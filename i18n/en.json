@@ -1,0 +1,109 @@
+{
+  "app": {
+    "name": "The Architectural Lens"
+  },
+  "onboarding": {
+    "slide1_label": "Curation 01",
+    "slide1_title": "Reimagine Your Space",
+    "slide1_desc": "Experience a curated approach to interior design through the silent lens of architectural perfection.",
+    "slide2_label": "Versatility 02",
+    "slide2_title": "Every Style, One Lens",
+    "slide2_desc": "From Scandinavian serenity to Art Deco grandeur — transform any room into a masterwork.",
+    "slide3_label": "Innovation 03",
+    "slide3_title": "AI Meets Architecture",
+    "slide3_desc": "Powered by advanced AI models, your space is reimagined with precision and artistry.",
+    "get_started": "Get Started",
+    "skip": "Skip Introduction"
+  },
+  "auth": {
+    "login": "Log In",
+    "register": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "forgot_password": "Forgot Password?",
+    "create_account": "Create Account",
+    "join_subtitle": "Join our curated design ecosystem.",
+    "welcome_back": "Welcome Back",
+    "welcome_subtitle": "Continue your curation of timeless spaces.",
+    "already_have_account": "Already have an account?",
+    "dont_have_account": "Don't have an account?",
+    "continue_with": "Continue with",
+    "reset_password": "Reset Password",
+    "send_reset_link": "Send Reset Link",
+    "back_to_login": "Back to Log In"
+  },
+  "tabs": {
+    "studio": "Studio",
+    "gallery": "Gallery",
+    "history": "History",
+    "profile": "Profile"
+  },
+  "studio": {
+    "step1_title": "Upload Your Photo",
+    "step2_title": "Room Type & Style",
+    "step3_title": "Design Specifications",
+    "step4_title": "Review & Generate",
+    "upload_prompt": "Tap to upload or take a photo",
+    "upload_hint": "JPEG/PNG, max 10MB",
+    "tips_title": "Tips for Best Results",
+    "next": "Next",
+    "generate": "Generate",
+    "credits": "Credits"
+  },
+  "gallery": {
+    "title": "Gallery",
+    "empty_title": "No designs yet",
+    "empty_cta": "Go to Studio",
+    "search": "Search designs..."
+  },
+  "history": {
+    "title": "History",
+    "empty_title": "No history yet",
+    "empty_cta": "Start Creating"
+  },
+  "profile": {
+    "title": "Profile",
+    "my_plan": "My Plan",
+    "credits": "Credits",
+    "notifications": "Notification Settings",
+    "language": "Language",
+    "help": "Help & Support",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "logout": "Log Out",
+    "upgrade": "Upgrade Now"
+  },
+  "plans": {
+    "title": "Choose Your Plan",
+    "confirm": "Confirm & Subscribe",
+    "per_month": "/month",
+    "credits_per_month": "credits/month"
+  },
+  "generation": {
+    "creating": "Creating Your Design...",
+    "upscaling": "Upscaling to HD...",
+    "failed": "Something Went Wrong",
+    "try_again": "Try Again",
+    "contact_support": "Contact Support"
+  },
+  "credits": {
+    "title": "Credits",
+    "exhausted": "Out of Credits",
+    "view_plans": "View Plans"
+  },
+  "settings": {
+    "notifications": "Notification Settings",
+    "language": "Choose Language",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "help": "Help & Support"
+  },
+  "common": {
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading..."
+  }
+}

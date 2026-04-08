@@ -1,0 +1,24 @@
+export type RootStackParamList = {
+    "(auth)/onboarding": undefined;
+    "(auth)/login": undefined;
+    "(auth)/register": undefined;
+    "(auth)/forgot-password": undefined;
+    "(tabs)/studio": undefined;
+    "(tabs)/gallery": undefined;
+    "(tabs)/history": undefined;
+    "(tabs)/profile": undefined;
+    "generation/progress": { jobId: string };
+    "generation/upscale": { jobId: string };
+    "result/[jobId]": { jobId: string };
+    "result/compare": { jobId: string };
+    "plans/index": undefined;
+    "plans/confirm": { planCode: string };
+    "credits/index": undefined;
+    "credits-exhausted": undefined;
+    "settings/notifications": undefined;
+    "settings/language": undefined;
+    "settings/privacy": undefined;
+    "settings/terms": undefined;
+    "settings/help": undefined;
+    error: { jobId?: string };
+};

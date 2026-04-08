@@ -28,10 +28,14 @@ yarn-error.*
 
 # macOS
 .DS_Store
+
+# MCP config (contains API keys)
+.vscode/mcp.json
 *.pem
 
 # local env files
 .env*.local
+.env.production
 
 # typescript
 *.tsbuildinfo
