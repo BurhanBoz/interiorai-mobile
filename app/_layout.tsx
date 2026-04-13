@@ -30,25 +30,25 @@ export default function RootLayout() {
     "Inter-SemiBold": require("../assets/fonts/Inter-Regular.ttf"),
   });
 
-  // TODO: Re-enable auth gate when ready
-  // const { isAuthenticated, hydrate } = useAuthStore();
+  const { isAuthenticated, hydrate } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   hydrate();
-  // }, []);
+  useEffect(() => {
+    hydrate();
+  }, []);
 
   useEffect(() => {
     if (!fontsLoaded) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    // Temporarily skip auth — always go to main tabs
-    if (inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/onboarding");
+    } else if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)/studio");
     }
-  }, [segments, fontsLoaded]);
+  }, [isAuthenticated, segments, fontsLoaded]);
 
   if (!fontsLoaded) return null;
 
