@@ -4,131 +4,469 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useStudioStore } from "@/stores/studioStore";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { useCreditCost } from "@/hooks/useCreditCost";
+import { useDrawer } from "@/components/layout/DrawerProvider";
+import Slider from "@react-native-community/slider";
 
-const IMAGE_YOUR_SPACE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDlGRuxXPnYvnidkHrrHd4LbVo9L8WVjUmMnIT5gFfICw79lpcSXLg6QxAuvUe1Rup9zHmVawVk_Z29Q97GVJ3dSVngK9W9rMO4HZhGLnOKZLsvVKQxFhtA_bmMvwnegTdJNBKjzWkD88Oqy0mpVOFLmWyQZMQuEuhR8FICCqzPUCJ-SXjxtZ1kqv6BBeh24xyf3O4-aDL1uQDifJuq3OPxAMtSvzBKi74U5yhcwIU-mOk5w0VvBDFrBVFxCh6latYpt_59xVRz1Kv5";
-
-const IMAGE_REFERENCE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCTXyVhAcoQYJMFYjKDohAMSsvXdeBTSa1004bOF7OWMV0Bo6hOWuJDywLIOIi2g3Mwfi4KxSX0d37Q1dYmn3xUuAvygPNYTJUi8_yS9WKFFCzSTKf41ZrkNg4_McC_Cw_7xOQpf9UStIm8ZHS-5RMKTFk4MGCRWTyzZJ8Z28nB-dCWtEi1ulEtlcz5PhfiFU8pCqoNci4YwDiE8rMKpeLL99CWnNTMe18TEWXREBIHjQCZj_XuRcElHWaG7v4Nhw5B80dZwB_6i5wc";
-
-const IMAGE_RESULT =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBDvTCgzCJBG8_G_H8hiiFTP_WSlHppSMpdTRaAVNA7eVytCv4mBk80oFEkNcK_-S9EPwS0P5K1LCICboTan08chPTrQfzF0Qvfc0gJ5cobBxgMMz8L-tpZr6W0vShW4i3vppVvgUR_iXI_fIxUysDyl4TJUkCuLzo9o_m7267D0twytvIEzQMzVX8lrq3JUC_BHl-iC0kGl6VzglM3t5-732hJfzlByVfDLS1xYnKOTZYXn0yLcUjEuBoNQEppctq0Uag6jcKqaw7p";
+const PLACEHOLDER_ROOM =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDY-BQvBeDvm_wjubZLoxxq_fdlB5DKLCs169xupU4TBlveZuXhYoh8b2cOxE9_z84iGFq8qjXZc-c896-Aciya2jHbgH7Psc7YEK26HW7MMJMiUfHeZBwmR7GV-bRLJ8_vkNjbLHLonBtC8eFH0GoGOpKUkNebi4AJqLpCVbwKo1OB-ahMCRo2YHyno3Fm4MlQmMuSvzu_wEyG8nzEZ7jJu-GPQZtnXXZ74fzGjvo45HHVaF3amPj6cKSibyrOMLFCxCMjicmhr_g";
 
 export default function StyleTransferScreen() {
+  const { openDrawer } = useDrawer();
+  const photo = useStudioStore(s => s.photo);
+  const referencePhoto = useStudioStore(s => s.referencePhoto);
+  const strength = useStudioStore(s => s.strength);
+  const qualityTier = useStudioStore(s => s.qualityTier);
+  const numOutputs = useStudioStore(s => s.numOutputs);
+  const setStrength = useStudioStore(s => s.setStrength);
+  const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
+  const { cost } = useCreditCost();
+  const { pickImage } = useImagePicker();
+
+  const roomImage = photo?.uri ?? PLACEHOLDER_ROOM;
+  const strengthPercent = Math.round(strength * 100);
+
+  const handlePickReference = async () => {
+    const result = await pickImage();
+    if (result) {
+      setReferencePhoto({ uri: result.uri, fileId: result.fileId ?? "" });
+    }
+  };
+
+  const handleNext = () => {
+    router.push("/generation/progress");
+  };
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+      {/* Top App Bar */}
+      <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          <Pressable onPress={openDrawer} hitSlop={8}>
+            <Ionicons name="menu" size={24} color="#E1C39B" />
+          </Pressable>
+          <Text
+            className="font-headline text-on-surface"
+            style={{
+              fontSize: 14,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+            }}
+          >
+            Architectural Lens
+          </Text>
+        </View>
+        <View
+          className="rounded-full overflow-hidden"
+          style={{
+            width: 32,
+            height: 32,
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.3)",
+          }}
+        >
+          <Image
+            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+          />
+        </View>
+      </View>
+
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-8 pb-12"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <Text className="mt-6 text-center text-[11px] font-label tracking-[0.1em] text-primary uppercase">
-          Exclusive Feature
-        </Text>
-
-        <Text className="mt-3 text-center font-headline text-[2.5rem] leading-[1.1] text-on-surface">
-          Style Transfer
-        </Text>
-
-        <Text className="mt-3 self-center text-center text-base font-body leading-relaxed text-on-surface-variant max-w-[80%]">
-          Style Transfer requires Max. Apply any reference aesthetic to your
-          space with architectural precision.
-        </Text>
-
-        {/* Visual Demo Section */}
-        <View className="mt-8 flex-row gap-3">
-          {/* Your Space */}
-          <View className="flex-[7]">
-            <View className="aspect-[4/3] overflow-hidden rounded-xl bg-surface-container-low">
-              <Image
-                source={IMAGE_YOUR_SPACE}
-                contentFit="cover"
-                className="w-full h-full"
-              />
-            </View>
-            <Text className="mt-2 text-center text-xs font-label text-on-surface-variant">
-              Your Space
-            </Text>
-          </View>
-
-          {/* Reference */}
-          <View className="flex-[5]">
-            <View className="aspect-square overflow-hidden rounded-xl bg-surface-container-high">
-              <Image
-                source={IMAGE_REFERENCE}
-                contentFit="cover"
-                className="w-full h-full"
-              />
-              {/* Sparkles Badge */}
-              <View className="absolute top-2 right-2 rounded-full bg-primary/90 p-1.5">
-                <Ionicons name="sparkles" size={14} color="#3F2D11" />
-              </View>
-            </View>
-            <Text className="mt-2 text-center text-xs font-label text-on-surface-variant">
-              Reference
-            </Text>
-          </View>
-        </View>
-
-        {/* Arrow Down */}
-        <View className="my-4 items-center">
-          <Ionicons name="arrow-down" size={28} color="#E1C39B" />
-        </View>
-
-        {/* Result — Locked Preview */}
-        <View className="overflow-hidden rounded-xl bg-surface-container-low">
-          <View className="aspect-[16/9] w-full">
-            <Image
-              source={IMAGE_RESULT}
-              contentFit="cover"
-              className="w-full h-full"
-              blurRadius={20}
-            />
-            {/* Blur Overlay */}
-            <View className="absolute inset-0 items-center justify-center bg-surface/50">
-              <View className="items-center gap-2">
-                <View className="rounded-full bg-surface-container-high/80 p-3">
-                  <Ionicons name="lock-closed" size={24} color="#E1C39B" />
-                </View>
-                <Text className="text-sm font-label text-on-surface-variant">
-                  Unlock Visual Preview
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Result Description */}
-        <Text className="mt-4 text-center font-headline text-lg text-on-surface">
-          Architectural Synthesis
-        </Text>
-        <Text className="mt-1 text-center text-sm font-body leading-relaxed text-on-surface-variant">
-          Your space reimagined with the reference aesthetic, blending structure
-          and style into a cohesive new design.
-        </Text>
-
-        {/* Upgrade CTA */}
-        <Pressable
-          onPress={() => router.push("/plans")}
-          className="mt-8 overflow-hidden rounded-xl active:opacity-80"
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68E6B"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-row items-center justify-center gap-2 py-4 px-6"
+        {/* Badge & Header */}
+        <View style={{ marginBottom: 48 }}>
+          <View
+            className="flex-row items-center mb-6"
+            style={{ gap: 12, marginTop: 8 }}
           >
-            <Ionicons name="star" size={18} color="#281901" />
-            <Text className="text-base font-label font-semibold text-on-primary-fixed">
-              Upgrade to Max
+            <View
+              className="rounded-full px-3"
+              style={{
+                paddingVertical: 4,
+                backgroundColor: "#584325",
+              }}
+            >
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 10,
+                  fontWeight: "700",
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  color: "#FEDFB5",
+                }}
+              >
+                Style Transfer
+              </Text>
+            </View>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 10,
+                fontWeight: "500",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
+              Max
             </Text>
-          </LinearGradient>
-        </Pressable>
+          </View>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ fontSize: 36, lineHeight: 42 }}
+          >
+            Curate Your{"\n"}Aesthetic
+          </Text>
+        </View>
 
-        <Text className="mt-3 mb-4 text-center text-xs font-label text-on-surface-variant">
-          Starting at $9.99/mo
-        </Text>
+        {/* Image Pair — Your Room & Ref Style */}
+        <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
+          {/* Your Room */}
+          <View style={{ flex: 1, gap: 16 }}>
+            <View className="flex-row items-end justify-between">
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                }}
+              >
+                Your Room
+              </Text>
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#998F84",
+                }}
+              >
+                Source
+              </Text>
+            </View>
+            <View
+              className="rounded-xl overflow-hidden bg-surface-container-low"
+              style={{ aspectRatio: 4 / 5 }}
+            >
+              <Image
+                source={{ uri: roomImage }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+                transition={300}
+              />
+              <View
+                className="absolute inset-0"
+                style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+                pointerEvents="none"
+              />
+            </View>
+          </View>
+
+          {/* Ref. Style */}
+          <View style={{ flex: 1, gap: 16 }}>
+            <View className="flex-row items-end justify-between">
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                }}
+              >
+                Ref. Style
+              </Text>
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#FEDFB5",
+                }}
+              >
+                Target
+              </Text>
+            </View>
+            {referencePhoto?.uri ? (
+              <Pressable onPress={handlePickReference}>
+                <View
+                  className="rounded-xl overflow-hidden"
+                  style={{ aspectRatio: 4 / 5 }}
+                >
+                  <Image
+                    source={{ uri: referencePhoto.uri }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                    transition={300}
+                  />
+                </View>
+              </Pressable>
+            ) : (
+              <Pressable onPress={handlePickReference}>
+                <View
+                  className="rounded-xl items-center justify-center bg-surface-container-low"
+                  style={{
+                    aspectRatio: 4 / 5,
+                    borderWidth: 2,
+                    borderColor: "#353534",
+                    borderStyle: "dashed",
+                  }}
+                >
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={36}
+                    color="#998F84"
+                    style={{ marginBottom: 16 }}
+                  />
+                  <Text
+                    className="font-label"
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      textTransform: "uppercase",
+                      color: "#998F84",
+                    }}
+                  >
+                    Upload reference
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+          </View>
+        </View>
+
+        {/* Influence Strength Slider */}
+        <View style={{ marginBottom: 32 }}>
+          <View className="flex-row items-center justify-between mb-6">
+            <Text
+              className="font-label text-on-surface"
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
+              Influence Strength
+            </Text>
+            <Text
+              className="font-headline text-primary"
+              style={{
+                fontSize: 24,
+                letterSpacing: -0.5,
+                fontStyle: "italic",
+              }}
+            >
+              {strengthPercent}%
+            </Text>
+          </View>
+
+          {/* Custom visual track */}
+          <View
+            className="w-full rounded-full overflow-hidden"
+            style={{ height: 4, backgroundColor: "#353534" }}
+          >
+            <LinearGradient
+              colors={["#C4A882", "#A68A62"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                width: `${strengthPercent}%`,
+                height: "100%",
+                borderRadius: 9999,
+              }}
+            />
+          </View>
+          {/* Glowing thumb indicator */}
+          <View
+            style={{
+              position: "absolute",
+              top: 44,
+              left: `${strengthPercent}%`,
+              marginLeft: -8,
+              width: 16,
+              height: 16,
+              borderRadius: 8,
+              backgroundColor: "#FEDFB5",
+              shadowColor: "rgba(254,223,181,0.5)",
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 1,
+              shadowRadius: 12,
+            }}
+            pointerEvents="none"
+          />
+          {/* Invisible interactive slider overlay */}
+          <Slider
+            style={{
+              width: "100%",
+              height: 36,
+              marginTop: -20,
+              opacity: 0,
+            }}
+            minimumValue={0}
+            maximumValue={1}
+            value={strength}
+            onValueChange={setStrength}
+            minimumTrackTintColor="transparent"
+            maximumTrackTintColor="transparent"
+            thumbTintColor="transparent"
+          />
+
+          <Text
+            className="font-label"
+            style={{
+              fontSize: 11,
+              letterSpacing: 0.8,
+              fontStyle: "italic",
+              lineHeight: 18,
+              color: "#998F84",
+              marginTop: 8,
+            }}
+          >
+            Balance the structural integrity of the original space with the
+            artistic motifs of the reference.
+          </Text>
+        </View>
+
+        {/* Quality & Variants */}
+        <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
+          <View
+            className="flex-1 rounded-xl p-6 bg-surface-container-low"
+            style={{ gap: 8 }}
+          >
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 9,
+                fontWeight: "700",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#998F84",
+              }}
+            >
+              Quality
+            </Text>
+            <Text
+              className="font-headline text-on-surface"
+              style={{ fontSize: 20 }}
+            >
+              {qualityTier === "HD" ? "4K" : "SD"}
+            </Text>
+          </View>
+          <View
+            className="flex-1 rounded-xl p-6 bg-surface-container-low"
+            style={{ gap: 8 }}
+          >
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 9,
+                fontWeight: "700",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#998F84",
+              }}
+            >
+              Variants
+            </Text>
+            <Text
+              className="font-headline text-on-surface"
+              style={{ fontSize: 20 }}
+            >
+              {String(numOutputs).padStart(2, "0")}
+            </Text>
+          </View>
+        </View>
+
+        {/* Footer Action */}
+        <View
+          style={{
+            paddingTop: 32,
+            borderTopWidth: 1,
+            borderTopColor: "rgba(77,70,60,0.1)",
+            gap: 24,
+          }}
+        >
+          {/* Processing Cost */}
+          <View className="items-center" style={{ gap: 4 }}>
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#998F84",
+                fontWeight: "500",
+              }}
+            >
+              Processing Cost
+            </Text>
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <Ionicons name="flash" size={14} color="#FEDFB5" />
+              <Text
+                className="font-headline"
+                style={{
+                  fontSize: 24,
+                  fontStyle: "italic",
+                  letterSpacing: -0.5,
+                  color: "#E5E2E1",
+                }}
+              >
+                {cost} Credits
+              </Text>
+            </View>
+          </View>
+
+          {/* CTA Button */}
+          <Pressable
+            onPress={handleNext}
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
+          >
+            <LinearGradient
+              colors={["#C4A882", "#A68A62"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                height: 56,
+                borderRadius: 16,
+                paddingHorizontal: 24,
+                borderWidth: 1,
+                borderColor: "rgba(196,168,130,0.3)",
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#3F2D11",
+                }}
+              >
+                Next: Render Sequence
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+            </LinearGradient>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

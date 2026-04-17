@@ -3,228 +3,216 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
-import type { CatalogItemResponse } from "@/types/api";
-
-const ROOM_TYPES: CatalogItemResponse[] = [
-  {
-    id: "1",
-    code: "living-room",
-    name: "Living Room",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-  {
-    id: "2",
-    code: "bedroom",
-    name: "Bedroom",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-  {
-    id: "3",
-    code: "kitchen",
-    name: "Kitchen",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-  {
-    id: "4",
-    code: "home-office",
-    name: "Home Office",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-  {
-    id: "5",
-    code: "bathroom",
-    name: "Bathroom",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-  {
-    id: "6",
-    code: "dining-room",
-    name: "Dining Room",
-    description: "",
-    category: "room",
-    previewUrl: "",
-  },
-];
-
-const DESIGN_STYLES: (CatalogItemResponse & { imageUrl: string })[] = [
-  {
-    id: "1",
-    code: "modern",
-    name: "Modern",
-    description: "",
-    category: "style",
-    previewUrl: "",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAQgZwszaiZvQ3OvggT1-zJqKe0vhurI-FHTG08Lzwq_v0Er9BvnvyuuJEtkpZutbvz6jHt7HD3iXhgOesf12VrVOgtM_wJYhpbNjS4f41KbvXiISglLa8WAXgO8QRh14yfrbxfG4OFmcXXrufZ1_J8lguIFxqvb17gJ_Z34YrsSC8LrP2zb9eRi0OQ2ulyvGnoZeCCDwUQPTJ953DYdLl3OyJayaTxxczeQN0PLZq9fYLM5PPBZ8C_HbtkSpbbgHuj5Pv3zSkm7E5a",
-  },
-  {
-    id: "2",
-    code: "minimalist",
-    name: "Minimalist",
-    description: "",
-    category: "style",
-    previewUrl: "",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCdaHjUc-A7KUd4PDz-93AF1olHrjOd1-Yym0SjElBtmP-A4kgEibFE9LxG3mWFgxHpwPlA3Vyvcf52UXI9rM8MlikirSuqodZPAb5UFrg8sJWaAKezxA5RzaWjERKVhNosK2PkGBLUCth_ZLsCSJlBArZ-eq6thwbN5YabZE1vV3DIAFu5kgZzMtaOR4abPXPVISXkeGRDkIMk64J9jryrR3j9W3K0PRhghsr80VVrTsm8KrdcCbvci2MZ8NVmNDKQ5CFAhgMZalsI",
-  },
-  {
-    id: "3",
-    code: "scandinavian",
-    name: "Scandinavian",
-    description: "",
-    category: "style",
-    previewUrl: "",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDrzZYJars2dat0MFlrjnUyWqPzGDTdHN2D3g_0h0svJKWL1e8TYgL-LnFzzWhgMSZzJmkyDs1dKKhEFnP3LE10rDB2ROIguzQthCNfolq6ihkyfOlRnawi2-abrmnO-3l3s1LdHUMw_XrhN-NsLnZJtyT41wv7bg6RTiKBid_JQHcS687P-lnUORVUh0Um0JW573nW6EERa9pHaDvB8tdOXe9Ds3V6Vv2c8k75XH0BI0pZqvoISvzHqtLX1JzO5d9IjeqROlNEFAVb",
-  },
-  {
-    id: "4",
-    code: "industrial",
-    name: "Industrial",
-    description: "",
-    category: "style",
-    previewUrl: "",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBnQf45bQUFXhZAKeaxvxNpwich9ZY16cBvl_aQHkongNKLmX45Rc-h7Rlzzi_qgEUXlbfrPHqV9Ls6M52uEb7O-qXq0bRJZg2tbrxVlO5iylkqgp1gPCqba0MiAdoh2NJZvKA9Wm2cuwE17UUKkH2R2gg_XOp7Ht6LRSxuphobqqFG53s6P3zsAUa1KMJpYlnEGDlbLUetuMBioz6_cwGSBV474Pc4VBs4Rfur2ER7Cw3cA-woj1Ev7WrZoVtGlSReFupoJnu6mMwF",
-  },
-];
+import { useDrawer } from "@/components/layout/DrawerProvider";
+import { useImagePicker } from "@/hooks/useImagePicker";
 
 export default function UploadedScreen() {
-  const { roomType, designStyle, setRoomType, setDesignStyle } =
-    useStudioStore();
+  const photo = useStudioStore(s => s.photo);
+  const setPhoto = useStudioStore(s => s.setPhoto);
+  const { openDrawer } = useDrawer();
+  const { pickImage } = useImagePicker();
 
   const handleNext = () => {
-    router.push("/studio/options");
+    router.push("/studio/style");
   };
 
-  const canProceed = roomType !== null && designStyle !== null;
+  const handleChangePhoto = async () => {
+    const result = await pickImage("gallery");
+    if (result) {
+      setPhoto(result);
+    }
+  };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      <ScrollView className="flex-1" contentContainerClassName="px-8 pb-32">
-        {/* Step Indicator */}
-        <View className="mt-4 mb-6">
-          <Text className="text-[10px] uppercase tracking-[0.2em] text-primary font-label mb-2">
-            Step 2 of 4
+      {/* App Header */}
+      <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          <Pressable onPress={openDrawer} hitSlop={8}>
+            <Ionicons name="menu" size={24} color="#E1C39B" />
+          </Pressable>
+          <Text
+            className="font-headline text-[#E1C39B]"
+            style={{
+              fontSize: 14,
+              lineHeight: 16,
+              fontWeight: "700",
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+            }}
+          >
+            {"ARCHITECTURAL\nLENS"}
           </Text>
-          <View className="flex-row gap-2">
-            <View className="flex-1 h-1 rounded-full bg-primary" />
-            <View className="flex-1 h-1 rounded-full bg-primary" />
-            <View className="flex-1 h-1 rounded-full bg-surface-container-highest" />
-            <View className="flex-1 h-1 rounded-full bg-surface-container-highest" />
+        </View>
+        <View
+          className="overflow-hidden"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.2)",
+          }}
+        >
+          <Image
+            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
+            style={{ width: 32, height: 32 }}
+            contentFit="cover"
+          />
+        </View>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 200 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Step Indicator */}
+        <View className="mb-2" style={{ paddingTop: 32 }}>
+          <Text
+            className="font-label text-secondary"
+            style={{
+              fontSize: 11,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              fontWeight: "500",
+            }}
+          >
+            STEP 1 OF 4
+          </Text>
+        </View>
+
+        {/* Headline */}
+        <Text
+          className="font-headline text-on-surface mb-12"
+          style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+        >
+          Your Photo
+        </Text>
+
+        {/* Uploaded Photo Preview */}
+        <View
+          className="rounded-xl overflow-hidden mb-6"
+          style={{ elevation: 8 }}
+        >
+          <View
+            style={{ aspectRatio: 4 / 3 }}
+            className="bg-surface-container-low"
+          >
+            <Image
+              source={{ uri: photo?.uri }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+            />
+
+            {/* Dark Overlay */}
+            <View
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+            />
+
+            {/* Close Button */}
+            <Pressable
+              onPress={() => setPhoto(null)}
+              className="absolute items-center justify-center"
+              style={{
+                top: 16,
+                right: 16,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "rgba(19,19,19,0.8)",
+              }}
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={20} color="#E5E2E1" />
+            </Pressable>
           </View>
         </View>
 
-        {/* Section A - Room Type */}
-        <Text className="font-headline text-2xl font-medium text-on-surface mb-4">
-          Room Type
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-8"
-          contentContainerClassName="gap-2"
-        >
-          {ROOM_TYPES.map(room => {
-            const selected = roomType?.id === room.id;
-            return (
-              <Pressable
-                key={room.id}
-                onPress={() => setRoomType(room)}
-                className={`px-6 py-2.5 rounded-full ${
-                  selected ? "bg-primary" : "bg-surface-container-high"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-body ${
-                    selected
-                      ? "text-on-primary font-medium"
-                      : "text-on-surface-variant"
-                  }`}
-                >
-                  {room.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {/* Change Photo */}
+        <View className="items-center mb-12">
+          <Pressable
+            onPress={handleChangePhoto}
+            className="flex-row items-center py-2"
+            style={{ gap: 8 }}
+          >
+            <Ionicons name="refresh" size={18} color="#D0C5B8" />
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#D0C5B8",
+              }}
+            >
+              Change Photo
+            </Text>
+          </Pressable>
+        </View>
 
-        {/* Section B - Design Style */}
-        <Text className="font-headline text-2xl font-medium text-on-surface mb-4">
-          Design Style
-        </Text>
-        <View className="flex-row flex-wrap justify-between">
-          {DESIGN_STYLES.map(style => {
-            const selected = designStyle?.id === style.id;
-            return (
-              <Pressable
-                key={style.id}
-                onPress={() => setDesignStyle(style)}
-                className="w-[48%] mb-4"
-              >
-                <View
-                  className={`rounded-xl overflow-hidden ${
-                    selected
-                      ? "ring-2 ring-primary bg-surface-container-high"
-                      : "bg-surface-container-low"
-                  }`}
-                  style={
-                    selected
-                      ? { borderWidth: 2, borderColor: "#E1C39B" }
-                      : undefined
-                  }
-                >
-                  <Image
-                    source={{ uri: style.imageUrl }}
-                    className="w-full aspect-[4/5]"
-                    contentFit="cover"
-                  />
-                  <View className="px-3 py-2.5">
-                    <Text
-                      className={`text-[10px] uppercase tracking-[0.15em] font-label ${
-                        selected ? "text-primary" : "text-on-surface-variant"
-                      }`}
-                    >
-                      {selected ? "SELECTED" : "STYLE"}
-                    </Text>
-                    <Text className="text-sm font-body text-on-surface mt-0.5">
-                      {style.name}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            );
-          })}
+        {/* Info hint */}
+        <View
+          style={{
+            marginTop: 16,
+            padding: 20,
+            borderRadius: 12,
+            backgroundColor: "#1C1B1B",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <Ionicons name="bulb-outline" size={22} color="#C4A882" />
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{ fontSize: 13, lineHeight: 20, flex: 1 }}
+          >
+            For best results, use a well-lit photo taken straight on with no
+            people or pets in the frame.
+          </Text>
         </View>
       </ScrollView>
 
-      {/* CTA Button */}
-      <View className="absolute bottom-0 left-0 right-0 px-8 pb-8 pt-4">
+      {/* Fixed CTA */}
+      <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
         <Pressable
           onPress={handleNext}
-          disabled={!canProceed}
-          className={!canProceed ? "opacity-50" : ""}
+          style={({ pressed }) => ({
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
         >
           <LinearGradient
-            colors={["#E1C39B", "#C4A882"]}
+            colors={["#C4A882", "#A68A62"]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="rounded-full py-4 items-center"
+            end={{ x: 1, y: 1 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: 56,
+              borderRadius: 16,
+              paddingHorizontal: 24,
+              borderWidth: 1,
+              borderColor: "rgba(196,168,130,0.3)",
+            }}
           >
-            <Text className="text-on-primary font-body font-semibold text-base">
-              Next Step
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 14,
+                fontWeight: "700",
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                color: "#3F2D11",
+              }}
+            >
+              Continue to Architecture
             </Text>
+            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
           </LinearGradient>
         </Pressable>
       </View>

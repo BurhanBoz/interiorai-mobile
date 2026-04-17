@@ -8,7 +8,6 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -16,12 +15,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/stores/authStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const BG_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuC7juCTbnitQE63aypbPEkbplT7k1TkQ2Aq3IY0SHQ31jNKLNM7Xe8hxPoynC2o1rJxIwcQzdYk5bv8RY6IPYh07t3zuBzqnPl41PSvIH0Dxf8udcRiCUSsMWh27_X5b5g4rBEu7v0tsyS8qa0Zk5Mh4jzGK4-twgCo7uVJfLhCjOuRnHOeBiCSCXNg4T1ONKDKblrjWp2MPra4W9aZtpboenhpsUBY-vQxZ0f2oe3Nm7z6HH5BKmaD_oP4GTED-9PxwIpk4HmCiJtI";
-
 export default function RegisterScreen() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const register = useAuthStore(s => s.register);
 
@@ -42,148 +40,218 @@ export default function RegisterScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      {/* Background image */}
-      <Image
-        source={{ uri: BG_IMAGE }}
-        style={{ position: "absolute", width: "100%", height: "100%" }}
-        contentFit="cover"
-      />
-
-      {/* Gradient overlay */}
-      <LinearGradient
-        colors={[
-          "rgba(19,19,19,0.80)",
-          "rgba(19,19,19,0.95)",
-          "rgba(19,19,19,1)",
-        ]}
-        locations={[0, 0.5, 1]}
-        style={{ position: "absolute", width: "100%", height: "100%" }}
-      />
-
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 32,
+              paddingTop: 48,
+              paddingBottom: 40,
+            }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            className="px-8"
           >
             {/* Branding */}
             <Text
-              className="font-headline text-center text-[#F5F0EB] text-sm uppercase mb-10"
-              style={{ letterSpacing: 4.8 }}
+              className="font-headline font-bold text-secondary uppercase mb-10"
+              style={{ fontSize: 14, letterSpacing: 3 }}
             >
-              THE ARCHITECTURAL LENS
+              ARCHITECTURAL LENS
             </Text>
 
             {/* Heading */}
-            <Text className="font-headline text-on-surface text-[2.5rem] leading-tight mb-2">
+            <Text
+              className="font-headline font-bold text-on-surface mb-10"
+              style={{ fontSize: 36, lineHeight: 42 }}
+            >
               Create Account
             </Text>
-            <Text className="font-body text-on-surface-variant text-base mb-8">
-              Join our curated design ecosystem.
-            </Text>
 
-            {/* Email */}
-            <View className="mb-6">
+            {/* Full Name */}
+            <View className="mb-7">
               <Text
-                className="font-label text-[10px] uppercase text-on-surface-variant/70 mb-2"
-                style={{ letterSpacing: 2.4 }}
+                className="font-label text-on-surface-variant uppercase mb-2"
+                style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                EMAIL ADDRESS
+                Full Name
               </Text>
               <TextInput
-                className="font-body text-on-surface text-base pb-3 border-b border-outline-variant/30"
+                className="font-body text-on-surface text-base pb-3 bg-transparent"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(77,70,60,0.2)",
+                }}
                 placeholderTextColor="rgba(208,197,184,0.4)"
-                placeholder="your@email.com"
+                placeholder="Julianne Moore"
+                value={fullName}
+                onChangeText={setFullName}
+                selectionColor="#E1C39B"
+              />
+            </View>
+
+            {/* Email */}
+            <View className="mb-7">
+              <Text
+                className="font-label text-on-surface-variant uppercase mb-2"
+                style={{ fontSize: 11, letterSpacing: 2 }}
+              >
+                Email Address
+              </Text>
+              <TextInput
+                className="font-body text-on-surface text-base pb-3 bg-transparent"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(77,70,60,0.2)",
+                }}
+                placeholderTextColor="rgba(208,197,184,0.4)"
+                placeholder="julianne.m@studio.com"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 textContentType="emailAddress"
                 value={email}
                 onChangeText={setEmail}
-                style={{ backgroundColor: "transparent" }}
                 selectionColor="#E1C39B"
               />
             </View>
 
             {/* Password */}
-            <View className="mb-8">
+            <View className="mb-10">
               <Text
-                className="font-label text-[10px] uppercase text-on-surface-variant/70 mb-2"
-                style={{ letterSpacing: 2.4 }}
+                className="font-label text-on-surface-variant uppercase mb-2"
+                style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                PASSWORD
+                Password
               </Text>
-              <TextInput
-                className="font-body text-on-surface text-base pb-3 border-b border-outline-variant/30"
-                placeholderTextColor="rgba(208,197,184,0.4)"
-                placeholder="••••••••"
-                secureTextEntry
-                textContentType="newPassword"
-                value={password}
-                onChangeText={setPassword}
-                style={{ backgroundColor: "transparent" }}
-                selectionColor="#E1C39B"
-              />
+              <View
+                className="flex-row items-center"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(77,70,60,0.2)",
+                }}
+              >
+                <TextInput
+                  className="flex-1 font-body text-on-surface text-base pb-3 bg-transparent"
+                  placeholderTextColor="rgba(208,197,184,0.4)"
+                  placeholder="••••••••••••"
+                  secureTextEntry={!showPassword}
+                  textContentType="newPassword"
+                  value={password}
+                  onChangeText={setPassword}
+                  selectionColor="#E1C39B"
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  className="pb-3"
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={18}
+                    color="rgba(208,197,184,0.6)"
+                  />
+                </Pressable>
+              </View>
             </View>
 
-            {/* Sign Up Button */}
-            <Pressable onPress={handleSignUp} disabled={loading}>
+            {/* CTA Button */}
+            <Pressable
+              onPress={handleSignUp}
+              disabled={loading}
+              style={({ pressed }) => ({
+                opacity: loading ? 0.7 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
+            >
               <LinearGradient
-                colors={["#C4A882", "#A68E6B"]}
+                colors={["#C4A882", "#A68A62"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="h-14 rounded-xl items-center justify-center"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  height: 56,
+                  borderRadius: 16,
+                  paddingHorizontal: 24,
+                  borderWidth: 1,
+                  borderColor: "rgba(196,168,130,0.3)",
+                }}
               >
-                <Text className="font-label text-on-primary text-sm font-semibold uppercase tracking-widest">
-                  {loading ? "Creating Account…" : "Sign Up"}
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    color: "#3F2D11",
+                  }}
+                >
+                  {loading ? "Creating…" : "Create Account"}
                 </Text>
+                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
               </LinearGradient>
             </Pressable>
 
-            {/* Log In link */}
-            <View className="flex-row justify-center mt-6">
+            {/* Divider */}
+            <View className="flex-row items-center my-6" style={{ gap: 12 }}>
+              <View className="flex-1 h-px bg-surface-container-high" />
+              <Text
+                className="font-label text-on-surface-variant uppercase"
+                style={{ fontSize: 11, letterSpacing: 3, opacity: 0.5 }}
+              >
+                or continue with
+              </Text>
+              <View className="flex-1 h-px bg-surface-container-high" />
+            </View>
+
+            {/* Social Buttons — temporarily disabled */}
+            <View className="flex-row" style={{ gap: 12, opacity: 0.35 }}>
+              <Pressable
+                disabled
+                className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+                style={{ height: 52, gap: 10 }}
+              >
+                <Ionicons name="logo-google" size={18} color="#E5E2E1" />
+                <Text
+                  className="font-label font-bold text-on-surface uppercase"
+                  style={{ fontSize: 11, letterSpacing: 3 }}
+                >
+                  Google
+                </Text>
+              </Pressable>
+              <Pressable
+                disabled
+                className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+                style={{ height: 52, gap: 10 }}
+              >
+                <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
+                <Text
+                  className="font-label font-bold text-on-surface uppercase"
+                  style={{ fontSize: 11, letterSpacing: 3 }}
+                >
+                  Apple
+                </Text>
+              </Pressable>
+            </View>
+            <Text
+              className="font-label text-on-surface-variant text-center mt-2"
+              style={{ fontSize: 10, letterSpacing: 1, opacity: 0.4 }}
+            >
+              Coming Soon
+            </Text>
+
+            {/* Footer */}
+            <View className="flex-row items-center justify-center mt-auto pt-10">
               <Text className="font-body text-on-surface-variant text-sm">
                 Already have an account?{" "}
               </Text>
               <Pressable onPress={() => router.push("/login")}>
-                <Text className="font-body text-primary text-sm font-medium">
-                  Log In
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Social divider */}
-            <View className="flex-row items-center my-8">
-              <View className="flex-1 h-px bg-outline-variant/20" />
-              <Text className="font-label text-on-surface-variant/50 text-xs mx-4 uppercase tracking-widest">
-                Continue with
-              </Text>
-              <View className="flex-1 h-px bg-outline-variant/20" />
-            </View>
-
-            {/* Social buttons */}
-            <View className="flex-row gap-4 mb-8">
-              <Pressable className="flex-1 flex-row items-center justify-center bg-surface-container-high h-14 rounded-xl gap-2">
-                <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
-                <Text
-                  className="font-label text-on-surface text-xs uppercase"
-                  style={{ letterSpacing: 2 }}
-                >
-                  APPLE
-                </Text>
-              </Pressable>
-
-              <Pressable className="flex-1 flex-row items-center justify-center bg-surface-container-high h-14 rounded-xl gap-2">
-                <Ionicons name="logo-google" size={18} color="#E5E2E1" />
-                <Text
-                  className="font-label text-on-surface text-xs uppercase"
-                  style={{ letterSpacing: 2 }}
-                >
-                  GOOGLE
+                <Text className="font-body text-secondary font-semibold text-sm ml-1">
+                  Sign In
                 </Text>
               </Pressable>
             </View>

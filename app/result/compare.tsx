@@ -1,140 +1,245 @@
 import { View, Text, ScrollView, Pressable, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const IMAGE_HEIGHT = SCREEN_WIDTH * 0.75;
-
-const BEFORE_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBkXC7i-ynMZkGK7F6P4EqrL7oXbkZAXbUbj4pSpHqk2icWBJyAlrVtHx0";
-const AFTER_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDgJCRkFcNo9XedWxDTL0tu9tqRpXyRH-WSOcsPjMtQvXYpeML9Xd3mgE0PAfiyzMkdA0hlzLNmkupDgt4pbdVGA1qhMkpBTO_Lk1BW9yDB4nE_dAoafUZjehrVwlDwzAo-MwkSN6UVXdRbU3SY0S7nxNxr6h8zQvAMx4BPaFH-woNXlMKlMlso7hKPqprIf6Za6Cfd8kBx9qNfN5cx0QJBJPwYa4oxfqz0Emo9Azh844HM17Au41RBGUvSiECrXCoAEp9xTaDtk5-C";
 
 export default function CompareScreen() {
+  const { beforeUrl, afterUrl } = useLocalSearchParams<{
+    beforeUrl: string;
+    afterUrl: string;
+  }>();
+  const authHeaders = useAuthHeaders();
+
+  const beforeSource = beforeUrl
+    ? { uri: beforeUrl, headers: authHeaders }
+    : undefined;
+  const afterSource = afterUrl
+    ? { uri: afterUrl, headers: authHeaders }
+    : undefined;
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-8 py-4">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-surface-container-high"
+      <View className="flex-row items-center justify-between px-6 py-6">
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={24} color="#E0C29A" />
+          </Pressable>
+          <Text
+            className="font-headline text-primary-container"
+            style={{
+              fontSize: 14,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+            }}
+          >
+            Transformation
+          </Text>
+        </View>
+        <View
+          className="w-8 h-8 rounded-full items-center justify-center"
+          style={{
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.2)",
+            backgroundColor: "#2A2A2A",
+          }}
         >
-          <Ionicons name="arrow-back" size={20} color="#E5E2E1" />
-        </Pressable>
-        <Text className="font-headline text-lg text-on-surface">
-          Transformation
-        </Text>
-        <Pressable className="w-10 h-10 items-center justify-center rounded-full bg-surface-container-high">
-          <Ionicons name="share-outline" size={20} color="#E5E2E1" />
-        </Pressable>
+          <Ionicons name="person" size={14} color="#E5E2E1" />
+        </View>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="pb-10"
+        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 24 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Before / After Comparison */}
-        <View className="mx-8 rounded-xl overflow-hidden bg-surface-container-low">
-          <View className="flex-row" style={{ height: IMAGE_HEIGHT }}>
+        <View
+          className="rounded-xl overflow-hidden bg-surface-container-low"
+          style={{ aspectRatio: 4 / 5 }}
+        >
+          <View className="absolute inset-0 flex-row">
             {/* Before */}
-            <View className="flex-1 overflow-hidden">
-              <Image
-                source={{ uri: BEFORE_IMAGE }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-              />
-              {/* Original label */}
-              <View className="absolute bottom-3 left-3 bg-surface/80 px-3 py-1.5 rounded-lg">
-                <Text className="text-[10px] tracking-wider text-on-surface font-label uppercase">
-                  Original
+            <View
+              className="flex-1 overflow-hidden"
+              style={{ borderRightWidth: 0 }}
+            >
+              {beforeSource ? (
+                <Image
+                  source={beforeSource}
+                  style={{ width: "100%", height: "100%", opacity: 0.6 }}
+                  contentFit="cover"
+                />
+              ) : (
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#2A2A2A",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="image-outline" size={32} color="#998F84" />
+                </View>
+              )}
+              {/* Before label */}
+              <View
+                className="absolute rounded-full"
+                style={{
+                  top: 24,
+                  left: 24,
+                  backgroundColor: "rgba(19,19,19,0.8)",
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text
+                  className="font-label text-on-surface-variant"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Before
                 </Text>
-              </View>
-            </View>
-
-            {/* Divider */}
-            <View className="w-[3px] bg-primary items-center justify-center z-10">
-              <View className="w-7 h-7 rounded-full bg-primary items-center justify-center">
-                <Ionicons name="swap-horizontal" size={14} color="#3F2D11" />
               </View>
             </View>
 
             {/* After */}
             <View className="flex-1 overflow-hidden">
-              <Image
-                source={{ uri: AFTER_IMAGE }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-              />
-              {/* AI Enhanced label */}
-              <LinearGradient
-                colors={["#C4A882", "#A68C66"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg"
+              {afterSource ? (
+                <Image
+                  source={afterSource}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                />
+              ) : (
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#1C1B1B",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="image-outline" size={32} color="#998F84" />
+                </View>
+              )}
+              {/* After label */}
+              <View
+                className="absolute rounded-full"
+                style={{
+                  top: 24,
+                  right: 24,
+                  backgroundColor: "rgba(254,223,181,0.9)",
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                }}
               >
-                <Text className="text-[10px] tracking-wider text-on-primary font-label uppercase">
-                  AI Enhanced
+                <Text
+                  className="font-label font-semibold"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    color: "#281801",
+                  }}
+                >
+                  After
                 </Text>
-              </LinearGradient>
+              </View>
+            </View>
+          </View>
+
+          {/* Comparison Slider Handle */}
+          <View
+            className="absolute items-center justify-center"
+            style={{ top: 0, bottom: 0, left: "50%", marginLeft: -1 }}
+            pointerEvents="none"
+          >
+            <View
+              style={{
+                width: 2,
+                height: "100%",
+                backgroundColor: "rgba(254,223,181,0.5)",
+                shadowColor: "#FEDFB5",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 15,
+              }}
+            />
+            <View
+              className="absolute items-center justify-center bg-surface"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                borderWidth: 2,
+                borderColor: "#FEDFB5",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 8,
+              }}
+            >
+              <Ionicons name="swap-horizontal" size={20} color="#FEDFB5" />
             </View>
           </View>
         </View>
 
-        {/* Metadata Section */}
-        <View className="px-8 mt-6">
-          {/* Project label + Value badge row */}
-          <View className="flex-row items-start justify-between mb-3">
-            <View className="flex-1 mr-4">
-              <Text className="text-primary text-xs font-label tracking-[2px] uppercase mb-2">
-                Project 082
-              </Text>
-              <Text className="font-headline text-2xl text-on-surface leading-tight">
-                Minimalist brutalist renovation
-              </Text>
-            </View>
-            <View className="bg-surface-container-high px-3 py-2 rounded-xl items-center mt-1">
-              <Text className="text-primary text-sm font-headline">+24%</Text>
-              <Text className="text-on-surface-variant text-[10px] tracking-wider font-label uppercase mt-0.5">
-                Est. Value
-              </Text>
-            </View>
-          </View>
-
-          {/* Description */}
-          <Text className="text-on-surface-variant text-sm leading-6 font-body mt-2">
-            A striking transformation that embraces raw concrete surfaces and
-            clean geometric forms, creating a powerful interplay between mass
-            and void. Natural light channels through strategically placed
-            openings, softening the material palette.
+        {/* Info */}
+        <View className="mt-8" style={{ gap: 16 }}>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ fontSize: 22, lineHeight: 28 }}
+          >
+            Before & After
+          </Text>
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{ fontSize: 14, lineHeight: 22 }}
+          >
+            Compare your original space with the AI-generated redesign side by
+            side.
           </Text>
         </View>
 
-        {/* Action Grid */}
-        <View className="flex-row gap-3 px-8 mt-8">
-          <Pressable className="flex-1 h-14 rounded-xl bg-surface-container-high flex-row items-center justify-center gap-2">
-            <Ionicons name="layers-outline" size={18} color="#E5E2E1" />
-            <Text className="text-on-surface font-body text-sm">
-              Save Variations
-            </Text>
-          </Pressable>
-
-          <LinearGradient
-            colors={["#C4A882", "#A68C66"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-1 rounded-xl overflow-hidden"
+        {/* Action Buttons */}
+        <View className="mt-10" style={{ gap: 16 }}>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
           >
-            <Pressable className="flex-1 flex-row items-center justify-center gap-2">
-              <Ionicons name="refresh" size={18} color="#3F2D11" />
-              <Text className="text-on-primary font-body text-sm font-semibold">
-                Regenerate
+            <LinearGradient
+              colors={["#C4A882", "#A68A62"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="flex-row items-center justify-between rounded-xl"
+              style={{ paddingVertical: 16, paddingHorizontal: 24 }}
+            >
+              <Text
+                className="font-label font-semibold"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: "#281801",
+                }}
+              >
+                Back to Result
               </Text>
-            </Pressable>
-          </LinearGradient>
+              <Ionicons name="arrow-back" size={20} color="#281801" />
+            </LinearGradient>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

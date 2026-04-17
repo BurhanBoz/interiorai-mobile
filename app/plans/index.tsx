@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,19 +16,19 @@ interface PlanFeature {
 
 const FEATURES: PlanFeature[] = [
   {
-    label: "Cloud Gallery Storage",
+    label: "Cloud Gallery",
     values: ["1 GB", "50 GB", "1 TB", "Unlimited"],
   },
   {
     label: "Blueprint Export",
-    values: ["—", "✓", "✓", "✓"],
+    values: ["PDF", "PDF+CAD", "All", "Source"],
   },
   {
     label: "High-Res Render",
     values: ["—", "—", "✓", "✓"],
   },
   {
-    label: "Collaborative Workspace",
+    label: "Collab Workspace",
     values: ["—", "—", "✓", "✓"],
   },
   {
@@ -37,6 +38,9 @@ const FEATURES: PlanFeature[] = [
 ];
 
 const PLAN_NAMES = ["Free", "Basic", "Pro", "Max"] as const;
+
+const EDITORIAL_IMG =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAo4RTa5Ebmtm2zt5dDiM-SXexRU8XazPYDO_gSKuLvfoDoAbNqPJdjo7qDQAj2J-0ApdGnxHnTd3BdgccFmSq6yHHlvwSkWh1T1O6YoMfmKE3GyB3EZAtQuVxTDt3zkmOLxoqr1i-ur2w0FPO1KyXL5PLuaJmmOkZIzQZoXEFvg7yKQmnqLSE5W2TpFBf2bwsWwgL_z9lN45RbCLnrOgboDJAj8sWDBQ5SWj0ztb16ss8EFNULJ-GNvXqQpi9QIgiPlbxBDG5Kq20";
 
 /* ------------------------------------------------------------------ */
 /*  Plan Card                                                          */
@@ -51,7 +55,6 @@ interface PlanCardProps {
   onPress: () => void;
   isCurrent?: boolean;
   isPopular?: boolean;
-  isDark?: boolean;
 }
 
 function PlanCard({
@@ -63,108 +66,251 @@ function PlanCard({
   onPress,
   isCurrent,
   isPopular,
-  isDark,
 }: PlanCardProps) {
-  const wrapperClass = isPopular
-    ? "bg-surface-container-low rounded-xl p-5 mt-3"
-    : "bg-surface-container-low rounded-xl p-5";
-
   return (
-    <View>
+    <View
+      className="bg-surface-container-low rounded-xl"
+      style={[
+        { padding: 32 },
+        isPopular && {
+          borderWidth: 1,
+          borderColor: "rgba(224,194,154,0.3)",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 24 },
+          shadowOpacity: 0.4,
+          shadowRadius: 48,
+          elevation: 12,
+        },
+      ]}
+    >
+      {/* Most Popular badge */}
       {isPopular && (
-        <View className="self-center -mb-3 z-10">
-          <View className="bg-primary-container rounded-full px-4 py-1">
-            <Text className="text-on-primary text-[10px] font-label font-bold uppercase tracking-widest">
+        <View style={{ position: "absolute", top: 16, right: 16 }}>
+          <LinearGradient
+            colors={["#C4A882", "#A68A62"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 4 }}
+          >
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: "700",
+                color: "#3F2D11",
+                textTransform: "uppercase",
+                letterSpacing: 2,
+              }}
+            >
               Most Popular
             </Text>
-          </View>
+          </LinearGradient>
         </View>
       )}
-      <View
-        className={wrapperClass}
-        style={
-          isPopular
-            ? {
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-                shadowColor: "#C4A882",
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.15,
-                shadowRadius: 16,
-                elevation: 8,
-              }
-            : undefined
-        }
-      >
-        {/* Header row */}
-        <View className="flex-row items-center justify-between mb-3">
-          <View>
-            <Text className="text-on-surface font-headline text-lg">
-              {tier}
-            </Text>
-            <Text className="text-on-surface-variant font-body text-xs mt-0.5">
-              {subtitle}
-            </Text>
-          </View>
-          <View className="items-end">
-            <Text className="text-on-surface font-headline text-2xl">
-              {price}
-            </Text>
-            <Text className="text-on-surface-variant font-body text-[11px]">
-              {cadence}
-            </Text>
-          </View>
-        </View>
 
-        {/* CTA */}
-        {isPopular ? (
-          <Pressable
-            onPress={onPress}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "rgba(196,168,130,0.8)"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="h-12 rounded-xl items-center justify-center"
-            >
-              <Text className="text-on-primary font-body font-semibold text-sm tracking-wide">
-                {cta}
-              </Text>
-            </LinearGradient>
-          </Pressable>
-        ) : isDark ? (
-          <Pressable
-            onPress={onPress}
-            className="h-12 rounded-xl items-center justify-center bg-on-surface"
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <Text className="text-surface font-body font-semibold text-sm tracking-wide">
-              {cta}
-            </Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={onPress}
-            className={`h-12 rounded-xl items-center justify-center ${
-              isCurrent
-                ? "bg-surface-container-highest"
-                : "bg-surface-container-high"
-            }`}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <Text className="text-on-surface font-body font-semibold text-sm tracking-wide">
-              {cta}
-            </Text>
-          </Pressable>
-        )}
+      {/* Tier & subtitle */}
+      <View style={{ marginBottom: 24 }}>
+        <Text
+          className="font-label text-secondary"
+          style={{
+            fontSize: 11,
+            letterSpacing: 2.2,
+            textTransform: "uppercase",
+            marginBottom: 4,
+          }}
+        >
+          {tier}
+        </Text>
+        <Text
+          className="font-body"
+          style={{ fontSize: 14, color: "#E0C29A" }}
+        >
+          {subtitle}
+        </Text>
       </View>
+
+      {/* Price */}
+      <View
+        className="flex-row items-baseline"
+        style={{ gap: 8, marginBottom: 32 }}
+      >
+        <Text
+          className="font-headline text-on-surface"
+          style={{ fontSize: 36 }}
+        >
+          {price}
+        </Text>
+        <Text
+          className="text-secondary"
+          style={{ fontSize: 12 }}
+        >
+          {cadence}
+        </Text>
+      </View>
+
+      {/* CTA Button */}
+      {isPopular ? (
+        <Pressable
+          onPress={onPress}
+          style={({ pressed }) => ({
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
+        >
+          <LinearGradient
+            colors={["#C4A882", "#A68A62"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: 56,
+              borderRadius: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 24,
+            }}
+          >
+            <Text
+              className="font-body"
+              style={{ fontSize: 15, fontWeight: "600", color: "#3F2D11" }}
+            >
+              {cta}
+            </Text>
+            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+          </LinearGradient>
+        </Pressable>
+      ) : isCurrent ? (
+        <View
+          style={{
+            height: 56,
+            borderRadius: 12,
+            backgroundColor: "#353534",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            className="font-body"
+            style={{ fontSize: 15, fontWeight: "600", color: "#998F84" }}
+          >
+            {cta}
+          </Text>
+        </View>
+      ) : (
+        <Pressable
+          onPress={onPress}
+          style={({ pressed }) => ({
+            height: 56,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "#4D463C",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: pressed ? "#2A2A2A" : "transparent",
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
+        >
+          <Text
+            className="font-body text-secondary"
+            style={{ fontSize: 15, fontWeight: "600" }}
+          >
+            {cta}
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Feature Comparison Table                                           */
+/* ------------------------------------------------------------------ */
+
+function FeatureTable() {
+  return (
+    <View className="rounded-xl bg-surface-container-low overflow-hidden">
+      {/* Header row */}
+      <View
+        className="flex-row"
+        style={{ backgroundColor: "#201F1F", paddingVertical: 14, paddingHorizontal: 16 }}
+      >
+        <Text
+          className="flex-1 font-label"
+          style={{
+            fontSize: 11,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            color: "rgba(209,197,184,0.7)",
+          }}
+        >
+          Feature
+        </Text>
+        {PLAN_NAMES.map((name) => (
+          <Text
+            key={name}
+            style={{
+              width: 56,
+              textAlign: "center",
+              fontSize: 11,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              fontFamily: "Inter",
+              color: "rgba(209,197,184,0.7)",
+            }}
+          >
+            {name}
+          </Text>
+        ))}
+      </View>
+
+      {/* Feature rows */}
+      {FEATURES.map((feature, idx) => (
+        <View
+          key={feature.label}
+          className="flex-row items-center"
+          style={{
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: "rgba(77,70,60,0.1)",
+          }}
+        >
+          <Text
+            className="flex-1 font-body text-on-surface"
+            style={{ fontSize: 13, fontWeight: "500" }}
+          >
+            {feature.label}
+          </Text>
+          {feature.values.map((val, i) => {
+            const isPro = i === 2;
+            const isCheck = val === "✓";
+            const isDash = val === "—";
+            return (
+              <View key={PLAN_NAMES[i]} style={{ width: 56, alignItems: "center" }}>
+                {isCheck ? (
+                  <Ionicons
+                    name="checkmark"
+                    size={isPro ? 20 : 20}
+                    color={isPro ? "#E0C29A" : "#E0C29A"}
+                  />
+                ) : isDash ? (
+                  <Ionicons name="remove" size={18} color="#998F84" />
+                ) : (
+                  <Text
+                    className="font-body"
+                    style={{
+                      fontSize: 13,
+                      textAlign: "center",
+                      color: isPro ? "#E0C29A" : "#998F84",
+                      fontWeight: isPro ? "600" : "400",
+                    }}
+                  >
+                    {val}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }
@@ -176,32 +322,50 @@ function PlanCard({
 export default function PlansScreen() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+      {/* ── Top App Bar ── */}
+      <View
+        className="flex-row items-center justify-between px-6"
+        style={{ height: 56 }}
+      >
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color="#E0C29A" />
+        </Pressable>
+        <Text
+          className="font-label text-on-surface-variant"
+          style={{
+            fontSize: 11,
+            letterSpacing: 2.2,
+            textTransform: "uppercase",
+          }}
+        >
+          Membership
+        </Text>
+        <View style={{ width: 24 }} />
+      </View>
+
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-6 pb-16"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back button */}
-        <Pressable
-          onPress={() => router.back()}
-          className="mt-2 mb-4 self-start"
-        >
-          <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
-        </Pressable>
+        {/* ── Headline Section ── */}
+        <View style={{ marginTop: 24, marginBottom: 48 }}>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ fontSize: 36, lineHeight: 42, marginBottom: 12 }}
+          >
+            Choose Your{"\n"}Plan
+          </Text>
+          <Text
+            className="font-body text-secondary"
+            style={{ fontSize: 14 }}
+          >
+            Select a tier that matches the scale of your vision.
+          </Text>
+        </View>
 
-        {/* Hero */}
-        <Text
-          className="text-on-surface font-headline mb-2"
-          style={{ fontSize: 36, lineHeight: 42 }}
-        >
-          Choose Your{"\n"}Plan
-        </Text>
-        <Text className="text-on-surface-variant font-body text-base mb-8">
-          Select a tier that matches the scale of your vision.
-        </Text>
-
-        {/* Plan cards */}
-        <View className="gap-4">
+        {/* ── Plan Cards Stack ── */}
+        <View style={{ gap: 24, marginBottom: 64 }}>
           <PlanCard
             tier="Foundations"
             subtitle="Free"
@@ -234,54 +398,52 @@ export default function PlansScreen() {
             price="$49.99"
             cadence="Monthly"
             cta="Go Unlimited"
-            isDark
             onPress={() => router.push("/plans/confirm")}
           />
         </View>
 
-        {/* Feature Comparison */}
-        <Text className="text-on-surface font-headline text-xl mt-12 mb-6">
-          Feature Comparison
-        </Text>
-
-        {/* Column headers */}
-        <View className="flex-row items-center mb-3 px-1">
-          <View className="flex-1" />
-          {PLAN_NAMES.map(name => (
-            <Text
-              key={name}
-              className="text-on-surface-variant font-label text-[10px] font-semibold uppercase tracking-wider w-16 text-center"
-            >
-              {name}
-            </Text>
-          ))}
+        {/* ── Feature Comparison ── */}
+        <View style={{ marginBottom: 80 }}>
+          <Text
+            className="font-label text-secondary"
+            style={{
+              fontSize: 11,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              textAlign: "center",
+              marginBottom: 32,
+            }}
+          >
+            Feature Comparison
+          </Text>
+          <FeatureTable />
         </View>
 
-        {/* Feature rows */}
-        {FEATURES.map((feature, idx) => (
+        {/* ── Editorial Image ── */}
+        <View style={{ marginBottom: 48 }}>
           <View
-            key={feature.label}
-            className={`flex-row items-center py-3.5 px-1 ${
-              idx < FEATURES.length - 1
-                ? "border-b border-surface-container-high"
-                : ""
-            }`}
+            className="rounded-xl overflow-hidden"
+            style={{ height: 240 }}
           >
-            <Text className="flex-1 text-on-surface font-body text-sm">
-              {feature.label}
-            </Text>
-            {feature.values.map((val, i) => (
-              <Text
-                key={PLAN_NAMES[i]}
-                className={`w-16 text-center font-body text-xs ${
-                  val === "—" ? "text-on-surface-variant/40" : "text-on-surface"
-                }`}
-              >
-                {val}
-              </Text>
-            ))}
+            <Image
+              source={{ uri: EDITORIAL_IMG }}
+              style={{ width: "100%", height: "100%", opacity: 0.4 }}
+              contentFit="cover"
+            />
           </View>
-        ))}
+          <Text
+            className="font-label text-center"
+            style={{
+              fontSize: 11,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              color: "#998F84",
+              marginTop: 24,
+            }}
+          >
+            Designed for the infinite creator.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

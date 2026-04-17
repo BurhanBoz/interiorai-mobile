@@ -1,8 +1,12 @@
 import api from "./api";
+import * as Crypto from "expo-crypto";
 import type { JobResponse, CreateJobRequest, PageResponse } from "@/types/api";
 
 export async function createJob(request: CreateJobRequest): Promise<JobResponse> {
-    const { data } = await api.post<JobResponse>("/api/jobs", request);
+    const { data } = await api.post<JobResponse>("/api/jobs", {
+        ...request,
+        idempotencyKey: Crypto.randomUUID(),
+    });
     return data;
 }
 

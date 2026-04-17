@@ -8,7 +8,6 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -16,16 +15,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/stores/authStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const HERO_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBI6VXVTCRdsTXdZma8avuosuaBISKEazhlBA3xlr3Igq-awfpemm5U_rtz1j3KTgHnNqjK1V4i5CypcRC24hnGroMZLACGW0B_pQVq4ZDX7Dk7HvGG-oIB8-zf5ew9lTnhMu_u1MzawDxGh7eD7KthYlGCaKX98ti4T7H3u8Wo0zbrnPmjb5uHiUP9-EmR-ty2EBGvnUcUVm88zXIwAKBJkiTfoODJFBhOQ--BW1cj-WgzaZStso91xCwRoMEYjuXWO0hS7A2pnPJB";
-
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const login = useAuthStore(s => s.login);
 
@@ -55,167 +49,214 @@ export default function LoginScreen() {
       >
         <ScrollView
           className="flex-1"
-          contentContainerClassName="px-6 pb-10 pt-4"
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 32,
+            paddingTop: 64,
+            paddingBottom: 40,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View className="items-center mb-6">
-            <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 rounded-xl bg-surface-container-high items-center justify-center">
-                <Ionicons name="cube-outline" size={20} color="#E1C39B" />
-              </View>
-              <Text className="font-headline text-on-surface text-xs tracking-widest uppercase">
-                The Architectural Lens
-              </Text>
-            </View>
-          </View>
-
-          {/* Hero Image */}
-          <View
-            className="mb-8 rounded-xl overflow-hidden"
-            style={{
-              aspectRatio: 4 / 3,
-              shadowColor: "rgba(245,240,235,1)",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.06,
-              shadowRadius: 40,
-              elevation: 4,
-            }}
-          >
-            <Image
-              source={{ uri: HERO_IMAGE }}
-              className="w-full h-full"
-              contentFit="cover"
-              transition={300}
-            />
+          {/* Brand Identity */}
+          <View className="mb-10">
+            <Text
+              className="font-headline font-bold text-secondary"
+              style={{
+                fontSize: 14,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+              }}
+            >
+              ARCHITECTURAL LENS
+            </Text>
           </View>
 
           {/* Headline */}
-          <View className="mb-8">
-            <Text className="font-headline text-on-surface text-4xl mb-2">
-              Welcome Back
-            </Text>
-            <Text className="font-body text-on-surface-variant text-sm">
-              Continue your curation of timeless spaces.
-            </Text>
-          </View>
+          <Text
+            className="font-headline font-bold text-on-surface mb-2"
+            style={{ fontSize: 36, lineHeight: 42 }}
+          >
+            Welcome Back
+          </Text>
+          <Text
+            className="font-body text-sm text-on-surface-variant mb-10"
+            style={{ fontWeight: "300" }}
+          >
+            Access your curated interior design portfolio.
+          </Text>
 
-          {/* Form */}
-          <View className="mb-6 gap-5">
-            {/* Email */}
-            <View>
-              <Text className="font-label text-on-surface-variant text-label-sm uppercase mb-2">
-                Architect Email
-              </Text>
+          {/* Email Input */}
+          <View className="mb-5">
+            <Text
+              className="font-label text-on-surface-variant uppercase ml-1 mb-2"
+              style={{ fontSize: 11, letterSpacing: 2 }}
+            >
+              Email Address
+            </Text>
+            <View className="flex-row items-center bg-surface-container-high rounded-xl">
+              <View className="pl-4">
+                <Ionicons name="mail-outline" size={20} color="#D0C5B8" />
+              </View>
               <TextInput
-                className={`h-14 px-4 rounded-xl font-body text-on-surface text-sm ${
-                  emailFocused
-                    ? "bg-surface-container-high"
-                    : "bg-surface-container-low"
-                }`}
-                placeholder="you@studio.com"
+                className="flex-1 py-4 pl-3 pr-4 font-body text-on-surface text-sm"
+                placeholder="julianne.m@studio.com"
                 placeholderTextColor="#998F84"
                 value={email}
                 onChangeText={setEmail}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
+          </View>
 
-            {/* Password */}
-            <View>
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="font-label text-on-surface-variant text-label-sm uppercase">
-                  Access Key
-                </Text>
-                <Pressable onPress={() => router.push("/forgot-password")}>
-                  <Text className="font-label text-primary text-xs">
-                    Forgot Password?
-                  </Text>
-                </Pressable>
-              </View>
-              <View className="relative">
-                <TextInput
-                  className={`h-14 px-4 pr-12 rounded-xl font-body text-on-surface text-sm ${
-                    passwordFocused
-                      ? "bg-surface-container-high"
-                      : "bg-surface-container-low"
-                  }`}
-                  placeholder="••••••••"
-                  placeholderTextColor="#998F84"
-                  value={password}
-                  onChangeText={setPassword}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => setPasswordFocused(false)}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <Pressable
-                  className="absolute right-4 top-0 bottom-0 justify-center"
-                  onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={8}
-                >
-                  <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
-                    color="#D0C5B8"
-                  />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Login Button */}
-            <Pressable
-              onPress={handleLogin}
-              disabled={isLoading}
-              style={{ opacity: isLoading ? 0.7 : 1 }}
+          {/* Password Input */}
+          <View className="mb-4">
+            <Text
+              className="font-label text-on-surface-variant uppercase ml-1 mb-2"
+              style={{ fontSize: 11, letterSpacing: 2 }}
             >
-              <LinearGradient
-                colors={["#C4A882", "#A68B64"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="h-14 rounded-xl items-center justify-center"
+              Password
+            </Text>
+            <View className="flex-row items-center bg-surface-container-high rounded-xl">
+              <View className="pl-4">
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color="#D0C5B8"
+                />
+              </View>
+              <TextInput
+                className="flex-1 py-4 pl-3 pr-2 font-body text-on-surface text-sm"
+                placeholder="••••••••••••"
+                placeholderTextColor="#998F84"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                className="pr-4"
               >
-                <Text className="font-label text-on-primary font-semibold text-base">
-                  {isLoading ? "Signing In…" : "Log In"}
-                </Text>
-              </LinearGradient>
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#D0C5B8"
+                />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Forgot Password */}
+          <View className="items-end mb-6">
+            <Pressable onPress={() => router.push("/forgot-password")}>
+              <Text
+                className="font-label text-secondary uppercase"
+                style={{ fontSize: 11, letterSpacing: 2 }}
+              >
+                Forgot Password?
+              </Text>
             </Pressable>
           </View>
+
+          {/* Sign In CTA */}
+          <Pressable
+            onPress={handleLogin}
+            disabled={isLoading}
+            style={({ pressed }) => ({
+              opacity: isLoading ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
+          >
+            <LinearGradient
+              colors={["#C4A882", "#A68A62"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                height: 56,
+                borderRadius: 16,
+                paddingHorizontal: 24,
+                borderWidth: 1,
+                borderColor: "rgba(196,168,130,0.3)",
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#3F2D11",
+                }}
+              >
+                {isLoading ? "Signing In…" : "Sign In"}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+            </LinearGradient>
+          </Pressable>
 
           {/* Divider */}
-          <View className="flex-row items-center mb-6">
-            <View className="flex-1 h-px bg-outline-variant/15" />
-            <Text className="font-label text-outline text-label-sm uppercase mx-4">
-              Portfolio Access
+          <View className="flex-row items-center my-8" style={{ gap: 12 }}>
+            <View
+              className="flex-1 h-px"
+              style={{ backgroundColor: "rgba(77,70,60,0.2)" }}
+            />
+            <Text
+              className="font-label text-on-surface-variant uppercase"
+              style={{ fontSize: 10, letterSpacing: 3 }}
+            >
+              or continue with
             </Text>
-            <View className="flex-1 h-px bg-outline-variant/15" />
+            <View
+              className="flex-1 h-px"
+              style={{ backgroundColor: "rgba(77,70,60,0.2)" }}
+            />
           </View>
 
-          {/* Social Buttons */}
-          <View className="flex-row gap-3 mb-8">
-            <Pressable className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl bg-surface-container-low">
+          {/* Social Login — temporarily disabled */}
+          <View className="flex-row" style={{ gap: 12, opacity: 0.35 }}>
+            <Pressable
+              disabled
+              className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+              style={{ height: 52, gap: 10 }}
+            >
               <Ionicons name="logo-google" size={18} color="#E5E2E1" />
-              <Text className="font-label text-on-surface text-sm">Google</Text>
+              <Text className="font-label font-medium text-on-surface text-xs">
+                Google
+              </Text>
             </Pressable>
-            <Pressable className="flex-1 flex-row items-center justify-center gap-2 h-14 rounded-xl bg-surface-container-low">
-              <Ionicons name="logo-apple" size={18} color="#E5E2E1" />
-              <Text className="font-label text-on-surface text-sm">Apple</Text>
+            <Pressable
+              disabled
+              className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+              style={{ height: 52, gap: 10 }}
+            >
+              <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
+              <Text className="font-label font-medium text-on-surface text-xs">
+                Apple
+              </Text>
             </Pressable>
           </View>
+          <Text
+            className="font-label text-on-surface-variant text-center mt-2"
+            style={{ fontSize: 10, letterSpacing: 1, opacity: 0.4 }}
+          >
+            Coming Soon
+          </Text>
 
           {/* Footer */}
-          <View className="flex-row items-center justify-center">
+          <View className="flex-row items-center justify-center mt-auto pt-8">
             <Text className="font-body text-on-surface-variant text-sm">
               Don't have an account?{" "}
             </Text>
             <Pressable onPress={() => router.push("/register")}>
-              <Text className="font-label text-primary text-sm font-semibold">
-                Sign Up
+              <Text className="font-body text-secondary font-semibold text-sm ml-1">
+                Register
               </Text>
             </Pressable>
           </View>

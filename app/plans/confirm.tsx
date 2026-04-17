@@ -3,10 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-
-/* ------------------------------------------------------------------ */
-/*  Data                                                               */
-/* ------------------------------------------------------------------ */
+import { useCreditStore } from "@/stores/creditStore";
 
 const FEATURES: {
   icon: keyof typeof Ionicons.glyphMap;
@@ -14,7 +11,7 @@ const FEATURES: {
   description: string;
 }[] = [
   {
-    icon: "map-outline",
+    icon: "compass-outline",
     title: "Unlimited Blueprints",
     description:
       "Generate as many designs as your vision demands, with no monthly cap.",
@@ -25,72 +22,101 @@ const FEATURES: {
     description: "Access curated style libraries reserved for Pro members.",
   },
   {
-    icon: "checkmark-circle-outline",
+    icon: "shield-checkmark-outline",
     title: "Commercial License",
     description: "Full rights to use generated designs in client projects.",
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Screen                                                             */
-/* ------------------------------------------------------------------ */
-
 export default function PlanConfirmScreen() {
+  const balance = useCreditStore(s => s.balance);
+
   return (
-    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-6 pb-10"
+        contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View className="mt-2 mb-6 flex-row items-center">
-          <Pressable onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
-          </Pressable>
-          <Text className="flex-1 font-headline text-xl text-on-surface">
-            Confirm Subscription
-          </Text>
-          <Pressable onPress={() => router.back()}>
-            <Ionicons name="close" size={22} color="#E5E2E1" />
-          </Pressable>
+        {/* Drag Handle */}
+        <View className="items-center pt-4 pb-8">
+          <View
+            className="rounded-full bg-surface-container-highest"
+            style={{ width: 40, height: 4 }}
+          />
         </View>
 
-        {/* Plan Summary Card */}
-        <View className="rounded-xl bg-surface-container-low p-5 mb-6">
-          <Text className="mb-1 font-label text-xs uppercase tracking-wider text-primary">
+        {/* Header Section */}
+        <View style={{ marginBottom: 32 }}>
+          {/* Membership Tier Label */}
+          <Text
+            className="font-label text-secondary"
+            style={{
+              fontSize: 11,
+              fontWeight: "500",
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              marginBottom: 16,
+            }}
+          >
             Membership Tier
           </Text>
-          <Text
-            className="font-headline text-on-surface mb-1"
-            style={{ fontSize: 32, lineHeight: 38 }}
-          >
-            Pro
-          </Text>
-          <Text className="font-body text-base text-on-surface-variant">
-            $24.99 / month
-          </Text>
+
+          {/* Title + Price Row */}
+          <View className="flex-row justify-between items-end">
+            <Text
+              className="font-headline text-on-surface"
+              style={{ fontSize: 36, lineHeight: 42 }}
+            >
+              Upgrade to{"\n"}Pro
+            </Text>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text
+                className="font-headline text-secondary"
+                style={{ fontSize: 32, lineHeight: 38 }}
+              >
+                $24.99
+              </Text>
+              <Text
+                className="font-body text-on-surface-variant"
+                style={{ fontSize: 14, marginTop: 2 }}
+              >
+                / month
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* Features */}
-        <Text className="font-headline text-lg text-on-surface mb-4">
-          What's Included
-        </Text>
-
-        <View className="gap-4 mb-6">
-          {FEATURES.map(feature => (
+        {/* Feature Rows */}
+        <View style={{ marginBottom: 32 }}>
+          {FEATURES.map((feature, idx) => (
             <View
               key={feature.title}
-              className="flex-row items-start rounded-xl bg-surface-container-low p-4"
+              className="flex-row items-start"
+              style={{
+                paddingVertical: 32,
+                gap: 16,
+                borderBottomWidth: idx < FEATURES.length - 1 ? 1 : 0,
+                borderBottomColor: "rgba(77,70,60,0.1)",
+              }}
             >
-              <View className="mr-4 mt-0.5 h-10 w-10 items-center justify-center rounded-xl bg-surface-container-high">
-                <Ionicons name={feature.icon} size={20} color="#C4A882" />
-              </View>
-              <View className="flex-1">
-                <Text className="font-body text-sm font-semibold text-on-surface mb-1">
+              <Ionicons
+                name={feature.icon}
+                size={24}
+                color="#E0C29A"
+                style={{ marginTop: 2 }}
+              />
+              <View className="flex-1" style={{ gap: 4 }}>
+                <Text
+                  className="font-body text-on-surface"
+                  style={{ fontSize: 16, fontWeight: "500" }}
+                >
                   {feature.title}
                 </Text>
-                <Text className="font-body text-xs leading-5 text-on-surface-variant">
+                <Text
+                  className="font-body text-on-surface-variant"
+                  style={{ fontSize: 13, lineHeight: 20 }}
+                >
                   {feature.description}
                 </Text>
               </View>
@@ -98,24 +124,27 @@ export default function PlanConfirmScreen() {
           ))}
         </View>
 
-        {/* Carry-over Info */}
-        <View className="rounded-xl bg-surface-container-high p-4 mb-8">
-          <View className="flex-row items-center">
-            <Ionicons
-              name="information-circle-outline"
-              size={18}
-              color="#998F84"
-              style={{ marginRight: 10 }}
-            />
-            <Text className="flex-1 font-body text-sm leading-5 text-on-surface-variant">
-              Your current credits (3) will carry over automatically.
-            </Text>
-          </View>
+        {/* Info Card */}
+        <View
+          className="rounded-xl bg-surface-container-high flex-row items-center"
+          style={{ padding: 16, gap: 16, marginBottom: 32 }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color="#E0C29A"
+          />
+          <Text
+            className="flex-1 font-body text-on-surface-variant"
+            style={{ fontSize: 13, lineHeight: 19 }}
+          >
+            Your current credits ({balance}) will carry over automatically.
+          </Text>
         </View>
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View className="px-6 pb-2">
+      <View className="px-8 pb-2" style={{ paddingTop: 16 }}>
         <Pressable
           onPress={() => {
             /* TODO: handle subscription */
@@ -125,23 +154,51 @@ export default function PlanConfirmScreen() {
           })}
         >
           <LinearGradient
-            colors={["#C4A882", "rgba(196,168,130,0.8)"]}
+            colors={["#C4A882", "#A68A62"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="h-12 items-center justify-center rounded-xl"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: 56,
+              borderRadius: 16,
+              paddingHorizontal: 24,
+              borderWidth: 1,
+              borderColor: "rgba(196,168,130,0.3)",
+            }}
           >
-            <Text className="font-body text-sm font-semibold tracking-wide text-on-primary">
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 14,
+                fontWeight: "700",
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                color: "#3F2D11",
+              }}
+            >
               Confirm & Subscribe
             </Text>
+            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
           </LinearGradient>
         </Pressable>
 
         <Pressable
           onPress={() => router.back()}
-          className="mt-3 items-center py-3"
+          className="items-center"
+          style={{ paddingVertical: 16 }}
         >
-          <Text className="font-body text-sm text-on-surface-variant">
-            Cancel and return
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{
+              fontSize: 14,
+              fontWeight: "500",
+              textDecorationLine: "underline",
+              textDecorationColor: "rgba(77,70,60,0.3)",
+            }}
+          >
+            Cancel and Return
           </Text>
         </Pressable>
       </View>

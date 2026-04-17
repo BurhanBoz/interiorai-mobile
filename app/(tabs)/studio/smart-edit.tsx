@@ -6,13 +6,15 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
+import { useDrawer } from "@/components/layout/DrawerProvider";
 import Slider from "@react-native-community/slider";
 import { Toggle } from "@/components/ui/Toggle";
 
 const PLACEHOLDER_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCXKvJqHPt_BywjZEgBh_8C42cBUFODsdaxTs6xuzy8iIxyapKRHCxLP0f-d6FrUuJvAh6QHYzJKw0mv8fhl_AQJjqFTnr37ctyMXjbMmIU1G9yQRJVpL2e5c_sOkuszNGOtC-fwc7avoXGUL6nr1lw7sKCCYjbR1hzJYstnMVFaUFVBVdxQgBfJ1zTWJ-CCfae70BvkfSgoGEzeFMOrKPx3emCkeN1KLSuMShgVjbuoaI7Sj5vJf6R3vujqJ7qItNN6WuK3Zb_chFJ";
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDXpc1GSq5QSnf4_Cb0mZMRLMKnwiUksHTS5s2EABiYKbN12D3g12-0QhRAOOyop_yQw4PnT3nwmQ8mqqYcPlJmxspsj3A-6x9as4yfRZANUBIyq9Fni_S49gdGWcHEqeEL9E-ugJfU3Ez_FGeLQscBaIqaSO7Ee9FnR16ItBeTgiiVctqOX_civmqF1iFv_ttCnUNByH0i_LJ4uIThNY8lkLgTjZNPFNEEhuFs0-5SMCqyyK-cVayGVdwZCmUIDbyZOTJBgVbu_70";
 
 export default function SmartEditScreen() {
+  const { openDrawer } = useDrawer();
   const photo = useStudioStore(s => s.photo);
   const prompt = useStudioStore(s => s.prompt);
   const qualityTier = useStudioStore(s => s.qualityTier);
@@ -21,7 +23,7 @@ export default function SmartEditScreen() {
   const setQualityTier = useStudioStore(s => s.setQualityTier);
   const setNumOutputs = useStudioStore(s => s.setNumOutputs);
 
-  const [brushSize, setBrushSize] = useState(40);
+  const [brushSize, setBrushSize] = useState(45);
   const [brushActive, setBrushActive] = useState(true);
   const [promptFocused, setPromptFocused] = useState(false);
   const isUltraHD = qualityTier === "HD";
@@ -34,116 +36,243 @@ export default function SmartEditScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={["top"]}>
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-8 pb-10 pt-4"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* ── Step Header ── */}
-        <View className="mb-4">
-          <Text className="font-label text-primary text-label-sm uppercase mb-2">
-            Step 03 — Refinement
-          </Text>
-          <Text className="font-headline text-on-surface text-2xl font-medium">
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={24} color="#D1C5B8" />
+          </Pressable>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ fontSize: 28, fontWeight: "700" }}
+          >
             Smart Edit
           </Text>
         </View>
+        <View
+          className="items-center justify-center rounded-full"
+          style={{
+            width: 40,
+            height: 40,
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.3)",
+            backgroundColor: "#201F1F",
+          }}
+        >
+          <Ionicons name="color-wand" size={20} color="#FEDFB5" />
+        </View>
+      </View>
 
-        {/* ── Image Canvas ── */}
-        <View className="aspect-[4/5] rounded-xl bg-surface-container-low overflow-hidden mb-6 relative">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Image Canvas */}
+        <View
+          className="rounded-xl overflow-hidden bg-surface-container-low"
+          style={{
+            aspectRatio: 4 / 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.4,
+            shadowRadius: 24,
+            elevation: 12,
+          }}
+        >
           <Image
             source={{ uri: imageSource }}
-            className="w-full h-full"
+            style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             transition={300}
           />
 
-          {/* Tool overlay — top right */}
-          <View className="absolute top-3 right-3 gap-2">
+          {/* Inpainting mask overlay (simulated) */}
+          <View
+            className="absolute inset-0"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.4)",
+              borderWidth: 2,
+              borderColor: "rgba(254,223,181,0.2)",
+              borderRadius: 12,
+            }}
+            pointerEvents="none"
+          />
+
+          {/* Floating overlay tools — top right */}
+          <View className="absolute top-4 right-4" style={{ gap: 12 }}>
             <Pressable
               onPress={() => setBrushActive(!brushActive)}
-              className={`w-10 h-10 rounded-xl items-center justify-center ${
-                brushActive
-                  ? "bg-primary/90 backdrop-blur-sm"
-                  : "bg-surface/80 backdrop-blur-sm"
-              }`}
+              className="items-center justify-center rounded-full"
+              style={{
+                width: 48,
+                height: 48,
+                backgroundColor: brushActive ? "#FEDFB5" : "rgba(53,53,52,0.8)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
+              }}
             >
               <Ionicons
                 name="brush"
-                size={20}
-                color={brushActive ? "#131313" : "#E5E2E1"}
+                size={22}
+                color={brushActive ? "#281801" : "#E5E2E1"}
               />
             </Pressable>
-            <Pressable className="w-10 h-10 rounded-xl items-center justify-center bg-surface/80 backdrop-blur-sm">
-              <Ionicons name="arrow-undo" size={20} color="#E5E2E1" />
+            <Pressable
+              className="items-center justify-center rounded-full"
+              style={{
+                width: 48,
+                height: 48,
+                backgroundColor: "rgba(53,53,52,0.8)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
+              }}
+            >
+              <Ionicons name="arrow-undo" size={22} color="#E5E2E1" />
             </Pressable>
           </View>
 
-          {/* Circle mask indicator */}
-          <View
-            className="absolute border-2 border-primary/80 rounded-full"
-            style={{
-              width: brushSize,
-              height: brushSize,
-              left: "60%",
-              top: "70%",
-              marginLeft: -(brushSize / 2),
-              marginTop: -(brushSize / 2),
-            }}
-          />
-
-          {/* Brush size slider — bottom of canvas */}
-          <View className="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-6 bg-gradient-to-t from-black/40">
-            <View className="flex-row items-center gap-3">
-              <Ionicons name="ellipse" size={10} color="#E1C39B" />
+          {/* Bottom brush size control */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.8)"]}
+            className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-10"
+          >
+            <View style={{ gap: 12 }}>
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className="font-label text-on-surface-variant"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Brush Size
+                </Text>
+                <Text
+                  className="font-label"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    color: "#FEDFB5",
+                  }}
+                >
+                  {Math.round(brushSize)}px
+                </Text>
+              </View>
+              {/* Visual track bar */}
+              <View
+                className="w-full rounded-full overflow-hidden"
+                style={{ height: 6, backgroundColor: "#353534" }}
+              >
+                <View
+                  style={{
+                    width: `${((brushSize - 10) / 90) * 100}%`,
+                    height: "100%",
+                    backgroundColor: "#FEDFB5",
+                    borderRadius: 9999,
+                    shadowColor: "rgba(254,223,181,0.6)",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 1,
+                    shadowRadius: 8,
+                  }}
+                />
+              </View>
+              {/* Invisible interactive slider overlay */}
               <Slider
-                style={{ flex: 1, height: 28 }}
+                style={{
+                  position: "absolute",
+                  bottom: 12,
+                  left: 16,
+                  right: 16,
+                  height: 30,
+                  opacity: 0,
+                }}
                 minimumValue={10}
                 maximumValue={100}
                 value={brushSize}
                 onValueChange={setBrushSize}
-                minimumTrackTintColor="#E1C39B"
-                maximumTrackTintColor="#4D463C"
-                thumbTintColor="#E1C39B"
+                minimumTrackTintColor="transparent"
+                maximumTrackTintColor="transparent"
+                thumbTintColor="transparent"
               />
-              <Ionicons name="ellipse" size={20} color="#E1C39B" />
             </View>
-          </View>
+          </LinearGradient>
         </View>
 
-        {/* ── Describe the Change ── */}
-        <View className="mb-6">
-          <Text className="font-label text-on-surface-variant text-label-sm uppercase mb-2">
-            Describe the Change
-          </Text>
+        {/* Describe the Change */}
+        <View className="mt-8" style={{ gap: 16 }}>
+          <View className="flex-row items-end justify-between">
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
+              Describe the change
+            </Text>
+            <Text
+              className="font-label"
+              style={{ fontSize: 11, color: "#4D463C" }}
+            >
+              {(prompt || "").length} / 200
+            </Text>
+          </View>
           <TextInput
-            className={`rounded-xl p-4 font-body text-on-surface text-sm min-h-[100px] ${
-              promptFocused
-                ? "bg-surface-container-high"
-                : "bg-surface-container-low"
-            }`}
-            placeholder="e.g., Replace this sofa with a minimal marble coffee table..."
-            placeholderTextColor="#998F84"
+            className="font-body text-on-surface"
+            style={{
+              backgroundColor: "#1C1B1B",
+              borderRadius: 12,
+              padding: 16,
+              fontSize: 14,
+              lineHeight: 22,
+              minHeight: 128,
+              textAlignVertical: "top",
+            }}
+            placeholder="e.g. Add a mid-century modern lounge chair in cognac leather..."
+            placeholderTextColor="rgba(153,143,131,0.5)"
             value={prompt}
-            onChangeText={setPrompt}
+            onChangeText={t => setPrompt(t.slice(0, 200))}
             onFocus={() => setPromptFocused(true)}
             onBlur={() => setPromptFocused(false)}
             multiline
-            textAlignVertical="top"
+            maxLength={200}
           />
         </View>
 
-        {/* ── Quality & Variants Grid ── */}
-        <View className="flex-row gap-3 mb-8">
-          {/* Quality Tier */}
-          <View className="flex-1 bg-surface-container-low rounded-xl p-4">
-            <Text className="font-label text-on-surface-variant text-label-sm uppercase mb-1">
+        {/* Bento Layout — Quality & Variants */}
+        <View className="mt-8" style={{ gap: 16 }}>
+          {/* Quality Tier Card */}
+          <View
+            className="rounded-xl p-5 justify-between"
+            style={{ backgroundColor: "#1C1B1B", height: 128 }}
+          >
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
               Quality Tier
             </Text>
             <View className="flex-row items-center justify-between">
-              <Text className="font-body text-on-surface text-sm">
-                Ultra HD
+              <Text
+                className="font-body text-on-surface"
+                style={{ fontSize: 14, fontWeight: "500" }}
+              >
+                Ultra HD Rendering
               </Text>
               <Toggle
                 value={isUltraHD}
@@ -152,42 +281,130 @@ export default function SmartEditScreen() {
             </View>
           </View>
 
-          {/* Variants */}
-          <Pressable
-            className="flex-1 bg-surface-container-low rounded-xl p-4"
-            onPress={() => setNumOutputs(numOutputs >= 4 ? 1 : numOutputs + 1)}
+          {/* Variants Card */}
+          <View
+            className="rounded-xl p-5"
+            style={{ backgroundColor: "#1C1B1B", gap: 16 }}
           >
-            <Text className="font-label text-on-surface-variant text-label-sm uppercase mb-1">
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
               Variants
             </Text>
-            <View className="flex-row items-center justify-between">
-              <Text className="font-body text-on-surface text-sm">
-                {numOutputs} {numOutputs === 1 ? "Image" : "Images"}
-              </Text>
-              <Ionicons name="chevron-down" size={16} color="#998F84" />
+            <View className="flex-row" style={{ gap: 12 }}>
+              {/* Active variant thumbnail */}
+              <View
+                className="rounded-lg overflow-hidden"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderWidth: 1,
+                  borderColor: "#FEDFB5",
+                }}
+              >
+                <Image
+                  source={{ uri: imageSource }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                />
+              </View>
+              {/* Additional variant slots */}
+              {Array.from({ length: Math.max(0, numOutputs - 1) }).map(
+                (_, i) => (
+                  <View
+                    key={i}
+                    className="rounded-lg overflow-hidden"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderWidth: 1,
+                      borderColor: "rgba(77,70,60,0.3)",
+                      opacity: 0.5,
+                    }}
+                  >
+                    <Image
+                      source={{ uri: imageSource }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                    />
+                  </View>
+                ),
+              )}
+              {/* Add variant button */}
+              <Pressable
+                onPress={() =>
+                  setNumOutputs(numOutputs >= 4 ? 1 : numOutputs + 1)
+                }
+                className="items-center justify-center rounded-lg"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: "rgba(77,70,60,0.5)",
+                }}
+              >
+                <Ionicons name="add" size={18} color="#4D463C" />
+              </Pressable>
             </View>
-          </Pressable>
+          </View>
         </View>
 
-        {/* ── CTA ── */}
-        <Pressable onPress={handleGenerate}>
-          <LinearGradient
-            colors={["#C4A882", "#A68B64"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="h-14 rounded-xl flex-row items-center justify-center gap-3"
+        {/* CTA Section */}
+        <View className="mt-8">
+          <Pressable
+            onPress={handleGenerate}
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
           >
-            <Text className="font-label text-on-primary font-semibold text-base">
-              Generate Refinement
-            </Text>
-            <View className="flex-row items-center bg-on-primary/20 rounded-lg px-2 py-1 gap-1">
-              <Ionicons name="flash" size={14} color="#131313" />
-              <Text className="font-label text-on-primary text-xs font-semibold">
-                12
+            <LinearGradient
+              colors={["#C4A882", "#A68A62"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                height: 56,
+                borderRadius: 16,
+                paddingHorizontal: 24,
+                borderWidth: 1,
+                borderColor: "rgba(196,168,130,0.3)",
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#3F2D11",
+                }}
+              >
+                Generate Refinement
               </Text>
-            </View>
-          </LinearGradient>
-        </Pressable>
+              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+            </LinearGradient>
+          </Pressable>
+          <Text
+            className="font-label text-center mt-4"
+            style={{
+              fontSize: 10,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              color: "#4D463C",
+            }}
+          >
+            Estimated time: 12 seconds
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

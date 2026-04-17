@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  TextInput,
+  Linking,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -14,7 +21,7 @@ const FAQ_ITEMS = [
   {
     question: "Licensing & Usage",
     answer:
-      "All generated designs are licensed for personal and commercial use under your active subscription. You retain full rights to download, share, and use your generated interiors in client presentations, portfolios, and marketing materials. Attribution is appreciated but not required.",
+      "All generated architectural perspectives are granted under a studio-exclusive license. This permits professional use in digital portfolios, client presentations, and conceptual proposals. Full commercial redistribution rights are available via our Premium Tier access.",
     defaultOpen: true,
   },
   {
@@ -38,20 +45,31 @@ function AccordionItem({
   return (
     <Pressable
       onPress={() => setOpen(!open)}
-      className="bg-surface-container-high rounded-xl p-5"
+      className="bg-surface-container-high rounded-xl p-6"
+      style={
+        open
+          ? { borderWidth: 1, borderColor: "rgba(225,195,155,0.2)" }
+          : undefined
+      }
     >
       <View className="flex-row items-center justify-between">
-        <Text className="font-headline text-base text-on-surface flex-1 mr-3">
+        <Text
+          className="font-body font-medium flex-1 mr-3"
+          style={{ fontSize: 16, color: open ? "#E1C39B" : "#E5E2E1" }}
+        >
           {question}
         </Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={20}
-          color="#E1C39B"
+          color={open ? "#E1C39B" : "#998F84"}
         />
       </View>
       {open && (
-        <Text className="font-body text-sm text-on-surface-variant leading-6 mt-4">
+        <Text
+          className="font-body text-on-surface-variant mt-4"
+          style={{ fontSize: 14, lineHeight: 22, fontWeight: "300" }}
+        >
           {answer}
         </Text>
       )}
@@ -71,93 +89,221 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
+      {/* TopAppBar */}
+      <View
+        className="bg-surface px-6 flex-row items-center justify-between"
+        style={{ height: 64 }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          className="w-10 h-10 items-center justify-center rounded-full"
+        >
+          <Ionicons name="arrow-back" size={24} color="#C4A882" />
+        </Pressable>
+        <Text
+          className="font-headline"
+          style={{
+            fontSize: 20,
+            letterSpacing: 4,
+            textTransform: "uppercase",
+            color: "#E1C39B",
+          }}
+        >
+          The Architectural Lens
+        </Text>
+        <View
+          className="rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/20"
+          style={{ width: 40, height: 40 }}
+        />
+      </View>
+
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-8 pb-32"
+        contentContainerClassName="px-6 pb-32"
         showsVerticalScrollIndicator={false}
       >
-        {/* Back */}
-        <View className="pt-6 pb-2">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
-          </Pressable>
+        {/* Hero Section */}
+        <View className="mb-12 mt-8">
+          <Text
+            className="font-headline text-on-background mb-4"
+            style={{ fontSize: 56, lineHeight: 62 }}
+          >
+            Help &{"\n"}Support
+          </Text>
+          <View
+            className="mb-6"
+            style={{ width: 96, height: 4, backgroundColor: "#C4A882" }}
+          />
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{ fontSize: 14, lineHeight: 22, maxWidth: 320 }}
+          >
+            Seeking clarity on our architectural process or studio credits?
+            Explore our curated guides below.
+          </Text>
         </View>
 
-        {/* Massive Headline */}
-        <Text className="font-headline text-4xl text-on-surface tracking-tight mt-4">
-          Help & Support
-        </Text>
-        <View className="mt-4 w-16 h-1 rounded-full bg-primary" />
-        <Text className="font-body text-sm text-on-surface-variant mt-4">
-          Find answers, get in touch, or browse our curated knowledge base.
-        </Text>
-
         {/* Search Bar */}
-        <View className="bg-surface-container-high rounded-xl flex-row items-center px-4 mt-8">
-          <Ionicons name="search" size={20} color="#5E5C5B" />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search for answers…"
-            placeholderTextColor="#5E5C5B"
-            className="flex-1 font-body text-sm text-on-surface py-4 ml-3"
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#5E5C5B" />
-            </Pressable>
-          )}
+        <View className="mb-12">
+          <Text
+            className="font-label text-outline mb-3"
+            style={{
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+            }}
+          >
+            Search Knowledge Base
+          </Text>
+          <View className="relative">
+            <View className="bg-surface-container-low rounded-xl flex-row items-center">
+              <Ionicons
+                name="search"
+                size={20}
+                color="#998F84"
+                style={{ position: "absolute", left: 16, zIndex: 1 }}
+              />
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Find answers..."
+                placeholderTextColor="rgba(153,143,132,0.5)"
+                className="flex-1 font-body text-on-surface"
+                style={{ fontSize: 14, paddingVertical: 16, paddingLeft: 48, paddingRight: 16 }}
+              />
+              {search.length > 0 && (
+                <Pressable
+                  onPress={() => setSearch("")}
+                  hitSlop={8}
+                  style={{ position: "absolute", right: 16 }}
+                >
+                  <Ionicons name="close-circle" size={18} color="#998F84" />
+                </Pressable>
+              )}
+            </View>
+          </View>
         </View>
 
         {/* FAQ Section */}
-        <Text className="font-headline text-lg text-on-surface mt-10 mb-4">
-          Frequently Asked
-        </Text>
-        <View className="gap-3">
-          {filtered.map((item, idx) => (
-            <AccordionItem
-              key={idx}
-              question={item.question}
-              answer={item.answer}
-              defaultOpen={item.defaultOpen}
-            />
-          ))}
-          {filtered.length === 0 && (
-            <Text className="font-body text-sm text-on-surface-variant text-center py-8">
-              No results found for "{search}"
+        <View className="mb-16">
+          <View className="flex-row items-baseline justify-between mb-8">
+            <Text
+              className="font-headline text-on-background"
+              style={{ fontSize: 20 }}
+            >
+              Frequent Inquiries
             </Text>
-          )}
+            <Text
+              className="font-label font-bold"
+              style={{
+                fontSize: 11,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                color: "#C4A882",
+              }}
+            >
+              View All
+            </Text>
+          </View>
+          <View style={{ gap: 24 }}>
+            {filtered.map((item, idx) => (
+              <AccordionItem
+                key={idx}
+                question={item.question}
+                answer={item.answer}
+                defaultOpen={item.defaultOpen}
+              />
+            ))}
+            {filtered.length === 0 && (
+              <Text
+                className="font-body text-on-surface-variant text-center py-8"
+                style={{ fontSize: 14 }}
+              >
+                No results found for "{search}"
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Contact Section */}
-        <View className="bg-surface-container-low rounded-xl p-6 mt-10">
-          <Text className="font-headline text-xl text-on-surface mb-2">
+        <View className="bg-surface-container-low rounded-xl p-8 mb-16 items-center">
+          <Text
+            className="font-headline text-on-background mb-6"
+            style={{ fontSize: 20 }}
+          >
             Still curious?
           </Text>
-          <Text className="font-body text-sm text-on-surface-variant mb-5 leading-5">
-            Our support curators are available to assist with any questions
-            about your designs, account, or subscription.
-          </Text>
-          <Pressable>
+          <Pressable
+            onPress={() => Linking.openURL("mailto:concierge@archlens.studio")}
+            className="w-full mb-6"
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
+          >
             <LinearGradient
-              colors={["#C4A882", "#A68E6B"]}
+              colors={["#C4A882", "#A68A62"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              className="h-12 rounded-xl items-center justify-center"
+              className="w-full flex-row items-center justify-center rounded-xl"
+              style={{ gap: 12, paddingVertical: 16 }}
             >
-              <Text className="font-body text-on-primary font-semibold text-sm uppercase tracking-widest">
+              <Ionicons name="mail" size={18} color="#3F2D11" />
+              <Text
+                className="font-body text-on-primary font-bold"
+                style={{
+                  fontSize: 14,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
                 Contact Us
               </Text>
             </LinearGradient>
           </Pressable>
-          <Text className="font-body text-xs text-on-surface-variant text-center mt-4">
-            support@architecturallens.com
-          </Text>
+          <View className="items-center" style={{ gap: 4 }}>
+            <Text
+              className="font-label text-outline"
+              style={{
+                fontSize: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+              }}
+            >
+              Direct Channel
+            </Text>
+            <Pressable
+              onPress={() =>
+                Linking.openURL("mailto:concierge@archlens.studio")
+              }
+            >
+              <Text
+                className="font-label font-bold"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#C4A882",
+                }}
+              >
+                concierge@archlens.studio
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Version Footer */}
-        <View className="mt-10 items-center">
-          <Text className="font-body text-xs text-on-surface-variant">
+        <View className="items-center pb-12">
+          <Text
+            className="font-label text-center"
+            style={{
+              fontSize: 10,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#998F84",
+              opacity: 0.5,
+            }}
+          >
             Version 2.4.0 — The Silent Curator
           </Text>
         </View>

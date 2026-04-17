@@ -68,6 +68,7 @@ export interface JobOutputResponse {
     id: string;
     ordinal: number;
     url: string;
+    file?: FileResponse;
     storageStatus: StorageStatus;
     width: number;
     height: number;
@@ -166,4 +167,91 @@ export interface PageResponse<T> {
     totalPages: number;
     size: number;
     number: number;
+    first: boolean;
+    last: boolean;
+}
+
+// ── Shared ─────────────────────────────────────
+export interface MessageResponse {
+    message: string;
+}
+
+// ── Credit Ledger ──────────────────────────────
+export type LedgerType =
+    | "RESERVE"
+    | "CONSUME"
+    | "RELEASE"
+    | "TOPUP"
+    | "ADJUSTMENT"
+    | "REFUND"
+    | "PROMO";
+
+export interface CreditLedgerEntry {
+    id: string;
+    type: LedgerType;
+    amount: number;
+    reason: string;
+    jobId: string | null;
+    createdAt: string;
+}
+
+// ── Promo ──────────────────────────────────────
+export type DiscountType = "FIXED_AMOUNT" | "PERCENTAGE";
+
+export interface PromoRedemptionResponse {
+    redemptionId: string;
+    campaignName: string;
+    discountType: DiscountType;
+    discountValue: number;
+    creditsAwarded: number;
+    message: string;
+}
+
+// ── Gallery ────────────────────────────────────
+export interface GalleryItem {
+    id: string;
+    title: string;
+    description: string | null;
+    imageUrl: string;
+    roomTypeCode: string | null;
+    designStyleCode: string | null;
+    featured: boolean;
+    createdAt: string;
+}
+
+// ── Notification Preferences ───────────────────
+export interface NotificationPreferences {
+    userId: string;
+    pushEnabled: boolean;
+    emailEnabled: boolean;
+    renderComplete: boolean;
+    promotions: boolean;
+    weeklySummary: boolean;
+}
+
+// ── Request Shapes ─────────────────────────────
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+}
+
+export interface UpdateProfileRequest {
+    displayName?: string;
+    email?: string;
+}
+
+export interface RedeemPromoRequest {
+    code: string;
+}
+
+export interface UpdateNotificationPreferencesRequest {
+    pushEnabled?: boolean;
+    emailEnabled?: boolean;
+    renderComplete?: boolean;
+    promotions?: boolean;
+    weeklySummary?: boolean;
 }

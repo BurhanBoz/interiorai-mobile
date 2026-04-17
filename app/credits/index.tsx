@@ -1,154 +1,534 @@
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+  TextInput,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
+import { useCreditStore } from "@/stores/creditStore";
+import * as creditsService from "@/services/credits";
+import * as promoService from "@/services/promo";
+import type { CreditLedgerEntry } from "@/types/api";
 
-const CREDIT_COSTS = [
-  { label: "Conceptual Sketch", cost: 1 },
-  { label: "High-Fidelity Render", cost: 5 },
-  { label: "3D Structural Analysis", cost: 12 },
+const REFERENCE_GUIDE = [
+  { label: "Conceptual Sketch", cost: "1 Credit" },
+  { label: "High-Fidelity Render", cost: "5 Credits" },
+  { label: "3D Structural Analysis", cost: "12 Credits" },
 ];
 
-const USAGE_ITEMS = [
-  {
-    id: "1",
-    thumbnail:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=128&h=128&fit=crop",
-    type: "Render",
-    date: "Oct 12",
-    title: "Lakeside Pavilion",
-    cost: 5,
-  },
-  {
-    id: "2",
-    thumbnail:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=128&h=128&fit=crop",
-    type: "Sketch",
-    date: "Oct 10",
-    title: "Urban Loft Concept",
-    cost: 1,
-  },
-  {
-    id: "3",
-    thumbnail:
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=128&h=128&fit=crop",
-    type: "Analysis",
-    date: "Oct 8",
-    title: "Hillside Retreat",
-    cost: 12,
-  },
-];
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
+}
 
+/* ─────────────────── Ledger Row ─────────────────── */
+function LedgerRow({ item }: { item: CreditLedgerEntry }) {
+  const isPositive = item.amount > 0;
+  return (
+    <Pressable
+      onPress={() => {
+        if (item.jobId) router.push(`/result/${item.jobId}`);
+      }}
+      className="flex-row items-center"
+      style={{ marginBottom: 32 }}
+    >
+      {/* Thumbnail */}
+      <View
+        className="rounded-lg overflow-hidden bg-surface-container-high items-center justify-center"
+        style={{ width: 40, height: 40, marginRight: 16 }}
+      >
+        {item.jobId ? (
+          <Image
+            source={{ uri: `https://picsum.photos/seed/${item.jobId}/80` }}
+            style={{ width: 40, height: 40 }}
+            contentFit="cover"
+          />
+        ) : (
+          <Ionicons
+            name="wallet-outline"
+            size={20}
+            color="rgba(224,194,154,0.4)"
+          />
+        )}
+      </View>
+
+      {/* Info */}
+      <View className="flex-1" style={{ marginRight: 12 }}>
+        <Text
+          className="font-label text-secondary"
+          style={{
+            fontSize: 10,
+            fontWeight: "700",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            marginBottom: 2,
+          }}
+        >
+          {item.reason.split(" ")[0]} • {formatDate(item.createdAt)}
+        </Text>
+        <Text
+          className="font-body text-on-surface"
+          style={{ fontSize: 14, fontWeight: "500" }}
+          numberOfLines={1}
+        >
+          {item.reason}
+        </Text>
+      </View>
+
+      {/* Amount */}
+      <Text
+        className="font-headline"
+        style={{
+          fontSize: 16,
+          color: isPositive ? "#4ade80" : "#E0C29A",
+        }}
+      >
+        {isPositive ? "+" : ""}
+        {item.amount}
+      </Text>
+    </Pressable>
+  );
+}
+
+/* ─────────────────── Main Screen ─────────────────── */
 export default function CreditsScreen() {
+  const balance = useCreditStore(s => s.balance);
+  const planCode = useCreditStore(s => s.planCode);
+  const fetchBalance = useCreditStore(s => s.fetchBalance);
+
+  const [ledger, setLedger] = useState<CreditLedgerEntry[]>([]);
+  const [page, setPage] = useState(0);
+  const [isLast, setIsLast] = useState(false);
+  const [loadingLedger, setLoadingLedger] = useState(false);
+
+  const [promoExpanded, setPromoExpanded] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
+
+  useEffect(() => {
+    fetchBalance();
+    loadLedger(0);
+  }, []);
+
+  const loadLedger = async (p: number) => {
+    if (loadingLedger) return;
+    setLoadingLedger(true);
+    try {
+      const data = await creditsService.getLedger(p, 20);
+      setLedger(prev => (p === 0 ? data.content : [...prev, ...data.content]));
+      setIsLast(data.last);
+      setPage(p);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingLedger(false);
+    }
+  };
+
+  const loadMore = useCallback(() => {
+    if (!isLast && !loadingLedger) {
+      loadLedger(page + 1);
+    }
+  }, [isLast, loadingLedger, page]);
+
+  const handleRedeemPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoError("");
+    setPromoLoading(true);
+    try {
+      const result = await promoService.redeemPromo(promoCode.trim());
+      Alert.alert("Promo Applied!", result.message);
+      setPromoCode("");
+      setPromoExpanded(false);
+      fetchBalance();
+      loadLedger(0);
+    } catch (e: any) {
+      setPromoError(
+        e?.response?.data?.message ?? "Failed to redeem promo code.",
+      );
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 120 }}
+      {/* ── Top App Bar ── */}
+      <View
+        className="flex-row items-center justify-between px-6"
+        style={{ height: 56 }}
       >
-        {/* Hero */}
-        <View className="items-center pt-10 pb-8 px-8">
-          <Text className="text-on-surface-variant font-label text-sm tracking-widest uppercase mb-2">
-            Available Balance
-          </Text>
-          <Text className="text-primary font-headline text-7xl leading-none mb-2">
-            147
-          </Text>
-          <Text className="text-on-surface-variant font-body text-sm">
-            Credits remain in your Studio vault.
-          </Text>
-        </View>
-
-        {/* Upgrade Banner */}
-        <Pressable onPress={() => router.push("/plans")} className="mx-8 mb-6">
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-row items-center justify-between rounded-xl px-5 py-4"
-          >
-            <Text className="text-on-primary font-body text-base font-semibold">
-              Upgrade for more credits
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-          </LinearGradient>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color="#C4A882" />
         </Pressable>
+        <Text
+          className="font-headline text-on-surface"
+          style={{
+            fontSize: 14,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+          }}
+        >
+          The Architectural Lens
+        </Text>
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.20)",
+          }}
+        >
+          <Image
+            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
+            style={{ width: 32, height: 32 }}
+            contentFit="cover"
+          />
+        </View>
+      </View>
 
-        {/* Credit Cost Reference */}
-        <View className="mx-8 mb-6 bg-surface-container-low rounded-xl p-5">
-          <Text className="text-on-surface font-headline text-lg mb-4">
-            Reference Guide
-          </Text>
-          {CREDIT_COSTS.map((item, index) => (
+      <FlatList
+        data={ledger}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => <LedgerRow item={item} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            {/* ── Hero Balance Section ── */}
             <View
-              key={item.label}
-              className={`flex-row items-center justify-between ${
-                index < CREDIT_COSTS.length - 1
-                  ? "mb-3 pb-3 border-b border-outline-variant/20"
-                  : ""
-              }`}
+              className="items-center"
+              style={{ paddingTop: 32, paddingBottom: 32 }}
             >
-              <Text className="text-on-surface-variant font-body text-sm">
-                {item.label}
+              <Text
+                className="font-label text-secondary"
+                style={{
+                  fontSize: 11,
+                  fontWeight: "500",
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  marginBottom: 8,
+                }}
+              >
+                Available Balance
               </Text>
-              <Text className="text-primary font-label text-xs font-semibold tracking-wider">
-                {item.cost} {item.cost === 1 ? "CREDIT" : "CREDITS"}
+              <Text
+                className="font-headline text-on-surface"
+                style={{ fontSize: 72, lineHeight: 80, marginBottom: 16 }}
+              >
+                {balance}
+              </Text>
+              <Text
+                className="font-body text-on-surface-variant"
+                style={{ fontSize: 14, fontWeight: "300", fontStyle: "italic" }}
+              >
+                Credits remain in your Studio vault.
               </Text>
             </View>
-          ))}
-        </View>
 
-        {/* Monthly Usage */}
-        <View className="mx-8 mb-6">
-          <Text className="text-on-surface font-headline text-lg mb-4">
-            Monthly Usage
-          </Text>
-          {USAGE_ITEMS.map(item => (
-            <View
-              key={item.id}
-              className="flex-row items-center bg-surface-container-low rounded-xl p-3 mb-3"
+            {/* ── Upgrade Banner ── */}
+            <Pressable
+              onPress={() => router.push("/plans")}
+              style={{ marginBottom: 48 }}
             >
-              <Image
-                source={{ uri: item.thumbnail }}
-                className="w-16 h-16 rounded-lg"
-              />
-              <View className="flex-1 ml-3">
-                <Text className="text-on-surface-variant font-label text-xs tracking-wide">
-                  {item.type} • {item.date}
+              <LinearGradient
+                colors={["#C4A882", "#A68A62"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  height: 56,
+                  borderRadius: 16,
+                  paddingHorizontal: 24,
+                  borderWidth: 1,
+                  borderColor: "rgba(196,168,130,0.3)",
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    color: "#3F2D11",
+                  }}
+                >
+                  Upgrade for More Credits
                 </Text>
-                <Text className="text-on-surface font-body text-base mt-0.5">
-                  {item.title}
+                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+              </LinearGradient>
+            </Pressable>
+
+            {/* ── Reference Guide ── */}
+            <View
+              className="bg-surface-container-low rounded-xl"
+              style={{ padding: 24, marginBottom: 48 }}
+            >
+              <Text
+                className="font-label text-secondary"
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  marginBottom: 24,
+                }}
+              >
+                Reference Guide
+              </Text>
+              {REFERENCE_GUIDE.map((item, i) => (
+                <View key={item.label}>
+                  <View
+                    className="flex-row items-center justify-between"
+                    style={{ paddingVertical: 8 }}
+                  >
+                    <Text
+                      className="font-body text-on-surface"
+                      style={{ fontSize: 14, fontWeight: "500" }}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text
+                      className="font-headline text-secondary"
+                      style={{ fontSize: 14 }}
+                    >
+                      {item.cost}
+                    </Text>
+                  </View>
+                  {i < REFERENCE_GUIDE.length - 1 && (
+                    <View
+                      style={{
+                        height: 1,
+                        backgroundColor: "rgba(77,70,60,0.20)",
+                        marginVertical: 8,
+                      }}
+                    />
+                  )}
+                </View>
+              ))}
+            </View>
+
+            {/* ── Next Cycle & Progress ── */}
+            <View
+              className="bg-surface-container-low rounded-xl"
+              style={{ padding: 24, marginBottom: 48 }}
+            >
+              <View style={{ marginBottom: 24 }}>
+                <Text
+                  className="font-label text-secondary"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    letterSpacing: 3,
+                    textTransform: "uppercase",
+                    marginBottom: 8,
+                  }}
+                >
+                  Next Cycle
+                </Text>
+                <Text
+                  className="font-body text-on-surface-variant"
+                  style={{ fontSize: 14 }}
+                >
+                  Your balance will reset on{" "}
+                  <Text
+                    className="text-on-surface"
+                    style={{ fontWeight: "500" }}
+                  >
+                    November 1, 2024.
+                  </Text>
                 </Text>
               </View>
-              <Text className="text-primary font-label text-sm font-semibold">
-                -{item.cost}
-              </Text>
-            </View>
-          ))}
-        </View>
 
-        {/* Monthly Reset Info */}
-        <View className="mx-8 mb-6 bg-surface-container-low rounded-xl p-5">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-on-surface-variant font-label text-xs tracking-widest uppercase">
-              Next Cycle
-            </Text>
-            <Text className="text-on-surface font-body text-sm">
-              Nov 1, 2026
+              {/* Progress bar */}
+              <View
+                className="bg-surface-container-highest rounded-full overflow-hidden"
+                style={{ height: 8, marginBottom: 12 }}
+              >
+                <LinearGradient
+                  colors={["#C4A882", "#A68A62"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ width: "60%", height: "100%", borderRadius: 9999 }}
+                />
+              </View>
+              <View className="items-end">
+                <Text
+                  className="font-label text-secondary"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "500",
+                    letterSpacing: 3,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  18 Days Remaining
+                </Text>
+              </View>
+            </View>
+
+            {/* ── Monthly Usage Header ── */}
+            <Text
+              className="font-label text-secondary"
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                marginBottom: 24,
+              }}
+            >
+              Monthly Usage
             </Text>
           </View>
-          <View className="h-2 bg-surface-container-highest rounded-full mb-3">
+        }
+        ListEmptyComponent={
+          !loadingLedger ? (
+            <Text
+              className="font-body text-on-surface-variant text-center"
+              style={{ fontSize: 14, marginTop: 32 }}
+            >
+              No credit transactions yet.
+            </Text>
+          ) : null
+        }
+        ListFooterComponent={
+          <View>
+            {loadingLedger && (
+              <ActivityIndicator
+                color="#E0C29A"
+                style={{ marginVertical: 16 }}
+              />
+            )}
+
+            {/* ── Promo Code Section ── */}
             <View
-              className="h-2 bg-primary rounded-full"
-              style={{ width: "65%" }}
-            />
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: "rgba(77,70,60,0.20)",
+                paddingTop: 32,
+                marginTop: 16,
+              }}
+            >
+              <Pressable
+                onPress={() => setPromoExpanded(!promoExpanded)}
+                className="flex-row items-center justify-between"
+                style={{ marginBottom: promoExpanded ? 24 : 0 }}
+              >
+                <Text
+                  className="font-label text-secondary"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    letterSpacing: 3,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Promotional Code
+                </Text>
+                <Ionicons
+                  name={promoExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#E0C29A"
+                />
+              </Pressable>
+
+              {promoExpanded && (
+                <View className="flex-row" style={{ gap: 12 }}>
+                  <TextInput
+                    value={promoCode}
+                    onChangeText={setPromoCode}
+                    placeholder="ENTER CODE"
+                    placeholderTextColor="rgba(209,197,184,0.4)"
+                    autoCapitalize="characters"
+                    editable={!promoLoading}
+                    className="flex-1 bg-surface-container-high rounded-lg text-on-surface"
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      fontSize: 14,
+                      letterSpacing: 3,
+                    }}
+                  />
+                  <Pressable
+                    onPress={handleRedeemPromo}
+                    disabled={promoLoading}
+                    style={{
+                      paddingHorizontal: 24,
+                      paddingVertical: 12,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: "#C4A882",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      opacity: promoLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {promoLoading ? (
+                      <ActivityIndicator color="#C4A882" size="small" />
+                    ) : (
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: "700",
+                          color: "#C4A882",
+                          letterSpacing: 3,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Redeem
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              )}
+
+              {promoError !== "" && (
+                <Text
+                  className="font-body"
+                  style={{
+                    fontSize: 12,
+                    color: "#ffb4ab",
+                    marginTop: 8,
+                  }}
+                >
+                  {promoError}
+                </Text>
+              )}
+            </View>
           </View>
-          <Text className="text-on-surface-variant font-label text-xs tracking-wider text-center uppercase">
-            18 Days Remaining
-          </Text>
-        </View>
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }

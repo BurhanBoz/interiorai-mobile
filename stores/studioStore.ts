@@ -13,6 +13,7 @@ interface StudioState {
     prompt: string;
     negativePrompt: string;
     colorPalette: string;
+    seed: number | undefined;
     strength: number;
     guidanceScale: number;
     referencePhoto: { uri: string; fileId: string } | null;
@@ -28,6 +29,7 @@ interface StudioState {
     setPrompt: (v: string) => void;
     setNegativePrompt: (v: string) => void;
     setColorPalette: (v: string) => void;
+    setSeed: (v: number | undefined) => void;
     setStrength: (v: number) => void;
     setGuidanceScale: (v: number) => void;
     setReferencePhoto: (photo: { uri: string; fileId: string } | null) => void;
@@ -47,6 +49,7 @@ const initialState = {
     prompt: "",
     negativePrompt: "",
     colorPalette: "",
+    seed: undefined,
     strength: 0.7,
     guidanceScale: 7.5,
     referencePhoto: null,
@@ -66,6 +69,7 @@ export const useStudioStore = create<StudioState>((set) => ({
     setPrompt: (prompt) => set({ prompt }),
     setNegativePrompt: (negativePrompt) => set({ negativePrompt }),
     setColorPalette: (colorPalette) => set({ colorPalette }),
+    setSeed: (seed) => set({ seed }),
     setStrength: (strength) => set({ strength }),
     setGuidanceScale: (guidanceScale) => set({ guidanceScale }),
     setReferencePhoto: (referencePhoto) => set({ referencePhoto }),

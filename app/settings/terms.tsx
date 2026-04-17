@@ -1,125 +1,287 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-const CLAUSES = [
-  {
-    title: "1. Curated Access",
-    body: `By accessing Architectural Lens ("the Platform"), you agree to use its AI-powered interior design generation tools solely for lawful, personal, or authorized commercial purposes. Your account grants you a non-exclusive, revocable license to generate and download designs within your active subscription tier. We reserve the right to modify or discontinue features at any time.`,
-  },
-  {
-    title: "2. User Conduct",
-    image: true,
-    body: `You agree to upload only images you own or have explicit rights to use. You will not attempt to reverse-engineer, exploit, or overload the Platform's generation systems. Abusive, offensive, or illegal content submitted for processing will result in immediate account suspension without refund.`,
-  },
-  {
-    title: "3. Liability & Indemnity",
-    highlight: true,
-    body: `The Platform is provided "as is" without warranty of any kind. We are not liable for any damages arising from generated designs, including but not limited to structural, aesthetic, or intellectual property disputes. You agree to indemnify and hold harmless Architectural Lens and its affiliates from any claims arising from your use.`,
-  },
-  {
-    title: "4. Data Stewardship",
-    body: `Uploaded images are processed securely and retained only for the duration necessary to deliver results. We do not sell or share your data with third parties except as required by law. Generated designs remain accessible in your account history for the duration of your subscription.`,
-  },
-];
+const IMG_TERMS =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDDN7PpniI42L8UlmvAwfr9zaGBPDgIVKjI5b-Os6PNBs9Au2vz35dLHpNClvH6TMqaPX6tmukLnZYKdhn_SkFUE47immo1WX81_OhC9QWo9pLIgFYkH9AL-SUwDmZvPM_oyWn95oN2RL0QRauabmu1sjAMyogax6aejDzPNzDLKFw3q_38QI85eBdW54me-UH7FUp6Bfhz--Bpfw3zZewJfx3B2BHNz6cR6dlnPI7bkSUs9ms9tBTX3Yex_x18lSqdObKBTLAryrc";
+
+const IMG_AVATAR =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCRu9nTIyQskuwKRucxyBeHx6wnFGkxOO-HYyrrgX8ZmNOqpCtiqm_K9wmhZbMtLx-jyl78az-CGQQp6PvuF8ITBR7YcY0hdT2jl9YLGEHp5ihCSBBMMXZgCYFmW3digx6KzCN24d-lZSZireR4WcwIpQLTgEbuFE2eqcFTKPwYxnOOBBmk1P1iuX2RViISTp9HujZvc0jF6WtN-7lCpI0QtWFCOE52htMdM8GOzv-kWRpLWjnswWpdYeLy1KQwaEYStmewfCIVamQ";
 
 export default function TermsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface">
-      {/* Sticky Header */}
-      <View className="px-8 pt-6 pb-4 bg-surface">
-        <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
-          </Pressable>
-          <Text className="font-headline text-base text-on-surface-variant tracking-widest uppercase">
-            Architectural Lens
-          </Text>
+      {/* TopAppBar */}
+      <View
+        className="flex-row items-center justify-between px-6"
+        style={{ height: 64, backgroundColor: "#131313" }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          className="w-10 h-10 items-center justify-center rounded-full"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? "#2A2A2A" : "transparent",
+          })}
+        >
+          <Ionicons name="arrow-back" size={24} color="#E1C39B" />
+        </Pressable>
+
+        <Text
+          className="font-headline"
+          style={{
+            fontSize: 20,
+            letterSpacing: 4,
+            textTransform: "uppercase",
+            color: "#E1C39B",
+          }}
+        >
+          THE ARCHITECTURAL LENS
+        </Text>
+
+        <View
+          className="rounded-full overflow-hidden"
+          style={{
+            width: 32,
+            height: 32,
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.3)",
+          }}
+        >
+          <Image
+            source={{ uri: IMG_AVATAR }}
+            style={{ width: 32, height: 32 }}
+            contentFit="cover"
+          />
         </View>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-8 pb-40"
+        contentContainerClassName="px-6 pb-32"
         showsVerticalScrollIndicator={false}
       >
-        {/* Massive Headline */}
-        <Text className="font-headline text-4xl text-on-surface tracking-tight mt-4">
-          Terms of Service
-        </Text>
-        <View className="mt-4 w-16 h-1 rounded-full bg-primary" />
+        {/* Hero Section */}
+        <View className="mb-16 mt-8">
+          <Text
+            className="font-headline text-on-background"
+            style={{ fontSize: 56, lineHeight: 62 }}
+          >
+            Terms of Service
+          </Text>
+          <View
+            className="mt-6"
+            style={{ width: 48, height: 2, backgroundColor: "#E1C39B" }}
+          />
+        </View>
 
         {/* Intro Block */}
-        <View className="bg-surface-container-low rounded-xl p-6 mt-8">
-          <Text className="font-body text-sm text-on-surface-variant leading-6">
-            Welcome to Architectural Lens. These terms govern your use of our
-            AI-powered interior design platform. By continuing, you acknowledge
-            that you have read, understood, and agree to be bound by the
-            following conditions. Last updated: March 2026.
+        <View className="bg-surface-container-low rounded-xl p-8 mb-12">
+          <Text
+            className="font-label font-bold mb-4"
+            style={{
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#E1C39B",
+            }}
+          >
+            UPDATED OCTOBER 2023
+          </Text>
+          <Text
+            className="font-headline text-on-surface-variant italic"
+            style={{ fontSize: 18, lineHeight: 28 }}
+          >
+            Our commitment to architectural integrity and digital stewardship
+            begins with transparency. This document outlines the refined
+            relationship between our curator tools and your creative practice.
           </Text>
         </View>
 
-        {/* Clause Sections */}
-        {CLAUSES.map((clause, idx) => (
-          <View key={idx} className="mt-8">
-            <Text className="font-headline text-xl text-on-surface mb-3">
-              {clause.title}
-            </Text>
-
-            {clause.image && (
-              <View className="h-40 rounded-xl bg-surface-container mb-4 items-center justify-center">
-                <Ionicons name="image-outline" size={40} color="#5E5C5B" />
-                <Text className="font-body text-xs text-on-surface-variant mt-2">
-                  Interstitial Placeholder
-                </Text>
-              </View>
-            )}
-
-            <View
-              className={`rounded-xl p-5 ${
-                clause.highlight
-                  ? "bg-surface-container-high"
-                  : "bg-surface-container-low"
-              }`}
+        {/* Clause 1 — Curated Access */}
+        <View className="mb-16">
+          <Text
+            className="font-headline text-secondary mb-6"
+            style={{ fontSize: 24 }}
+          >
+            1. Curated Access
+          </Text>
+          <View style={{ gap: 16 }}>
+            <Text
+              className="font-body text-on-surface-variant"
+              style={{ fontSize: 14, lineHeight: 26 }}
             >
-              <Text className="font-body text-sm text-on-surface-variant leading-6">
-                {clause.body}
-              </Text>
-            </View>
+              Access to The Architectural Lens is provided as a premium service
+              for design professionals. We reserve the right to curate the
+              membership based on professional alignment and creative intent.
+            </Text>
+            <Text
+              className="font-body text-on-surface-variant"
+              style={{ fontSize: 14, lineHeight: 26 }}
+            >
+              Users are granted a limited, non-exclusive license to utilize our
+              proprietary AI modeling tools for conceptual architectural
+              visualization within the boundaries of ethical design practices.
+            </Text>
           </View>
-        ))}
+        </View>
+
+        {/* Decorative Image */}
+        <View
+          className="w-full rounded-xl overflow-hidden mb-16"
+          style={{
+            aspectRatio: 16 / 9,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.6,
+            shadowRadius: 32,
+            elevation: 24,
+          }}
+        >
+          <Image
+            source={{ uri: IMG_TERMS }}
+            style={{ width: "100%", height: "100%", opacity: 0.8 }}
+            contentFit="cover"
+          />
+        </View>
+
+        {/* Clause 2 — User Conduct */}
+        <View className="mb-12">
+          <Text
+            className="font-headline text-secondary mb-6"
+            style={{ fontSize: 24 }}
+          >
+            2. User Conduct
+          </Text>
+          <View style={{ gap: 16 }}>
+            <Text
+              className="font-body text-on-surface-variant"
+              style={{ fontSize: 14, lineHeight: 26 }}
+            >
+              The integrity of the Lens depends on the respectful use of our
+              shared aesthetic environment. Automated scraping or unauthorized
+              harvesting of generative outputs is strictly prohibited.
+            </Text>
+          </View>
+
+          {/* Highlighted Clause */}
+          <View
+            className="bg-surface-container-high rounded-xl p-8 mt-8"
+            style={{ borderLeftWidth: 2, borderLeftColor: "#E1C39B" }}
+          >
+            <Text
+              className="font-label font-bold mb-3"
+              style={{
+                fontSize: 11,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                color: "#E1C39B",
+              }}
+            >
+              LIABILITY & INDEMNITY
+            </Text>
+            <Text
+              className="font-body text-on-surface font-medium"
+              style={{ fontSize: 14, lineHeight: 22 }}
+            >
+              The Architectural Lens acts as a conceptual catalyst. We are not
+              liable for structural engineering failures or technical
+              inaccuracies arising from the application of AI-generated
+              conceptual visualizations in real-world construction.
+            </Text>
+          </View>
+        </View>
+
+        {/* Clause 3 — Data Stewardship */}
+        <View className="mb-24">
+          <Text
+            className="font-headline text-secondary mb-6"
+            style={{ fontSize: 24 }}
+          >
+            3. Data Stewardship
+          </Text>
+          <View style={{ gap: 16 }}>
+            <Text
+              className="font-body text-on-surface-variant"
+              style={{ fontSize: 14, lineHeight: 26 }}
+            >
+              Your creative inputs are treated as private intellectual property.
+              We do not sell your visual prompts or resulting concepts to
+              third-party datasets for external model training without explicit
+              consent.
+            </Text>
+            <Text
+              className="font-body text-on-surface-variant"
+              style={{ fontSize: 14, lineHeight: 26 }}
+            >
+              Encryption protocols ensure that your design vault remains
+              accessible only to verified credentials, maintaining the sanctuary
+              of your conceptual workflow.
+            </Text>
+          </View>
+        </View>
 
         {/* Footer */}
-        <View className="mt-12 items-center">
-          <Text className="font-body text-xs text-on-surface-variant">
-            © 2026 Architectural Lens. All rights reserved.
+        <View
+          className="pt-12 mb-16 items-center"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: "rgba(53,53,52,0.3)",
+          }}
+        >
+          <Text
+            className="font-label"
+            style={{
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#A68A62",
+            }}
+          >
+            THE ARCHITECTURAL LENS © 2024
           </Text>
         </View>
       </ScrollView>
 
-      {/* Acknowledge Button */}
-      <View className="absolute bottom-0 left-0 right-0">
-        <LinearGradient
-          colors={["transparent", "#131313", "#131313"]}
-          locations={[0, 0.3, 1]}
-          className="px-8 pt-12 pb-10"
+      {/* Sticky CTA at bottom */}
+      <LinearGradient
+        colors={["transparent", "#131313", "#131313"]}
+        locations={[0, 0.4, 1]}
+        className="absolute bottom-0 left-0 right-0 px-6 pb-6"
+        style={{ paddingTop: 48 }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          className="w-full rounded-xl flex-row items-center justify-center"
+          style={({ pressed }) => ({
+            backgroundColor: "#C4A882",
+            height: 56,
+            gap: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.6,
+            shadowRadius: 32,
+            elevation: 24,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
         >
-          <Pressable onPress={() => router.back()}>
-            <LinearGradient
-              colors={["#C4A882", "#A68E6B"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="h-14 rounded-xl flex-row items-center justify-center gap-2"
-            >
-              <Text className="font-body text-on-primary font-semibold text-sm uppercase tracking-widest">
-                Acknowledge & Return
-              </Text>
-            </LinearGradient>
-          </Pressable>
-        </LinearGradient>
-      </View>
+          <Text
+            className="font-body font-semibold"
+            style={{
+              fontSize: 14,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              color: "#3F2D11",
+            }}
+          >
+            Acknowledge & Return
+          </Text>
+          <Ionicons name="checkmark-circle" size={20} color="#3F2D11" />
+        </Pressable>
+      </LinearGradient>
     </SafeAreaView>
   );
 }

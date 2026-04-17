@@ -8,18 +8,27 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState, useRef } from "react";
-
-const PLACEHOLDER_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDgJCRkFcNo9XedWxDTL0tu9tqRpXyRH-WSOcsPjMtQvXYpeML9Xd3mgE0PAfiyzMkdA0hlzLNmkupDgt4pbdVGA1qhMkpBTO_Lk1BW9yDB4nE_dAoafUZjehrVwlDwzAo-MwkSN6UVXdRbU3SY0S7nxNxr6h8zQvAMx4BPaFH-woNXlMKlMlso7hKPqprIf6Za6Cfd8kBx9qNfN5cx0QJBJPwYa4oxfqz0Emo9Azh844HM17Au41RBGUvSiECrXCoAEp9xTaDtk5-C";
+import { LinearGradient } from "expo-linear-gradient";
+import { getOutputDownloadUrl } from "@/services/files";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 export default function UpscaleScreen() {
+  const { jobId, outputId } = useLocalSearchParams<{
+    jobId: string;
+    outputId: string;
+  }>();
+  const authHeaders = useAuthHeaders();
+  const imageUrl =
+    jobId && outputId ? getOutputDownloadUrl(jobId, outputId) : undefined;
   const [progress, setProgress] = useState(0);
   const [complete, setComplete] = useState(false);
   const spinRotation = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  // Spinning animation for sync icon
   useEffect(() => {
     Animated.loop(
       Animated.timing(spinRotation, {
@@ -31,6 +40,27 @@ export default function UpscaleScreen() {
     ).start();
   }, []);
 
+  // Pulse animation for active log entry icon
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.4,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+
+  // Progress simulation
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(prev => {
@@ -45,14 +75,19 @@ export default function UpscaleScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  // Navigate on completion
   useEffect(() => {
     if (complete) {
       const timeout = setTimeout(() => {
-        router.replace("/result/latest");
+        if (jobId) {
+          router.replace(`/result/${jobId}` as any);
+        } else {
+          router.back();
+        }
       }, 600);
       return () => clearTimeout(timeout);
     }
-  }, [complete]);
+  }, [complete, jobId]);
 
   const spinStyle = {
     transform: [
@@ -67,140 +102,302 @@ export default function UpscaleScreen() {
 
   const phaseLabel =
     progress < 40
-      ? "PHASE 1: NOISE REDUCTION"
+      ? "Enhancing Detail"
       : progress < 80
-        ? "PHASE 2: TEXTURAL REFINEMENT"
-        : "PHASE 3: FINAL ENHANCEMENT";
+        ? "Textural Refinement"
+        : "Final Enhancement";
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+      {/* Top Bar */}
+      <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <Ionicons name="arrow-back" size={24} color="#E1C39B" />
+          </Pressable>
+          <Text
+            className="font-headline"
+            style={{
+              fontSize: 14,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#E1C39B",
+            }}
+          >
+            Architectural Lens
+          </Text>
+        </View>
+        <View
+          className="rounded-full overflow-hidden"
+          style={{
+            width: 32,
+            height: 32,
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.3)",
+            backgroundColor: "#2A2A2A",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="person" size={14} color="#E5E2E1" />
+        </View>
+      </View>
+
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-8 pb-8"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Label */}
-        <Text className="text-[10px] tracking-[0.2em] text-primary mt-6 font-label">
-          CURRENT WORKFLOW
-        </Text>
-
-        {/* Title */}
-        <Text className="font-headline text-[2.5rem] italic text-on-surface mt-2 leading-tight">
-          Upscaling to HD...
-        </Text>
-
-        {/* Phase Label */}
-        <View className="flex-row items-center mt-5 gap-2">
-          <Ionicons name="sparkles" size={14} color="rgba(229,226,225,0.6)" />
-          <Text className="text-[11px] tracking-wider text-on-surface/60 font-label">
-            {phaseLabel}
+        {/* Header Content */}
+        <View className="mb-10 mt-4">
+          <Text
+            className="font-label text-on-surface-variant mb-2"
+            style={{
+              fontSize: 11,
+              letterSpacing: 3.5,
+              textTransform: "uppercase",
+            }}
+          >
+            Current Workflow
+          </Text>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ fontSize: 34, lineHeight: 42, fontStyle: "italic" }}
+          >
+            Upscaling to HD...
           </Text>
         </View>
 
-        {/* Image Preview */}
-        <View className="mt-6 aspect-[4/5] rounded-xl bg-surface-container-low overflow-hidden">
+        {/* Image Preview Section */}
+        <View
+          className="rounded-xl overflow-hidden mb-8"
+          style={{
+            aspectRatio: 4 / 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.5,
+            shadowRadius: 20,
+            elevation: 20,
+          }}
+        >
           <Image
-            source={{ uri: PLACEHOLDER_IMAGE }}
+            source={
+              imageUrl
+                ? { uri: imageUrl, headers: authHeaders }
+                : require("@/assets/icon.png")
+            }
             style={{ width: "100%", height: "100%" }}
-            blurRadius={12}
+            blurRadius={16}
             contentFit="cover"
           />
 
-          {/* Overlay */}
-          <View className="absolute inset-0 bg-surface/40 items-center justify-center">
-            {/* Progress Bar */}
-            <View className="w-[200px] h-[2px] bg-on-surface/10 rounded-full overflow-hidden">
-              <View
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${progress}%` }}
-              />
-            </View>
+          {/* Darken overlay */}
+          <View
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          />
 
-            {/* Progress Text */}
-            <Text className="text-on-surface text-sm font-body mt-3">
-              Enhancing Detail: {progress}%
-            </Text>
-            <Text className="text-on-surface/50 text-xs font-body mt-1">
-              Applying AI super-resolution
-            </Text>
+          {/* Progress Overlay */}
+          <View className="absolute inset-0 items-center justify-center px-12">
+            <View className="w-full items-center" style={{ maxWidth: 260 }}>
+              {/* Phase Label */}
+              <Text
+                className="font-label text-primary mb-4"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 3.5,
+                  textTransform: "uppercase",
+                  textShadowColor: "rgba(254,223,181,0.6)",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 4,
+                }}
+              >
+                {phaseLabel}
+              </Text>
+
+              {/* Progress Bar */}
+              <View
+                className="w-full rounded-full overflow-hidden mb-3"
+                style={{
+                  height: 2,
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                }}
+              >
+                <LinearGradient
+                  colors={["#C4A882", "#A68A62"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    height: "100%",
+                    width: `${progress}%`,
+                    borderRadius: 9999,
+                    shadowColor: "#C4A882",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 10,
+                  }}
+                />
+              </View>
+
+              {/* Processing / Percentage */}
+              <View className="flex-row items-center justify-between w-full">
+                <Text
+                  className="font-label text-on-surface-variant"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Processing
+                </Text>
+                <Text
+                  className="font-headline text-primary"
+                  style={{ fontSize: 14 }}
+                >
+                  {progress}%
+                </Text>
+              </View>
+            </View>
           </View>
 
-          {/* HD Processing Badge */}
-          <View className="absolute top-3 right-3 bg-surface/80 px-3 py-1.5 rounded-lg">
-            <Text className="text-[10px] tracking-wider text-on-surface font-label">
-              HD PROCESSING
-            </Text>
+          {/* Lens Corner Accent */}
+          <View className="absolute" style={{ top: 24, right: 24 }}>
+            <Ionicons
+              name="scan-outline"
+              size={32}
+              color="rgba(254,223,181,0.4)"
+            />
           </View>
         </View>
 
         {/* Process Log */}
-        <View className="mt-8">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-on-surface text-base font-headline">
-              Process Log
-            </Text>
-            <Text className="text-[10px] tracking-wider text-primary font-label">
-              REAL-TIME
-            </Text>
-          </View>
-
+        <View style={{ gap: 12 }}>
           {/* Log Entry 1 — Completed */}
-          <View className="flex-row items-start mt-4 gap-3">
-            <Ionicons
-              name="checkmark-circle"
-              size={18}
-              color="#E1C39B"
-              style={{ marginTop: 2 }}
-            />
-            <View className="flex-1">
-              <Text className="text-on-surface text-sm font-body">
+          <View
+            className="flex-row items-center justify-between rounded-xl"
+            style={{ padding: 20, backgroundColor: "#1C1B1B" }}
+          >
+            <View className="flex-row items-center" style={{ gap: 16 }}>
+              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              <Text
+                className="font-label text-on-surface"
+                style={{
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
                 Standard Render Complete
               </Text>
-              <Text className="text-on-surface/50 text-xs font-body mt-0.5">
-                Base image generated successfully
-              </Text>
             </View>
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 10,
+                color: "rgba(209,197,184,0.5)",
+              }}
+            >
+              14:02:11
+            </Text>
           </View>
 
           {/* Log Entry 2 — In Progress */}
-          <View className="flex-row items-start mt-4 gap-3">
-            <Animated.View style={spinStyle}>
-              <Ionicons
-                name="sync"
-                size={18}
-                color="rgba(229,226,225,0.6)"
-                style={{ marginTop: 2 }}
-              />
-            </Animated.View>
-            <View className="flex-1">
-              <Text className="text-on-surface text-sm font-body">
+          <View
+            className="flex-row items-center justify-between rounded-xl"
+            style={{ padding: 20, backgroundColor: "#1C1B1B" }}
+          >
+            <View className="flex-row items-center" style={{ gap: 16 }}>
+              <Animated.View style={{ opacity: pulseAnim }}>
+                <Animated.View style={spinStyle}>
+                  <Ionicons name="sync" size={20} color="#FEDFB5" />
+                </Animated.View>
+              </Animated.View>
+              <Text
+                className="font-label text-primary"
+                style={{
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
                 HD Upscaling In Progress
               </Text>
-              <Text className="text-on-surface/50 text-xs font-body mt-0.5">
-                Enhancing resolution and detail with AI
-              </Text>
             </View>
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 10,
+                color: "rgba(209,197,184,0.5)",
+              }}
+            >
+              Active
+            </Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Buttons */}
-      <View className="flex-row gap-3 px-8 pb-6">
-        <Pressable
-          onPress={() => router.back()}
-          className="flex-1 h-14 rounded-xl bg-surface-container-high items-center justify-center"
-        >
-          <Text className="text-on-surface font-body text-base">Cancel</Text>
-        </Pressable>
+      {/* Bottom Controls — Glass Nav */}
+      <View
+        className="absolute bottom-0 left-0 right-0"
+        style={{
+          padding: 24,
+          backgroundColor: "rgba(19,19,19,0.7)",
+        }}
+      >
+        <SafeAreaView edges={["bottom"]}>
+          <View className="flex-row" style={{ gap: 16 }}>
+            <Pressable
+              onPress={() => router.back()}
+              className="flex-1 rounded-xl items-center justify-center"
+              style={{
+                height: 52,
+                backgroundColor: "#2A2A2A",
+              }}
+            >
+              <Text
+                className="font-label text-on-surface"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 3.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                Cancel
+              </Text>
+            </Pressable>
 
-        <Pressable
-          disabled
-          className="flex-1 h-14 rounded-xl bg-primary/40 items-center justify-center"
-        >
-          <Text className="text-on-primary font-body text-base opacity-60">
-            {complete ? "Done" : "Saving..."}
-          </Text>
-        </Pressable>
+            <Pressable
+              disabled={!complete}
+              onPress={() => {
+                if (complete && jobId) {
+                  router.replace(`/result/${jobId}` as any);
+                } else if (complete) {
+                  router.back();
+                }
+              }}
+              className="flex-1 rounded-xl items-center justify-center"
+              style={{
+                height: 52,
+                backgroundColor: "rgba(254,223,181,0.2)",
+                borderWidth: 1,
+                borderColor: "rgba(254,223,181,0.1)",
+              }}
+            >
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 3.5,
+                  textTransform: "uppercase",
+                  color: complete ? "#FEDFB5" : "rgba(254,223,181,0.4)",
+                }}
+              >
+                Done
+              </Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
       </View>
     </SafeAreaView>
   );

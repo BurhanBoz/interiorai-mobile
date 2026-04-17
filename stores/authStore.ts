@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
 import type { UserResponse } from "@/types/api";
 import * as authService from "@/services/auth";
+import * as userService from "@/services/user";
 
 interface AuthState {
     token: string | null;
@@ -13,6 +14,7 @@ interface AuthState {
     register: (email: string, password: string, displayName?: string) => Promise<void>;
     logout: () => Promise<void>;
     hydrate: () => Promise<void>;
+    setUser: (user: UserResponse) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -72,6 +74,14 @@ export const useAuthStore = create<AuthState>((set) => ({
                     isAuthenticated: true,
                     isLoading: false,
                 });
+                // Fetch full user profile in background
+                try {
+                    const user = await userService.getMe();
+                    set({ user });
+                } catch {
+                    // Token may be expired — keep authenticated state,
+                    // API interceptor will handle 401
+                }
             } else {
                 set({ isLoading: false });
             }
@@ -79,4 +89,6 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: false });
         }
     },
+
+    setUser: (user) => set({ user }),
 }));

@@ -1,12 +1,12 @@
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
-import * as SplashScreen from "expo-system-ui";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/authStore";
+import { DrawerProvider } from "@/components/layout/DrawerProvider";
 import "@/i18n";
 import "../global.css";
 
@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     NotoSerif: require("../assets/fonts/NotoSerif-Regular.ttf"),
     "NotoSerif-Medium": require("../assets/fonts/NotoSerif-Regular.ttf"),
     "NotoSerif-Bold": require("../assets/fonts/NotoSerif-Regular.ttf"),
@@ -30,7 +30,7 @@ export default function RootLayout() {
     "Inter-SemiBold": require("../assets/fonts/Inter-Regular.ttf"),
   });
 
-  const { isAuthenticated, hydrate } = useAuthStore();
+  const { isAuthenticated, isLoading, hydrate } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
@@ -38,26 +38,33 @@ export default function RootLayout() {
     hydrate();
   }, []);
 
+  // Guard: redirect away from protected routes if not authed,
+  // and away from auth routes if already authed.
+  // This only fires AFTER hydration completes — initial route
+  // is handled by app/index.tsx so +not-found never flashes.
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsLoaded && !fontError) return;
+    if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/onboarding");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)/studio");
+      router.replace("/(tabs)/gallery");
     }
-  }, [isAuthenticated, segments, fontsLoaded]);
+  }, [isAuthenticated, isLoading, segments, fontsLoaded, fontError]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="light" />
-          <Slot />
+          <DrawerProvider>
+            <StatusBar style="light" />
+            <Slot />
+          </DrawerProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

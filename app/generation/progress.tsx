@@ -1,30 +1,54 @@
-import { View, Text, Pressable, Animated, Easing } from "react-native";
+import { View, Text, Pressable, Animated, Easing, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useJobPolling } from "@/hooks/useJobPolling";
+import { useCreditStore } from "@/stores/creditStore";
 
 const STATUS_MESSAGES = [
-  "Analyzing room structure...",
-  "Applying design style...",
-  "Rendering final output...",
-  "Optimizing quality...",
+  "Analyzing Room Structure...",
+  "Applying Design Style...",
+  "Rendering Final Output...",
+  "Optimizing Quality...",
 ];
 
 export default function GenerationProgressScreen() {
   const { jobId } = useLocalSearchParams<{ jobId?: string }>();
   const [statusIndex, setStatusIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fetchBalance = useCreditStore(s => s.fetchBalance);
 
   const rotation = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 360,
-        duration: 2000,
+        duration: 3000,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
+    ).start();
+  }, []);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 0.6,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.3,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
     ).start();
   }, []);
 
@@ -47,14 +71,23 @@ export default function GenerationProgressScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate completion — navigate after 10s
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const target = jobId ? `/result/${jobId}` : "/result/demo";
-      router.replace(target as any);
-    }, 10000);
-    return () => clearTimeout(timeout);
-  }, [jobId]);
+  // Poll job status until terminal
+  useJobPolling(
+    jobId ?? null,
+    job => {
+      if (job.status === "COMPLETED") {
+        fetchBalance();
+        router.replace(`/result/${job.id}` as any);
+      } else if (job.status === "FAILED") {
+        setErrorMessage(
+          job.errorMessage || "Generation failed. Please try again.",
+        );
+      } else if (job.status === "CANCELLED") {
+        setErrorMessage("Job was cancelled.");
+      }
+    },
+    3000,
+  );
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -66,77 +99,208 @@ export default function GenerationProgressScreen() {
 
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
-      <View className="flex-1 px-6">
-        {/* Header */}
-        <View className="flex-row items-center justify-between py-4">
-          <Text className="font-headline text-sm tracking-[3px] uppercase text-on-surface">
-            THE ARCHITECTURAL LENS
-          </Text>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-8 py-6">
+        <Text
+          className="font-headline text-on-background"
+          style={{
+            fontSize: 13,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+          }}
+        >
+          Architectural Lens
+        </Text>
+        <Pressable
+          onPress={handleClose}
+          className="items-center justify-center rounded-full"
+          style={{
+            width: 40,
+            height: 40,
+            backgroundColor: "#2A2A2A",
+          }}
+        >
+          <Ionicons name="close" size={20} color="#E5E2E1" />
+        </Pressable>
+      </View>
+
+      {/* Center content */}
+      <View className="flex-1 items-center justify-center px-8">
+        {/* Animated concentric loader */}
+        <View
+          className="items-center justify-center mb-12"
+          style={{ width: 150, height: 150 }}
+        >
+          {/* Background static circle */}
+          <View
+            className="absolute rounded-full"
+            style={{
+              width: 150,
+              height: 150,
+              borderWidth: 1,
+              borderColor: "rgba(153,143,131,0.2)",
+            }}
+          />
+
+          {/* Pulsing glow ring */}
+          <Animated.View
+            className="absolute rounded-full"
+            style={{
+              width: 140,
+              height: 140,
+              borderWidth: 1,
+              borderColor: "#C4A882",
+              opacity: pulse,
+            }}
+          />
+
+          {/* Spinning arc */}
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                width: 150,
+                height: 150,
+                borderRadius: 75,
+                borderWidth: 2,
+                borderColor: "transparent",
+                borderTopColor: "#FEDFB5",
+              },
+              spinStyle,
+            ]}
+          />
+
+          {/* Center icon */}
+          <Ionicons
+            name="time-outline"
+            size={40}
+            color="#FEDFB5"
+            style={{
+              textShadowColor: "rgba(254,223,181,0.4)",
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 8,
+            }}
+          />
+        </View>
+
+        {/* Title */}
+        <Text
+          className="font-headline text-on-background text-center"
+          style={{ fontSize: 28, letterSpacing: -0.3 }}
+        >
+          {errorMessage ? "Generation Failed" : "Creating Your Design..."}
+        </Text>
+
+        {/* Status subtitle */}
+        <Text
+          className="text-center mt-4"
+          style={{
+            fontFamily: "Inter",
+            fontSize: 11,
+            letterSpacing: 2.2,
+            textTransform: "uppercase",
+            color: errorMessage ? "#E57373" : "#E0C29A",
+          }}
+        >
+          {errorMessage ?? STATUS_MESSAGES[statusIndex]}
+        </Text>
+
+        {errorMessage && (
           <Pressable
-            onPress={handleClose}
-            className="w-10 h-10 items-center justify-center rounded-full bg-surface-container-high"
+            onPress={() =>
+              router.replace({
+                pathname: "/(tabs)/studio/review" as any,
+                params: { error: errorMessage },
+              })
+            }
+            className="mt-8 rounded-xl"
+            style={{
+              paddingHorizontal: 24,
+              paddingVertical: 14,
+              backgroundColor: "#2A2A2A",
+              borderWidth: 1,
+              borderColor: "rgba(196,168,130,0.3)",
+            }}
           >
-            <Ionicons name="close" size={20} color="#E5E2E1" />
-          </Pressable>
-        </View>
-
-        {/* Center content */}
-        <View className="flex-1 items-center justify-center -mt-10">
-          {/* Spinner area */}
-          <View className="items-center justify-center w-[140px] h-[140px] mb-10">
-            {/* Outer decorative ring */}
-            <View className="absolute w-[140px] h-[140px] rounded-full border border-primary/10" />
-
-            {/* Spinning ring */}
-            <Animated.View
-              style={spinStyle}
-              className="absolute w-[120px] h-[120px] rounded-full border-[3px] border-transparent border-t-primary border-r-primary/40"
-            />
-
-            {/* Pulsing glow placeholder — static subtle ring */}
-            <View className="absolute w-[130px] h-[130px] rounded-full border border-primary/5" />
-
-            {/* Center icon */}
-            <View className="w-14 h-14 items-center justify-center rounded-full bg-surface-container">
-              <Ionicons name="cube-outline" size={28} color="#E1C39B" />
-            </View>
-          </View>
-
-          {/* Title */}
-          <Text className="font-headline text-3xl tracking-tight text-on-surface text-center mb-3">
-            Creating Your Design...
-          </Text>
-
-          {/* Status text */}
-          <Text className="text-on-surface-variant text-sm uppercase tracking-[2px] opacity-80 text-center">
-            {STATUS_MESSAGES[statusIndex]}
-          </Text>
-        </View>
-
-        {/* Design principle card */}
-        <View className="bg-surface-container-low p-6 rounded-xl mb-6">
-          <View className="flex-row items-center gap-2 mb-3">
-            <Ionicons name="bulb-outline" size={16} color="#E1C39B" />
-            <Text className="text-primary text-xs font-label tracking-[2px] uppercase">
-              Design Principle
+            <Text
+              className="font-label text-secondary"
+              style={{
+                fontSize: 12,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                fontWeight: "600",
+              }}
+            >
+              Try Again
             </Text>
-          </View>
-          <Text className="text-on-surface-variant text-sm leading-6 italic mb-4">
-            "Scandinavian design prioritizes 'Hygge'—creating a warm atmosphere
-            and a feeling of coziness, contentment, and well-being through
-            thoughtful simplicity."
-          </Text>
-          <View className="w-12 h-[2px] bg-primary/30 rounded-full" />
-        </View>
+          </Pressable>
+        )}
 
         {/* Powered by badge */}
-        <View className="items-center mb-6">
-          <View className="flex-row items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full">
-            <Ionicons name="flash" size={14} color="#E1C39B" />
-            <Text className="text-on-surface-variant text-xs font-label tracking-[1px] uppercase">
-              Powered by SDXL
+        <View
+          className="items-center justify-center rounded-full mt-12"
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            backgroundColor: "#2A2A2A",
+            borderWidth: 1,
+            borderColor: "rgba(77,70,60,0.1)",
+          }}
+        >
+          <Text
+            className="font-label text-on-surface-variant"
+            style={{
+              fontSize: 10,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+            }}
+          >
+            Powered by SDXL
+          </Text>
+        </View>
+      </View>
+
+      {/* Bottom educational card */}
+      <View className="px-8 mb-12">
+        <View
+          className="rounded-xl overflow-hidden"
+          style={{ backgroundColor: "#1C1B1B", padding: 32 }}
+        >
+          {/* Header row */}
+          <View
+            className="flex-row items-center justify-between pb-4 mb-6"
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: "rgba(77,70,60,0.1)",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 11,
+                letterSpacing: 2.2,
+                textTransform: "uppercase",
+                color: "#E0C29A",
+              }}
+            >
+              Design Principle
             </Text>
+            <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
           </View>
+
+          {/* Blockquote */}
+          <Text
+            className="font-headline text-on-surface-variant"
+            style={{
+              fontSize: 18,
+              lineHeight: 28,
+              fontStyle: "italic",
+            }}
+          >
+            "Scandinavian design is not just about minimalism; it's about
+            finding the soul of a space through natural light and functional
+            honesty."
+          </Text>
         </View>
       </View>
     </SafeAreaView>
