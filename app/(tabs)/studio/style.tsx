@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -16,6 +17,61 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
 import type { CatalogItemResponse } from "@/types/api";
+import type { ImageSource } from "expo-image";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const CARD_GAP = 16;
+const CARD_H_PAD = 24;
+const CARD_WIDTH = (SCREEN_WIDTH - CARD_H_PAD * 2 - CARD_GAP) / 2;
+
+/* ── Room type icon map ── */
+const ROOM_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  LIVING_ROOM: "tv-outline",
+  BEDROOM: "bed-outline",
+  KITCHEN: "restaurant-outline",
+  BATHROOM: "water-outline",
+  DINING_ROOM: "wine-outline",
+  HOME_OFFICE: "desktop-outline",
+  KIDS_ROOM: "happy-outline",
+  NURSERY: "heart-outline",
+  LAUNDRY: "shirt-outline",
+  GARAGE: "car-outline",
+  BASEMENT: "layers-outline",
+  ATTIC: "triangle-outline",
+  HALLWAY: "swap-horizontal-outline",
+  ENTRYWAY: "enter-outline",
+  CLOSET: "archive-outline",
+  PATIO: "umbrella-outline",
+  BALCONY: "sunny-outline",
+  GARDEN: "leaf-outline",
+  POOL: "water-outline",
+  STUDIO: "color-palette-outline",
+  LIBRARY: "library-outline",
+  GYM: "barbell-outline",
+  MEDIA_ROOM: "film-outline",
+  GUEST_ROOM: "person-outline",
+  SUNROOM: "sunny-outline",
+  MUDROOM: "footsteps-outline",
+  PANTRY: "nutrition-outline",
+  BAR: "beer-outline",
+  OFFICE: "briefcase-outline",
+  RECEPTION: "people-outline",
+  CONFERENCE_ROOM: "easel-outline",
+  LOUNGE: "cafe-outline",
+  LOBBY: "business-outline",
+  SHOWROOM: "storefront-outline",
+  RESTAURANT: "restaurant-outline",
+  CAFE: "cafe-outline",
+  RETAIL: "cart-outline",
+  HOTEL_ROOM: "key-outline",
+  SPA: "sparkles-outline",
+  CLINIC: "medkit-outline",
+  CLASSROOM: "school-outline",
+};
+
+function getRoomIcon(code: string): keyof typeof Ionicons.glyphMap {
+  return ROOM_ICONS[code] ?? "home-outline";
+}
 
 /* ── Design style icon map ── */
 const STYLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -57,6 +113,48 @@ const STYLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 function getStyleIcon(code: string): keyof typeof Ionicons.glyphMap {
   return STYLE_ICONS[code] ?? "color-palette-outline";
+}
+
+/* ── Local design style images ── */
+const STYLE_IMAGES: Record<string, ImageSource> = {
+  MODERN: require("@/assets/styles/modern.png"),
+  MINIMALIST: require("@/assets/styles/minimalist.png"),
+  SCANDINAVIAN: require("@/assets/styles/scandinavian.png"),
+  INDUSTRIAL: require("@/assets/styles/industrial.png"),
+  BOHEMIAN: require("@/assets/styles/bohemian.png"),
+  TRADITIONAL: require("@/assets/styles/traditional.png"),
+  CONTEMPORARY: require("@/assets/styles/contemporary.png"),
+  MID_CENTURY: require("@/assets/styles/mid_century.png"),
+  RUSTIC: require("@/assets/styles/rustic.png"),
+  ART_DECO: require("@/assets/styles/art_deco.png"),
+  COASTAL: require("@/assets/styles/coastal.png"),
+  MEDITERRANEAN: require("@/assets/styles/mediterranean.png"),
+  JAPANESE: require("@/assets/styles/japanese.png"),
+  TROPICAL: require("@/assets/styles/tropical.png"),
+  FARMHOUSE: require("@/assets/styles/farmhouse.png"),
+  VINTAGE: require("@/assets/styles/vintage.png"),
+  ECLECTIC: require("@/assets/styles/eclectic.png"),
+  CLASSIC: require("@/assets/styles/classic.png"),
+  FRENCH_COUNTRY: require("@/assets/styles/french_country.png"),
+  HOLLYWOOD_GLAM: require("@/assets/styles/hollywood_glam.png"),
+  SHABBY_CHIC: require("@/assets/styles/shabby_chic.png"),
+  TRANSITIONAL: require("@/assets/styles/transitional.png"),
+  URBAN: require("@/assets/styles/urban.png"),
+  ZEN: require("@/assets/styles/zen.png"),
+  BAROQUE: require("@/assets/styles/baroque.png"),
+  GOTHIC: require("@/assets/styles/gothic.png"),
+  NEOCLASSICAL: require("@/assets/styles/neoclassical.png"),
+  BIOPHILIC: require("@/assets/styles/biophilic.png"),
+  WABI_SABI: require("@/assets/styles/wabi_sabi.png"),
+  CYBERPUNK: require("@/assets/styles/cyberpunk.png"),
+  FUTURISTIC: require("@/assets/styles/futuristic.png"),
+  RETRO: require("@/assets/styles/retro.png"),
+  MAXIMALIST: require("@/assets/styles/maximalist.png"),
+  SOUTHWESTERN: require("@/assets/styles/southwestern.png"),
+};
+
+function getStyleImage(code: string): ImageSource | null {
+  return STYLE_IMAGES[code] ?? null;
 }
 
 export default function StyleScreen() {
@@ -119,49 +217,65 @@ export default function StyleScreen() {
       presentationStyle="pageSheet"
       onRequestClose={() => setRoomPickerVisible(false)}
     >
-      <View className="flex-1 bg-surface">
-        {/* Modal Header */}
+      <View style={{ flex: 1, backgroundColor: "#131313" }}>
+        {/* Modal Header — X left, title centered */}
         <View
-          className="flex-row items-center justify-between px-6"
           style={{
-            height: 60,
+            height: 64,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(77,70,60,0.2)",
+            borderBottomColor: "rgba(77,70,60,0.15)",
           }}
         >
-          <Text
-            className="font-headline text-on-surface"
-            style={{ fontSize: 18, fontWeight: "700" }}
-          >
-            Select Room Type
-          </Text>
           <Pressable
             onPress={() => setRoomPickerVisible(false)}
-            hitSlop={8}
+            hitSlop={12}
             style={{
               width: 36,
               height: 36,
               borderRadius: 18,
-              backgroundColor: "rgba(42,42,42,0.8)",
+              backgroundColor: "rgba(255,255,255,0.08)",
               alignItems: "center",
               justifyContent: "center",
+              zIndex: 1,
             }}
           >
-            <Ionicons name="close" size={20} color="#E1C39B" />
+            <Ionicons name="close" size={18} color="#E5E2E1" />
           </Pressable>
+          <Text
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 22,
+              fontWeight: "700",
+              color: "#E5E2E1",
+              fontFamily: "NotoSerif",
+            }}
+          >
+            Select Space
+          </Text>
         </View>
 
         <FlatList
           data={groupedRoomTypes}
           keyExtractor={g => g.category}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={{ paddingBottom: 60 }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item: group }) => (
-            <View style={{ marginTop: 24 }}>
+            <View style={{ marginTop: 28 }}>
               {/* Category header */}
               <View
-                className="px-6 mb-3 flex-row items-center"
-                style={{ gap: 8 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 24,
+                  marginBottom: 16,
+                  gap: 8,
+                }}
               >
                 <View
                   style={{
@@ -172,7 +286,6 @@ export default function StyleScreen() {
                   }}
                 />
                 <Text
-                  className="font-label"
                   style={{
                     fontSize: 11,
                     letterSpacing: 2.5,
@@ -186,79 +299,101 @@ export default function StyleScreen() {
               </View>
 
               {/* Room items */}
-              {group.items.map(room => {
+              {group.items.map((room, idx) => {
                 const isSelected = roomType?.code === room.code;
                 return (
-                  <Pressable
-                    key={room.id}
-                    onPress={() => {
-                      setRoomType(room);
-                      setRoomPickerVisible(false);
-                    }}
-                    style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 24,
-                      paddingVertical: 14,
-                      backgroundColor: isSelected
-                        ? "rgba(224,194,154,0.08)"
-                        : pressed
-                          ? "rgba(255,255,255,0.03)"
-                          : "transparent",
-                    })}
-                  >
-                    <View
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        backgroundColor: isSelected
-                          ? "rgba(224,194,154,0.15)"
-                          : "rgba(42,42,42,0.6)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: isSelected ? 1 : 0,
-                        borderColor: "rgba(224,194,154,0.3)",
+                  <View key={room.id}>
+                    <Pressable
+                      onPress={() => {
+                        setRoomType(room);
+                        setRoomPickerVisible(false);
                       }}
                     >
-                      <Ionicons
-                        name="home-outline"
-                        size={18}
-                        color={isSelected ? "#E1C39B" : "#998F84"}
-                      />
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 14 }}>
-                      <Text
-                        className="font-body"
+                      <View
                         style={{
-                          fontSize: 15,
-                          fontWeight: "600",
-                          color: isSelected ? "#E1C39B" : "#E5E2E1",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          paddingHorizontal: 24,
+                          paddingVertical: 20,
+                          backgroundColor: isSelected
+                            ? "rgba(224,194,154,0.06)"
+                            : "transparent",
                         }}
                       >
-                        {room.name}
-                      </Text>
-                      {room.description ? (
-                        <Text
+                        {/* Circular icon */}
+                        <View
                           style={{
-                            fontSize: 12,
-                            color: "#998F84",
-                            marginTop: 2,
+                            width: 64,
+                            height: 64,
+                            borderRadius: 32,
+                            backgroundColor: isSelected
+                              ? "rgba(224,194,154,0.15)"
+                              : "rgba(255,255,255,0.06)",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
                           }}
-                          numberOfLines={1}
                         >
-                          {room.description}
-                        </Text>
-                      ) : null}
-                    </View>
-                    {isSelected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={22}
-                        color="#E1C39B"
+                          <Ionicons
+                            name={getRoomIcon(room.code)}
+                            size={26}
+                            color={isSelected ? "#E1C39B" : "#998F84"}
+                          />
+                        </View>
+                        {/* Name & description */}
+                        <View
+                          style={{
+                            flex: 1,
+                            marginLeft: 20,
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: "700",
+                              color: isSelected ? "#E1C39B" : "#E5E2E1",
+                              fontFamily: "NotoSerif",
+                            }}
+                          >
+                            {room.name}
+                          </Text>
+                          {room.description ? (
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                color: "#7A7268",
+                                marginTop: 4,
+                                lineHeight: 20,
+                              }}
+                              numberOfLines={2}
+                            >
+                              {room.description}
+                            </Text>
+                          ) : null}
+                        </View>
+                        {isSelected && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color="#E1C39B"
+                            style={{ flexShrink: 0, marginLeft: 12 }}
+                          />
+                        )}
+                      </View>
+                    </Pressable>
+                    {/* Separator */}
+                    {idx < group.items.length - 1 && (
+                      <View
+                        style={{
+                          height: 1,
+                          marginLeft: 24,
+                          marginRight: 24,
+                          backgroundColor: "rgba(255,255,255,0.06)",
+                        }}
                       />
                     )}
-                  </Pressable>
+                  </View>
                 );
               })}
             </View>
@@ -269,9 +404,20 @@ export default function StyleScreen() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#131313" }}
+    >
       {/* App Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 24,
+          paddingVertical: 16,
+        }}
+      >
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
@@ -289,14 +435,15 @@ export default function StyleScreen() {
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
         <Text
-          className="font-headline text-center"
           style={{
             fontSize: 14,
             lineHeight: 16,
             fontWeight: "700",
             letterSpacing: 1.5,
             textTransform: "uppercase",
+            textAlign: "center",
             color: "#E1C39B",
+            fontFamily: "NotoSerif",
           }}
         >
           {"ARCHITECTURAL\nLENS"}
@@ -305,26 +452,32 @@ export default function StyleScreen() {
       </View>
 
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 200 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Step Indicator & Headline */}
         <View style={{ paddingHorizontal: 24, paddingTop: 32 }}>
           <Text
-            className="font-label text-secondary mb-2"
             style={{
               fontSize: 11,
               letterSpacing: 2,
               textTransform: "uppercase",
               fontWeight: "500",
+              color: "#998F84",
+              marginBottom: 8,
             }}
           >
             STEP 2 OF 4
           </Text>
           <Text
-            className="font-headline text-on-surface"
-            style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+            style={{
+              fontSize: 36,
+              lineHeight: 40,
+              fontWeight: "700",
+              color: "#E5E2E1",
+              fontFamily: "NotoSerif",
+            }}
           >
             Describe Your Space
           </Text>
@@ -334,12 +487,12 @@ export default function StyleScreen() {
           <View style={{ marginTop: 64, alignItems: "center" }}>
             <ActivityIndicator size="large" color="#C4A882" />
             <Text
-              className="font-label text-on-surface-variant"
               style={{
                 marginTop: 16,
                 fontSize: 11,
                 letterSpacing: 2,
                 textTransform: "uppercase",
+                color: "#998F84",
               }}
             >
               Loading catalog…
@@ -350,267 +503,200 @@ export default function StyleScreen() {
             {/* ── Room Type Select Box ── */}
             <View style={{ marginTop: 32, paddingHorizontal: 24 }}>
               <Text
-                className="font-label text-on-surface-variant"
                 style={{
                   fontSize: 11,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                   marginBottom: 12,
+                  fontWeight: "500",
+                  color: "#998F84",
                 }}
               >
                 ROOM TYPE
               </Text>
-              <Pressable
-                onPress={() => setRoomPickerVisible(true)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: pressed
-                    ? "rgba(42,42,42,0.9)"
-                    : "rgba(42,42,42,0.6)",
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: roomType
-                    ? "rgba(224,194,154,0.4)"
-                    : "rgba(77,70,60,0.25)",
-                  paddingHorizontal: 16,
-                  height: 60,
-                  gap: 12,
-                })}
-              >
+              <Pressable onPress={() => setRoomPickerVisible(true)}>
                 <View
                   style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 10,
-                    backgroundColor: roomType
-                      ? "rgba(224,194,154,0.12)"
-                      : "rgba(77,70,60,0.2)",
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
+                    backgroundColor: "rgba(42,42,42,0.6)",
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: roomType
+                      ? "rgba(224,194,154,0.35)"
+                      : "rgba(77,70,60,0.25)",
+                    paddingHorizontal: 16,
+                    height: 56,
                   }}
                 >
-                  <Ionicons
-                    name={roomType ? "home" : "home-outline"}
-                    size={16}
-                    color={roomType ? "#E1C39B" : "#998F84"}
-                  />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  {roomType ? (
-                    <>
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          letterSpacing: 1.5,
-                          textTransform: "uppercase",
-                          color: "#998F84",
-                          fontWeight: "600",
-                        }}
-                        numberOfLines={1}
-                      >
-                        {roomType.category || "Room"}
-                      </Text>
-                      <Text
-                        className="font-body"
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "600",
-                          color: "#E5E2E1",
-                          marginTop: 1,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {roomType.name}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text
-                      className="font-body"
+                  {roomType && (
+                    <View
                       style={{
-                        fontSize: 14,
-                        color: "#998F84",
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: "rgba(224,194,154,0.12)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 12,
                       }}
-                      numberOfLines={1}
                     >
-                      Select a room type…
-                    </Text>
+                      <Ionicons
+                        name={getRoomIcon(roomType.code)}
+                        size={16}
+                        color="#E1C39B"
+                      />
+                    </View>
                   )}
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      fontWeight: "600",
+                      letterSpacing: roomType ? 1 : 0,
+                      textTransform: roomType ? "uppercase" : "none",
+                      color: roomType ? "#E1C39B" : "#998F84",
+                    }}
+                    numberOfLines={1}
+                  >
+                    {roomType ? roomType.name : "Select a room type…"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color="#998F84" />
                 </View>
-                <Ionicons
-                  name="chevron-down"
-                  size={16}
-                  color="#998F84"
-                  style={{ flexShrink: 0 }}
-                />
               </Pressable>
             </View>
 
             {/* ── Design Style Section ── */}
             <View style={{ marginTop: 36, paddingHorizontal: 24 }}>
               <Text
-                className="font-label text-on-surface-variant"
                 style={{
                   fontSize: 11,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                   marginBottom: 20,
+                  fontWeight: "500",
+                  color: "#998F84",
                 }}
               >
                 DESIGN STYLE
               </Text>
-              <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: CARD_GAP,
+                }}
+              >
                 {designStyles.map(style => {
                   const isSelected = designStyle?.code === style.code;
                   const iconName = getStyleIcon(style.code);
+                  const localImage = getStyleImage(style.code);
+                  const imageSource = localImage
+                    ? localImage
+                    : style.previewUrl
+                      ? { uri: style.previewUrl }
+                      : null;
                   return (
                     <Pressable
                       key={style.id}
                       onPress={() => setDesignStyle(style)}
-                      style={({ pressed }) => ({
-                        width: "47%",
-                        transform: [{ scale: pressed ? 0.97 : 1 }],
-                      })}
                     >
-                      <View
-                        style={{
-                          borderRadius: 16,
-                          overflow: "hidden",
-                          backgroundColor: isSelected
-                            ? "rgba(224,194,154,0.06)"
-                            : "#1C1B1B",
-                          borderWidth: isSelected ? 1.5 : 1,
-                          borderColor: isSelected
-                            ? "#E1C39B"
-                            : "rgba(77,70,60,0.15)",
-                        }}
-                      >
-                        {/* Preview image or icon fallback */}
+                      <View style={{ width: CARD_WIDTH, marginBottom: 4 }}>
+                        {/* Image Card */}
                         <View
                           style={{
-                            aspectRatio: 4 / 3,
-                            backgroundColor: "#2A2A2A",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            width: CARD_WIDTH,
+                            height: CARD_WIDTH * 1.15,
+                            borderRadius: 16,
                             overflow: "hidden",
+                            borderWidth: isSelected ? 2 : 1,
+                            borderColor: isSelected
+                              ? "#E1C39B"
+                              : "rgba(77,70,60,0.2)",
+                            backgroundColor: "#1E1E1E",
                           }}
                         >
-                          {style.previewUrl ? (
+                          {imageSource ? (
                             <Image
-                              source={{ uri: style.previewUrl }}
+                              source={imageSource}
                               style={{ width: "100%", height: "100%" }}
                               contentFit="cover"
+                              transition={200}
                             />
                           ) : (
-                            <View style={{ alignItems: "center", gap: 6 }}>
-                              <View
-                                style={{
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: 24,
-                                  backgroundColor: isSelected
-                                    ? "rgba(224,194,154,0.15)"
-                                    : "rgba(77,70,60,0.25)",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Ionicons
-                                  name={iconName}
-                                  size={24}
-                                  color={isSelected ? "#E1C39B" : "#998F84"}
-                                />
-                              </View>
-                            </View>
-                          )}
-                          {/* Name overlay on the image */}
-                          <LinearGradient
-                            colors={["transparent", "rgba(0,0,0,0.7)"]}
-                            style={{
-                              position: "absolute",
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              paddingTop: 24,
-                              paddingBottom: 8,
-                              paddingHorizontal: 10,
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <Ionicons
-                              name={iconName}
-                              size={12}
-                              color="rgba(255,255,255,0.8)"
-                            />
-                            <Text
+                            <View
                               style={{
                                 flex: 1,
-                                fontSize: 10,
-                                fontWeight: "700",
-                                letterSpacing: 0.8,
-                                textTransform: "uppercase",
-                                color: "rgba(255,255,255,0.9)",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#2A2A2A",
                               }}
-                              numberOfLines={1}
                             >
-                              {style.name}
-                            </Text>
-                          </LinearGradient>
-                          {/* Selected indicator overlay */}
+                              <Ionicons
+                                name={iconName}
+                                size={40}
+                                color={isSelected ? "#E1C39B" : "#998F84"}
+                              />
+                            </View>
+                          )}
+                          {/* SELECTED badge */}
                           {isSelected && (
                             <View
                               style={{
                                 position: "absolute",
-                                top: 8,
-                                right: 8,
-                                width: 24,
-                                height: 24,
-                                borderRadius: 12,
-                                backgroundColor: "#E1C39B",
-                                alignItems: "center",
-                                justifyContent: "center",
+                                top: 10,
+                                left: 10,
+                                backgroundColor: "rgba(30,28,26,0.85)",
+                                borderRadius: 6,
+                                paddingHorizontal: 10,
+                                paddingVertical: 5,
+                                borderWidth: 1,
+                                borderColor: "rgba(224,194,154,0.3)",
                               }}
                             >
-                              <Ionicons
-                                name="checkmark"
-                                size={14}
-                                color="#3F2D11"
-                              />
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: "800",
+                                  letterSpacing: 1.2,
+                                  color: "#E1C39B",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                Selected
+                              </Text>
                             </View>
                           )}
                         </View>
-
-                        {/* Label */}
+                        {/* Name below card */}
                         <View
-                          className="flex-row items-center"
                           style={{
-                            paddingHorizontal: 12,
-                            paddingVertical: 10,
-                            gap: 6,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginTop: 10,
+                            paddingHorizontal: 2,
                           }}
                         >
-                          <Ionicons
-                            name={iconName}
-                            size={13}
-                            color={isSelected ? "#E1C39B" : "#998F84"}
-                          />
                           <Text
-                            className="font-label"
                             style={{
-                              flex: 1,
-                              fontSize: 10,
-                              letterSpacing: 0.8,
-                              textTransform: "uppercase",
+                              fontSize: 14,
                               fontWeight: "600",
-                              color: isSelected ? "#E1C39B" : "#D1C5B8",
+                              color: isSelected ? "#E5E2E1" : "#E5E2E1",
+                              flex: 1,
                             }}
                             numberOfLines={1}
                           >
                             {style.name}
                           </Text>
+                          {isSelected && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={20}
+                              color="#E1C39B"
+                              style={{ marginLeft: 6 }}
+                            />
+                          )}
                         </View>
                       </View>
                     </Pressable>
@@ -626,7 +712,17 @@ export default function StyleScreen() {
       <RoomPickerModal />
 
       {/* Floating CTA */}
-      <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 24,
+          paddingBottom: 96,
+          paddingTop: 16,
+        }}
+      >
         <Pressable
           onPress={handleNext}
           disabled={!canProceed}

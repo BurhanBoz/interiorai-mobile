@@ -92,27 +92,34 @@ function EmptyState() {
         className="w-full"
         style={({ pressed }) => ({
           maxWidth: 400,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          transform: [{ scale: pressed ? 0.97 : 1 }],
         })}
       >
         <LinearGradient
           colors={["#C4A882", "#A68A62"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="flex-row items-center justify-between rounded-xl px-8"
-          style={{ height: 56 }}
+          style={{
+            height: 54,
+            borderRadius: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+          }}
         >
           <Text
-            className="font-body text-on-secondary font-semibold"
             style={{
-              fontSize: 14,
-              letterSpacing: 1.5,
+              fontSize: 13,
+              fontWeight: "700",
+              letterSpacing: 2,
               textTransform: "uppercase",
+              color: "#3F2D11",
             }}
           >
             Start Creating
           </Text>
-          <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+          <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
         </LinearGradient>
       </Pressable>
     </View>
