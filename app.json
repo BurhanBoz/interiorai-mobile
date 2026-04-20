@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.thearchitecturallens.mobile"
+      "bundleIdentifier": "com.thearchitecturallens.mobile",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +36,8 @@
       "expo-font",
       "expo-localization",
       "expo-secure-store",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-apple-authentication"
     ]
   }
 }

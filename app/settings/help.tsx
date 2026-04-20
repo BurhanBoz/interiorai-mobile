@@ -11,6 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { useTranslation } from "react-i18next";
 
 const FAQ_ITEMS = [
   {
@@ -78,6 +80,7 @@ function AccordionItem({
 }
 
 export default function HelpScreen() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const filtered = FAQ_ITEMS.filter(
@@ -129,7 +132,7 @@ export default function HelpScreen() {
             className="font-headline text-on-background mb-4"
             style={{ fontSize: 56, lineHeight: 62 }}
           >
-            Help &{"\n"}Support
+            {t("settings.help_title")}
           </Text>
           <View
             className="mb-6"
@@ -167,7 +170,7 @@ export default function HelpScreen() {
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder="Find answers..."
+                placeholder={t("settings.help_search_placeholder")}
                 placeholderTextColor="rgba(153,143,132,0.5)"
                 className="flex-1 font-body text-on-surface"
                 style={{
@@ -237,42 +240,15 @@ export default function HelpScreen() {
             className="font-headline text-on-background mb-6"
             style={{ fontSize: 20 }}
           >
-            Still curious?
+            {t("settings.help_still_curious")}
           </Text>
-          <Pressable
-            onPress={() => Linking.openURL("mailto:concierge@archlens.studio")}
-            className="w-full mb-6"
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.97 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                height: 54,
-                borderRadius: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
-            >
-              <Ionicons name="mail-outline" size={18} color="#3F2D11" />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                Contact Us
-              </Text>
-            </LinearGradient>
-          </Pressable>
+          <View className="w-full mb-6">
+            <PrimaryButton
+              label={t("settings.help_contact_us")}
+              leftIcon="mail-outline"
+              onPress={() => Linking.openURL("mailto:concierge@archlens.studio")}
+            />
+          </View>
           <View className="items-center" style={{ gap: 4 }}>
             <Text
               className="font-label text-outline"

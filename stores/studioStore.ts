@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CatalogItemResponse, DesignMode, QualityTier } from "@/types/api";
+import type { CatalogItemResponse, DesignMode, QualityTier, SpeedMode } from "@/types/api";
 
 interface StudioState {
     step: 1 | 2 | 3 | 4;
@@ -8,6 +8,7 @@ interface StudioState {
     designStyle: CatalogItemResponse | null;
     mode: DesignMode;
     qualityTier: QualityTier;
+    speedMode: SpeedMode;
     numOutputs: number;
     preserveLayout: boolean;
     prompt: string;
@@ -24,6 +25,7 @@ interface StudioState {
     setDesignStyle: (style: CatalogItemResponse | null) => void;
     setMode: (mode: DesignMode) => void;
     setQualityTier: (tier: QualityTier) => void;
+    setSpeedMode: (mode: SpeedMode) => void;
     setNumOutputs: (n: number) => void;
     setPreserveLayout: (v: boolean) => void;
     setPrompt: (v: string) => void;
@@ -44,6 +46,7 @@ const initialState = {
     designStyle: null,
     mode: "REDESIGN" as DesignMode,
     qualityTier: "STANDARD" as QualityTier,
+    speedMode: "BALANCED" as SpeedMode,
     numOutputs: 1,
     preserveLayout: true,
     prompt: "",
@@ -64,6 +67,7 @@ export const useStudioStore = create<StudioState>((set) => ({
     setDesignStyle: (designStyle) => set({ designStyle }),
     setMode: (mode) => set({ mode }),
     setQualityTier: (qualityTier) => set({ qualityTier }),
+    setSpeedMode: (speedMode) => set({ speedMode }),
     setNumOutputs: (numOutputs) => set({ numOutputs }),
     setPreserveLayout: (preserveLayout) => set({ preserveLayout }),
     setPrompt: (prompt) => set({ prompt }),

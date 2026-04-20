@@ -11,33 +11,34 @@ import { useRef, useEffect, useCallback } from "react";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 const MENU_ITEMS = [
   {
     icon: "cube-outline" as const,
-    label: "Studio",
+    labelKey: "tabs.studio",
     route: "/(tabs)/studio" as const,
     match: "/studio",
   },
   {
     icon: "grid-outline" as const,
-    label: "Gallery",
+    labelKey: "tabs.gallery",
     route: "/(tabs)/gallery" as const,
     match: "/gallery",
   },
   {
     icon: "time-outline" as const,
-    label: "History",
+    labelKey: "tabs.history",
     route: "/(tabs)/history" as const,
     match: "/history",
   },
   {
     icon: "person-outline" as const,
-    label: "Profile",
+    labelKey: "tabs.profile",
     route: "/(tabs)/profile" as const,
     match: "/profile",
   },
@@ -45,13 +46,13 @@ const MENU_ITEMS = [
 
 const SETTINGS_ITEMS = [
   {
-    icon: "settings-outline" as const,
-    label: "Settings",
+    icon: "language-outline" as const,
+    labelKey: "drawer.language",
     route: "/settings/language" as const,
   },
   {
     icon: "help-circle-outline" as const,
-    label: "Help",
+    labelKey: "drawer.help",
     route: "/settings/help" as const,
   },
 ] as const;
@@ -62,6 +63,7 @@ interface SideDrawerProps {
 }
 
 export function SideDrawer({ visible, onClose }: SideDrawerProps) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const drawerWidth = width * 0.8;
   const insets = useSafeAreaInsets();
@@ -71,10 +73,9 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
 
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const credits = useCreditStore((s) => s.balance);
   const subscription = useSubscriptionStore((s) => s.subscription);
 
-  const tierLabel = subscription?.planName ?? "Free";
+  const tierLabel = subscription?.planName ?? t("profile.free");
 
   useEffect(() => {
     if (visible) {
@@ -116,18 +117,22 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
   );
 
   const handleSignOut = useCallback(() => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          onClose();
-          await logout();
+    Alert.alert(
+      t("drawer.sign_out_confirm_title"),
+      t("drawer.sign_out_confirm_description"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("drawer.sign_out"),
+          style: "destructive",
+          onPress: async () => {
+            onClose();
+            await logout();
+          },
         },
-      },
-    ]);
-  }, [onClose, logout]);
+      ],
+    );
+  }, [onClose, logout, t]);
 
   return (
     <Modal
@@ -183,24 +188,16 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
         >
           {/* Avatar with tier badge */}
           <View style={{ position: "relative" }}>
-            <View
+            <UserAvatar
+              size="md"
               style={{
                 width: 64,
                 height: 64,
                 borderRadius: 32,
-                overflow: "hidden",
-                backgroundColor: "#2A2A2A",
                 borderWidth: 2,
                 borderColor: "rgba(225,195,155,0.3)",
-                padding: 3,
               }}
-            >
-              <Image
-                source={{ uri: user?.displayName ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=2A2A2A&color=E1C39B&size=128` : "https://i.pravatar.cc/128?img=12" }}
-                style={{ width: "100%", height: "100%", borderRadius: 999 }}
-                contentFit="cover"
-              />
-            </View>
+            />
             <View
               style={{
                 position: "absolute",
@@ -237,7 +234,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 lineHeight: 24,
               }}
             >
-              {user?.displayName || user?.email || "Architect"}
+              {user?.displayName || user?.email || t("drawer.architect")}
             </Text>
             <View
               style={{
@@ -258,7 +255,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                   color: "#E0C29A",
                 }}
               >
-                Premium Member
+                {t("drawer.premium_member")}
               </Text>
             </View>
           </View>
@@ -276,7 +273,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
               color: "rgba(224,194,154,0.6)",
             }}
           >
-            NAVIGATE
+            {t("drawer.navigate")}
           </Text>
         </View>
 
@@ -284,9 +281,10 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
         <View style={{ paddingHorizontal: 24, marginBottom: 32, flex: 1 }}>
           {MENU_ITEMS.map((item) => {
             const isActive = pathname.includes(item.match);
+            const label = t(item.labelKey);
             return (
               <Pressable
-                key={item.label}
+                key={item.labelKey}
                 onPress={() => navigate(item.route)}
                 style={({ pressed }) => ({
                   flexDirection: "row",
@@ -324,7 +322,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                       color: isActive ? "#E1C39B" : "#E5E2E1",
                     }}
                   >
-                    {item.label}
+                    {label}
                   </Text>
                 </View>
                 <Ionicons
@@ -349,14 +347,14 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 color: "rgba(224,194,154,0.6)",
               }}
             >
-              SETTINGS
+              {t("drawer.settings")}
             </Text>
           </View>
 
           {/* Settings Items */}
           {SETTINGS_ITEMS.map((item) => (
             <Pressable
-              key={item.label}
+              key={item.labelKey}
               onPress={() => navigate(item.route)}
               style={({ pressed }) => ({
                 flexDirection: "row",
@@ -388,42 +386,44 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                     color: "#E5E2E1",
                   }}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
               </View>
             </Pressable>
           ))}
         </View>
 
-        {/* Sign Out — bottom */}
+        {/* Sign Out — matches the menu-item row style (icon + text inline) */}
         <View style={{ paddingHorizontal: 24 }}>
           <Pressable
             onPress={handleSignOut}
             style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              borderRadius: 12,
-              backgroundColor: pressed
-                ? "rgba(255,180,171,0.1)"
-                : "rgba(255,180,171,0.05)",
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+              borderRadius: 8,
+              backgroundColor: pressed ? "rgba(255,180,171,0.1)" : "transparent",
             })}
           >
-            <Ionicons name="log-out-outline" size={22} color="#FFB4AB" />
-            <Text
-              className="font-label"
+            <View
               style={{
-                fontSize: 14,
-                fontWeight: "700",
-                textTransform: "uppercase",
-                letterSpacing: 2,
-                color: "#FFB4AB",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 16,
               }}
             >
-              Sign Out
-            </Text>
+              <Ionicons name="log-out-outline" size={22} color="#FFB4AB" />
+              <Text
+                className="font-body"
+                style={{
+                  fontSize: 14,
+                  fontWeight: "500",
+                  letterSpacing: 0.5,
+                  color: "#FFB4AB",
+                }}
+              >
+                {t("drawer.sign_out")}
+              </Text>
+            </View>
           </Pressable>
         </View>
       </Animated.View>

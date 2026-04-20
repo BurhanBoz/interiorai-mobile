@@ -3,20 +3,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "@/stores/settingsStore";
-
-const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "tr", label: "Türkçe" },
-  { code: "ar", label: "العربية" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "de", label: "Deutsch" },
-  { code: "ja", label: "日本語" },
-  { code: "zh", label: "中文" },
-] as const;
+import { SUPPORTED_LANGUAGES } from "@/i18n";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function LanguageScreen() {
+  const { t } = useTranslation();
   const language = useSettingsStore((s) => s.language);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
 
@@ -45,13 +38,13 @@ export default function LanguageScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Title Section */}
+        {/* Title */}
         <View style={{ marginBottom: 48, marginTop: 24 }}>
           <Text
             className="font-headline text-on-surface"
             style={{ fontSize: 38, lineHeight: 44, marginBottom: 16 }}
           >
-            Choose Language
+            {t("settings.language_title")}
           </Text>
           <View
             className="bg-primary"
@@ -59,9 +52,9 @@ export default function LanguageScreen() {
           />
         </View>
 
-        {/* Language List */}
+        {/* Language List — built from SUPPORTED_LANGUAGES in i18n/index.ts */}
         <View style={{ gap: 12 }}>
-          {LANGUAGES.map((lang) => {
+          {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = language === lang.code;
             return (
               <Pressable
@@ -85,8 +78,8 @@ export default function LanguageScreen() {
                     },
                   ]}
                 >
-                  {isSelected ? (
-                    <View>
+                  <View style={{ flex: 1 }}>
+                    {isSelected && (
                       <Text
                         className="font-label text-primary"
                         style={{
@@ -99,21 +92,33 @@ export default function LanguageScreen() {
                       >
                         Current
                       </Text>
-                      <Text
-                        className="font-body text-on-surface"
-                        style={{ fontSize: 18, fontWeight: "500" }}
-                      >
-                        {lang.label}
-                      </Text>
-                    </View>
-                  ) : (
+                    )}
                     <Text
-                      className="font-body text-on-surface-variant"
-                      style={{ fontSize: 18 }}
+                      className={`font-body ${
+                        isSelected ? "text-on-surface" : "text-on-surface-variant"
+                      }`}
+                      style={{
+                        fontSize: 18,
+                        fontWeight: isSelected ? "500" : "400",
+                      }}
                     >
-                      {lang.label}
+                      {lang.nativeName}
                     </Text>
-                  )}
+                    {lang.nativeName !== lang.englishName && (
+                      <Text
+                        className="font-label text-on-surface-variant"
+                        style={{
+                          fontSize: 11,
+                          letterSpacing: 1.5,
+                          marginTop: 2,
+                          opacity: 0.7,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {lang.englishName}
+                      </Text>
+                    )}
+                  </View>
                   {isSelected && (
                     <Ionicons
                       name="checkmark-circle"
@@ -128,41 +133,14 @@ export default function LanguageScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Actions */}
+      {/* Bottom CTA */}
       <View className="absolute bottom-0 left-0 right-0">
         <LinearGradient
           colors={["transparent", "rgba(19,19,19,0.9)", "#131313"]}
           locations={[0, 0.35, 1]}
           style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 40 }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.95 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-row items-center justify-between rounded-xl"
-              style={{ height: 56, paddingHorizontal: 24 }}
-            >
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  color: "#281801",
-                }}
-              >
-                Continue
-              </Text>
-              <Ionicons name="arrow-forward" size={22} color="#281801" />
-            </LinearGradient>
-          </Pressable>
+          <PrimaryButton label={t("common.continue")} onPress={() => router.back()} />
         </LinearGradient>
       </View>
     </SafeAreaView>

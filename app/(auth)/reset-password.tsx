@@ -7,14 +7,16 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import * as authService from "@/services/auth";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function ResetPasswordScreen() {
+  const { t } = useTranslation();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,19 +28,19 @@ export default function ResetPasswordScreen() {
     setError("");
 
     if (!newPassword.trim() || !confirmPassword.trim()) {
-      setError("Please fill in both fields.");
+      setError(t("auth.register_missing_fields"));
       return;
     }
     if (newPassword.length < 8 || newPassword.length > 72) {
-      setError("Password must be 8–72 characters.");
+      setError(t("reset_password.password_too_short"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("reset_password.passwords_dont_match"));
       return;
     }
     if (!token) {
-      setError("Invalid reset link. Please request a new password reset.");
+      setError(t("reset_password.generic_error"));
       return;
     }
 
@@ -46,13 +48,12 @@ export default function ResetPasswordScreen() {
     try {
       await authService.resetPassword(token, newPassword);
       Alert.alert(
-        "Password Reset",
-        "Your password has been reset successfully. You can now log in.",
-        [{ text: "Log In", onPress: () => router.replace("/(auth)/login") }],
+        t("reset_password.success_title"),
+        t("reset_password.success_description"),
+        [{ text: t("auth.sign_in_link"), onPress: () => router.replace("/(auth)/login") }],
       );
     } catch (e: any) {
-      const message =
-        e?.response?.data?.message ?? "Something went wrong. Please try again.";
+      const message = e?.response?.data?.message ?? t("reset_password.generic_error");
       setError(message);
     } finally {
       setLoading(false);
@@ -74,7 +75,7 @@ export default function ResetPasswordScreen() {
           <View className="flex-1 px-6">
             {/* Header */}
             <Text className="mt-4 text-center font-headline text-xl uppercase tracking-widest text-[#F5F0EB]">
-              THE ARCHITECTURAL LENS
+              {t("app.brand")}
             </Text>
 
             {/* Headline */}
@@ -82,10 +83,10 @@ export default function ResetPasswordScreen() {
               className="mt-10 font-headline font-bold tracking-tight text-on-surface"
               style={{ fontSize: 40, lineHeight: 44 }}
             >
-              New Password
+              {t("reset_password.title")}
             </Text>
             <Text className="mt-2 font-body text-sm text-on-surface-variant">
-              Choose a strong password for your account.
+              {t("reset_password.subtitle")}
             </Text>
 
             {/* Form */}
@@ -93,12 +94,12 @@ export default function ResetPasswordScreen() {
               {/* New Password */}
               <View>
                 <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
-                  NEW PASSWORD
+                  {t("reset_password.new_password_label")}
                 </Text>
                 <View className="relative">
                   <TextInput
                     className="rounded-xl bg-surface-container-low px-4 py-3.5 pr-12 font-body text-base text-on-surface"
-                    placeholder="Enter new password"
+                    placeholder={t("reset_password.new_password_placeholder")}
                     placeholderTextColor="#4D463C"
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -123,11 +124,11 @@ export default function ResetPasswordScreen() {
               {/* Confirm Password */}
               <View>
                 <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
-                  CONFIRM PASSWORD
+                  {t("reset_password.confirm_password_label")}
                 </Text>
                 <TextInput
                   className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
-                  placeholder="Confirm new password"
+                  placeholder={t("reset_password.confirm_password_placeholder")}
                   placeholderTextColor="#4D463C"
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
@@ -146,45 +147,13 @@ export default function ResetPasswordScreen() {
             ) : null}
 
             {/* Submit */}
-            <Pressable
-              onPress={handleReset}
-              disabled={loading}
-              className="mt-6"
-              style={({ pressed }) => ({
-                opacity: loading ? 0.7 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              <LinearGradient
-                colors={["#C4A882", "#A68A62"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  height: 56,
-                  borderRadius: 16,
-                  paddingHorizontal: 24,
-                  borderWidth: 1,
-                  borderColor: "rgba(196,168,130,0.3)",
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                    color: "#3F2D11",
-                  }}
-                >
-                  {loading ? "Resetting…" : "Reset Password"}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-              </LinearGradient>
-            </Pressable>
+            <View className="mt-6">
+              <PrimaryButton
+                label={loading ? t("reset_password.resetting") : t("reset_password.submit")}
+                onPress={handleReset}
+                loading={loading}
+              />
+            </View>
 
             {/* Request new reset link */}
             <Pressable
@@ -193,7 +162,7 @@ export default function ResetPasswordScreen() {
               disabled={loading}
             >
               <Text className="font-body text-sm text-primary">
-                Request a new reset link
+                {t("reset_password.request_new_link")}
               </Text>
             </Pressable>
 
@@ -206,7 +175,7 @@ export default function ResetPasswordScreen() {
               >
                 <Ionicons name="arrow-back" size={18} color="#D0C5B8" />
                 <Text className="font-body text-sm text-on-surface-variant">
-                  Back to Log In
+                  {t("forgot_password.back_to_login")}
                 </Text>
               </Pressable>
             </View>

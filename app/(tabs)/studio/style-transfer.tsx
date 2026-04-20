@@ -8,6 +8,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { useDrawer } from "@/components/layout/DrawerProvider";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import Slider from "@react-native-community/slider";
 
 const PLACEHOLDER_ROOM =
@@ -58,21 +59,7 @@ export default function StyleTransferScreen() {
             Architectural Lens
           </Text>
         </View>
-        <View
-          className="rounded-full overflow-hidden"
-          style={{
-            width: 32,
-            height: 32,
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.3)",
-          }}
-        >
-          <Image
-            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView

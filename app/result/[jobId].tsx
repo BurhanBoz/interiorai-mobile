@@ -14,6 +14,8 @@ import { useState, useEffect, useRef } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -28,20 +30,21 @@ function getOutputImageUrl(jobId: string, output: JobOutputResponse): string {
   return getOutputDownloadUrl(jobId, output.id);
 }
 
-const qualityLabels: Record<string, string> = {
-  STANDARD: "Standard",
-  HD: "HD (4K Ready)",
-  ULTRA_HD: "8K Ultra Render",
+const qualityLabelKeys: Record<string, string> = {
+  STANDARD: "studio.quality_standard",
+  HD: "studio.quality_hd",
+  ULTRA_HD: "studio.quality_ultra_hd",
 };
 
-const modeLabels: Record<string, string> = {
-  REDESIGN: "Architectural",
-  EMPTY_ROOM: "Interior Focus",
-  INPAINT: "Atmospheric",
-  STYLE_TRANSFER: "Style Transfer",
+const modeLabelKeys: Record<string, string> = {
+  REDESIGN: "studio.mode_redesign",
+  EMPTY_ROOM: "studio.mode_empty_room",
+  INPAINT: "studio.mode_inpaint",
+  STYLE_TRANSFER: "studio.mode_style_transfer",
 };
 
 export default function ResultDetailScreen() {
+  const { t } = useTranslation();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const [job, setJob] = useState<JobResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +121,7 @@ export default function ResultDetailScreen() {
           className="font-headline text-on-surface mt-4"
           style={{ fontSize: 20 }}
         >
-          Job Not Found
+          {t("errors.generic")}
         </Text>
         <Pressable onPress={() => router.back()} className="mt-6">
           <Text
@@ -129,7 +132,7 @@ export default function ResultDetailScreen() {
               textTransform: "uppercase",
             }}
           >
-            Go Back
+            {t("common.back")}
           </Text>
         </Pressable>
       </SafeAreaView>
@@ -137,12 +140,12 @@ export default function ResultDetailScreen() {
   }
 
   const metadata = [
-    { label: "Room Type", value: job.roomTypeName || "—" },
-    { label: "Style", value: job.designStyleName || "—" },
-    { label: "Mode", value: modeLabels[job.designMode] ?? job.designMode },
+    { label: t("result.room"), value: job.roomTypeName || "—" },
+    { label: t("result.style"), value: job.designStyleName || "—" },
+    { label: t("result.mode"), value: modeLabelKeys[job.designMode] ? t(modeLabelKeys[job.designMode]) : job.designMode },
     {
-      label: "Quality",
-      value: qualityLabels[job.qualityTier] ?? job.qualityTier,
+      label: t("result.quality"),
+      value: qualityLabelKeys[job.qualityTier] ? t(qualityLabelKeys[job.qualityTier]) : job.qualityTier,
     },
   ];
 
@@ -175,7 +178,7 @@ export default function ResultDetailScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Loading render…
+              {t("common.loading")}
             </Text>
           </View>
 
@@ -250,8 +253,7 @@ export default function ResultDetailScreen() {
                   textTransform: "uppercase",
                 }}
               >
-                {job.creditsConsumed} Credit
-                {job.creditsConsumed !== 1 ? "s" : ""}
+                {t("studio.cost_credits", { count: job.creditsConsumed })}
               </Text>
             </View>
           )}
@@ -304,7 +306,7 @@ export default function ResultDetailScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Compare
+              {t("result.compare")}
             </Text>
           </View>
 
@@ -324,17 +326,18 @@ export default function ResultDetailScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Share
+              {t("result.share")}
             </Text>
           </View>
 
           {/* Upscale Button */}
           <Pressable
-            onPress={() =>
+            onPress={() => {
+              if (!currentOutput?.id) return;
               router.push(
-                `/generation/upscale?jobId=${job.id}&outputId=${currentOutput?.id}` as any,
-              )
-            }
+                `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
+              );
+            }}
             className="flex-1 flex-row items-center justify-between bg-surface-container-high rounded-xl"
             style={{ height: 48, marginLeft: 8, paddingHorizontal: 20 }}
           >
@@ -347,7 +350,7 @@ export default function ResultDetailScreen() {
                   textTransform: "uppercase",
                 }}
               >
-                Upscale
+                {t("result.upscale")}
               </Text>
               <Text
                 className="font-label"
@@ -358,7 +361,7 @@ export default function ResultDetailScreen() {
                   color: "rgba(254,223,181,0.7)",
                 }}
               >
-                2 Credits
+                {t("result.upscale_credits_hint")}
               </Text>
             </View>
             <Ionicons name="sparkles" size={20} color="#FEDFB5" />
@@ -404,7 +407,7 @@ export default function ResultDetailScreen() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Render Time
+                  {t("result.generation_time")}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
@@ -422,7 +425,7 @@ export default function ResultDetailScreen() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Resolution
+                  {t("result.quality")}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
@@ -436,43 +439,13 @@ export default function ResultDetailScreen() {
         )}
 
         {/* Redesign Again CTA */}
-        <Pressable
-          onPress={() => router.push("/(tabs)/studio")}
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            marginBottom: 40,
-          })}
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 56,
-              borderRadius: 16,
-              paddingHorizontal: 24,
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#3F2D11",
-              }}
-            >
-              Redesign Again
-            </Text>
-            <Ionicons name="refresh" size={20} color="#3F2D11" />
-          </LinearGradient>
-        </Pressable>
+        <View style={{ marginBottom: 40 }}>
+          <PrimaryButton
+            label={t("result.new_design")}
+            icon="refresh"
+            onPress={() => router.push("/(tabs)/studio")}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

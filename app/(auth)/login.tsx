@@ -12,20 +12,26 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const login = useAuthStore(s => s.login);
+  const { appleAvailable, loading: socialLoading, signInWithApple, signInWithGoogle } = useSocialAuth();
+  const busy = isLoading || socialLoading !== null;
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Missing Fields", "Please enter your email and password.");
+      Alert.alert(t("auth.missing_fields_title"), t("auth.missing_fields_description"));
       return;
     }
     setIsLoading(true);
@@ -33,8 +39,8 @@ export default function LoginScreen() {
       await login(email.trim(), password);
     } catch (error: any) {
       Alert.alert(
-        "Login Failed",
-        error?.message || "Please check your credentials and try again.",
+        t("auth.login_failed_title"),
+        error?.message || t("auth.login_failed_description"),
       );
     } finally {
       setIsLoading(false);
@@ -68,7 +74,7 @@ export default function LoginScreen() {
                 textTransform: "uppercase",
               }}
             >
-              ARCHITECTURAL LENS
+              {t("app.brand")}
             </Text>
           </View>
 
@@ -77,13 +83,13 @@ export default function LoginScreen() {
             className="font-headline font-bold text-on-surface mb-2"
             style={{ fontSize: 36, lineHeight: 42 }}
           >
-            Welcome Back
+            {t("auth.login_title")}
           </Text>
           <Text
             className="font-body text-sm text-on-surface-variant mb-10"
             style={{ fontWeight: "300" }}
           >
-            Access your curated interior design portfolio.
+            {t("auth.login_subtitle")}
           </Text>
 
           {/* Email Input */}
@@ -92,7 +98,7 @@ export default function LoginScreen() {
               className="font-label text-on-surface-variant uppercase ml-1 mb-2"
               style={{ fontSize: 11, letterSpacing: 2 }}
             >
-              Email Address
+              {t("auth.email_label")}
             </Text>
             <View className="flex-row items-center bg-surface-container-high rounded-xl">
               <View className="pl-4">
@@ -100,7 +106,7 @@ export default function LoginScreen() {
               </View>
               <TextInput
                 className="flex-1 py-4 pl-3 pr-4 font-body text-on-surface text-sm"
-                placeholder="julianne.m@studio.com"
+                placeholder={t("auth.email_placeholder")}
                 placeholderTextColor="#998F84"
                 value={email}
                 onChangeText={setEmail}
@@ -117,7 +123,7 @@ export default function LoginScreen() {
               className="font-label text-on-surface-variant uppercase ml-1 mb-2"
               style={{ fontSize: 11, letterSpacing: 2 }}
             >
-              Password
+              {t("auth.password_label")}
             </Text>
             <View className="flex-row items-center bg-surface-container-high rounded-xl">
               <View className="pl-4">
@@ -129,7 +135,7 @@ export default function LoginScreen() {
               </View>
               <TextInput
                 className="flex-1 py-4 pl-3 pr-2 font-body text-on-surface text-sm"
-                placeholder="••••••••••••"
+                placeholder={t("auth.password_placeholder")}
                 placeholderTextColor="#998F84"
                 value={password}
                 onChangeText={setPassword}
@@ -156,50 +162,18 @@ export default function LoginScreen() {
                 className="font-label text-secondary uppercase"
                 style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                Forgot Password?
+                {t("auth.forgot_password")}
               </Text>
             </Pressable>
           </View>
 
           {/* Sign In CTA */}
-          <Pressable
+          <PrimaryButton
+            label={isLoading ? t("auth.signing_in") : t("auth.sign_in")}
             onPress={handleLogin}
-            disabled={isLoading}
-            style={({ pressed }) => ({
-              opacity: isLoading ? 0.7 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-              }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                {isLoading ? "Signing In…" : "Sign In"}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-            </LinearGradient>
-          </Pressable>
+            disabled={busy}
+            loading={isLoading}
+          />
 
           {/* Divider */}
           <View className="flex-row items-center my-8" style={{ gap: 12 }}>
@@ -211,7 +185,7 @@ export default function LoginScreen() {
               className="font-label text-on-surface-variant uppercase"
               style={{ fontSize: 10, letterSpacing: 3 }}
             >
-              or continue with
+              {t("auth.continue_with")}
             </Text>
             <View
               className="flex-1 h-px"
@@ -219,44 +193,50 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Social Login — temporarily disabled */}
-          <View className="flex-row" style={{ gap: 12, opacity: 0.35 }}>
+          {/* Social Login */}
+          <View className="flex-row" style={{ gap: 12 }}>
             <Pressable
-              disabled
+              onPress={signInWithGoogle}
+              disabled={busy}
               className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-              style={{ height: 52, gap: 10 }}
+              style={({ pressed }) => ({
+                height: 52,
+                gap: 10,
+                opacity: busy ? 0.5 : pressed ? 0.8 : 1,
+              })}
             >
               <Ionicons name="logo-google" size={18} color="#E5E2E1" />
               <Text className="font-label font-medium text-on-surface text-xs">
-                Google
+                {socialLoading === "google" ? t("auth.signing_in") : t("auth.google")}
               </Text>
             </Pressable>
-            <Pressable
-              disabled
-              className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-              style={{ height: 52, gap: 10 }}
-            >
-              <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
-              <Text className="font-label font-medium text-on-surface text-xs">
-                Apple
-              </Text>
-            </Pressable>
+            {appleAvailable && (
+              <Pressable
+                onPress={signInWithApple}
+                disabled={busy}
+                className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+                style={({ pressed }) => ({
+                  height: 52,
+                  gap: 10,
+                  opacity: busy ? 0.5 : pressed ? 0.8 : 1,
+                })}
+              >
+                <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
+                <Text className="font-label font-medium text-on-surface text-xs">
+                  {socialLoading === "apple" ? t("auth.signing_in") : t("auth.apple")}
+                </Text>
+              </Pressable>
+            )}
           </View>
-          <Text
-            className="font-label text-on-surface-variant text-center mt-2"
-            style={{ fontSize: 10, letterSpacing: 1, opacity: 0.4 }}
-          >
-            Coming Soon
-          </Text>
 
           {/* Footer */}
           <View className="flex-row items-center justify-center mt-auto pt-8">
             <Text className="font-body text-on-surface-variant text-sm">
-              Don't have an account?{" "}
+              {t("auth.dont_have_account")}{" "}
             </Text>
             <Pressable onPress={() => router.push("/register")}>
               <Text className="font-body text-secondary font-semibold text-sm ml-1">
-                Register
+                {t("auth.register_link")}
               </Text>
             </Pressable>
           </View>

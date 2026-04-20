@@ -12,16 +12,32 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { CreditLedgerEntry } from "@/types/api";
 
-const REFERENCE_GUIDE = [
-  { label: "Conceptual Sketch", cost: "1 Credit" },
-  { label: "High-Fidelity Render", cost: "5 Credits" },
-  { label: "3D Structural Analysis", cost: "12 Credits" },
+/**
+ * Reference features to show pricing for. Each one resolves to a label and
+ * a credit cost pulled from the subscription store's creditRules. Features
+ * that the current plan does not support are filtered out at render time.
+ */
+const REFERENCE_FEATURES: {
+  code: string;
+  tier: string | null;
+  labelKey: string;
+}[] = [
+  { code: "INTERIOR_REDESIGN", tier: "STANDARD", labelKey: "credits.ref_standard_redesign" },
+  { code: "INTERIOR_REDESIGN", tier: "HD",       labelKey: "credits.ref_hd_redesign" },
+  { code: "INPAINT",           tier: "STANDARD", labelKey: "credits.ref_inpaint" },
+  { code: "STYLE_TRANSFER",    tier: "STANDARD", labelKey: "credits.ref_style_transfer" },
+  { code: "EMPTY_ROOM",        tier: "STANDARD", labelKey: "credits.ref_empty_room" },
+  { code: "ULTRA_HD_UPSCALE",  tier: null,       labelKey: "credits.ref_upscale" },
 ];
 
 function formatDate(dateStr: string): string {
@@ -114,9 +130,15 @@ function LedgerRow({ item }: { item: CreditLedgerEntry }) {
 
 /* ─────────────────── Main Screen ─────────────────── */
 export default function CreditsScreen() {
+  const { t } = useTranslation();
   const balance = useCreditStore(s => s.balance);
   const planCode = useCreditStore(s => s.planCode);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
+  const creditRules = useSubscriptionStore(s => s.creditRules);
+  const features = useSubscriptionStore(s => s.features);
+  const subscription = useSubscriptionStore(s => s.subscription);
+  const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
+  const fetchPlans = useSubscriptionStore(s => s.fetchPlans);
 
   const [ledger, setLedger] = useState<CreditLedgerEntry[]>([]);
   const [page, setPage] = useState(0);
@@ -127,6 +149,46 @@ export default function CreditsScreen() {
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
+  const handleBack = useBackHandler("/(tabs)/profile");
+
+  // Derived: when the current period ends, how many days from now, and how
+  // full the progress bar should look (balance as % of monthly allocation).
+  const resetDateFormatted = useMemo(() => {
+    if (!subscription?.currentPeriodEnd) return null;
+    const d = new Date(subscription.currentPeriodEnd);
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [subscription?.currentPeriodEnd]);
+
+  const daysRemaining = useMemo(() => {
+    if (!subscription?.currentPeriodEnd) return 0;
+    const diffMs = new Date(subscription.currentPeriodEnd).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }, [subscription?.currentPeriodEnd]);
+
+  const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
+  const progressPct = monthlyLimit > 0 ? Math.min(1, balance / monthlyLimit) : 0;
+
+  // Reference guide — resolve each feature's credit cost from the plan's
+  // creditRules. Skip features the plan doesn't include.
+  const referenceItems = useMemo(() => {
+    if (creditRules.length === 0) return [];
+    return REFERENCE_FEATURES.map((ref) => {
+      const feat = features.find((f) => f.featureCode === ref.code);
+      if (feat && !feat.enabled) return null;
+      const rule = creditRules.find(
+        (r) =>
+          r.featureCode === ref.code &&
+          (ref.tier ? r.qualityTier === ref.tier : true) &&
+          (r.numOutputs === 1 || r.numOutputs === null),
+      );
+      if (!rule) return null;
+      return { labelKey: ref.labelKey, cost: rule.creditCost };
+    }).filter((x): x is { labelKey: string; cost: number } => x !== null);
+  }, [creditRules, features]);
 
   useEffect(() => {
     fetchBalance();
@@ -160,14 +222,14 @@ export default function CreditsScreen() {
     setPromoLoading(true);
     try {
       const result = await promoService.redeemPromo(promoCode.trim());
-      Alert.alert("Promo Applied!", result.message);
+      Alert.alert(t("credits.promo_success_title"), result.message);
       setPromoCode("");
       setPromoExpanded(false);
       fetchBalance();
       loadLedger(0);
     } catch (e: any) {
       setPromoError(
-        e?.response?.data?.message ?? "Failed to redeem promo code.",
+        e?.response?.data?.message ?? t("credits.promo_failed_title"),
       );
     } finally {
       setPromoLoading(false);
@@ -181,7 +243,7 @@ export default function CreditsScreen() {
         className="flex-row items-center justify-between px-6"
         style={{ height: 56 }}
       >
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={handleBack} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color="#C4A882" />
         </Pressable>
         <Text
@@ -192,24 +254,9 @@ export default function CreditsScreen() {
             textTransform: "uppercase",
           }}
         >
-          The Architectural Lens
+          {t("app.name")}
         </Text>
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.20)",
-          }}
-        >
-          <Image
-            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
-            style={{ width: 32, height: 32 }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       <FlatList
@@ -237,7 +284,7 @@ export default function CreditsScreen() {
                   marginBottom: 8,
                 }}
               >
-                Available Balance
+                {t("credits.available_balance")}
               </Text>
               <Text
                 className="font-headline text-on-surface"
@@ -249,14 +296,14 @@ export default function CreditsScreen() {
                 className="font-body text-on-surface-variant"
                 style={{ fontSize: 14, fontWeight: "300", fontStyle: "italic" }}
               >
-                Credits remain in your Studio vault.
+                {t("credits.credits_in_vault")}
               </Text>
             </View>
 
             {/* ── Upgrade Banner ── */}
             <Pressable
               onPress={() => router.push("/plans")}
-              style={{ marginBottom: 48 }}
+              style={{ marginBottom: 12 }}
             >
               <LinearGradient
                 colors={["#C4A882", "#A68A62"]}
@@ -283,119 +330,178 @@ export default function CreditsScreen() {
                     color: "#3F2D11",
                   }}
                 >
-                  Upgrade for More Credits
+                  {t("credits.upgrade_banner")}
                 </Text>
                 <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
               </LinearGradient>
             </Pressable>
 
-            {/* ── Reference Guide ── */}
-            <View
-              className="bg-surface-container-low rounded-xl"
-              style={{ padding: 24, marginBottom: 48 }}
+            {/* ── One-time Credit Pack Banner ── */}
+            <Pressable
+              onPress={() => router.push("/credits/packs")}
+              style={{ marginBottom: 48 }}
             >
-              <Text
-                className="font-label text-secondary"
+              <View
                 style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                  marginBottom: 24,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  height: 56,
+                  borderRadius: 16,
+                  paddingHorizontal: 24,
+                  borderWidth: 1,
+                  borderColor: "#4D463C",
+                  backgroundColor: "transparent",
                 }}
               >
-                Reference Guide
-              </Text>
-              {REFERENCE_GUIDE.map((item, i) => (
-                <View key={item.label}>
-                  <View
-                    className="flex-row items-center justify-between"
-                    style={{ paddingVertical: 8 }}
+                <Text
+                  numberOfLines={1}
+                  className="font-label text-secondary"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("credits.one_time_banner")}
+                </Text>
+                <Ionicons name="arrow-forward" size={20} color="#E0C29A" />
+              </View>
+            </Pressable>
+
+            {/* ── Reference Guide ── */}
+            {referenceItems.length > 0 && (
+              <View
+                className="bg-surface-container-low rounded-xl"
+                style={{ padding: 24, marginBottom: 48 }}
+              >
+                <View
+                  className="flex-row items-center justify-between"
+                  style={{ marginBottom: 8 }}
+                >
+                  <Text
+                    className="font-label text-secondary"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "700",
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                    }}
                   >
+                    {t("credits.reference_guide")}
+                  </Text>
+                  {subscription?.planName && (
                     <Text
-                      className="font-body text-on-surface"
-                      style={{ fontSize: 14, fontWeight: "500" }}
-                    >
-                      {item.label}
-                    </Text>
-                    <Text
-                      className="font-headline text-secondary"
-                      style={{ fontSize: 14 }}
-                    >
-                      {item.cost}
-                    </Text>
-                  </View>
-                  {i < REFERENCE_GUIDE.length - 1 && (
-                    <View
+                      className="font-label"
                       style={{
-                        height: 1,
-                        backgroundColor: "rgba(77,70,60,0.20)",
-                        marginVertical: 8,
+                        fontSize: 10,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                        color: "#E0C29A",
                       }}
-                    />
+                    >
+                      {subscription.planName}
+                    </Text>
                   )}
                 </View>
-              ))}
-            </View>
-
-            {/* ── Next Cycle & Progress ── */}
-            <View
-              className="bg-surface-container-low rounded-xl"
-              style={{ padding: 24, marginBottom: 48 }}
-            >
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  className="font-label text-secondary"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: "700",
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
-                    marginBottom: 8,
-                  }}
-                >
-                  Next Cycle
-                </Text>
                 <Text
                   className="font-body text-on-surface-variant"
-                  style={{ fontSize: 14 }}
+                  style={{ fontSize: 12, marginBottom: 16 }}
                 >
-                  Your balance will reset on{" "}
-                  <Text
-                    className="text-on-surface"
-                    style={{ fontWeight: "500" }}
-                  >
-                    November 1, 2024.
-                  </Text>
+                  {t("credits.reference_guide_subtitle")}
                 </Text>
+                {referenceItems.map((item, i) => (
+                  <View key={item.labelKey}>
+                    <View
+                      className="flex-row items-center justify-between"
+                      style={{ paddingVertical: 8 }}
+                    >
+                      <Text
+                        className="font-body text-on-surface"
+                        style={{ fontSize: 14, fontWeight: "500" }}
+                      >
+                        {t(item.labelKey)}
+                      </Text>
+                      <Text
+                        className="font-headline text-secondary"
+                        style={{ fontSize: 14 }}
+                      >
+                        {t("credits.credit_count", { count: item.cost })}
+                      </Text>
+                    </View>
+                    {i < referenceItems.length - 1 && (
+                      <View
+                        style={{
+                          height: 1,
+                          backgroundColor: "rgba(77,70,60,0.20)",
+                          marginVertical: 8,
+                        }}
+                      />
+                    )}
+                  </View>
+                ))}
               </View>
+            )}
 
-              {/* Progress bar */}
+            {/* ── Next Cycle & Progress ── */}
+            {subscription?.currentPeriodEnd && (
               <View
-                className="bg-surface-container-highest rounded-full overflow-hidden"
-                style={{ height: 8, marginBottom: 12 }}
+                className="bg-surface-container-low rounded-xl"
+                style={{ padding: 24, marginBottom: 48 }}
               >
-                <LinearGradient
-                  colors={["#C4A882", "#A68A62"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ width: "60%", height: "100%", borderRadius: 9999 }}
-                />
-              </View>
-              <View className="items-end">
-                <Text
-                  className="font-label text-secondary"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: "500",
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
-                  }}
+                <View style={{ marginBottom: 24 }}>
+                  <Text
+                    className="font-label text-secondary"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "700",
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {t("credits.next_cycle")}
+                  </Text>
+                  <Text
+                    className="font-body text-on-surface-variant"
+                    style={{ fontSize: 14 }}
+                  >
+                    {t("credits.balance_reset_on", { date: resetDateFormatted })}
+                  </Text>
+                </View>
+
+                {/* Progress bar */}
+                <View
+                  className="bg-surface-container-highest rounded-full overflow-hidden"
+                  style={{ height: 8, marginBottom: 12 }}
                 >
-                  18 Days Remaining
-                </Text>
+                  <LinearGradient
+                    colors={["#C4A882", "#A68A62"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      width: `${Math.round(progressPct * 100)}%`,
+                      height: "100%",
+                      borderRadius: 9999,
+                    }}
+                  />
+                </View>
+                <View className="items-end">
+                  <Text
+                    className="font-label text-secondary"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "500",
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("credits.days_remaining", { count: daysRemaining })}
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
 
             {/* ── Monthly Usage Header ── */}
             <Text
@@ -408,7 +514,7 @@ export default function CreditsScreen() {
                 marginBottom: 24,
               }}
             >
-              Monthly Usage
+              {t("credits.monthly_usage")}
             </Text>
           </View>
         }
@@ -418,7 +524,7 @@ export default function CreditsScreen() {
               className="font-body text-on-surface-variant text-center"
               style={{ fontSize: 14, marginTop: 32 }}
             >
-              No credit transactions yet.
+              {t("credits.no_transactions")}
             </Text>
           ) : null
         }
@@ -454,7 +560,7 @@ export default function CreditsScreen() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Promotional Code
+                  {t("credits.promo_code_label")}
                 </Text>
                 <Ionicons
                   name={promoExpanded ? "chevron-up" : "chevron-down"}
@@ -468,7 +574,7 @@ export default function CreditsScreen() {
                   <TextInput
                     value={promoCode}
                     onChangeText={setPromoCode}
-                    placeholder="ENTER CODE"
+                    placeholder={t("credits.promo_placeholder")}
                     placeholderTextColor="rgba(209,197,184,0.4)"
                     autoCapitalize="characters"
                     editable={!promoLoading}
@@ -506,7 +612,7 @@ export default function CreditsScreen() {
                           textTransform: "uppercase",
                         }}
                       >
-                        Redeem
+                        {t("credits.promo_apply")}
                       </Text>
                     )}
                   </Pressable>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
-import type { UserResponse } from "@/types/api";
+import { jwtDecode } from "jwt-decode";
+import type { UserResponse, AuthResponse } from "@/types/api";
 import * as authService from "@/services/auth";
 import * as userService from "@/services/user";
 
@@ -12,9 +13,33 @@ interface AuthState {
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string, displayName?: string) => Promise<void>;
+    loginWithApple: (params: { identityToken: string; fullName?: string; nonce?: string }) => Promise<void>;
+    loginWithGoogle: (params: { identityToken: string; fullName?: string }) => Promise<void>;
     logout: () => Promise<void>;
     hydrate: () => Promise<void>;
     setUser: (user: UserResponse) => void;
+}
+
+function isExpired(token: string): boolean {
+    try {
+        const { exp } = jwtDecode<{ exp?: number }>(token);
+        if (!exp) return true;
+        return Date.now() >= exp * 1000;
+    } catch {
+        return true;
+    }
+}
+
+async function persistAuth(data: AuthResponse) {
+    await SecureStore.setItemAsync("auth_token", data.token);
+    await SecureStore.setItemAsync("org_id", data.organizationId);
+    await SecureStore.setItemAsync("user_id", data.user.id);
+}
+
+async function clearAuth() {
+    await SecureStore.deleteItemAsync("auth_token");
+    await SecureStore.deleteItemAsync("org_id");
+    await SecureStore.deleteItemAsync("user_id");
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -26,9 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     login: async (email, password) => {
         const data = await authService.login(email, password);
-        await SecureStore.setItemAsync("auth_token", data.token);
-        await SecureStore.setItemAsync("org_id", data.organizationId);
-        await SecureStore.setItemAsync("user_id", data.user.id);
+        await persistAuth(data);
         set({
             token: data.token,
             user: data.user,
@@ -39,9 +62,29 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     register: async (email, password, displayName) => {
         const data = await authService.register(email, password, displayName);
-        await SecureStore.setItemAsync("auth_token", data.token);
-        await SecureStore.setItemAsync("org_id", data.organizationId);
-        await SecureStore.setItemAsync("user_id", data.user.id);
+        await persistAuth(data);
+        set({
+            token: data.token,
+            user: data.user,
+            orgId: data.organizationId,
+            isAuthenticated: true,
+        });
+    },
+
+    loginWithApple: async (params) => {
+        const data = await authService.loginWithApple(params);
+        await persistAuth(data);
+        set({
+            token: data.token,
+            user: data.user,
+            orgId: data.organizationId,
+            isAuthenticated: true,
+        });
+    },
+
+    loginWithGoogle: async (params) => {
+        const data = await authService.loginWithGoogle(params);
+        await persistAuth(data);
         set({
             token: data.token,
             user: data.user,
@@ -51,14 +94,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     logout: async () => {
-        await SecureStore.deleteItemAsync("auth_token");
-        await SecureStore.deleteItemAsync("org_id");
-        await SecureStore.deleteItemAsync("user_id");
+        await clearAuth();
         set({
             token: null,
             user: null,
             orgId: null,
             isAuthenticated: false,
+            isLoading: false,
         });
     },
 
@@ -67,23 +109,39 @@ export const useAuthStore = create<AuthState>((set) => ({
             const token = await SecureStore.getItemAsync("auth_token");
             const orgId = await SecureStore.getItemAsync("org_id");
             const userId = await SecureStore.getItemAsync("user_id");
-            if (token && orgId && userId) {
+
+            if (!token || !orgId || !userId) {
+                set({ isLoading: false });
+                return;
+            }
+
+            if (isExpired(token)) {
+                // Token is stale — clear and land on onboarding
+                await clearAuth();
                 set({
-                    token,
-                    orgId,
-                    isAuthenticated: true,
+                    token: null,
+                    user: null,
+                    orgId: null,
+                    isAuthenticated: false,
                     isLoading: false,
                 });
-                // Fetch full user profile in background
-                try {
-                    const user = await userService.getMe();
-                    set({ user });
-                } catch {
-                    // Token may be expired — keep authenticated state,
-                    // API interceptor will handle 401
-                }
-            } else {
-                set({ isLoading: false });
+                return;
+            }
+
+            set({
+                token,
+                orgId,
+                isAuthenticated: true,
+                isLoading: false,
+            });
+
+            // Fetch full user profile in background — if it 401s the
+            // response interceptor will call logout() and redirect.
+            try {
+                const user = await userService.getMe();
+                set({ user });
+            } catch {
+                // Interceptor handles auth failure. Keep optimistic state here.
             }
         } catch {
             set({ isLoading: false });

@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +19,7 @@ import { useAuthStore } from "@/stores/authStore";
 import * as userService from "@/services/user";
 
 export default function ProfileEditScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
   const setUser = useAuthStore(s => s.setUser);
 
@@ -48,11 +51,11 @@ export default function ProfileEditScreen() {
     try {
       const updatedUser = await userService.updateProfile(updates);
       setUser(updatedUser);
-      Alert.alert("Success", "Profile updated successfully.", [
-        { text: "OK", onPress: () => router.back() },
+      Alert.alert(t("settings.profile_edit_success_title"), t("settings.profile_edit_success_description"), [
+        { text: t("common.ok"), onPress: () => router.back() },
       ]);
     } catch (e: any) {
-      const message = e?.response?.data?.message ?? "Failed to update profile.";
+      const message = e?.response?.data?.message ?? t("settings.profile_edit_fail");
       setError(message);
     } finally {
       setLoading(false);
@@ -68,7 +71,7 @@ export default function ProfileEditScreen() {
             <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
           </Pressable>
           <Text className="font-headline text-lg text-on-surface">
-            Edit Profile
+            {t("settings.profile_edit_title")}
           </Text>
         </View>
       </View>
@@ -84,21 +87,21 @@ export default function ProfileEditScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text className="font-headline text-4xl text-on-surface tracking-tight mt-2">
-            Your Profile
+            {t("profile.title")}
           </Text>
           <View className="mt-4 w-16 h-1 rounded-full bg-primary" />
           <Text className="font-body text-sm text-on-surface-variant mt-4 mb-8">
-            Update your display name or email address.
+            {t("settings.profile_edit_subtitle")}
           </Text>
 
           {/* Display Name */}
           <View className="mb-6">
             <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
-              DISPLAY NAME
+              {t("settings.profile_edit_display_name")}
             </Text>
             <TextInput
               className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
-              placeholder="Your name"
+              placeholder={t("settings.profile_edit_display_name_placeholder")}
               placeholderTextColor="#4D463C"
               value={displayName}
               onChangeText={setDisplayName}
@@ -110,11 +113,11 @@ export default function ProfileEditScreen() {
           {/* Email */}
           <View className="mb-6">
             <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
-              EMAIL ADDRESS
+              {t("settings.profile_edit_email")}
             </Text>
             <TextInput
               className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
-              placeholder="you@example.com"
+              placeholder={t("settings.profile_edit_email_placeholder")}
               placeholderTextColor="#4D463C"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -130,22 +133,13 @@ export default function ProfileEditScreen() {
           ) : null}
 
           {/* Save Button */}
-          <Pressable
+          <PrimaryButton
+            label={loading ? t("settings.profile_edit_saving") : t("settings.profile_edit_save")}
             onPress={handleSave}
-            disabled={loading || !hasChanges}
-            style={{ opacity: loading || !hasChanges ? 0.5 : 1 }}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68B64"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="h-14 rounded-xl items-center justify-center"
-            >
-              <Text className="font-label text-on-primary font-semibold text-base">
-                {loading ? "Saving…" : "Save Changes"}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+            disabled={!hasChanges}
+            loading={loading}
+            icon="checkmark"
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -116,10 +116,26 @@ api.interceptors.response.use(
     }
 );
 
+/**
+ * Tear the session down and redirect to onboarding.
+ * We import lazily to avoid a circular dependency between api.ts and authStore.ts.
+ */
 async function forceLogout() {
-    await SecureStore.deleteItemAsync("auth_token");
-    await SecureStore.deleteItemAsync("org_id");
-    await SecureStore.deleteItemAsync("user_id");
+    try {
+        const { useAuthStore } = await import("@/stores/authStore");
+        await useAuthStore.getState().logout();
+    } catch {
+        // Fallback — at least clear SecureStore
+        await SecureStore.deleteItemAsync("auth_token");
+        await SecureStore.deleteItemAsync("org_id");
+        await SecureStore.deleteItemAsync("user_id");
+    }
+    try {
+        const { router } = await import("expo-router");
+        router.replace("/(auth)/onboarding");
+    } catch {
+        // ignore — root layout will redirect on next render
+    }
 }
 
 export default api;

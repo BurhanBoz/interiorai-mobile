@@ -15,14 +15,17 @@ import { router } from "expo-router";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import * as jobsService from "@/services/jobs";
 import { getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import type { JobResponse } from "@/types/api";
 import { useDrawer } from "@/components/layout/DrawerProvider";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 /* ─────────────────── Empty State ─────────────────── */
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <View className="flex-1 items-center justify-center px-8 -mt-12">
       <View style={{ width: 96, height: 96, marginBottom: 32 }}>
@@ -60,72 +63,26 @@ function EmptyState() {
           className="font-headline text-on-surface text-center mb-3"
           style={{ fontSize: 22 }}
         >
-          No designs yet
+          {t("gallery.empty_title")}
         </Text>
         <Text
           className="font-body text-on-surface-variant text-center"
           style={{ fontSize: 14, lineHeight: 22, maxWidth: 280, opacity: 0.8 }}
         >
-          Your curated architectural portfolio is currently empty. Begin your
-          journey by shaping space and form.
+          {t("gallery.empty_description")}
         </Text>
       </View>
 
       <View className="w-full items-center" style={{ maxWidth: 360 }}>
-        <Text
-          className="font-label text-secondary text-center font-medium mb-6"
-          style={{
-            fontSize: 11,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-          }}
-        >
-          Create Your First Design in the Studio
-        </Text>
-
-        <Pressable
+        <PrimaryButton
+          label={t("gallery.empty_cta")}
           onPress={() => router.push("/(tabs)/studio")}
-          className="w-full"
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 56,
-              borderRadius: 16,
-              paddingHorizontal: 24,
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#3F2D11",
-              }}
-            >
-              Go to Studio
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-          </LinearGradient>
-        </Pressable>
+        />
       </View>
     </View>
   );
 }
 
-/* ─────────────────── Flat output item ─────────────────── */
 interface GalleryOutput {
   jobId: string;
   outputId: string;
@@ -138,6 +95,7 @@ interface GalleryOutput {
 
 /* ─────────────────── Main Screen ─────────────────── */
 export default function GalleryScreen() {
+  const { t } = useTranslation();
   const { openDrawer } = useDrawer();
   const { width } = useWindowDimensions();
   const GAP = 2;
@@ -214,21 +172,28 @@ export default function GalleryScreen() {
       );
   }, [jobs]);
 
-  // Grid items = all outputs except the featured (first) one
+  // Grid = everything EXCEPT the featured hero (first item)
   const gridItems = useMemo(() => outputs.slice(1), [outputs]);
 
-  const handleItemPress = (item: GalleryOutput) => {
+  // Tap navigates directly to the result detail page. Long-press opens a
+  // fullscreen zoom preview for a quick peek without losing scroll position.
+  const handleTap = useCallback((item: GalleryOutput) => {
+    router.push(`/result/${item.jobId}`);
+  }, []);
+  const handleLongPress = useCallback((item: GalleryOutput) => {
     setPreviewItem(item);
-  };
+  }, []);
 
   /* ── Featured Card (latest item, spans full width) ── */
   const FeaturedCard = ({ item }: { item: GalleryOutput }) => (
     <Pressable
-      onPress={() => handleItemPress(item)}
+      onPress={() => handleTap(item)}
+      onLongPress={() => handleLongPress(item)}
+      delayLongPress={300}
       style={({ pressed }) => ({
-        height: 220,
+        height: 200,
         marginHorizontal: GAP,
-        borderRadius: 4,
+        borderRadius: 6,
         overflow: "hidden",
         transform: [{ scale: pressed ? 0.99 : 1 }],
       })}
@@ -306,7 +271,9 @@ export default function GalleryScreen() {
   const renderTile = useCallback(
     ({ item }: { item: GalleryOutput }) => (
       <Pressable
-        onPress={() => handleItemPress(item)}
+        onPress={() => handleTap(item)}
+        onLongPress={() => handleLongPress(item)}
+        delayLongPress={300}
         style={({ pressed }) => ({
           width: tileSize,
           height: tileSize,
@@ -345,7 +312,7 @@ export default function GalleryScreen() {
         )}
       </Pressable>
     ),
-    [tileSize, authHeaders],
+    [tileSize, authHeaders, handleTap, handleLongPress],
   );
 
   const getItemLayout = useCallback(
@@ -389,7 +356,7 @@ export default function GalleryScreen() {
               textTransform: "uppercase",
             }}
           >
-            The Architectural Lens
+            {t("app.name")}
           </Text>
         </View>
         <Pressable
@@ -412,13 +379,13 @@ export default function GalleryScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Your Designs
+              {t("gallery.curated")}
             </Text>
             <Text
               className="text-on-surface font-headline"
               style={{ fontSize: 36, lineHeight: 42 }}
             >
-              Gallery
+              {t("gallery.title")}
             </Text>
             <View
               className="bg-secondary mt-4"
@@ -435,7 +402,7 @@ export default function GalleryScreen() {
           numColumns={3}
           columnWrapperStyle={{ gap: GAP, paddingHorizontal: GAP }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120, gap: GAP }}
+          contentContainerStyle={{ paddingBottom: 120, gap: GAP, flexGrow: 1 }}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           getItemLayout={getItemLayout}
@@ -456,7 +423,7 @@ export default function GalleryScreen() {
                     className="text-on-surface font-headline font-bold"
                     style={{ fontSize: 28, lineHeight: 32 }}
                   >
-                    Gallery
+                    {t("gallery.title")}
                   </Text>
                   <Text
                     className="font-label text-on-surface-variant mt-1"
@@ -512,7 +479,7 @@ export default function GalleryScreen() {
         />
       )}
 
-      {/* ── Full-Screen Image Preview Modal ── */}
+      {/* ── Long-Press Zoom Preview Modal ── */}
       <Modal
         visible={previewItem !== null}
         animationType="fade"
@@ -520,7 +487,10 @@ export default function GalleryScreen() {
         statusBarTranslucent
         onRequestClose={() => setPreviewItem(null)}
       >
-        <View style={{ flex: 1, backgroundColor: "#000" }}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: "#000" }}
+          onPress={() => setPreviewItem(null)}
+        >
           <StatusBar barStyle="light-content" />
           {previewItem && (
             <Image
@@ -530,7 +500,6 @@ export default function GalleryScreen() {
               transition={200}
             />
           )}
-          {/* Close button */}
           <Pressable
             onPress={() => setPreviewItem(null)}
             hitSlop={12}
@@ -548,7 +517,6 @@ export default function GalleryScreen() {
           >
             <Ionicons name="close" size={22} color="#fff" />
           </Pressable>
-          {/* Bottom info & action */}
           {previewItem && (
             <View
               style={{
@@ -589,43 +557,10 @@ export default function GalleryScreen() {
                     {previewItem.roomTypeName}
                   </Text>
                 ) : null}
-                <Pressable
-                  onPress={() => {
-                    const jobId = previewItem.jobId;
-                    setPreviewItem(null);
-                    router.push(`/result/${jobId}`);
-                  }}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    marginTop: 16,
-                    alignSelf: "flex-start",
-                    backgroundColor: "rgba(224,194,154,0.2)",
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: "rgba(224,194,154,0.3)",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "700",
-                      color: "#E0C29A",
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    View Details
-                  </Text>
-                  <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
-                </Pressable>
               </View>
             </View>
           )}
-        </View>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );

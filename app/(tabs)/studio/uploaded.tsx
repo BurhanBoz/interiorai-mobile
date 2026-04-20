@@ -4,11 +4,15 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function UploadedScreen() {
+  const { t } = useTranslation();
   const photo = useStudioStore(s => s.photo);
   const setPhoto = useStudioStore(s => s.setPhoto);
   const { openDrawer } = useDrawer();
@@ -43,25 +47,10 @@ export default function UploadedScreen() {
               textTransform: "uppercase",
             }}
           >
-            {"ARCHITECTURAL\nLENS"}
+            {t("app.brand").split(" ").join("\n")}
           </Text>
         </View>
-        <View
-          className="overflow-hidden"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.2)",
-          }}
-        >
-          <Image
-            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
-            style={{ width: 32, height: 32 }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
@@ -80,7 +69,7 @@ export default function UploadedScreen() {
               fontWeight: "500",
             }}
           >
-            STEP 1 OF 4
+            {t("studio.step_1_of_4")}
           </Text>
         </View>
 
@@ -89,7 +78,7 @@ export default function UploadedScreen() {
           className="font-headline text-on-surface mb-12"
           style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
         >
-          Your Photo
+          {t("studio.step1_title")}
         </Text>
 
         {/* Uploaded Photo Preview */}
@@ -149,7 +138,7 @@ export default function UploadedScreen() {
                 color: "#D0C5B8",
               }}
             >
-              Change Photo
+              {t("studio.change_photo")}
             </Text>
           </Pressable>
         </View>
@@ -179,42 +168,10 @@ export default function UploadedScreen() {
 
       {/* Fixed CTA */}
       <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
-        <Pressable
+        <PrimaryButton
+          label={t("studio.continue_to_architecture")}
           onPress={handleNext}
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 56,
-              borderRadius: 16,
-              paddingHorizontal: 24,
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#3F2D11",
-              }}
-            >
-              Continue to Architecture
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-          </LinearGradient>
-        </Pressable>
+        />
       </View>
     </SafeAreaView>
   );

@@ -4,6 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { useTranslation } from "react-i18next";
 
 const IMG_PRIVACY =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBK4B8PnJI8QhWEUJB6nh2LZD_fvabBsAcLvseRcQc5QkoQ2V3TXcuWHGijSrVyvCznR2VukIjkHkkmYNYYMLZJP1dBm9LY32DKNPPuGZVdv2x4ed0ZATVBwdw1lUjN0WdcoMgAqHq0ql6tXDIJWJ5w1sv2ss8CZ60I9liyJYfPpsDuHRu98Bg8W9rCu_ZYpj6uibr9ul7cVNzm3lax5SG-T9UrZd7KHI3nrYyR9RHtfW97GpG7ncwCQmTc-MbEcM8p1yv-u54Nfrk";
@@ -18,6 +20,7 @@ const BULLET_ITEMS = [
 ];
 
 export default function PrivacyScreen() {
+  const { t } = useTranslation();
   return (
     <SafeAreaView className="flex-1 bg-surface">
       {/* TopAppBar */}
@@ -37,7 +40,7 @@ export default function PrivacyScreen() {
             className="font-headline"
             style={{ fontSize: 18, color: "#C4A882" }}
           >
-            Privacy Policy
+            {t("settings.privacy_title")}
           </Text>
         </View>
         <View
@@ -203,28 +206,11 @@ export default function PrivacyScreen() {
 
           {/* CTA & Footer */}
           <View className="mt-8" style={{ gap: 24 }}>
-            <Pressable
+            <PrimaryButton
+              label={t("settings.privacy_acknowledge")}
+              icon="checkmark-circle"
               onPress={() => router.back()}
-              className="rounded-xl items-center"
-              style={({ pressed }) => ({
-                backgroundColor: "#C4A882",
-                paddingVertical: 16,
-                paddingHorizontal: 32,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              <Text
-                className="font-body font-semibold"
-                style={{
-                  fontSize: 12,
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                ACKNOWLEDGE & CONTINUE
-              </Text>
-            </Pressable>
+            />
             <Text
               className="font-label text-outline text-center"
               style={{
@@ -233,7 +219,7 @@ export default function PrivacyScreen() {
                 textTransform: "uppercase",
               }}
             >
-              LAST UPDATED: OCTOBER 2023
+              {t("settings.privacy_last_updated")}
             </Text>
           </View>
         </View>

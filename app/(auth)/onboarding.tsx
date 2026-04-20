@@ -12,29 +12,28 @@ import { router } from "expo-router";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const SLIDES = [
   {
     id: "1",
-    headline: "Reimagine\nYour Space",
-    description:
-      "Upload any room and watch AI transform it into a masterpiece of contemporary architecture.",
+    headlineKey: "onboarding.slide1_headline",
+    descriptionKey: "onboarding.slide1_description",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuBRoRem4VJ4B-V1XcsHiLabwHVNWMO77W_Wtc7nUPzy6QSyGH5M9KoAe2Inp6YUBO3BmLNah-U1L6qC9a8n4EOZvS_sEgtqlJPoYdOhDxq-3mlgBzzqMGQo6sz3ek0nb_GZOzGalQKF1_kZZXaS273-BA0ZkGL1j5bDgUtyxHx72wp5ox8wDJDZfRKiwQOf22swUb8I2jwTtn_cveRW3w-Pfv4-raJmf-susQ3z5jZWobaLRTPd21vj_c4fICGFHp-jc3DxCBOULIQ",
   },
   {
     id: "2",
-    headline: "Any Style,\nInstantly",
-    description:
-      "From minimalist modern to classic elegance — explore every aesthetic with a single tap.",
+    headlineKey: "onboarding.slide2_headline",
+    descriptionKey: "onboarding.slide2_description",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuB1T7Qq5t80xSyhu02790-CfmyDVaWoU-cfLRgFhyncMwCgUmNBm_SfbyhmWI9VYcBzV2MG1wBEK-jUTdr8MUWKGav0xdnQb7QIrmAo_Nd4aNjzUFzEoaz5PM6mOeVJITyC72vhzcSIH-t-IF8R3WVDGjjKDwmx-jSw0JdReY2ibqOXYNqUB0_DNm7wVHZaKOHnbHEI5-HMCCQLsyMohYYabcCCmU5gdSLapAp0iB2MKb6XnoHYmjctzC2jlIh30FD59kqYpEAzA_IH",
   },
   {
     id: "3",
-    headline: "AI-Powered\nMagic",
-    description:
-      "Let artificial intelligence reimagine your rooms with stunning, photorealistic results.",
+    headlineKey: "onboarding.slide3_headline",
+    descriptionKey: "onboarding.slide3_description",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuC9tymtJNY2iXmwhyUuPE37D0Jya9D8Ad8X8I6FuEwxT1h5tJlZf5fDNkUFg-v7mIoe13PX8Fyq0YWqwqLjMhwyxQCvroZZjh3eDTJE-N4JVkG63e8jTIaR97cD1DxGBGvb8XNkmET1tmYqyyBNMuvFzW9yQ_5H3kgBr-j_eeoNcFGG_otxBhR7pjv7ll1pNNTS8HEDqhd0JXB90H7fqTwvtW-HH6oZRScvVaTS91CnEe261cFjpbOPYKRLBzQdY128s9-5tuaEsUm7",
   },
@@ -68,6 +67,7 @@ function PaginationDot({ active }: { active: boolean }) {
 }
 
 export default function OnboardingScreen() {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -139,7 +139,7 @@ export default function OnboardingScreen() {
               textTransform: "uppercase",
             }}
           >
-            ARCHITECTURAL{"\n"}LENS
+            {t("app.brand").split(" ").join("\n")}
           </Text>
         </View>
       </View>
@@ -159,13 +159,13 @@ export default function OnboardingScreen() {
             className="font-headline font-bold text-on-surface"
             style={{ fontSize: 32, lineHeight: 38 }}
           >
-            {slide.headline}
+            {t(slide.headlineKey)}
           </Text>
           <Text
             className="font-body text-sm text-on-surface-variant leading-relaxed mt-4"
             style={{ opacity: 0.8 }}
           >
-            {slide.description}
+            {t(slide.descriptionKey)}
           </Text>
         </View>
 
@@ -176,48 +176,17 @@ export default function OnboardingScreen() {
               className="font-label font-semibold text-secondary uppercase"
               style={{ fontSize: 11, letterSpacing: 2 }}
             >
-              Already have an account? Sign In
+              {t("auth.already_have_account")} {t("auth.sign_in_link")}
             </Text>
           </Pressable>
 
           {/* CTA Button */}
-          <Pressable
-            onPress={() => router.push("/register")}
-            className="w-full"
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-              }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                Get Started
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-            </LinearGradient>
-          </Pressable>
+          <View className="w-full">
+            <PrimaryButton
+              label={t("onboarding.get_started")}
+              onPress={() => router.push("/register")}
+            />
+          </View>
         </View>
       </View>
     </View>

@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as userService from "@/services/user";
 import type { NotificationPreferences } from "@/types/api";
+import { useTranslation } from "react-i18next";
 
 const IMG_HERO =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBMXanOw0Wj_FYf9p9ca26IIu5OVLycC9kuOVzTM_SknOnF_5WZjaMKq7JcF1eGMQw3E5tgKlQPt9sG10pw_RjR4a03yiiqhhgTeWkBagWRC81Pc8lDIeWOzRxlubiiIa_3J6vJ5TEK1bZEKKPOhGc0fLwimmLxDF5YNw8sxoMf9Q2Pn6LhhcPaASWldJHkytUySQNzuhr0FE2yHY9Wls-6Vqjmm2Neeb0Uh--uvqbCbo7xLoZOB3m6BgR1v6NpRTUSySxZp8pYEE0";
@@ -58,6 +59,7 @@ function ToggleRow({ label, description, value, onToggle }: ToggleRowProps) {
 }
 
 export default function NotificationsSettingsScreen() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState<Omit<
     NotificationPreferences,
     "userId"
@@ -106,7 +108,7 @@ export default function NotificationsSettingsScreen() {
               textTransform: "uppercase",
             }}
           >
-            Architectural Lens
+            {t("app.brand")}
           </Text>
         </View>
         <View style={{ width: 32, height: 32 }} />
@@ -129,13 +131,13 @@ export default function NotificationsSettingsScreen() {
               marginBottom: 16,
             }}
           >
-            Preferences
+            {t("profile.notifications")}
           </Text>
           <Text
             className="font-headline text-on-surface"
             style={{ fontSize: 30, lineHeight: 38 }}
           >
-            Tailor your architectural experience.
+            {t("settings.notifications_description")}
           </Text>
           <View
             className="bg-primary-fixed"
@@ -160,7 +162,7 @@ export default function NotificationsSettingsScreen() {
                   paddingHorizontal: 8,
                 }}
               >
-                Project Lifecycle
+                {t("settings.notifications_push_title")}
               </Text>
               <View style={{ gap: 1 }}>
                 <ToggleRow
@@ -197,7 +199,7 @@ export default function NotificationsSettingsScreen() {
                   paddingHorizontal: 8,
                 }}
               >
-                Curated Network
+                {t("settings.notifications_email_title")}
               </Text>
               <View style={{ gap: 1 }}>
                 <ToggleRow

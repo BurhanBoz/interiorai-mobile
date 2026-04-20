@@ -1,38 +1,45 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { useEffect, useRef } from "react";
+import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDrawer } from "@/components/layout/DrawerProvider";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const tips = [
   {
     icon: "sunny-outline" as const,
-    title: "Natural Lighting",
-    text: "Capture your space during daylight for the most accurate AI depth analysis.",
+    titleKey: "studio.tip_lighting_title",
+    textKey: "studio.tip_lighting_description",
   },
   {
     icon: "scan-outline" as const,
-    title: "Wide Perspectives",
-    text: "Stand in a corner to give the Lens AI a full view of the architectural volume.",
+    titleKey: "studio.tip_perspective_title",
+    textKey: "studio.tip_perspective_description",
   },
   {
     icon: "navigate-outline" as const,
-    title: "Clear Pathways",
-    text: "Ensure the floor area is visible to help the system map spatial dimensions.",
+    titleKey: "studio.tip_pathways_title",
+    textKey: "studio.tip_pathways_description",
   },
 ];
 
 export default function StudioScreen() {
+  const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
   const { openDrawer } = useDrawer();
   const photo = useStudioStore(s => s.photo);
   const setPhoto = useStudioStore(s => s.setPhoto);
 
   const handleUpload = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage("gallery");
     if (result) {
       setPhoto(result);
@@ -40,11 +47,34 @@ export default function StudioScreen() {
   };
 
   const handleCamera = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage("camera");
     if (result) {
       setPhoto(result);
     }
   };
+
+  // Subtle breathing animation on the idle upload icon — premium cue that
+  // the zone is tappable without adding visual noise.
+  const uploadPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(uploadPulse, {
+          toValue: 0.55,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(uploadPulse, {
+          toValue: 1,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [uploadPulse]);
 
   const handleContinue = () => {
     router.push("/studio/uploaded");
@@ -73,22 +103,7 @@ export default function StudioScreen() {
               {"ARCHITECTURAL\nLENS"}
             </Text>
           </View>
-          <View
-            className="overflow-hidden"
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(77,70,60,0.2)",
-            }}
-          >
-            <Image
-              source={{ uri: "https://i.pravatar.cc/40?img=12" }}
-              style={{ width: 32, height: 32 }}
-              contentFit="cover"
-            />
-          </View>
+          <UserAvatar size="sm" onPress />
         </View>
 
         <ScrollView
@@ -107,7 +122,7 @@ export default function StudioScreen() {
                 fontWeight: "500",
               }}
             >
-              STEP 1 OF 4
+              {t("studio.step_1_of_4")}
             </Text>
           </View>
 
@@ -116,7 +131,7 @@ export default function StudioScreen() {
             className="font-headline text-on-surface mb-10"
             style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
           >
-            Analyze Your Space
+            {t("studio.step1_title")}
           </Text>
 
           {/* Uploaded photo */}
@@ -146,49 +161,17 @@ export default function StudioScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Change Photo
+              {t("studio.change_photo")}
             </Text>
           </Pressable>
         </ScrollView>
 
         {/* CTA */}
         <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
-          <Pressable
+          <PrimaryButton
+            label={t("studio.continue_to_architecture")}
             onPress={handleContinue}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-              }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                Continue to Architecture
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-            </LinearGradient>
-          </Pressable>
+          />
         </View>
       </SafeAreaView>
     );
@@ -216,22 +199,7 @@ export default function StudioScreen() {
             {"ARCHITECTURAL\nLENS"}
           </Text>
         </View>
-        <View
-          className="overflow-hidden"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.2)",
-          }}
-        >
-          <Image
-            source={{ uri: "https://i.pravatar.cc/40?img=12" }}
-            style={{ width: 32, height: 32 }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" />
       </View>
 
       <ScrollView
@@ -250,7 +218,7 @@ export default function StudioScreen() {
               fontWeight: "500",
             }}
           >
-            STEP 1 OF 4
+            {t("studio.step_1_of_4")}
           </Text>
         </View>
 
@@ -259,7 +227,7 @@ export default function StudioScreen() {
           className="font-headline text-on-surface mb-10"
           style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
         >
-          Analyze Your Space
+          {t("studio.step1_title")}
         </Text>
 
         {/* Upload Zone */}
@@ -276,12 +244,13 @@ export default function StudioScreen() {
           })}
           className="w-full items-center justify-center bg-surface-container-low mb-6"
         >
-          <Ionicons
-            name="cloud-upload-outline"
-            size={36}
-            color="#E0C29A"
-            style={{ marginBottom: 16 }}
-          />
+          <Animated.View style={{ opacity: uploadPulse, marginBottom: 16 }}>
+            <Ionicons
+              name="cloud-upload-outline"
+              size={36}
+              color="#E0C29A"
+            />
+          </Animated.View>
           <Text
             className="font-label text-on-surface-variant"
             style={{
@@ -290,7 +259,7 @@ export default function StudioScreen() {
               textTransform: "uppercase",
             }}
           >
-            {isUploading ? "Uploading…" : "Tap to Upload"}
+            {isUploading ? t("studio.uploading") : t("studio.tap_to_upload")}
           </Text>
         </Pressable>
 
@@ -298,7 +267,7 @@ export default function StudioScreen() {
         <View className="flex-row items-center mb-6" style={{ gap: 16 }}>
           <View
             className="flex-1"
-            style={{ height: 1, backgroundColor: "rgba(77,70,60,0.2)" }}
+            style={{ height: 1, backgroundColor: "#4D463C" }}
           />
           <Text
             className="font-label text-on-surface-variant"
@@ -308,11 +277,11 @@ export default function StudioScreen() {
               textTransform: "uppercase",
             }}
           >
-            OR
+            {t("common.or")}
           </Text>
           <View
             className="flex-1"
-            style={{ height: 1, backgroundColor: "rgba(77,70,60,0.2)" }}
+            style={{ height: 1, backgroundColor: "#4D463C" }}
           />
         </View>
 
@@ -322,10 +291,10 @@ export default function StudioScreen() {
           style={({ pressed }) => ({
             transform: [{ scale: pressed ? 0.98 : 1 }],
             borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.2)",
+            borderColor: "#4D463C",
             borderRadius: 12,
           })}
-          className="w-full flex-row items-center justify-center py-4 mb-12"
+          className="w-full flex-row items-center justify-center py-4 mb-8"
           disabled={isUploading}
         >
           <Ionicons
@@ -335,15 +304,14 @@ export default function StudioScreen() {
             style={{ marginRight: 12 }}
           />
           <Text
-            className="font-label text-on-surface-variant"
+            className="font-label text-primary"
             style={{
               fontSize: 11,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: "#D0C5B8",
             }}
           >
-            Take a Photo
+            {t("studio.take_a_photo")}
           </Text>
         </Pressable>
 
@@ -355,10 +323,9 @@ export default function StudioScreen() {
               fontSize: 11,
               letterSpacing: 3,
               textTransform: "uppercase",
-              opacity: 0.6,
             }}
           >
-            Professional Tips
+            {t("studio.professional_tips")}
           </Text>
 
           <View style={{ gap: 16 }}>
@@ -372,8 +339,8 @@ export default function StudioScreen() {
                 <View
                   className="bg-surface-container-highest items-center justify-center"
                   style={{
-                    width: 64,
-                    height: 64,
+                    width: 52,
+                    height: 52,
                     borderRadius: 8,
                     flexShrink: 0,
                   }}
@@ -387,17 +354,17 @@ export default function StudioScreen() {
                     className="text-primary font-medium mb-1"
                     style={{
                       fontSize: 14,
-                      letterSpacing: 0.5,
+                      letterSpacing: 1.5,
                       textTransform: "uppercase",
                     }}
                   >
-                    {tip.title}
+                    {t(tip.titleKey)}
                   </Text>
                   <Text
                     className="text-on-surface-variant font-body"
                     style={{ fontSize: 12, lineHeight: 18 }}
                   >
-                    {tip.text}
+                    {t(tip.textKey)}
                   </Text>
                 </View>
               </View>

@@ -44,6 +44,9 @@ export interface FileResponse {
 }
 
 // ── Jobs ───────────────────────────────────────
+/** Inference speed / quality tradeoff. QUALITY is gated to the MAX plan. */
+export type SpeedMode = "FAST" | "BALANCED" | "QUALITY";
+
 export interface CreateJobRequest {
     inputFileId: string;
     roomTypeId: string;
@@ -61,6 +64,7 @@ export interface CreateJobRequest {
     targetWidth?: number;
     targetHeight?: number;
     qualityTier?: QualityTier;
+    speedMode?: SpeedMode;
     referenceFileId?: string;
 }
 
@@ -118,6 +122,23 @@ export interface PlanCreditRuleResponse {
     description: string;
 }
 
+/**
+ * Plan-wide permission bits read from backend `plans.permissions_json`.
+ * Boolean keys are populated explicitly per plan; any missing key should be
+ * treated by the client as `false` (deny-by-default).
+ */
+export interface PlanPermissions {
+    allow_strength?: boolean;
+    allow_seed?: boolean;
+    allow_negative_prompt?: boolean;
+    allow_custom_prompt?: boolean;
+    allow_commercial_spaces?: boolean;
+    allow_reference_image?: boolean;
+    allow_mask_editing?: boolean;
+    // Forward-compat: unknown keys the backend may add later
+    [key: string]: boolean | undefined;
+}
+
 export interface PlanResponse {
     id: string;
     code: string;
@@ -131,6 +152,7 @@ export interface PlanResponse {
     watermark: boolean;
     modelTier: string;
     sortOrder: number;
+    permissions?: PlanPermissions;
     features: PlanFeatureResponse[];
     creditRules: PlanCreditRuleResponse[];
 }
@@ -174,6 +196,42 @@ export interface PageResponse<T> {
 // ── Shared ─────────────────────────────────────
 export interface MessageResponse {
     message: string;
+}
+
+// ── Credit Packs (one-time consumable IAP) ─────
+export interface CreditPackResponse {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    credits: number;
+    bonusCredits: number;
+    totalCredits: number;
+    priceCents: number;
+    currency: string;
+    appleProductId: string | null;
+    googleProductId: string | null;
+    badgeLabel: string | null;
+    sortOrder: number;
+}
+
+export interface PurchaseCreditPackRequest {
+    packCode: string;
+    provider: "REVENUECAT" | "DUMMY";
+    transactionId: string;
+    productId?: string;
+    receiptData?: string;
+}
+
+export interface CreditPackPurchaseResponse {
+    id: string;
+    packCode: string;
+    creditsGranted: number;
+    newBalance: number;
+    provider: string;
+    providerTransactionId: string;
+    status: "PENDING" | "COMPLETED" | "REFUNDED" | "FAILED";
+    purchasedAt: string | null;
 }
 
 // ── Credit Ledger ──────────────────────────────

@@ -4,6 +4,8 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 /* ── Stitch design assets ── */
 const IMG_STANDARD =
@@ -740,8 +742,9 @@ export default function UpsellScreen() {
 
   if (feature === "smart_edit") return <SmartEditUpsell />;
 
+  const { t } = useTranslation();
   const isStyleTransfer = feature === "style_transfer";
-  const ctaLabel = isStyleTransfer ? "Upgrade to Max" : "Upgrade to Basic";
+  const ctaLabel = t("upsell.upgrade_cta");
   const subtitle = isStyleTransfer ? "Starting at $14.99 / month" : undefined;
 
   return (
@@ -761,7 +764,7 @@ export default function UpsellScreen() {
                 textTransform: "uppercase",
               }}
             >
-              The Architectural Lens
+              {t("app.name")}
             </Text>
             <View className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden" />
           </View>
@@ -797,42 +800,10 @@ export default function UpsellScreen() {
             paddingBottom: 8,
           }}
         >
-          <Pressable
+          <PrimaryButton
+            label={ctaLabel}
             onPress={() => router.push("/plans")}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-              }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#3F2D11",
-                }}
-              >
-                {ctaLabel}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-            </LinearGradient>
-          </Pressable>
+          />
 
           {subtitle ? (
             <Text

@@ -4,6 +4,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { useTranslation } from "react-i18next";
 
 const IMG_TERMS =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDDN7PpniI42L8UlmvAwfr9zaGBPDgIVKjI5b-Os6PNBs9Au2vz35dLHpNClvH6TMqaPX6tmukLnZYKdhn_SkFUE47immo1WX81_OhC9QWo9pLIgFYkH9AL-SUwDmZvPM_oyWn95oN2RL0QRauabmu1sjAMyogax6aejDzPNzDLKFw3q_38QI85eBdW54me-UH7FUp6Bfhz--Bpfw3zZewJfx3B2BHNz6cR6dlnPI7bkSUs9ms9tBTX3Yex_x18lSqdObKBTLAryrc";
@@ -12,6 +14,7 @@ const IMG_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCRu9nTIyQskuwKRucxyBeHx6wnFGkxOO-HYyrrgX8ZmNOqpCtiqm_K9wmhZbMtLx-jyl78az-CGQQp6PvuF8ITBR7YcY0hdT2jl9YLGEHp5ihCSBBMMXZgCYFmW3digx6KzCN24d-lZSZireR4WcwIpQLTgEbuFE2eqcFTKPwYxnOOBBmk1P1iuX2RViISTp9HujZvc0jF6WtN-7lCpI0QtWFCOE52htMdM8GOzv-kWRpLWjnswWpdYeLy1KQwaEYStmewfCIVamQ";
 
 export default function TermsScreen() {
+  const { t } = useTranslation();
   return (
     <SafeAreaView className="flex-1 bg-surface">
       {/* TopAppBar */}
@@ -39,7 +42,7 @@ export default function TermsScreen() {
             color: "#E1C39B",
           }}
         >
-          THE ARCHITECTURAL LENS
+          {t("app.brand")}
         </Text>
 
         <View
@@ -70,7 +73,7 @@ export default function TermsScreen() {
             className="font-headline text-on-background"
             style={{ fontSize: 56, lineHeight: 62 }}
           >
-            Terms of Service
+            {t("settings.terms_title")}
           </Text>
           <View
             className="mt-6"
@@ -241,7 +244,7 @@ export default function TermsScreen() {
               color: "#A68A62",
             }}
           >
-            THE ARCHITECTURAL LENS © 2024
+            {t("app.brand")} © 2024
           </Text>
         </View>
       </ScrollView>
@@ -253,34 +256,11 @@ export default function TermsScreen() {
         className="absolute bottom-0 left-0 right-0 px-6 pb-6"
         style={{ paddingTop: 48 }}
       >
-        <Pressable
+        <PrimaryButton
+          label={t("settings.terms_acknowledge")}
+          icon="checkmark-circle"
           onPress={() => router.back()}
-          className="w-full rounded-xl flex-row items-center justify-center"
-          style={({ pressed }) => ({
-            backgroundColor: "#C4A882",
-            height: 56,
-            gap: 8,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.6,
-            shadowRadius: 32,
-            elevation: 24,
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-          })}
-        >
-          <Text
-            className="font-body font-semibold"
-            style={{
-              fontSize: 14,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-              color: "#3F2D11",
-            }}
-          >
-            Acknowledge & Return
-          </Text>
-          <Ionicons name="checkmark-circle" size={20} color="#3F2D11" />
-        </Pressable>
+        />
       </LinearGradient>
     </SafeAreaView>
   );

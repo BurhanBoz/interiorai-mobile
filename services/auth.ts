@@ -33,3 +33,29 @@ export async function refreshToken(): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/refresh");
     return data;
 }
+
+/**
+ * Sign in with Apple — the mobile app passes the signed `identityToken` it
+ * received from expo-apple-authentication. The backend verifies it against
+ * Apple's JWKS and either logs the user in or registers a new account.
+ */
+export async function loginWithApple(params: {
+    identityToken: string;
+    fullName?: string;
+    nonce?: string;
+}): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/apple", params);
+    return data;
+}
+
+/**
+ * Sign in with Google — mobile app obtains an `idToken` via expo-auth-session
+ * (Google provider). Backend verifies audience against the configured client IDs.
+ */
+export async function loginWithGoogle(params: {
+    identityToken: string;
+    fullName?: string;
+}): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/google", params);
+    return data;
+}

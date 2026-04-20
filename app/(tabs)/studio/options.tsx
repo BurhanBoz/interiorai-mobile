@@ -14,9 +14,11 @@ import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useEntitlement } from "@/hooks/useEntitlement";
+import { useEntitlement, usePlanPermission } from "@/hooks/useEntitlement";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import type { DesignMode, QualityTier } from "@/types/api";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   REDESIGN: "INTERIOR_REDESIGN",
@@ -27,12 +29,12 @@ const FEATURE_CODE_MAP: Record<DesignMode, string> = {
 
 const MODES: {
   key: DesignMode;
-  label: string;
+  labelKey: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { key: "REDESIGN", label: "Architectural", icon: "sparkles" },
-  { key: "EMPTY_ROOM", label: "Interior Focus", icon: "home-outline" },
-  { key: "INPAINT", label: "Atmospheric", icon: "image-outline" },
+  { key: "REDESIGN", labelKey: "studio.mode_redesign", icon: "sparkles" },
+  { key: "EMPTY_ROOM", labelKey: "studio.mode_empty_room", icon: "home-outline" },
+  { key: "INPAINT", labelKey: "studio.mode_inpaint", icon: "image-outline" },
 ];
 
 const PALETTE_COLORS = [
@@ -44,13 +46,14 @@ const PALETTE_COLORS = [
   { color: "#93000A", gradientEnd: "#FFB4AB" },
 ];
 
-const QUALITY_TIERS: { key: QualityTier; label: string }[] = [
-  { key: "STANDARD", label: "Draft" },
-  { key: "HD", label: "High" },
-  { key: "ULTRA_HD", label: "Ultra" },
+const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
+  { key: "STANDARD", labelKey: "studio.quality_standard" },
+  { key: "HD", labelKey: "studio.quality_hd" },
+  { key: "ULTRA_HD", labelKey: "studio.quality_ultra_hd" },
 ];
 
 export default function OptionsScreen() {
+  const { t } = useTranslation();
   const mode = useStudioStore(s => s.mode);
   const qualityTier = useStudioStore(s => s.qualityTier);
   const numOutputs = useStudioStore(s => s.numOutputs);
@@ -68,7 +71,11 @@ export default function OptionsScreen() {
 
   const seed = useStudioStore(s => s.seed);
   const setSeed = useStudioStore(s => s.setSeed);
-  const { enabled: seedControlEnabled } = useEntitlement("SEED_CONTROL");
+  // Plan-level permission checks — these reflect the current plan's
+  // permissions_json and are the single source of truth for fine-grained locks.
+  const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
+  const { allowed: seedControlEnabled } = usePlanPermission("allow_seed");
+  const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
   const { cost } = useCreditCost();
   const creditRules = useSubscriptionStore(s => s.creditRules);
   const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
@@ -191,13 +198,13 @@ export default function OptionsScreen() {
               fontWeight: "500",
             }}
           >
-            STEP 3 OF 4
+            {t("studio.step_3_of_4")}
           </Text>
           <Text
             className="font-headline text-on-surface"
             style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
           >
-            Design Settings
+            {t("studio.step3_title")}
           </Text>
         </View>
 
@@ -212,7 +219,7 @@ export default function OptionsScreen() {
               marginBottom: 16,
             }}
           >
-            DESIGN MODE
+            {t("studio.design_mode")}
           </Text>
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
             {MODES.map(m => {
@@ -255,7 +262,7 @@ export default function OptionsScreen() {
                           : "#E0C29A",
                     }}
                   >
-                    {m.label}
+                    {t(m.labelKey)}
                   </Text>
                 </Pressable>
               );
@@ -282,7 +289,7 @@ export default function OptionsScreen() {
                 marginBottom: 24,
               }}
             >
-              QUALITY
+              {t("studio.quality_tier")}
             </Text>
             <View
               className="flex-row"
@@ -332,7 +339,7 @@ export default function OptionsScreen() {
                             : "#D1C5B8",
                       }}
                     >
-                      {tier.label}
+                      {t(tier.labelKey)}
                     </Text>
                   </Pressable>
                 );
@@ -340,48 +347,64 @@ export default function OptionsScreen() {
             </View>
           </View>
 
-          {/* AI Strength */}
-          <View
+          {/* AI Strength — gated by plan permission */}
+          <Pressable
+            onPress={() => {
+              if (!strengthAllowed) router.push("/plans");
+            }}
+            disabled={strengthAllowed}
             style={{
               padding: 24,
               borderRadius: 12,
               backgroundColor: "#1C1B1B",
+              opacity: strengthAllowed ? 1 : 0.55,
             }}
           >
             <View
               className="flex-row items-center justify-between"
               style={{ marginBottom: 24 }}
             >
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                AI STRENGTH
-              </Text>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                {!strengthAllowed && (
+                  <Ionicons name="lock-closed" size={12} color="#998F84" />
+                )}
+                <Text
+                  className="font-label text-on-surface-variant"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("studio.strength")}
+                </Text>
+              </View>
               <Text
                 className="font-headline"
-                style={{ color: "#E0C29A", fontSize: 16 }}
+                style={{
+                  color: strengthAllowed ? "#E0C29A" : "#998F84",
+                  fontSize: 16,
+                }}
               >
-                {aiStrengthPercent}%
+                {strengthAllowed ? `${aiStrengthPercent}%` : "PRO+"}
               </Text>
             </View>
             {/* Strength Steps */}
             <View className="flex-row items-center" style={{ gap: 8 }}>
               {[0.25, 0.5, 0.7, 0.85, 1.0].map(val => {
-                const isActive = strength === val;
                 return (
                   <Pressable
                     key={val}
-                    onPress={() => setStrength(val)}
+                    onPress={() => {
+                      if (strengthAllowed) setStrength(val);
+                      else router.push("/plans");
+                    }}
                     style={{
                       flex: 1,
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: strength >= val ? "#E1C39B" : "#353534",
+                      backgroundColor:
+                        strengthAllowed && strength >= val ? "#E1C39B" : "#353534",
                     }}
                   />
                 );
@@ -401,7 +424,7 @@ export default function OptionsScreen() {
                 DRAMATIC
               </Text>
             </View>
-          </View>
+          </Pressable>
         </View>
 
         {/* Color Palette */}
@@ -416,7 +439,7 @@ export default function OptionsScreen() {
               marginBottom: 24,
             }}
           >
-            COLOR PALETTE
+            {t("studio.color_palette")}
           </Text>
           <ScrollView
             horizontal
@@ -478,7 +501,7 @@ export default function OptionsScreen() {
                 textTransform: "uppercase",
               }}
             >
-              VARIANTS
+              {t("studio.number_of_outputs")}
             </Text>
             <View className="flex-row items-center" style={{ gap: 24 }}>
               <Pressable
@@ -539,7 +562,7 @@ export default function OptionsScreen() {
                 textTransform: "uppercase",
               }}
             >
-              PRESERVE LAYOUT
+              {t("studio.preserve_layout")}
             </Text>
             <Switch
               value={preserveLayout}
@@ -622,7 +645,7 @@ export default function OptionsScreen() {
               marginBottom: 16,
             }}
           >
-            MATERIAL NARRATIVE
+            {t("studio.custom_prompt")}
           </Text>
           <TextInput
             className="font-body text-on-surface"
@@ -634,7 +657,7 @@ export default function OptionsScreen() {
               minHeight: 100,
               textAlignVertical: "top",
             }}
-            placeholder="Describe textures, lighting angles, and interior rhythm..."
+            placeholder={t("studio.custom_prompt")}
             placeholderTextColor="#998F84"
             value={prompt}
             onChangeText={setPrompt}
@@ -644,21 +667,47 @@ export default function OptionsScreen() {
           />
         </View>
 
-        {/* Advanced Seed Controls */}
+        {/* Advanced Seed Controls — gated by plan.allow_seed */}
         <View style={{ paddingHorizontal: 24 }}>
           <Pressable
-            onPress={() => setSeedExpanded(!seedExpanded)}
+            onPress={() => {
+              if (!seedControlEnabled) {
+                router.push("/plans");
+                return;
+              }
+              setSeedExpanded(!seedExpanded);
+            }}
             className="flex-row items-center justify-between"
-            style={{ marginTop: 32 }}
+            style={({ pressed }) => ({
+              marginTop: 32,
+              opacity: !seedControlEnabled ? 0.55 : pressed ? 0.8 : 1,
+            })}
           >
             <View className="flex-row items-center" style={{ gap: 10 }}>
-              <Ionicons name="options" size={20} color="#E5E2E1" />
+              <Ionicons
+                name={seedControlEnabled ? "options" : "lock-closed"}
+                size={seedControlEnabled ? 20 : 16}
+                color={seedControlEnabled ? "#E5E2E1" : "#998F84"}
+              />
               <Text
                 className="font-body text-on-surface"
                 style={{ fontSize: 15 }}
               >
-                Advanced Seed Controls
+                {t("studio.seed")}
               </Text>
+              {!seedControlEnabled && (
+                <Text
+                  className="font-label"
+                  style={{
+                    fontSize: 10,
+                    color: "#E0C29A",
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  PRO+
+                </Text>
+              )}
             </View>
             <Ionicons
               name={seedExpanded ? "chevron-down" : "chevron-forward"}
@@ -686,7 +735,7 @@ export default function OptionsScreen() {
                     paddingVertical: 12,
                     fontSize: 14,
                   }}
-                  placeholder="Random"
+                  placeholder={t("studio.seed_placeholder")}
                   placeholderTextColor="#998F84"
                   keyboardType="number-pad"
                   value={seed !== undefined ? String(seed) : ""}
@@ -727,13 +776,13 @@ export default function OptionsScreen() {
                   textTransform: "uppercase",
                 }}
               >
-                GENERATION COST
+                {t("studio.credits")}
               </Text>
               <Text
                 className="font-headline text-on-surface"
                 style={{ fontSize: 20, fontWeight: "700", marginTop: 4 }}
               >
-                {cost} Credits
+                {t("studio.cost_credits", { count: cost })}
               </Text>
             </View>
             <Ionicons name="wallet-outline" size={24} color="#E0C29A" />
@@ -743,42 +792,10 @@ export default function OptionsScreen() {
 
       {/* Floating CTA */}
       <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
-        <Pressable
+        <PrimaryButton
+          label={t("common.next")}
           onPress={() => router.push("/(tabs)/studio/review")}
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 56,
-              borderRadius: 16,
-              paddingHorizontal: 24,
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#3F2D11",
-              }}
-            >
-              Next Step
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-          </LinearGradient>
-        </Pressable>
+        />
       </View>
     </SafeAreaView>
   );

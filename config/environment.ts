@@ -5,6 +5,10 @@ interface EnvironmentConfig {
     apiUrl: string;
     appName: string;
     enableLogging: boolean;
+    google: {
+        iosClientId: string;
+        webClientId: string;
+    };
 }
 
 const env: EnvironmentConfig = {
@@ -14,6 +18,10 @@ const env: EnvironmentConfig = {
     appName:
         process.env.EXPO_PUBLIC_APP_NAME ?? "The Architectural Lens",
     enableLogging: process.env.EXPO_PUBLIC_ENABLE_LOGGING === "true",
+    google: {
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "",
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "",
+    },
 };
 
 export const isDev = env.env === "development";

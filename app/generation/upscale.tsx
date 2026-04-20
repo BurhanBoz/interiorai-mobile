@@ -5,30 +5,95 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { getOutputDownloadUrl } from "@/services/files";
+import { upscaleJob, cancelJob } from "@/services/jobs";
+import { useJobPolling } from "@/hooks/useJobPolling";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { useCreditStore } from "@/stores/creditStore";
+import type { JobResponse, JobStatus } from "@/types/api";
 
+/**
+ * Upscale screen — user-initiated from the result screen.
+ *
+ * Route params:
+ *   - parentJobId  (required) completed parent job to upscale from
+ *   - outputId     (optional) specific output; defaults to first
+ *
+ * Flow:
+ *   1. POST /api/jobs/{parentJobId}/upscale → backend creates child job
+ *   2. Poll GET /api/jobs/{childJobId} every 3s
+ *   3. On COMPLETED → navigate to /result/{childJobId}
+ *   4. On FAILED/CANCELLED → show error, allow retry
+ */
 export default function UpscaleScreen() {
-  const { jobId, outputId } = useLocalSearchParams<{
-    jobId: string;
-    outputId: string;
+  const { parentJobId, outputId } = useLocalSearchParams<{
+    parentJobId: string;
+    outputId?: string;
   }>();
   const authHeaders = useAuthHeaders();
-  const imageUrl =
-    jobId && outputId ? getOutputDownloadUrl(jobId, outputId) : undefined;
+  const fetchBalance = useCreditStore((s) => s.fetchBalance);
+
+  const [upscaleJobId, setUpscaleJobId] = useState<string | null>(null);
+  const [status, setStatus] = useState<JobStatus | null>(null);
   const [progress, setProgress] = useState(0);
-  const [complete, setComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
+  const startedAt = useRef<number>(Date.now());
   const spinRotation = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Spinning animation for sync icon
+  // Peek at the parent output as a backdrop while upscaling
+  const previewUrl =
+    parentJobId && outputId ? getOutputDownloadUrl(parentJobId, outputId) : undefined;
+
+  // ─── Submit upscale on mount ───────────────────────────────────
+  useEffect(() => {
+    if (!parentJobId) {
+      setInitError("Missing parent job id");
+      return;
+    }
+    (async () => {
+      try {
+        const job = await upscaleJob(parentJobId, outputId ?? undefined);
+        setUpscaleJobId(job.id);
+        setStatus(job.status);
+      } catch (e: any) {
+        const message =
+          e?.response?.data?.message ??
+          e?.message ??
+          "Failed to start the upscale.";
+        setInitError(message);
+      }
+    })();
+  }, [parentJobId, outputId]);
+
+  // ─── Poll the child job ────────────────────────────────────────
+  useJobPolling(upscaleJobId, (job: JobResponse) => {
+    setStatus(job.status);
+    setProgress(estimateProgress(job.status, startedAt.current));
+
+    if (job.status === "COMPLETED") {
+      // Give user a brief confirmation tick, refresh credit balance, navigate.
+      fetchBalance().catch(() => {});
+      setTimeout(() => {
+        router.replace(`/result/${job.id}` as any);
+      }, 700);
+    } else if (job.status === "FAILED") {
+      setError(job.errorMessage ?? "Upscale failed. Your credits have been refunded.");
+    } else if (job.status === "CANCELLED") {
+      setError("Upscale was cancelled.");
+    }
+  }, 3000);
+
+  // ─── Spinner animation ─────────────────────────────────────────
   useEffect(() => {
     Animated.loop(
       Animated.timing(spinRotation, {
@@ -36,12 +101,8 @@ export default function UpscaleScreen() {
         duration: 1500,
         easing: Easing.linear,
         useNativeDriver: true,
-      }),
+      })
     ).start();
-  }, []);
-
-  // Pulse animation for active log entry icon
-  useEffect(() => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -56,38 +117,32 @@ export default function UpscaleScreen() {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ]),
+      ])
     ).start();
   }, []);
 
-  // Progress simulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setComplete(true);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 80);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Navigate on completion
-  useEffect(() => {
-    if (complete) {
-      const timeout = setTimeout(() => {
-        if (jobId) {
-          router.replace(`/result/${jobId}` as any);
-        } else {
-          router.back();
-        }
-      }, 600);
-      return () => clearTimeout(timeout);
+  const handleCancel = async () => {
+    if (upscaleJobId && status && !isTerminal(status)) {
+      Alert.alert("Cancel upscale?", "Reserved credits will be refunded.", [
+        { text: "Keep waiting", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await cancelJob(upscaleJobId);
+            } catch {
+              // best-effort
+            } finally {
+              router.back();
+            }
+          },
+        },
+      ]);
+    } else {
+      router.back();
     }
-  }, [complete, jobId]);
+  };
 
   const spinStyle = {
     transform: [
@@ -102,17 +157,17 @@ export default function UpscaleScreen() {
 
   const phaseLabel =
     progress < 40
-      ? "Enhancing Detail"
+      ? "Analyzing Composition"
       : progress < 80
-        ? "Textural Refinement"
-        : "Final Enhancement";
+        ? "Enhancing Detail"
+        : "Final Refinement";
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* Top Bar */}
+      {/* Top bar */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Pressable onPress={handleCancel} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color="#E1C39B" />
           </Pressable>
           <Text
@@ -127,36 +182,17 @@ export default function UpscaleScreen() {
             Architectural Lens
           </Text>
         </View>
-        <View
-          className="rounded-full overflow-hidden"
-          style={{
-            width: 32,
-            height: 32,
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.3)",
-            backgroundColor: "#2A2A2A",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="person" size={14} color="#E5E2E1" />
-        </View>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Content */}
         <View className="mb-10 mt-4">
           <Text
             className="font-label text-on-surface-variant mb-2"
-            style={{
-              fontSize: 11,
-              letterSpacing: 3.5,
-              textTransform: "uppercase",
-            }}
+            style={{ fontSize: 11, letterSpacing: 3.5, textTransform: "uppercase" }}
           >
             Current Workflow
           </Text>
@@ -164,11 +200,11 @@ export default function UpscaleScreen() {
             className="font-headline text-on-surface"
             style={{ fontSize: 34, lineHeight: 42, fontStyle: "italic" }}
           >
-            Upscaling to HD...
+            {error ? "Upscale Failed" : initError ? "Couldn't Start" : "Upscaling to Ultra HD…"}
           </Text>
         </View>
 
-        {/* Image Preview Section */}
+        {/* Blurred preview */}
         <View
           className="rounded-xl overflow-hidden mb-8"
           style={{
@@ -182,25 +218,19 @@ export default function UpscaleScreen() {
         >
           <Image
             source={
-              imageUrl
-                ? { uri: imageUrl, headers: authHeaders }
+              previewUrl
+                ? { uri: previewUrl, headers: authHeaders }
                 : require("@/assets/icon.png")
             }
             style={{ width: "100%", height: "100%" }}
             blurRadius={16}
             contentFit="cover"
           />
+          <View className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.35)" }} />
 
-          {/* Darken overlay */}
-          <View
-            className="absolute inset-0"
-            style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-          />
-
-          {/* Progress Overlay */}
+          {/* Progress overlay */}
           <View className="absolute inset-0 items-center justify-center px-12">
             <View className="w-full items-center" style={{ maxWidth: 260 }}>
-              {/* Phase Label */}
               <Text
                 className="font-label text-primary mb-4"
                 style={{
@@ -212,169 +242,102 @@ export default function UpscaleScreen() {
                   textShadowRadius: 4,
                 }}
               >
-                {phaseLabel}
+                {error || initError ? "Error" : phaseLabel}
               </Text>
 
-              {/* Progress Bar */}
               <View
                 className="w-full rounded-full overflow-hidden mb-3"
-                style={{
-                  height: 2,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                }}
+                style={{ height: 2, backgroundColor: "rgba(255,255,255,0.1)" }}
               >
                 <LinearGradient
-                  colors={["#C4A882", "#A68A62"]}
+                  colors={error || initError ? ["#93000A", "#93000A"] : ["#C4A882", "#A68A62"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
                     height: "100%",
-                    width: `${progress}%`,
+                    width: `${error || initError ? 100 : progress}%`,
                     borderRadius: 9999,
-                    shadowColor: "#C4A882",
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 10,
                   }}
                 />
               </View>
 
-              {/* Processing / Percentage */}
               <View className="flex-row items-center justify-between w-full">
                 <Text
                   className="font-label text-on-surface-variant"
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                  }}
+                  style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}
                 >
-                  Processing
+                  {statusLabel(status, error, initError)}
                 </Text>
-                <Text
-                  className="font-headline text-primary"
-                  style={{ fontSize: 14 }}
-                >
-                  {progress}%
+                <Text className="font-headline text-primary" style={{ fontSize: 14 }}>
+                  {error || initError ? "—" : `${progress}%`}
                 </Text>
               </View>
             </View>
           </View>
-
-          {/* Lens Corner Accent */}
-          <View className="absolute" style={{ top: 24, right: 24 }}>
-            <Ionicons
-              name="scan-outline"
-              size={32}
-              color="rgba(254,223,181,0.4)"
-            />
-          </View>
         </View>
 
-        {/* Process Log */}
+        {/* Log entries */}
         <View style={{ gap: 12 }}>
-          {/* Log Entry 1 — Completed */}
-          <View
-            className="flex-row items-center justify-between rounded-xl"
-            style={{ padding: 20, backgroundColor: "#1C1B1B" }}
-          >
-            <View className="flex-row items-center" style={{ gap: 16 }}>
-              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-              <Text
-                className="font-label text-on-surface"
-                style={{
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                }}
-              >
-                Standard Render Complete
-              </Text>
-            </View>
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 10,
-                color: "rgba(209,197,184,0.5)",
-              }}
+          <LogEntry done label="Standard Render Complete" time="prior" />
+          {initError ? (
+            <LogEntry error label={initError} time="just now" />
+          ) : error ? (
+            <LogEntry error label={error} time="just now" />
+          ) : (
+            <View
+              className="flex-row items-center justify-between rounded-xl"
+              style={{ padding: 20, backgroundColor: "#1C1B1B" }}
             >
-              14:02:11
-            </Text>
-          </View>
-
-          {/* Log Entry 2 — In Progress */}
-          <View
-            className="flex-row items-center justify-between rounded-xl"
-            style={{ padding: 20, backgroundColor: "#1C1B1B" }}
-          >
-            <View className="flex-row items-center" style={{ gap: 16 }}>
-              <Animated.View style={{ opacity: pulseAnim }}>
-                <Animated.View style={spinStyle}>
-                  <Ionicons name="sync" size={20} color="#FEDFB5" />
+              <View className="flex-row items-center" style={{ gap: 16 }}>
+                <Animated.View style={{ opacity: pulseAnim }}>
+                  <Animated.View style={spinStyle}>
+                    <Ionicons name="sync" size={20} color="#FEDFB5" />
+                  </Animated.View>
                 </Animated.View>
-              </Animated.View>
+                <Text
+                  className="font-label text-primary"
+                  style={{ fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase" }}
+                >
+                  {status === "COMPLETED"
+                    ? "Ultra HD Complete"
+                    : "HD Upscaling In Progress"}
+                </Text>
+              </View>
               <Text
-                className="font-label text-primary"
-                style={{
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                }}
+                className="font-label"
+                style={{ fontSize: 10, color: "rgba(209,197,184,0.5)" }}
               >
-                HD Upscaling In Progress
+                {status ?? "Starting"}
               </Text>
             </View>
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 10,
-                color: "rgba(209,197,184,0.5)",
-              }}
-            >
-              Active
-            </Text>
-          </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* Bottom Controls — Glass Nav */}
+      {/* Bottom bar */}
       <View
         className="absolute bottom-0 left-0 right-0"
-        style={{
-          padding: 24,
-          backgroundColor: "rgba(19,19,19,0.7)",
-        }}
+        style={{ padding: 24, backgroundColor: "rgba(19,19,19,0.7)" }}
       >
         <SafeAreaView edges={["bottom"]}>
           <View className="flex-row" style={{ gap: 16 }}>
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleCancel}
               className="flex-1 rounded-xl items-center justify-center"
-              style={{
-                height: 52,
-                backgroundColor: "#2A2A2A",
-              }}
+              style={{ height: 52, backgroundColor: "#2A2A2A" }}
             >
               <Text
                 className="font-label text-on-surface"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: 3.5,
-                  textTransform: "uppercase",
-                }}
+                style={{ fontSize: 11, letterSpacing: 3.5, textTransform: "uppercase" }}
               >
-                Cancel
+                {error || initError ? "Close" : "Cancel"}
               </Text>
             </Pressable>
 
             <Pressable
-              disabled={!complete}
+              disabled={status !== "COMPLETED"}
               onPress={() => {
-                if (complete && jobId) {
-                  router.replace(`/result/${jobId}` as any);
-                } else if (complete) {
-                  router.back();
-                }
+                if (upscaleJobId) router.replace(`/result/${upscaleJobId}` as any);
               }}
               className="flex-1 rounded-xl items-center justify-center"
               style={{
@@ -390,10 +353,10 @@ export default function UpscaleScreen() {
                   fontSize: 11,
                   letterSpacing: 3.5,
                   textTransform: "uppercase",
-                  color: complete ? "#FEDFB5" : "rgba(254,223,181,0.4)",
+                  color: status === "COMPLETED" ? "#FEDFB5" : "rgba(254,223,181,0.4)",
                 }}
               >
-                Done
+                View Result
               </Text>
             </Pressable>
           </View>
@@ -401,4 +364,69 @@ export default function UpscaleScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────
+
+function LogEntry(props: { done?: boolean; error?: boolean; label: string; time: string }) {
+  const iconName = props.done ? "checkmark-circle" : props.error ? "alert-circle" : "sync";
+  const iconColor = props.done ? "#4CAF50" : props.error ? "#FFB4AB" : "#FEDFB5";
+  const textColor = props.error ? "#FFB4AB" : "#E5E2E1";
+  return (
+    <View
+      className="flex-row items-center justify-between rounded-xl"
+      style={{ padding: 20, backgroundColor: "#1C1B1B" }}
+    >
+      <View className="flex-row items-center flex-1" style={{ gap: 16 }}>
+        <Ionicons name={iconName as any} size={20} color={iconColor} />
+        <Text
+          className="font-label"
+          style={{
+            color: textColor,
+            fontSize: 12,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            flex: 1,
+          }}
+          numberOfLines={2}
+        >
+          {props.label}
+        </Text>
+      </View>
+      <Text className="font-label" style={{ fontSize: 10, color: "rgba(209,197,184,0.5)" }}>
+        {props.time}
+      </Text>
+    </View>
+  );
+}
+
+function isTerminal(s: JobStatus): boolean {
+  return s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
+}
+
+function statusLabel(
+  status: JobStatus | null,
+  error: string | null,
+  initError: string | null,
+): string {
+  if (initError || error) return "Error";
+  if (status === "COMPLETED") return "Ready";
+  if (status === "PROCESSING") return "Processing";
+  if (status === "SUBMITTED") return "Submitted";
+  return "Starting";
+}
+
+/**
+ * Upscales typically take 30-90s; Real-ESRGAN is fast. Map elapsed time to an
+ * estimated progress curve so the UI feels responsive without the backend
+ * exposing true % progress.
+ */
+function estimateProgress(status: JobStatus | null, startMs: number): number {
+  if (status === "COMPLETED") return 100;
+  if (status === "FAILED" || status === "CANCELLED") return 100;
+  const elapsed = (Date.now() - startMs) / 1000;
+  // 0-85% over ~60s, then 85-95% over the remainder (asymptotic)
+  const expected = 60;
+  if (elapsed < expected) return Math.round((elapsed / expected) * 85);
+  return Math.min(95, Math.round(85 + (elapsed - expected) * 0.3));
 }

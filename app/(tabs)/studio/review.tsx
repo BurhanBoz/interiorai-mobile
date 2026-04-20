@@ -14,23 +14,28 @@ import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
+import { useTranslation } from "react-i18next";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import type { SpeedMode } from "@/types/api";
 
-const qualityLabels: Record<string, string> = {
-  STANDARD: "Standard",
-  HD: "HD (4K Ready)",
-  ULTRA_HD: "8K Ultra Render",
+const qualityLabelKeys: Record<string, string> = {
+  STANDARD: "studio.quality_standard",
+  HD: "studio.quality_hd",
+  ULTRA_HD: "studio.quality_ultra_hd",
 };
 
-const modeLabels: Record<string, string> = {
-  REDESIGN: "Architectural",
-  EMPTY_ROOM: "Interior Focus",
-  INPAINT: "Atmospheric",
-  STYLE_TRANSFER: "Style Transfer",
+const modeLabelKeys: Record<string, string> = {
+  REDESIGN: "studio.mode_redesign",
+  EMPTY_ROOM: "studio.mode_empty_room",
+  INPAINT: "studio.mode_inpaint",
+  STYLE_TRANSFER: "studio.mode_style_transfer",
 };
 
 export default function ReviewScreen() {
+  const { t } = useTranslation();
   const { error } = useLocalSearchParams<{ error?: string }>();
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export default function ReviewScreen() {
     roomType,
     designStyle,
     qualityTier,
+    speedMode,
     numOutputs,
     mode,
     preserveLayout,
@@ -52,9 +58,12 @@ export default function ReviewScreen() {
     strength,
     guidanceScale,
     referencePhoto,
+    setSpeedMode,
   } = useStudioStore();
   const balance = useCreditStore(s => s.balance);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
+  const hasPermission = useSubscriptionStore(s => s.hasPermission);
+  const canUseQualityMode = hasPermission("allow_quality_mode");
   const { cost, featureCode } = useCreditCost();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -80,6 +89,7 @@ export default function ReviewScreen() {
         designStyleId: designStyle.id,
         designMode: mode,
         qualityTier,
+        speedMode,
         numOutputs,
         preserveLayout,
         prompt: prompt || undefined,
@@ -204,13 +214,13 @@ export default function ReviewScreen() {
               fontWeight: "500",
             }}
           >
-            STEP 4 OF 4
+            {t("studio.step_4_of_4")}
           </Text>
           <Text
             className="font-headline text-on-surface"
             style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
           >
-            Final Review
+            {t("studio.step4_title")}
           </Text>
         </View>
 
@@ -272,7 +282,7 @@ export default function ReviewScreen() {
                     letterSpacing: 2,
                   }}
                 >
-                  {modeLabels[mode] ?? mode}
+                  {modeLabelKeys[mode] ? t(modeLabelKeys[mode]) : mode}
                 </Text>
               </View>
               <View
@@ -297,7 +307,7 @@ export default function ReviewScreen() {
                     letterSpacing: 2,
                   }}
                 >
-                  {designStyle?.name ?? "Style"}
+                  {designStyle?.name ?? t("studio.design_style")}
                 </Text>
               </View>
             </View>
@@ -315,21 +325,101 @@ export default function ReviewScreen() {
           }}
         >
           <SummaryCard
-            label="Style"
-            value={designStyle?.name ?? "Japandi Minimalist"}
+            label={t("result.style")}
+            value={designStyle?.name ?? "—"}
           />
           <SummaryCard
-            label="Room Type"
-            value={roomType?.name ?? "Living Room"}
+            label={t("result.room")}
+            value={roomType?.name ?? "—"}
           />
           <SummaryCard
-            label="Resolution"
-            value={qualityLabels[qualityTier] ?? qualityTier}
+            label={t("result.quality")}
+            value={qualityLabelKeys[qualityTier] ? t(qualityLabelKeys[qualityTier]) : qualityTier}
           />
           <SummaryCard
-            label="Output"
-            value={`${numOutputs} Variant${numOutputs !== 1 ? "s" : ""}`}
+            label={t("studio.number_of_outputs")}
+            value={String(numOutputs)}
           />
+        </View>
+
+        {/* Speed Mode Selector */}
+        <View style={{ marginTop: 32, paddingHorizontal: 24 }}>
+          <Text
+            className="font-label text-on-surface-variant mb-3"
+            style={{
+              fontSize: 11,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+            }}
+          >
+            {t("studio.speed_mode")}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              backgroundColor: "#2A2A2A",
+              borderRadius: 12,
+              padding: 4,
+              gap: 4,
+            }}
+          >
+            {(["FAST", "BALANCED", "QUALITY"] as SpeedMode[]).map(m => {
+              const isSelected = speedMode === m;
+              const isLocked = m === "QUALITY" && !canUseQualityMode;
+              const labelKey =
+                m === "FAST"
+                  ? "studio.speed_fast"
+                  : m === "BALANCED"
+                  ? "studio.speed_balanced"
+                  : "studio.speed_quality";
+              return (
+                <Pressable
+                  key={m}
+                  onPress={() => {
+                    if (isLocked) {
+                      Alert.alert(
+                        t("studio.speed_quality"),
+                        t("studio.speed_quality_locked"),
+                      );
+                      return;
+                    }
+                    setSpeedMode(m);
+                  }}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    backgroundColor: isSelected ? "#FEDFB5" : "transparent",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: isLocked ? 0.5 : 1,
+                  }}
+                >
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Text
+                      className="font-label"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: isSelected ? "700" : "500",
+                        letterSpacing: 1,
+                        textTransform: "uppercase",
+                        color: isSelected ? "#281801" : "#E5E2E1",
+                      }}
+                    >
+                      {t(labelKey)}
+                    </Text>
+                    {isLocked && (
+                      <Ionicons
+                        name="lock-closed"
+                        size={10}
+                        color="#E5E2E1"
+                      />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Credits Info */}
@@ -346,7 +436,7 @@ export default function ReviewScreen() {
                 textTransform: "uppercase",
               }}
             >
-              COST TO RENDER
+              {t("studio.credits")}
             </Text>
             <View className="flex-row items-center" style={{ gap: 8 }}>
               <Text
@@ -364,7 +454,7 @@ export default function ReviewScreen() {
                   paddingTop: 8,
                 }}
               >
-                Credits
+                {t("studio.credits")}
               </Text>
             </View>
           </View>
@@ -377,13 +467,13 @@ export default function ReviewScreen() {
                 textTransform: "uppercase",
               }}
             >
-              WALLET BALANCE
+              {t("credits.balance")}
             </Text>
             <Text
               className="font-body text-on-surface"
               style={{ fontSize: 15, fontWeight: "600" }}
             >
-              {balance} Credits
+              {t("studio.cost_credits", { count: balance })}
             </Text>
           </View>
         </View>
@@ -397,49 +487,14 @@ export default function ReviewScreen() {
             gap: 16,
           }}
         >
-          <Pressable
-            onPress={handleGenerate}
-            disabled={isSubmitting}
-            style={({ pressed }) => ({
-              width: "100%",
-              opacity: isSubmitting ? 0.6 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
-              }}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#3F2D11" />
-              ) : (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                    color: "#3F2D11",
-                  }}
-                >
-                  Generate
-                </Text>
-              )}
-              <Ionicons name="sparkles" size={20} color="#3F2D11" />
-            </LinearGradient>
-          </Pressable>
+          <View style={{ width: "100%" }}>
+            <PrimaryButton
+              label={t("studio.generate")}
+              onPress={handleGenerate}
+              loading={isSubmitting}
+              icon="sparkles"
+            />
+          </View>
 
           <Text
             className="font-label text-on-surface-variant"

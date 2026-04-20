@@ -5,12 +5,14 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Constants from "expo-constants";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useState, useEffect, useMemo } from "react";
 import * as userService from "@/services/user";
+import { pushWithReturn } from "@/utils/navigation";
 
 /* ─────────────────── Credit Ring ─────────────────── */
 function CreditRing({
@@ -71,36 +73,22 @@ function CreditRing({
 
 /* ─────────────────── Menu Items ─────────────────── */
 const MENU_ITEMS: {
-  label: string;
+  labelKey: string;
   icon: keyof typeof Ionicons.glyphMap;
   route?: string;
   hasBadge?: boolean;
 }[] = [
-  {
-    label: "Curated Favorites",
-    icon: "heart",
-    route: "/(tabs)/gallery",
-  },
-  {
-    label: "Notifications",
-    icon: "notifications",
-    route: "/settings/notifications",
-    hasBadge: true,
-  },
-  {
-    label: "Billing History",
-    icon: "card-outline",
-    route: "/plans",
-  },
-  {
-    label: "Privacy & Data",
-    icon: "shield-checkmark-outline",
-    route: "/settings/privacy",
-  },
+  { labelKey: "profile.curated_favorites", icon: "heart", route: "/(tabs)/gallery" },
+  { labelKey: "profile.notifications", icon: "notifications", route: "/settings/notifications", hasBadge: true },
+  { labelKey: "profile.credit_packs", icon: "flash-outline", route: "/credits/packs" },
+  { labelKey: "profile.billing_history", icon: "card-outline", route: "/credits" },
+  { labelKey: "profile.manage_plan", icon: "ribbon-outline", route: "/plans" },
+  { labelKey: "profile.privacy_data", icon: "shield-checkmark-outline", route: "/settings/privacy" },
 ];
 
 /* ─────────────────── Main Screen ─────────────────── */
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const { openDrawer } = useDrawer();
   const user = useAuthStore(s => s.user);
   const logout = useAuthStore(s => s.logout);
@@ -124,7 +112,7 @@ export default function ProfileScreen() {
   const displayName = user?.displayName ?? null;
   const email = user?.email || "";
   const isFree = !planCode || planCode === "FREE";
-  const planLabel = subscription?.planName ?? (isFree ? "Free" : planCode);
+  const planLabel = subscription?.planName ?? (isFree ? t("profile.free") : planCode);
   const badgeLabel = planLabel?.toUpperCase() ?? null;
 
   // Compute renewal text from subscription period
@@ -134,10 +122,10 @@ export default function ProfileScreen() {
     const now = new Date();
     const diffMs = end.getTime() - now.getTime();
     const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-    if (diffDays === 0) return "Renews today";
-    if (diffDays === 1) return "Renews tomorrow";
-    return `Renews in ${diffDays} days`;
-  }, [subscription?.currentPeriodEnd]);
+    if (diffDays === 0) return t("profile.renews_today");
+    if (diffDays === 1) return t("profile.renews_tomorrow");
+    return t("profile.renews_in_days", { days: diffDays });
+  }, [subscription?.currentPeriodEnd, t]);
 
   // Initials for avatar fallback
   const initials = useMemo(() => {
@@ -157,27 +145,27 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete your account?",
-      "This is permanent and cannot be undone. All your designs, credits, and subscriptions will be permanently deleted.",
+      t("profile.delete_confirm_title"),
+      t("profile.delete_confirm_description"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Continue",
+          text: t("profile.delete_confirm_continue"),
           style: "destructive",
           onPress: () => {
             Alert.prompt(
-              "Confirm Deletion",
-              "Type DELETE to confirm account deletion.",
+              t("profile.delete_confirm_prompt_title"),
+              t("profile.delete_confirm_prompt_description"),
               [
-                { text: "Cancel", style: "cancel" },
+                { text: t("common.cancel"), style: "cancel" },
                 {
-                  text: "Delete My Account",
+                  text: t("profile.delete_my_account"),
                   style: "destructive",
                   onPress: async (value: string | undefined) => {
                     if (value !== "DELETE") {
                       Alert.alert(
-                        "Error",
-                        'Please type exactly "DELETE" to confirm.',
+                        t("common.confirm"),
+                        t("profile.delete_must_type"),
                       );
                       return;
                     }
@@ -188,9 +176,9 @@ export default function ProfileScreen() {
                       router.replace("/(auth)/login");
                     } catch (e: any) {
                       Alert.alert(
-                        "Error",
+                        t("errors.generic"),
                         e?.response?.data?.message ??
-                          "Failed to delete account.",
+                          t("profile.delete_failed"),
                       );
                     } finally {
                       setDeleting(false);
@@ -224,7 +212,7 @@ export default function ProfileScreen() {
             textTransform: "uppercase",
           }}
         >
-          The Architectural Lens
+          {t("app.name")}
         </Text>
         <View
           style={{
@@ -367,7 +355,7 @@ export default function ProfileScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Credits Left
+              {t("profile.credits_label")}
             </Text>
           </View>
 
@@ -386,7 +374,7 @@ export default function ProfileScreen() {
                 marginBottom: 8,
               }}
             >
-              Current Plan
+              {t("plans.current_plan")}
             </Text>
             <Text
               className="font-headline text-on-surface"
@@ -417,15 +405,15 @@ export default function ProfileScreen() {
               marginBottom: 16,
             }}
           >
-            Account Settings
+            {t("drawer.settings")}
           </Text>
 
           <View>
             {MENU_ITEMS.map(item => (
               <Pressable
-                key={item.label}
+                key={item.labelKey}
                 onPress={() => {
-                  if (item.route) router.push(item.route as any);
+                  if (item.route) pushWithReturn(item.route, "profile");
                 }}
                 className="flex-row items-center active:opacity-70"
                 style={{
@@ -456,7 +444,7 @@ export default function ProfileScreen() {
                   className="text-on-surface font-body flex-1"
                   style={{ fontSize: 15, marginLeft: 16 }}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
                 <Ionicons name="chevron-forward" size={16} color="#4D463C" />
               </Pressable>
@@ -478,7 +466,7 @@ export default function ProfileScreen() {
                   fontWeight: "500",
                 }}
               >
-                Sign Out
+                {t("drawer.sign_out")}
               </Text>
             </Pressable>
           </View>
@@ -496,7 +484,7 @@ export default function ProfileScreen() {
               fontWeight: "500",
             }}
           >
-            The Architectural Lens
+            {t("app.name")}
           </Text>
           <Text
             style={{

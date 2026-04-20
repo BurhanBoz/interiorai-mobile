@@ -12,27 +12,33 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const register = useAuthStore(s => s.register);
+  const { appleAvailable, loading: socialLoading, signInWithApple, signInWithGoogle } = useSocialAuth();
+  const busy = loading || socialLoading !== null;
 
   const handleSignUp = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
+      Alert.alert(t("auth.missing_fields_title"), t("auth.register_missing_fields"));
       return;
     }
     setLoading(true);
     try {
       await register(email, password);
     } catch (e: any) {
-      Alert.alert("Registration Failed", e?.message ?? "Something went wrong.");
+      Alert.alert(t("auth.register_failed_title"), e?.message ?? t("auth.register_failed_description"));
     } finally {
       setLoading(false);
     }
@@ -60,7 +66,7 @@ export default function RegisterScreen() {
               className="font-headline font-bold text-secondary uppercase mb-10"
               style={{ fontSize: 14, letterSpacing: 3 }}
             >
-              ARCHITECTURAL LENS
+              {t("app.brand")}
             </Text>
 
             {/* Heading */}
@@ -68,7 +74,7 @@ export default function RegisterScreen() {
               className="font-headline font-bold text-on-surface mb-10"
               style={{ fontSize: 36, lineHeight: 42 }}
             >
-              Create Account
+              {t("auth.register_title")}
             </Text>
 
             {/* Full Name */}
@@ -77,7 +83,7 @@ export default function RegisterScreen() {
                 className="font-label text-on-surface-variant uppercase mb-2"
                 style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                Full Name
+                {t("auth.full_name_label")}
               </Text>
               <TextInput
                 className="font-body text-on-surface text-base pb-3 bg-transparent"
@@ -86,7 +92,7 @@ export default function RegisterScreen() {
                   borderBottomColor: "rgba(77,70,60,0.2)",
                 }}
                 placeholderTextColor="rgba(208,197,184,0.4)"
-                placeholder="Julianne Moore"
+                placeholder={t("auth.full_name_placeholder")}
                 value={fullName}
                 onChangeText={setFullName}
                 selectionColor="#E1C39B"
@@ -99,7 +105,7 @@ export default function RegisterScreen() {
                 className="font-label text-on-surface-variant uppercase mb-2"
                 style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                Email Address
+                {t("auth.email_label")}
               </Text>
               <TextInput
                 className="font-body text-on-surface text-base pb-3 bg-transparent"
@@ -108,7 +114,7 @@ export default function RegisterScreen() {
                   borderBottomColor: "rgba(77,70,60,0.2)",
                 }}
                 placeholderTextColor="rgba(208,197,184,0.4)"
-                placeholder="julianne.m@studio.com"
+                placeholder={t("auth.email_placeholder")}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 textContentType="emailAddress"
@@ -124,7 +130,7 @@ export default function RegisterScreen() {
                 className="font-label text-on-surface-variant uppercase mb-2"
                 style={{ fontSize: 11, letterSpacing: 2 }}
               >
-                Password
+                {t("auth.password_label")}
               </Text>
               <View
                 className="flex-row items-center"
@@ -136,7 +142,7 @@ export default function RegisterScreen() {
                 <TextInput
                   className="flex-1 font-body text-on-surface text-base pb-3 bg-transparent"
                   placeholderTextColor="rgba(208,197,184,0.4)"
-                  placeholder="••••••••••••"
+                  placeholder={t("auth.password_placeholder")}
                   secureTextEntry={!showPassword}
                   textContentType="newPassword"
                   value={password}
@@ -157,44 +163,12 @@ export default function RegisterScreen() {
             </View>
 
             {/* CTA Button */}
-            <Pressable
+            <PrimaryButton
+              label={loading ? t("auth.creating") : t("auth.sign_up")}
               onPress={handleSignUp}
-              disabled={loading}
-              style={({ pressed }) => ({
-                opacity: loading ? 0.7 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              <LinearGradient
-                colors={["#C4A882", "#A68A62"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  height: 56,
-                  borderRadius: 16,
-                  paddingHorizontal: 24,
-                  borderWidth: 1,
-                  borderColor: "rgba(196,168,130,0.3)",
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                    color: "#3F2D11",
-                  }}
-                >
-                  {loading ? "Creating…" : "Create Account"}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-              </LinearGradient>
-            </Pressable>
+              disabled={busy}
+              loading={loading}
+            />
 
             {/* Divider */}
             <View className="flex-row items-center my-6" style={{ gap: 12 }}>
@@ -203,55 +177,61 @@ export default function RegisterScreen() {
                 className="font-label text-on-surface-variant uppercase"
                 style={{ fontSize: 11, letterSpacing: 3, opacity: 0.5 }}
               >
-                or continue with
+                {t("auth.continue_with")}
               </Text>
               <View className="flex-1 h-px bg-surface-container-high" />
             </View>
 
-            {/* Social Buttons — temporarily disabled */}
-            <View className="flex-row" style={{ gap: 12, opacity: 0.35 }}>
+            {/* Social Buttons */}
+            <View className="flex-row" style={{ gap: 12 }}>
               <Pressable
-                disabled
+                onPress={signInWithGoogle}
+                disabled={busy}
                 className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-                style={{ height: 52, gap: 10 }}
+                style={({ pressed }) => ({
+                  height: 52,
+                  gap: 10,
+                  opacity: busy ? 0.5 : pressed ? 0.8 : 1,
+                })}
               >
                 <Ionicons name="logo-google" size={18} color="#E5E2E1" />
                 <Text
                   className="font-label font-bold text-on-surface uppercase"
                   style={{ fontSize: 11, letterSpacing: 3 }}
                 >
-                  Google
+                  {socialLoading === "google" ? t("auth.signing_in") : t("auth.google")}
                 </Text>
               </Pressable>
-              <Pressable
-                disabled
-                className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-                style={{ height: 52, gap: 10 }}
-              >
-                <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
-                <Text
-                  className="font-label font-bold text-on-surface uppercase"
-                  style={{ fontSize: 11, letterSpacing: 3 }}
+              {appleAvailable && (
+                <Pressable
+                  onPress={signInWithApple}
+                  disabled={busy}
+                  className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
+                  style={({ pressed }) => ({
+                    height: 52,
+                    gap: 10,
+                    opacity: busy ? 0.5 : pressed ? 0.8 : 1,
+                  })}
                 >
-                  Apple
-                </Text>
-              </Pressable>
+                  <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
+                  <Text
+                    className="font-label font-bold text-on-surface uppercase"
+                    style={{ fontSize: 11, letterSpacing: 3 }}
+                  >
+                    {socialLoading === "apple" ? t("auth.signing_in") : t("auth.apple")}
+                  </Text>
+                </Pressable>
+              )}
             </View>
-            <Text
-              className="font-label text-on-surface-variant text-center mt-2"
-              style={{ fontSize: 10, letterSpacing: 1, opacity: 0.4 }}
-            >
-              Coming Soon
-            </Text>
 
             {/* Footer */}
             <View className="flex-row items-center justify-center mt-auto pt-10">
               <Text className="font-body text-on-surface-variant text-sm">
-                Already have an account?{" "}
+                {t("auth.already_have_account")}{" "}
               </Text>
               <Pressable onPress={() => router.push("/login")}>
                 <Text className="font-body text-secondary font-semibold text-sm ml-1">
-                  Sign In
+                  {t("auth.sign_in_link")}
                 </Text>
               </Pressable>
             </View>
