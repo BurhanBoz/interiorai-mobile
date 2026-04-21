@@ -44,6 +44,13 @@ export function useBackHandler(defaultFallback: string = "/(tabs)/gallery") {
     };
 }
 
-export function pushWithReturn(pathname: string, returnTo: TabName) {
-    router.push({ pathname, params: { returnTo } } as never);
+export function pushWithReturn(
+    pathname: string,
+    returnTo: TabName,
+    extraParams?: Record<string, string>,
+) {
+    router.push({
+        pathname,
+        params: { returnTo, ...(extraParams ?? {}) },
+    } as never);
 }

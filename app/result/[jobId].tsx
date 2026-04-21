@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   FlatList,
   Dimensions,
-  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -20,6 +19,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { getJob } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { useImageActions } from "@/hooks/useImageActions";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -76,25 +76,58 @@ export default function ResultDetailScreen() {
     headers: authHeaders,
   });
 
+  const { saveToPhotos, shareImage, isDownloading, isSharing } =
+    useImageActions();
+
   const handleShare = async () => {
     const url = currentOutput
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
-    try {
-      await Share.share({ url });
-    } catch {
-      // user cancelled
-    }
+    // Share the actual image file (downloaded from the auth-protected
+    // backend), not just the URL string. iMessage / WhatsApp / Mail get
+    // a real attachment instead of a paste-this-into-a-browser link.
+    await shareImage(url, {
+      headers: authHeaders,
+      nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
+    });
+  };
+
+  const handleDownload = async () => {
+    const url = currentOutput
+      ? getOutputImageUrl(job!.id, currentOutput)
+      : undefined;
+    if (!url) return;
+    await saveToPhotos(url, {
+      headers: authHeaders,
+      nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
+    });
   };
 
   const handleCompare = () => {
-    if (!job?.inputFile?.id || !currentOutput) return;
+    if (!currentOutput) return;
+    // Surface the inputFile state up front so we can diagnose missing
+    // before-images in the wild. The earlier silent `return` when
+    // `inputFile.id` was absent is what prevented the compare screen
+    // from opening at all — now we at least navigate with an empty
+    // beforeUrl and the target screen can show a clear message.
+    const beforeUrl = job?.inputFile?.id
+      ? getFileDownloadUrl(job.inputFile.id)
+      : "";
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[Result] handleCompare — inputFile:",
+        job?.inputFile,
+        "beforeUrl:",
+        beforeUrl,
+      );
+    }
     router.push({
       pathname: "/result/compare",
       params: {
-        beforeUrl: getFileDownloadUrl(job.inputFile.id),
-        afterUrl: getOutputImageUrl(job.id, currentOutput),
+        beforeUrl,
+        afterUrl: getOutputImageUrl(job!.id, currentOutput),
       },
     } as any);
   };
@@ -310,13 +343,45 @@ export default function ResultDetailScreen() {
             </Text>
           </View>
 
+          {/* Download — saves to Photos */}
+          <View className="items-center" style={{ gap: 8 }}>
+            <Pressable
+              onPress={handleDownload}
+              disabled={isDownloading}
+              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+              style={{ opacity: isDownloading ? 0.5 : 1 }}
+            >
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="#D1C5B8" />
+              ) : (
+                <Ionicons name="download-outline" size={22} color="#D1C5B8" />
+              )}
+            </Pressable>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 9,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+              }}
+            >
+              {t("result.download")}
+            </Text>
+          </View>
+
           {/* Share */}
           <View className="items-center" style={{ gap: 8 }}>
             <Pressable
               onPress={handleShare}
+              disabled={isSharing}
               className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+              style={{ opacity: isSharing ? 0.5 : 1 }}
             >
-              <Ionicons name="share-social-outline" size={22} color="#D1C5B8" />
+              {isSharing ? (
+                <ActivityIndicator size="small" color="#D1C5B8" />
+              ) : (
+                <Ionicons name="share-social-outline" size={22} color="#D1C5B8" />
+              )}
             </Pressable>
             <Text
               className="font-label text-on-surface-variant"

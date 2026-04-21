@@ -16,7 +16,13 @@ interface StudioState {
     colorPalette: string;
     seed: number | undefined;
     strength: number;
-    guidanceScale: number;
+    /**
+     * Undefined when the user hasn't touched the guidance slider — this
+     * lets the backend pick the style-specific override (design_style_guidance
+     * table: Modern/SDXL=8.5, Scandinavian/FLUX=3.5 …). Sending a numeric
+     * default here would short-circuit that and force 7.5 for everything.
+     */
+    guidanceScale: number | undefined;
     referencePhoto: { uri: string; fileId: string } | null;
     maskData: string | null;
     setStep: (step: 1 | 2 | 3 | 4) => void;
@@ -33,7 +39,7 @@ interface StudioState {
     setColorPalette: (v: string) => void;
     setSeed: (v: number | undefined) => void;
     setStrength: (v: number) => void;
-    setGuidanceScale: (v: number) => void;
+    setGuidanceScale: (v: number | undefined) => void;
     setReferencePhoto: (photo: { uri: string; fileId: string } | null) => void;
     setMaskData: (data: string | null) => void;
     reset: () => void;
@@ -54,7 +60,7 @@ const initialState = {
     colorPalette: "",
     seed: undefined,
     strength: 0.7,
-    guidanceScale: 7.5,
+    guidanceScale: undefined,
     referencePhoto: null,
     maskData: null,
 };

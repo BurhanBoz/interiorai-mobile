@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useRef, useState } from "react";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -236,6 +237,21 @@ export default function CompareScreen() {
   }>();
   const authHeaders = useAuthHeaders();
 
+  // `useAuthHeaders` hydrates asynchronously from SecureStore — the first
+  // render sees an empty object. expo-image caches the initial failed
+  // (unauthenticated) request, so rendering the BEFORE image before the
+  // token arrives leaves it blank. Gate the slider behind the hydrated flag.
+  const authReady = Object.keys(authHeaders).length > 0;
+
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "[Compare] beforeUrl:", beforeUrl,
+      "afterUrl:", afterUrl,
+      "authReady:", authReady,
+    );
+  }
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
       {/* Header */}
@@ -255,16 +271,7 @@ export default function CompareScreen() {
             {t("result.compare")}
           </Text>
         </View>
-        <View
-          className="w-8 h-8 rounded-full items-center justify-center"
-          style={{
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.2)",
-            backgroundColor: "#2A2A2A",
-          }}
-        >
-          <Ionicons name="person" size={14} color="#E5E2E1" />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
@@ -272,11 +279,20 @@ export default function CompareScreen() {
         contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <BeforeAfterSlider
-          beforeUri={beforeUrl}
-          afterUri={afterUrl}
-          authHeaders={authHeaders}
-        />
+        {authReady ? (
+          <BeforeAfterSlider
+            beforeUri={beforeUrl}
+            afterUri={afterUrl}
+            authHeaders={authHeaders}
+          />
+        ) : (
+          <View
+            className="rounded-xl overflow-hidden bg-surface-container-low items-center justify-center"
+            style={{ aspectRatio: 4 / 5, width: "100%" }}
+          >
+            <Ionicons name="hourglass-outline" size={32} color="#998F84" />
+          </View>
+        )}
 
         {/* Info */}
         <View className="mt-8" style={{ gap: 16 }}>

@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -189,18 +190,26 @@ export default function RegisterScreen() {
                 disabled={busy}
                 className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
                 style={({ pressed }) => ({
-                  height: 52,
+                  height: 56,
                   gap: 10,
+                  paddingHorizontal: 16,
                   opacity: busy ? 0.5 : pressed ? 0.8 : 1,
                 })}
               >
-                <Ionicons name="logo-google" size={18} color="#E5E2E1" />
-                <Text
-                  className="font-label font-bold text-on-surface uppercase"
-                  style={{ fontSize: 11, letterSpacing: 3 }}
-                >
-                  {socialLoading === "google" ? t("auth.signing_in") : t("auth.google")}
-                </Text>
+                {socialLoading === "google" ? (
+                  <ActivityIndicator size="small" color="#E5E2E1" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={20} color="#E5E2E1" />
+                    <Text
+                      className="font-body font-medium text-on-surface"
+                      style={{ fontSize: 14, letterSpacing: 0.3 }}
+                      numberOfLines={1}
+                    >
+                      {t("auth.google")}
+                    </Text>
+                  </>
+                )}
               </Pressable>
               {appleAvailable && (
                 <Pressable
@@ -208,18 +217,26 @@ export default function RegisterScreen() {
                   disabled={busy}
                   className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
                   style={({ pressed }) => ({
-                    height: 52,
+                    height: 56,
                     gap: 10,
+                    paddingHorizontal: 16,
                     opacity: busy ? 0.5 : pressed ? 0.8 : 1,
                   })}
                 >
-                  <Ionicons name="logo-apple" size={20} color="#E5E2E1" />
-                  <Text
-                    className="font-label font-bold text-on-surface uppercase"
-                    style={{ fontSize: 11, letterSpacing: 3 }}
-                  >
-                    {socialLoading === "apple" ? t("auth.signing_in") : t("auth.apple")}
-                  </Text>
+                  {socialLoading === "apple" ? (
+                    <ActivityIndicator size="small" color="#E5E2E1" />
+                  ) : (
+                    <>
+                      <Ionicons name="logo-apple" size={22} color="#E5E2E1" />
+                      <Text
+                        className="font-body font-medium text-on-surface"
+                        style={{ fontSize: 14, letterSpacing: 0.3 }}
+                        numberOfLines={1}
+                      >
+                        {t("auth.apple")}
+                      </Text>
+                    </>
+                  )}
                 </Pressable>
               )}
             </View>

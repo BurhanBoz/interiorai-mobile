@@ -59,51 +59,95 @@ function formatDate(dateStr: string): string {
   return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/* ─────────────────── Ledger Row ─────────────────── */
-function LedgerRow({ item }: { item: CreditLedgerEntry }) {
+/* ─────────────────── Ledger Row ───────────────────
+ * Premium redesign — 48px thumb, monospace amount, kind badge pill, chevron
+ * when the entry links to a job. Kind badge (RESERVE/CONSUME/RELEASE/TOPUP/
+ * REFUND) comes from the ledger entry's `kind` field; fallback derives from
+ * the reason string so historical rows without the field still render. */
+function kindBadgeKey(kind: string | undefined, reason: string): string {
+  const k = (kind ?? reason.split(" ")[0] ?? "").toUpperCase();
+  if (k.startsWith("RESERVE")) return "RESERVE";
+  if (k.startsWith("CONSUME")) return "CONSUME";
+  if (k.startsWith("RELEASE")) return "RELEASE";
+  if (k.startsWith("TOPUP")) return "TOPUP";
+  if (k.startsWith("REFUND")) return "REFUND";
+  if (k.startsWith("GRANT")) return "GRANT";
+  return "ACTIVITY";
+}
+
+function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => string }) {
   const isPositive = item.amount > 0;
+  const kind = kindBadgeKey((item as any).kind, item.reason);
+  const amountColor = isPositive ? "#8FE3A1" : "#FFB4AB";
   return (
     <Pressable
       onPress={() => {
         if (item.jobId) router.push(`/result/${item.jobId}`);
       }}
-      className="flex-row items-center"
-      style={{ marginBottom: 32 }}
+      className="flex-row items-center bg-surface-container-low rounded-xl"
+      style={({ pressed }) => ({
+        marginBottom: 10,
+        padding: 14,
+        opacity: pressed ? 0.85 : 1,
+        borderWidth: 1,
+        borderColor: "rgba(77,70,60,0.18)",
+      })}
     >
-      {/* Thumbnail */}
+      {/* Thumbnail — 48x48, rounded, job preview if available */}
       <View
         className="rounded-lg overflow-hidden bg-surface-container-high items-center justify-center"
-        style={{ width: 40, height: 40, marginRight: 16 }}
+        style={{ width: 48, height: 48, marginRight: 14 }}
       >
         {item.jobId ? (
           <Image
-            source={{ uri: `https://picsum.photos/seed/${item.jobId}/80` }}
-            style={{ width: 40, height: 40 }}
+            source={{ uri: `https://picsum.photos/seed/${item.jobId}/96` }}
+            style={{ width: 48, height: 48 }}
             contentFit="cover"
           />
         ) : (
           <Ionicons
-            name="wallet-outline"
-            size={20}
-            color="rgba(224,194,154,0.4)"
+            name={isPositive ? "add-circle-outline" : "wallet-outline"}
+            size={22}
+            color="rgba(224,194,154,0.5)"
           />
         )}
       </View>
 
       {/* Info */}
-      <View className="flex-1" style={{ marginRight: 12 }}>
-        <Text
-          className="font-label text-secondary"
-          style={{
-            fontSize: 10,
-            fontWeight: "700",
-            letterSpacing: 1,
-            textTransform: "uppercase",
-            marginBottom: 2,
-          }}
-        >
-          {item.reason.split(" ")[0]} • {formatDate(item.createdAt)}
-        </Text>
+      <View className="flex-1" style={{ marginRight: 10 }}>
+        <View className="flex-row items-center" style={{ gap: 6, marginBottom: 4 }}>
+          <View
+            style={{
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 4,
+              backgroundColor: "rgba(225,195,155,0.14)",
+            }}
+          >
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 9,
+                fontWeight: "700",
+                letterSpacing: 1.2,
+                color: "#E0C29A",
+              }}
+            >
+              {t(`credits.kind_${kind.toLowerCase()}`)}
+            </Text>
+          </View>
+          <Text
+            className="font-label"
+            style={{
+              fontSize: 10,
+              fontWeight: "500",
+              letterSpacing: 0.8,
+              color: "#998F84",
+            }}
+          >
+            {formatDate(item.createdAt)}
+          </Text>
+        </View>
         <Text
           className="font-body text-on-surface"
           style={{ fontSize: 14, fontWeight: "500" }}
@@ -113,17 +157,27 @@ function LedgerRow({ item }: { item: CreditLedgerEntry }) {
         </Text>
       </View>
 
-      {/* Amount */}
-      <Text
-        className="font-headline"
-        style={{
-          fontSize: 16,
-          color: isPositive ? "#4ade80" : "#E0C29A",
-        }}
-      >
-        {isPositive ? "+" : ""}
-        {item.amount}
-      </Text>
+      {/* Amount + chevron */}
+      <View className="items-end" style={{ gap: 2 }}>
+        <Text
+          className="font-headline"
+          style={{
+            fontSize: 17,
+            color: amountColor,
+            letterSpacing: 0.5,
+          }}
+        >
+          {isPositive ? "+" : ""}
+          {item.amount}
+        </Text>
+        {item.jobId && (
+          <Ionicons
+            name="chevron-forward"
+            size={14}
+            color="#998F84"
+          />
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -144,6 +198,9 @@ export default function CreditsScreen() {
   const [page, setPage] = useState(0);
   const [isLast, setIsLast] = useState(false);
   const [loadingLedger, setLoadingLedger] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<"ALL" | "EARNED" | "SPENT">(
+    "ALL",
+  );
 
   const [promoExpanded, setPromoExpanded] = useState(false);
   const [promoCode, setPromoCode] = useState("");
@@ -171,6 +228,24 @@ export default function CreditsScreen() {
 
   const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
   const progressPct = monthlyLimit > 0 ? Math.min(1, balance / monthlyLimit) : 0;
+
+  // Filter the ledger for the ALL/EARNED/SPENT tabs. Positive = earned
+  // (grants/topups/refunds/release), negative = spent (reserve/consume).
+  const filteredLedger = useMemo(() => {
+    if (activityFilter === "ALL") return ledger;
+    if (activityFilter === "EARNED") return ledger.filter(l => l.amount > 0);
+    return ledger.filter(l => l.amount < 0);
+  }, [ledger, activityFilter]);
+
+  // "Spent this month" — sum of negative entries within the active period.
+  // Gives the user a quick sense of burn rate without scrolling the list.
+  const spentThisMonth = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    return ledger
+      .filter(l => l.amount < 0 && new Date(l.createdAt).getTime() >= startOfMonth)
+      .reduce((sum, l) => sum + Math.abs(l.amount), 0);
+  }, [ledger]);
 
   // Reference guide — resolve each feature's credit cost from the plan's
   // creditRules. Skip features the plan doesn't include.
@@ -260,9 +335,9 @@ export default function CreditsScreen() {
       </View>
 
       <FlatList
-        data={ledger}
+        data={filteredLedger}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <LedgerRow item={item} />}
+        renderItem={({ item }) => <LedgerRow item={item} t={t} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
@@ -503,29 +578,139 @@ export default function CreditsScreen() {
               </View>
             )}
 
-            {/* ── Monthly Usage Header ── */}
-            <Text
-              className="font-label text-secondary"
-              style={{
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                marginBottom: 24,
-              }}
+            {/* ── Monthly Usage Header + Filter Chips ── */}
+            <View
+              className="flex-row items-center justify-between"
+              style={{ marginBottom: 16 }}
             >
-              {t("credits.monthly_usage")}
-            </Text>
+              <Text
+                className="font-label text-secondary"
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("credits.monthly_usage")}
+              </Text>
+              {spentThisMonth > 0 && (
+                <Text
+                  className="font-label"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "500",
+                    letterSpacing: 1.5,
+                    color: "#998F84",
+                  }}
+                >
+                  {t("credits.billing_spent_this_month", {
+                    amount: spentThisMonth,
+                  })}
+                </Text>
+              )}
+            </View>
+
+            {/* Filter chips */}
+            <View
+              className="flex-row"
+              style={{ gap: 8, marginBottom: 20 }}
+            >
+              {(["ALL", "EARNED", "SPENT"] as const).map(f => {
+                const active = activityFilter === f;
+                return (
+                  <Pressable
+                    key={f}
+                    onPress={() => setActivityFilter(f)}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 7,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: active
+                        ? "rgba(254,223,181,0.6)"
+                        : "rgba(77,70,60,0.4)",
+                      backgroundColor: active
+                        ? "rgba(225,195,155,0.15)"
+                        : "transparent",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: active ? "700" : "500",
+                        color: active ? "#E0C29A" : "#E5E2E1",
+                        letterSpacing: 1.2,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t(`credits.filter_${f.toLowerCase()}`)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         }
         ListEmptyComponent={
           !loadingLedger ? (
-            <Text
-              className="font-body text-on-surface-variant text-center"
-              style={{ fontSize: 14, marginTop: 32 }}
-            >
-              {t("credits.no_transactions")}
-            </Text>
+            <View className="items-center" style={{ paddingVertical: 32 }}>
+              <Ionicons
+                name="receipt-outline"
+                size={36}
+                color="#998F84"
+                style={{ marginBottom: 12 }}
+              />
+              <Text
+                className="font-headline text-on-surface text-center"
+                style={{ fontSize: 16, marginBottom: 6 }}
+              >
+                {t(
+                  activityFilter === "ALL"
+                    ? "credits.empty_title"
+                    : "credits.empty_filtered_title",
+                )}
+              </Text>
+              <Text
+                className="font-body text-on-surface-variant text-center"
+                style={{
+                  fontSize: 13,
+                  maxWidth: 280,
+                  lineHeight: 20,
+                  marginBottom: 18,
+                }}
+              >
+                {t(
+                  activityFilter === "ALL"
+                    ? "credits.empty_subtitle"
+                    : "credits.empty_filtered_subtitle",
+                )}
+              </Text>
+              {activityFilter === "ALL" && (
+                <Pressable
+                  onPress={() => router.push("/(tabs)/studio")}
+                  style={{
+                    paddingHorizontal: 22,
+                    paddingVertical: 10,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: "#C4A882",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "700",
+                      color: "#C4A882",
+                      letterSpacing: 2,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("credits.empty_cta")}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           ) : null
         }
         ListFooterComponent={

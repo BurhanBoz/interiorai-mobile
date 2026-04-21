@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import * as userService from "@/services/user";
 import type { NotificationPreferences } from "@/types/api";
-import { useTranslation } from "react-i18next";
-
-const IMG_HERO =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBMXanOw0Wj_FYf9p9ca26IIu5OVLycC9kuOVzTM_SknOnF_5WZjaMKq7JcF1eGMQw3E5tgKlQPt9sG10pw_RjR4a03yiiqhhgTeWkBagWRC81Pc8lDIeWOzRxlubiiIa_3J6vJ5TEK1bZEKKPOhGc0fLwimmLxDF5YNw8sxoMf9Q2Pn6LhhcPaASWldJHkytUySQNzuhr0FE2yHY9Wls-6Vqjmm2Neeb0Uh--uvqbCbo7xLoZOB3m6BgR1v6NpRTUSySxZp8pYEE0";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useCreditStore } from "@/stores/creditStore";
 
 interface ToggleRowProps {
   label: string;
@@ -58,8 +55,119 @@ function ToggleRow({ label, description, value, onToggle }: ToggleRowProps) {
   );
 }
 
+type UpsellCard = {
+  key: string;
+  titleKey: string;
+  descKey: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  showForPlans: string[]; // empty = all
+};
+
+// Plan-aware upsell feed. Filtered at render time against the user's active
+// plan so Max users don't see Max upgrades, Free users see everything.
+const UPSELL_CARDS: UpsellCard[] = [
+  {
+    key: "style_transfer",
+    titleKey: "settings.notifications_upsell_style_transfer_title",
+    descKey: "settings.notifications_upsell_style_transfer_desc",
+    icon: "swap-horizontal",
+    showForPlans: ["FREE", "BASIC", "PRO"],
+  },
+  {
+    key: "commercial",
+    titleKey: "settings.notifications_upsell_commercial_title",
+    descKey: "settings.notifications_upsell_commercial_desc",
+    icon: "briefcase",
+    showForPlans: ["FREE", "BASIC"],
+  },
+  {
+    key: "hd",
+    titleKey: "settings.notifications_upsell_hd_title",
+    descKey: "settings.notifications_upsell_hd_desc",
+    icon: "sparkles",
+    showForPlans: ["FREE"],
+  },
+  {
+    key: "credits",
+    titleKey: "settings.notifications_upsell_credits_title",
+    descKey: "settings.notifications_upsell_credits_desc",
+    icon: "flash",
+    showForPlans: [], // everyone
+  },
+];
+
+function UpsellCardView({ card }: { card: UpsellCard }) {
+  const { t } = useTranslation();
+  return (
+    <Pressable
+      onPress={() => router.push("/plans")}
+      className="bg-surface-container-low rounded-xl"
+      style={({ pressed }) => ({
+        padding: 20,
+        borderWidth: 1,
+        borderColor: "rgba(225,195,155,0.18)",
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
+      <View className="flex-row" style={{ gap: 16 }}>
+        <View
+          className="rounded-full items-center justify-center"
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: "rgba(225,195,155,0.12)",
+            flexShrink: 0,
+          }}
+        >
+          <Ionicons name={card.icon} size={20} color="#E0C29A" />
+        </View>
+        <View className="flex-1" style={{ gap: 4 }}>
+          <Text
+            className="font-body"
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: "#E5E2E1",
+              letterSpacing: 0.2,
+            }}
+          >
+            {t(card.titleKey)}
+          </Text>
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{ fontSize: 13, lineHeight: 19 }}
+          >
+            {t(card.descKey)}
+          </Text>
+          <View
+            className="flex-row items-center mt-2"
+            style={{ gap: 6 }}
+          >
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 11,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontWeight: "700",
+                color: "#E0C29A",
+              }}
+            >
+              {t("settings.notifications_upgrade_cta")}
+            </Text>
+            <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function NotificationsSettingsScreen() {
   const { t } = useTranslation();
+  const planCode = useCreditStore(s => s.planCode);
+  const subscription = useSubscriptionStore(s => s.subscription);
+  const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
   const [prefs, setPrefs] = useState<Omit<
     NotificationPreferences,
     "userId"
@@ -67,6 +175,7 @@ export default function NotificationsSettingsScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetchSubscription().catch(() => {});
     userService
       .getNotificationPreferences()
       .then(data => {
@@ -74,8 +183,29 @@ export default function NotificationsSettingsScreen() {
         setPrefs(rest);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        // Graceful fallback — push SDK / notification APIs may not be wired
+        // yet (C3 backlog). Seed local defaults so toggles still render.
+        setPrefs({
+          pushEnabled: false,
+          emailEnabled: false,
+          renderComplete: true,
+          weeklySummary: false,
+          promotions: false,
+        });
+        setLoading(false);
+      });
+  }, [fetchSubscription]);
+
+  const activePlan = subscription?.planCode ?? planCode ?? "FREE";
+  const isMaxUser = activePlan === "MAX";
+
+  const visibleCards = useMemo(() => {
+    return UPSELL_CARDS.filter(c => {
+      if (c.showForPlans.length === 0) return true;
+      return c.showForPlans.includes(activePlan);
+    });
+  }, [activePlan]);
 
   const toggle = async (key: keyof Omit<NotificationPreferences, "userId">) => {
     if (!prefs) return;
@@ -88,30 +218,34 @@ export default function NotificationsSettingsScreen() {
       const { userId, ...rest } = updated;
       setPrefs(rest);
     } catch {
-      setPrefs({ ...prefs, [key]: !newValue });
+      // Silent fail — leave optimistic UI value, backend will reconcile
+      // when push SDK lands.
     }
   };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="arrow-back" size={20} color="#E1C39B" />
-          </Pressable>
-          <Text
-            className="font-headline text-on-surface"
-            style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-            }}
-          >
-            {t("app.brand")}
-          </Text>
-        </View>
-        <View style={{ width: 32, height: 32 }} />
+      {/* Header — back + centered title */}
+      <View className="flex-row items-center px-6" style={{ height: 64 }}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          className="w-10 h-10 items-center justify-center rounded-full"
+        >
+          <Ionicons name="arrow-back" size={24} color="#C4A882" />
+        </Pressable>
+        <Text
+          className="font-headline flex-1 text-center"
+          style={{
+            fontSize: 17,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            color: "#C4A882",
+          }}
+        >
+          {t("profile.notifications")}
+        </Text>
+        <View style={{ width: 40, height: 40 }} />
       </View>
 
       <ScrollView
@@ -119,168 +253,169 @@ export default function NotificationsSettingsScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
-        <View style={{ marginBottom: 64, marginTop: 24 }}>
+        {/* Editorial header */}
+        <View style={{ marginTop: 24, marginBottom: 32 }}>
           <Text
             className="font-label text-primary"
             style={{
               fontSize: 11,
               fontWeight: "600",
-              letterSpacing: 2,
+              letterSpacing: 2.5,
               textTransform: "uppercase",
-              marginBottom: 16,
+              marginBottom: 12,
             }}
           >
-            {t("profile.notifications")}
+            {t("settings.notifications_eyebrow")}
           </Text>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 30, lineHeight: 38 }}
+            style={{ fontSize: 30, lineHeight: 36 }}
           >
-            {t("settings.notifications_description")}
+            {t("settings.notifications_headline")}
           </Text>
           <View
-            className="bg-primary-fixed"
-            style={{ width: 96, height: 4, borderRadius: 2, marginTop: 32 }}
+            className="bg-secondary mt-4"
+            style={{ width: 36, height: 2, borderRadius: 1 }}
           />
+          <Text
+            className="font-body text-on-surface-variant mt-4"
+            style={{ fontSize: 14, lineHeight: 22, maxWidth: 320 }}
+          >
+            {t("settings.notifications_hero_subtitle")}
+          </Text>
         </View>
 
-        {loading ? (
-          <ActivityIndicator color="#E1C39B" className="mt-8" />
-        ) : prefs ? (
-          <View>
-            {/* Group 1: Project Lifecycle */}
-            <View style={{ marginBottom: 48 }}>
+        {/* Section A — Announcements / Upsell Feed */}
+        <View style={{ marginBottom: 48 }}>
+          <Text
+            className="font-label text-on-surface-variant"
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              marginBottom: 16,
+              paddingHorizontal: 4,
+            }}
+          >
+            {t("settings.notifications_announcements_title")}
+          </Text>
+
+          {isMaxUser && (
+            <View
+              className="bg-surface-container-high rounded-xl mb-4"
+              style={{
+                padding: 18,
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.25)",
+              }}
+            >
+              <View className="flex-row items-center" style={{ gap: 10 }}>
+                <Ionicons name="star" size={18} color="#E0C29A" />
+                <Text
+                  className="font-body flex-1"
+                  style={{ fontSize: 14, color: "#E0C29A", fontWeight: "600" }}
+                >
+                  {t("settings.notifications_you_are_max")}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <View style={{ gap: 12 }}>
+            {visibleCards.map(card => (
+              <UpsellCardView key={card.key} card={card} />
+            ))}
+          </View>
+        </View>
+
+        {/* Section B — Preferences */}
+        <View style={{ marginBottom: 32 }}>
+          <Text
+            className="font-label text-on-surface-variant"
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              marginBottom: 16,
+              paddingHorizontal: 4,
+            }}
+          >
+            {t("settings.notifications_preferences_title")}
+          </Text>
+
+          {loading ? (
+            <ActivityIndicator color="#E1C39B" className="mt-8" />
+          ) : prefs ? (
+            <View>
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  letterSpacing: 2,
+                  fontSize: 10,
+                  fontWeight: "600",
+                  letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  marginBottom: 24,
-                  paddingHorizontal: 8,
+                  marginBottom: 12,
+                  marginTop: 8,
+                  paddingHorizontal: 4,
+                  opacity: 0.7,
                 }}
               >
                 {t("settings.notifications_push_title")}
               </Text>
-              <View style={{ gap: 1 }}>
+              <View style={{ gap: 1, marginBottom: 24 }}>
                 <ToggleRow
-                  label="Design completed"
-                  description="Receive alerts when AI renders reach final fidelity."
+                  label={t("settings.notifications_pref_render_title")}
+                  description={t("settings.notifications_pref_render_desc")}
                   value={prefs.renderComplete}
                   onToggle={() => toggle("renderComplete")}
                 />
                 <ToggleRow
-                  label="Blueprint revisions"
-                  description="Status updates on automated structural refinements."
+                  label={t("settings.notifications_pref_push_title")}
+                  description={t("settings.notifications_pref_push_desc")}
                   value={prefs.pushEnabled}
                   onToggle={() => toggle("pushEnabled")}
                 />
                 <ToggleRow
-                  label="Lighting Analysis"
-                  description="Daylight study completion and energy reports."
+                  label={t("settings.notifications_pref_promo_title")}
+                  description={t("settings.notifications_pref_promo_desc")}
                   value={prefs.promotions}
                   onToggle={() => toggle("promotions")}
                 />
               </View>
-            </View>
 
-            {/* Group 2: Curated Network */}
-            <View style={{ marginBottom: 64 }}>
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  letterSpacing: 2,
+                  fontSize: 10,
+                  fontWeight: "600",
+                  letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  marginBottom: 24,
-                  paddingHorizontal: 8,
+                  marginBottom: 12,
+                  paddingHorizontal: 4,
+                  opacity: 0.7,
                 }}
               >
                 {t("settings.notifications_email_title")}
               </Text>
               <View style={{ gap: 1 }}>
                 <ToggleRow
-                  label="New styles"
-                  description="Weekly drops of architectural aesthetics and materials."
+                  label={t("settings.notifications_pref_email_title")}
+                  description={t("settings.notifications_pref_email_desc")}
                   value={prefs.emailEnabled}
                   onToggle={() => toggle("emailEnabled")}
                 />
                 <ToggleRow
-                  label="Designer collaboration"
-                  description="Direct messages from community experts."
+                  label={t("settings.notifications_pref_weekly_title")}
+                  description={t("settings.notifications_pref_weekly_desc")}
                   value={prefs.weeklySummary}
                   onToggle={() => toggle("weeklySummary")}
                 />
               </View>
             </View>
-
-            {/* Footer Image with Quote Overlay */}
-            <View
-              className="w-full overflow-hidden rounded-xl"
-              style={{ height: 320 }}
-            >
-              <Image
-                source={{ uri: IMG_HERO }}
-                style={{ width: "100%", height: "100%", opacity: 0.4 }}
-                contentFit="cover"
-              />
-              <LinearGradient
-                colors={["transparent", "rgba(19,19,19,0.8)"]}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  top: 0,
-                }}
-              />
-              <View
-                className="absolute items-center justify-center"
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  padding: 32,
-                }}
-              >
-                <Text
-                  className="font-headline text-on-surface text-center"
-                  style={{
-                    fontSize: 18,
-                    lineHeight: 28,
-                    fontStyle: "italic",
-                    marginBottom: 16,
-                  }}
-                >
-                  "Design is not just what it looks like and feels like.
-                  Design is how it works."
-                </Text>
-                <Text
-                  className="font-label"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                    color: "rgba(254,223,181,0.8)",
-                  }}
-                >
-                  — Steve Jobs
-                </Text>
-              </View>
-            </View>
-          </View>
-        ) : (
-          <Text
-            className="font-body text-on-surface-variant mt-4"
-            style={{ fontSize: 14 }}
-          >
-            Failed to load preferences.
-          </Text>
-        )}
+          ) : null}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

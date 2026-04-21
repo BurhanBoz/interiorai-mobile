@@ -47,7 +47,7 @@ export default function UploadedScreen() {
               textTransform: "uppercase",
             }}
           >
-            {t("app.brand").split(" ").join("\n")}
+            {"ARCHITECTURAL\nLENS"}
           </Text>
         </View>
         <UserAvatar size="sm" onPress />
@@ -145,11 +145,11 @@ export default function UploadedScreen() {
 
         {/* Info hint */}
         <View
+          className="bg-surface-container-low"
           style={{
             marginTop: 16,
             padding: 20,
             borderRadius: 12,
-            backgroundColor: "#1C1B1B",
             flexDirection: "row",
             alignItems: "center",
             gap: 14,
@@ -160,8 +160,7 @@ export default function UploadedScreen() {
             className="font-body text-on-surface-variant"
             style={{ fontSize: 13, lineHeight: 20, flex: 1 }}
           >
-            For best results, use a well-lit photo taken straight on with no
-            people or pets in the frame.
+            {t("studio.tip_best_results")}
           </Text>
         </View>
       </ScrollView>

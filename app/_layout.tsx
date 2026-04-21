@@ -1,7 +1,7 @@
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,8 +11,15 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { DrawerProvider } from "@/components/layout/DrawerProvider";
+import { AppSplash } from "@/components/ui/AppSplash";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import i18n from "@/i18n";
 import "../global.css";
+
+// How long to dwell on the branded splash AFTER fonts/bootstrap are ready.
+// Adjust for feel — <1200ms feels rushed, >2500ms feels slow on subsequent launches.
+const SPLASH_DWELL_MS = 1800;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,10 +53,20 @@ export default function RootLayout() {
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const segments = useSegments();
   const router = useRouter();
+  const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
     hydrate();
   }, []);
+
+  // Dismiss the branded splash once fonts have loaded AND the dwell timer
+  // has elapsed. This runs over the native Expo splash — user sees one
+  // continuous brand moment, not a flash of black between the two.
+  useEffect(() => {
+    if (!fontsLoaded && !fontError) return;
+    const timer = setTimeout(() => setSplashVisible(false), SPLASH_DWELL_MS);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded, fontError]);
 
   // Bootstrap subscription + credit data as soon as the user is authenticated.
   // Without this, the subscription store stays empty on first app-open and
@@ -90,20 +107,32 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+  if (splashVisible) {
+    return (
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <DrawerProvider>
-            <StatusBar style="light" />
-            {/* `key` forces the whole tree to remount when language changes.
-                This is a belt-and-suspenders guarantee on top of useTranslation()
-                — any screen that forgot to hook into t() will still pick up
-                the new language the next time it mounts. */}
-            <Slot key={i18nInstance.language} />
-          </DrawerProvider>
-        </QueryClientProvider>
+        <StatusBar style="light" />
+        <AppSplash />
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <QueryClientProvider client={queryClient}>
+            <DrawerProvider>
+              <StatusBar style="light" />
+              {/* `key` forces the whole tree to remount when language changes.
+                  This is a belt-and-suspenders guarantee on top of useTranslation()
+                  — any screen that forgot to hook into t() will still pick up
+                  the new language the next time it mounts. */}
+              <Slot key={i18nInstance.language} />
+              <OfflineBanner />
+            </DrawerProvider>
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

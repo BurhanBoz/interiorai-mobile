@@ -19,6 +19,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { SpeedMode } from "@/types/api";
 
 const qualityLabelKeys: Record<string, string> = {
@@ -73,6 +74,18 @@ export default function ReviewScreen() {
         "Missing Info",
         "Please complete all steps before generating.",
       );
+      return;
+    }
+
+    // STYLE_TRANSFER gate — backend enforces the same rule but fails after
+    // reserving credits. Block here so the user lands back on the reference
+    // capture screen instead of seeing a generic 400.
+    if (mode === "STYLE_TRANSFER" && !referencePhoto?.fileId) {
+      Alert.alert(
+        t("studio.mode_style_transfer"),
+        t("studio.style_transfer_requires_reference"),
+      );
+      router.push("/studio/style-transfer");
       return;
     }
 
@@ -147,25 +160,7 @@ export default function ReviewScreen() {
         >
           {"ARCHITECTURAL\nLENS"}
         </Text>
-        <View
-          className="overflow-hidden"
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#2A2A2A",
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.15)",
-          }}
-        >
-          <Image
-            source={{
-              uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC94vMqQIy5RM9nI5m9i29eS9XQK6xZ0VadHXawACllcVwnXqDH1SxI47VnSmk3UEQvbWxnADYubY3mCtr-vEUA1bkaWd8BsmWOj5FihE3TB8POTYTkyhhrRynJDexox8hFjfplL8AXc1qOT4q2_7Q4PIkG-06_2CbzJwcwzN92hzQt0RfenfGhH0ZWNjw3ev5YcuwkeoRPWEMdf1pttdUbL9QMbv5amRcLkNSqbY8SPXnUrssF5Rw3F5gsKv014XN-66jSa8NkgcE",
-            }}
-            style={{ width: 40, height: 40 }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       {/* Error Banner */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,40 +8,30 @@ import {
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useTranslation } from "react-i18next";
+import { useAuthStore } from "@/stores/authStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
 
-const FAQ_ITEMS = [
-  {
-    question: "How do credits work?",
-    answer:
-      "Each generation consumes credits based on the complexity of the style and resolution selected. Standard designs cost 1 credit, while HD upscales and premium styles may cost 2–5 credits. Credits refresh monthly with your plan or can be purchased à la carte.",
-  },
-  {
-    question: "Licensing & Usage",
-    answer:
-      "All generated architectural perspectives are granted under a studio-exclusive license. This permits professional use in digital portfolios, client presentations, and conceptual proposals. Full commercial redistribution rights are available via our Premium Tier access.",
-    defaultOpen: true,
-  },
-  {
-    question: "Collaborative Access",
-    answer:
-      "Team plans allow up to 5 members to share a single credit pool. Invite collaborators from your profile settings. Each member maintains their own generation history while drawing from the shared balance.",
-  },
-];
+const SUPPORT_EMAIL = "support@thearchitecturallens.com";
+
+// Single source of truth for which FAQs render. Question/answer strings
+// come from i18n — never hardcode English here (8 locales must stay in sync).
+const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6"] as const;
 
 function AccordionItem({
-  question,
-  answer,
+  questionKey,
+  answerKey,
   defaultOpen = false,
 }: {
-  question: string;
-  answer: string;
+  questionKey: string;
+  answerKey: string;
   defaultOpen?: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
 
   return (
@@ -59,7 +49,7 @@ function AccordionItem({
           className="font-body font-medium flex-1 mr-3"
           style={{ fontSize: 16, color: open ? "#E1C39B" : "#E5E2E1" }}
         >
-          {question}
+          {t(questionKey)}
         </Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
@@ -72,7 +62,7 @@ function AccordionItem({
           className="font-body text-on-surface-variant mt-4"
           style={{ fontSize: 14, lineHeight: 22, fontWeight: "300" }}
         >
-          {answer}
+          {t(answerKey)}
         </Text>
       )}
     </Pressable>
@@ -82,17 +72,40 @@ function AccordionItem({
 export default function HelpScreen() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const user = useAuthStore(s => s.user);
+  const subscription = useSubscriptionStore(s => s.subscription);
+  const appVersion = Constants.expoConfig?.version ?? "1.0.0";
 
-  const filtered = FAQ_ITEMS.filter(
-    item =>
-      !search ||
-      item.question.toLowerCase().includes(search.toLowerCase()) ||
-      item.answer.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Client-side filter over the translated q/a pair so search works in the
+  // active language, not just English.
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return FAQ_KEYS.filter(key => {
+      if (!query) return true;
+      const q = t(`settings.help_faq_${key}_q`).toLowerCase();
+      const a = t(`settings.help_faq_${key}_a`).toLowerCase();
+      return q.includes(query) || a.includes(query);
+    });
+  }, [search, t]);
+
+  const openSupportMail = () => {
+    const subject = t("settings.help_mail_subject");
+    const body = t("settings.help_mail_body", {
+      version: appVersion,
+      userId: user?.id ?? "—",
+      plan: subscription?.planCode ?? "FREE",
+    });
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(body)}`;
+    Linking.openURL(url);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
-      {/* TopAppBar */}
+      {/* TopAppBar — back + centered title. Previous layout had a wide
+          uppercased brand name plus a decorative avatar placeholder, which
+          overflowed on iPhone SE. Short title + spacer = symmetric flex. */}
       <View
         className="bg-surface px-6 flex-row items-center justify-between"
         style={{ height: 64 }}
@@ -105,20 +118,18 @@ export default function HelpScreen() {
           <Ionicons name="arrow-back" size={24} color="#C4A882" />
         </Pressable>
         <Text
-          className="font-headline"
+          className="font-headline flex-1 text-center"
           style={{
-            fontSize: 20,
-            letterSpacing: 4,
+            fontSize: 17,
+            letterSpacing: 3,
             textTransform: "uppercase",
             color: "#E1C39B",
           }}
         >
-          The Architectural Lens
+          {t("settings.help_title_header")}
         </Text>
-        <View
-          className="rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/20"
-          style={{ width: 40, height: 40 }}
-        />
+        {/* Symmetric spacer so the title centers optically */}
+        <View style={{ width: 40, height: 40 }} />
       </View>
 
       <ScrollView
@@ -130,7 +141,7 @@ export default function HelpScreen() {
         <View className="mb-12 mt-8">
           <Text
             className="font-headline text-on-background mb-4"
-            style={{ fontSize: 56, lineHeight: 62 }}
+            style={{ fontSize: 48, lineHeight: 54 }}
           >
             {t("settings.help_title")}
           </Text>
@@ -142,8 +153,7 @@ export default function HelpScreen() {
             className="font-body text-on-surface-variant"
             style={{ fontSize: 14, lineHeight: 22, maxWidth: 320 }}
           >
-            Seeking clarity on our architectural process or studio credits?
-            Explore our curated guides below.
+            {t("settings.help_hero_subtitle")}
           </Text>
         </View>
 
@@ -157,7 +167,7 @@ export default function HelpScreen() {
               textTransform: "uppercase",
             }}
           >
-            Search Knowledge Base
+            {t("settings.help_search_label")}
           </Text>
           <View className="relative">
             <View className="bg-surface-container-low rounded-xl flex-row items-center">
@@ -195,32 +205,19 @@ export default function HelpScreen() {
 
         {/* FAQ Section */}
         <View className="mb-16">
-          <View className="flex-row items-baseline justify-between mb-8">
-            <Text
-              className="font-headline text-on-background"
-              style={{ fontSize: 20 }}
-            >
-              Frequent Inquiries
-            </Text>
-            <Text
-              className="font-label font-bold"
-              style={{
-                fontSize: 11,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#C4A882",
-              }}
-            >
-              View All
-            </Text>
-          </View>
+          <Text
+            className="font-headline text-on-background mb-8"
+            style={{ fontSize: 20 }}
+          >
+            {t("settings.help_faq_title")}
+          </Text>
           <View style={{ gap: 24 }}>
-            {filtered.map((item, idx) => (
+            {filtered.map((key, idx) => (
               <AccordionItem
-                key={idx}
-                question={item.question}
-                answer={item.answer}
-                defaultOpen={item.defaultOpen}
+                key={key}
+                questionKey={`settings.help_faq_${key}_q`}
+                answerKey={`settings.help_faq_${key}_a`}
+                defaultOpen={idx === 0 && !search}
               />
             ))}
             {filtered.length === 0 && (
@@ -228,7 +225,7 @@ export default function HelpScreen() {
                 className="font-body text-on-surface-variant text-center py-8"
                 style={{ fontSize: 14 }}
               >
-                No results found for "{search}"
+                {t("settings.help_no_results", { query: search })}
               </Text>
             )}
           </View>
@@ -246,7 +243,7 @@ export default function HelpScreen() {
             <PrimaryButton
               label={t("settings.help_contact_us")}
               leftIcon="mail-outline"
-              onPress={() => Linking.openURL("mailto:concierge@archlens.studio")}
+              onPress={openSupportMail}
             />
           </View>
           <View className="items-center" style={{ gap: 4 }}>
@@ -258,13 +255,9 @@ export default function HelpScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Direct Channel
+              {t("settings.help_direct_channel")}
             </Text>
-            <Pressable
-              onPress={() =>
-                Linking.openURL("mailto:concierge@archlens.studio")
-              }
-            >
+            <Pressable onPress={openSupportMail}>
               <Text
                 className="font-label font-bold"
                 style={{
@@ -274,7 +267,7 @@ export default function HelpScreen() {
                   color: "#C4A882",
                 }}
               >
-                concierge@archlens.studio
+                {SUPPORT_EMAIL}
               </Text>
             </Pressable>
           </View>
@@ -292,7 +285,7 @@ export default function HelpScreen() {
               opacity: 0.5,
             }}
           >
-            Version 2.4.0 — The Silent Curator
+            {t("settings.help_version_label", { version: appVersion })}
           </Text>
         </View>
       </ScrollView>

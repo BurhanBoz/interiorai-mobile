@@ -5,13 +5,16 @@ import {
   Pressable,
   ScrollView,
   Switch,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
+import Slider from "@react-native-community/slider";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useEntitlement, usePlanPermission } from "@/hooks/useEntitlement";
@@ -19,6 +22,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import type { DesignMode, QualityTier } from "@/types/api";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   REDESIGN: "INTERIOR_REDESIGN",
@@ -35,6 +39,7 @@ const MODES: {
   { key: "REDESIGN", labelKey: "studio.mode_redesign", icon: "sparkles" },
   { key: "EMPTY_ROOM", labelKey: "studio.mode_empty_room", icon: "home-outline" },
   { key: "INPAINT", labelKey: "studio.mode_inpaint", icon: "image-outline" },
+  { key: "STYLE_TRANSFER", labelKey: "studio.mode_style_transfer", icon: "color-palette-outline" },
 ];
 
 const PALETTE_COLORS = [
@@ -71,6 +76,7 @@ export default function OptionsScreen() {
 
   const seed = useStudioStore(s => s.seed);
   const setSeed = useStudioStore(s => s.setSeed);
+  const referencePhoto = useStudioStore(s => s.referencePhoto);
   // Plan-level permission checks — these reflect the current plan's
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
@@ -160,25 +166,7 @@ export default function OptionsScreen() {
         >
           {"ARCHITECTURAL\nLENS"}
         </Text>
-        <View
-          className="overflow-hidden"
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#2A2A2A",
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.15)",
-          }}
-        >
-          <Image
-            source={{
-              uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC94vMqQIy5RM9nI5m9i29eS9XQK6xZ0VadHXawACllcVwnXqDH1SxI47VnSmk3UEQvbWxnADYubY3mCtr-vEUA1bkaWd8BsmWOj5FihE3TB8POTYTkyhhrRynJDexox8hFjfplL8AXc1qOT4q2_7Q4PIkG-06_2CbzJwcwzN92hzQt0RfenfGhH0ZWNjw3ev5YcuwkeoRPWEMdf1pttdUbL9QMbv5amRcLkNSqbY8SPXnUrssF5Rw3F5gsKv014XN-66jSa8NkgcE",
-            }}
-            style={{ width: 40, height: 40 }}
-            contentFit="cover"
-          />
-        </View>
+        <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
@@ -202,7 +190,7 @@ export default function OptionsScreen() {
           </Text>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+            style={{ fontSize: 30, lineHeight: 34, fontWeight: "700" }}
           >
             {t("studio.step3_title")}
           </Text>
@@ -229,18 +217,31 @@ export default function OptionsScreen() {
                 <Pressable
                   key={m.key}
                   onPress={() => {
+                    Haptics.selectionAsync();
                     if (locked) {
                       router.push("/plans");
-                    } else {
-                      setMode(m.key);
+                      return;
+                    }
+                    setMode(m.key);
+                    // Style Transfer needs a reference image; kick the user
+                    // into the dedicated capture screen. They return to
+                    // Review (not here) once the reference is set.
+                    if (m.key === "STYLE_TRANSFER") {
+                      router.push("/studio/style-transfer");
                     }
                   }}
                   style={({ pressed }) => ({
                     paddingHorizontal: 24,
                     paddingVertical: 12,
                     borderRadius: 12,
-                    backgroundColor: isActive ? "#E1C39B" : "#2A2A2A",
-                    opacity: locked ? 0.5 : 1,
+                    backgroundColor: isActive
+                      ? "#E1C39B"
+                      : locked
+                        ? "rgba(28,27,27,0.6)"
+                        : "#2A2A2A",
+                    borderWidth: locked ? 1 : 0,
+                    borderColor: locked ? "rgba(153,143,132,0.3)" : "transparent",
+                    borderStyle: locked ? "dashed" : "solid",
                     transform: [{ scale: pressed ? 0.96 : 1 }],
                     flexDirection: "row",
                     alignItems: "center",
@@ -306,6 +307,7 @@ export default function OptionsScreen() {
                   <Pressable
                     key={tier.key}
                     onPress={() => {
+                      Haptics.selectionAsync();
                       if (locked) {
                         router.push("/plans");
                       } else {
@@ -316,8 +318,12 @@ export default function OptionsScreen() {
                     style={{
                       paddingVertical: 8,
                       borderRadius: 6,
-                      backgroundColor: isSelected ? "#2A2A2A" : "transparent",
-                      opacity: locked ? 0.4 : 1,
+                      backgroundColor: isSelected
+                        ? "rgba(225,195,155,0.12)"
+                        : "transparent",
+                      borderWidth: isSelected ? 1 : 0,
+                      borderColor: "rgba(225,195,155,0.3)",
+                      opacity: locked ? 0.55 : 1,
                       flexDirection: "row",
                       justifyContent: "center",
                       gap: 4,
@@ -335,12 +341,35 @@ export default function OptionsScreen() {
                         color: locked
                           ? "#998F84"
                           : isSelected
-                            ? "#E0C29A"
-                            : "#D1C5B8",
+                            ? "#E1C39B"
+                            : "#998F84",
+                        fontWeight: isSelected ? "700" : "500",
                       }}
                     >
                       {t(tier.labelKey)}
                     </Text>
+                    {locked && tier.key !== "STANDARD" && (
+                      <View
+                        style={{
+                          marginLeft: 4,
+                          paddingHorizontal: 5,
+                          paddingVertical: 1,
+                          borderRadius: 3,
+                          backgroundColor: "rgba(224,194,154,0.15)",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 8,
+                            fontWeight: "700",
+                            letterSpacing: 1,
+                            color: "#E0C29A",
+                          }}
+                        >
+                          PRO
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -389,41 +418,57 @@ export default function OptionsScreen() {
                 {strengthAllowed ? `${aiStrengthPercent}%` : "PRO+"}
               </Text>
             </View>
-            {/* Strength Steps */}
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              {[0.25, 0.5, 0.7, 0.85, 1.0].map(val => {
-                return (
-                  <Pressable
-                    key={val}
-                    onPress={() => {
-                      if (strengthAllowed) setStrength(val);
-                      else router.push("/plans");
-                    }}
-                    style={{
-                      flex: 1,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor:
-                        strengthAllowed && strength >= val ? "#E1C39B" : "#353534",
-                    }}
-                  />
-                );
-              })}
-            </View>
-            <View className="flex-row justify-between" style={{ marginTop: 8 }}>
+            {/* Continuous slider — 0.1–1.0, snaps every 0.05 */}
+            <Slider
+              value={strength}
+              onValueChange={(v) => {
+                if (strengthAllowed) setStrength(v);
+              }}
+              onSlidingStart={() => {
+                if (strengthAllowed) Haptics.selectionAsync();
+              }}
+              minimumValue={0.1}
+              maximumValue={1.0}
+              step={0.05}
+              minimumTrackTintColor="#E1C39B"
+              maximumTrackTintColor="#353534"
+              thumbTintColor={strengthAllowed ? "#FDDEB4" : "#998F84"}
+              disabled={!strengthAllowed}
+              style={{ width: "100%", height: 32 }}
+            />
+            <View className="flex-row justify-between" style={{ marginTop: 4 }}>
               <Text
                 className="font-label"
-                style={{ fontSize: 9, color: "#998F84", letterSpacing: 1 }}
+                style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
               >
-                SUBTLE
+                {t("studio.strength_subtle")}
               </Text>
               <Text
                 className="font-label"
-                style={{ fontSize: 9, color: "#998F84", letterSpacing: 1 }}
+                style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
               >
-                DRAMATIC
+                {t("studio.strength_dramatic")}
               </Text>
             </View>
+            {/* Mode-aware helper — STYLE_TRANSFER uses this value as the
+                reference-image influence weight (backend image_prompt_strength),
+                which has a different mental model than generic redesign. */}
+            {strengthAllowed && (
+              <Text
+                className="font-body"
+                style={{
+                  fontSize: 12,
+                  color: "#998F84",
+                  lineHeight: 18,
+                  marginTop: 14,
+                  fontStyle: "italic",
+                }}
+              >
+                {mode === "STYLE_TRANSFER"
+                  ? t("studio.strength_helper_style_transfer")
+                  : t("studio.strength_helper_generic")}
+              </Text>
+            )}
           </Pressable>
         </View>
 
@@ -451,7 +496,10 @@ export default function OptionsScreen() {
               return (
                 <Pressable
                   key={idx}
-                  onPress={() => setColorPalette(pal.color)}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setColorPalette(pal.color);
+                  }}
                   style={({ pressed }) => ({
                     transform: [{ scale: pressed ? 0.92 : 1 }],
                   })}
@@ -629,7 +677,7 @@ export default function OptionsScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Real-time Preview
+              {t("studio.realtime_preview")}
             </Text>
           </View>
         </View>
@@ -722,7 +770,7 @@ export default function OptionsScreen() {
                 className="font-body text-on-surface-variant"
                 style={{ fontSize: 12, marginBottom: 8 }}
               >
-                Use a specific seed to reproduce identical outputs.
+                {t("studio.seed_help")}
               </Text>
               <View className="flex-row items-center" style={{ gap: 10 }}>
                 <TextInput
@@ -794,7 +842,21 @@ export default function OptionsScreen() {
       <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
         <PrimaryButton
           label={t("common.next")}
-          onPress={() => router.push("/(tabs)/studio/review")}
+          onPress={() => {
+            // STYLE_TRANSFER requires a reference image. If the user hasn't
+            // picked one yet (e.g. navigated away from the style-transfer
+            // screen without uploading), send them back instead of letting
+            // Review proceed to a guaranteed backend 400.
+            if (mode === "STYLE_TRANSFER" && !referencePhoto?.fileId) {
+              Alert.alert(
+                t("studio.mode_style_transfer"),
+                t("studio.style_transfer_requires_reference"),
+              );
+              router.push("/studio/style-transfer");
+              return;
+            }
+            router.push("/(tabs)/studio/review");
+          }}
         />
       </View>
     </SafeAreaView>

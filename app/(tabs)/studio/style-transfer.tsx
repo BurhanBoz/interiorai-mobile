@@ -1,21 +1,38 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useCreditCost } from "@/hooks/useCreditCost";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import Slider from "@react-native-community/slider";
 
+// Height of the global GlassNavBar (icon row + label + home-indicator pad).
+// Sticky wizard footers must sit above this so the CTA stays tappable.
+const TAB_BAR_HEIGHT = 96;
+
+// Fallback hero when the user lands here without a source photo (e.g. via
+// deep link). Editorial interior shot, matches the dark-luxe aesthetic.
 const PLACEHOLDER_ROOM =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDY-BQvBeDvm_wjubZLoxxq_fdlB5DKLCs169xupU4TBlveZuXhYoh8b2cOxE9_z84iGFq8qjXZc-c896-Aciya2jHbgH7Psc7YEK26HW7MMJMiUfHeZBwmR7GV-bRLJ8_vkNjbLHLonBtC8eFH0GoGOpKUkNebi4AJqLpCVbwKo1OB-ahMCRo2YHyno3Fm4MlQmMuSvzu_wEyG8nzEZ7jJu-GPQZtnXXZ74fzGjvo45HHVaF3amPj6cKSibyrOMLFCxCMjicmhr_g";
 
+// Label-only mapping. The product calls ULTRA_HD "4K" in the UI — the
+// underlying enum stays the same.
+const QUALITY_DISPLAY: Record<string, string> = {
+  STANDARD: "Standard",
+  HD: "HD",
+  ULTRA_HD: "4K",
+};
+
 export default function StyleTransferScreen() {
-  const { openDrawer } = useDrawer();
+  const { t } = useTranslation();
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
   const strength = useStudioStore(s => s.strength);
@@ -25,28 +42,53 @@ export default function StyleTransferScreen() {
   const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
   const { cost } = useCreditCost();
   const { pickImage } = useImagePicker();
+  const subscription = useSubscriptionStore(s => s.subscription);
+  const planLabel = subscription?.planName ?? "Max";
 
   const roomImage = photo?.uri ?? PLACEHOLDER_ROOM;
   const strengthPercent = Math.round(strength * 100);
 
   const handlePickReference = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage();
     if (result) {
       setReferencePhoto({ uri: result.uri, fileId: result.fileId ?? "" });
     }
   };
 
+  // A reference image is mandatory for Style Transfer — without it the
+  // backend has no "target style" to apply and the render collapses to
+  // a plain redesign. Gate the Next CTA until one is uploaded.
+  const canProceed = !!referencePhoto?.fileId;
+
   const handleNext = () => {
-    router.push("/generation/progress");
+    if (!canProceed) return;
+    Haptics.selectionAsync();
+    router.push("/studio/review");
   };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* Top App Bar */}
+      {/* Top App Bar — back chevron mirrors options.tsx so the wizard
+          navigation contract is consistent: left = go back one step,
+          right = profile. Drawer stays reachable from the main tabs. */}
       <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={openDrawer} hitSlop={8}>
-            <Ionicons name="menu" size={24} color="#E1C39B" />
+        <View className="flex-row items-center" style={{ gap: 12 }}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: "rgba(42,42,42,0.8)",
+              borderWidth: 1,
+              borderColor: "rgba(77,70,60,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="chevron-back" size={22} color="#E1C39B" />
           </Pressable>
           <Text
             className="font-headline text-on-surface"
@@ -64,7 +106,13 @@ export default function StyleTransferScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          // Footer (~120px) sits at bottom: TAB_BAR_HEIGHT (96px). Add a
+          // 60px buffer on top of those so the last visible content is
+          // never hidden behind the glass bar.
+          paddingBottom: TAB_BAR_HEIGHT + 120 + 40,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -91,7 +139,7 @@ export default function StyleTransferScreen() {
                   color: "#FEDFB5",
                 }}
               >
-                Style Transfer
+                {t("studio.mode_style_transfer")}
               </Text>
             </View>
             <Text
@@ -103,14 +151,14 @@ export default function StyleTransferScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Max
+              {planLabel}
             </Text>
           </View>
           <Text
             className="font-headline text-on-surface"
             style={{ fontSize: 36, lineHeight: 42 }}
           >
-            Curate Your{"\n"}Aesthetic
+            {t("studio.style_transfer_headline")}
           </Text>
         </View>
 
@@ -128,7 +176,7 @@ export default function StyleTransferScreen() {
                   textTransform: "uppercase",
                 }}
               >
-                Your Room
+                {t("studio.style_transfer_subject_label")}
               </Text>
               <Text
                 className="font-label"
@@ -139,7 +187,7 @@ export default function StyleTransferScreen() {
                   color: "#998F84",
                 }}
               >
-                Source
+                {t("studio.style_transfer_subject_badge")}
               </Text>
             </View>
             <View
@@ -172,7 +220,7 @@ export default function StyleTransferScreen() {
                   textTransform: "uppercase",
                 }}
               >
-                Ref. Style
+                {t("studio.style_transfer_reference_label")}
               </Text>
               <Text
                 className="font-label"
@@ -183,7 +231,7 @@ export default function StyleTransferScreen() {
                   color: "#FEDFB5",
                 }}
               >
-                Target
+                {t("studio.style_transfer_reference_badge")}
               </Text>
             </View>
             {referencePhoto?.uri ? (
@@ -226,7 +274,7 @@ export default function StyleTransferScreen() {
                       color: "#998F84",
                     }}
                   >
-                    Upload reference
+                    {t("studio.upload_reference")}
                   </Text>
                 </View>
               </Pressable>
@@ -246,7 +294,7 @@ export default function StyleTransferScreen() {
                 textTransform: "uppercase",
               }}
             >
-              Influence Strength
+              {t("studio.strength")}
             </Text>
             <Text
               className="font-headline text-primary"
@@ -260,55 +308,21 @@ export default function StyleTransferScreen() {
             </Text>
           </View>
 
-          {/* Custom visual track */}
-          <View
-            className="w-full rounded-full overflow-hidden"
-            style={{ height: 4, backgroundColor: "#353534" }}
-          >
-            <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                width: `${strengthPercent}%`,
-                height: "100%",
-                borderRadius: 9999,
-              }}
-            />
-          </View>
-          {/* Glowing thumb indicator */}
-          <View
-            style={{
-              position: "absolute",
-              top: 44,
-              left: `${strengthPercent}%`,
-              marginLeft: -8,
-              width: 16,
-              height: 16,
-              borderRadius: 8,
-              backgroundColor: "#FEDFB5",
-              shadowColor: "rgba(254,223,181,0.5)",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 1,
-              shadowRadius: 12,
-            }}
-            pointerEvents="none"
-          />
-          {/* Invisible interactive slider overlay */}
+          {/* Native slider — matches options.tsx pattern (0.1–1.0 range,
+              0.05 step). Previous dual-layer custom slider dropped taps
+              because the invisible overlay was offset from the visible
+              track; a single native slider both draws and captures. */}
           <Slider
-            style={{
-              width: "100%",
-              height: 36,
-              marginTop: -20,
-              opacity: 0,
-            }}
-            minimumValue={0}
-            maximumValue={1}
+            style={{ width: "100%", height: 36 }}
+            minimumValue={0.1}
+            maximumValue={1.0}
+            step={0.05}
             value={strength}
             onValueChange={setStrength}
-            minimumTrackTintColor="transparent"
-            maximumTrackTintColor="transparent"
-            thumbTintColor="transparent"
+            onSlidingStart={() => Haptics.selectionAsync()}
+            minimumTrackTintColor="#E1C39B"
+            maximumTrackTintColor="#353534"
+            thumbTintColor="#FDDEB4"
           />
 
           <Text
@@ -322,8 +336,7 @@ export default function StyleTransferScreen() {
               marginTop: 8,
             }}
           >
-            Balance the structural integrity of the original space with the
-            artistic motifs of the reference.
+            {t("studio.style_transfer_strength_hint")}
           </Text>
         </View>
 
@@ -343,13 +356,13 @@ export default function StyleTransferScreen() {
                 color: "#998F84",
               }}
             >
-              Quality
+              {t("result.quality")}
             </Text>
             <Text
               className="font-headline text-on-surface"
               style={{ fontSize: 20 }}
             >
-              {qualityTier === "HD" ? "4K" : "SD"}
+              {QUALITY_DISPLAY[qualityTier] ?? qualityTier}
             </Text>
           </View>
           <View
@@ -366,7 +379,7 @@ export default function StyleTransferScreen() {
                 color: "#998F84",
               }}
             >
-              Variants
+              {t("studio.number_of_outputs")}
             </Text>
             <Text
               className="font-headline text-on-surface"
@@ -377,41 +390,70 @@ export default function StyleTransferScreen() {
           </View>
         </View>
 
-        {/* Footer Action */}
-        <View
+      </ScrollView>
+
+      {/* Sticky Footer — sits ABOVE the GlassNavBar so the CTA is always
+          tappable. A blurred glass surface mirrors the navbar aesthetic
+          (BlurView intensity 55, dark tint) and a faint top-edge gradient
+          fades scrolling content into the bar without a hard line. */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: TAB_BAR_HEIGHT,
+        }}
+      >
+        {/* Edge fade — content disappears into the glass instead of
+            colliding with the border. Sits ABOVE the BlurView, no taps. */}
+        <LinearGradient
+          colors={["transparent", "rgba(19,19,19,0.85)"]}
+          style={{ height: 32 }}
+          pointerEvents="none"
+        />
+
+        <BlurView
+          intensity={55}
+          tint="dark"
           style={{
-            paddingTop: 32,
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 18,
+            backgroundColor: "rgba(19,19,19,0.55)",
             borderTopWidth: 1,
-            borderTopColor: "rgba(77,70,60,0.1)",
-            gap: 24,
+            borderTopColor: "rgba(225,195,155,0.18)",
           }}
         >
-          {/* Processing Cost */}
-          <View className="items-center" style={{ gap: 4 }}>
+          {/* Cost row — micro-summary, doesn't crowd the CTA */}
+          <View
+            className="flex-row items-center justify-between"
+            style={{ marginBottom: 12 }}
+          >
             <Text
               className="font-label"
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 letterSpacing: 2,
                 textTransform: "uppercase",
                 color: "#998F84",
-                fontWeight: "500",
+                fontWeight: "600",
               }}
             >
-              Processing Cost
+              {t("studio.style_transfer_cost_label")}
             </Text>
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Ionicons name="flash" size={14} color="#FEDFB5" />
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Ionicons name="flash" size={13} color="#FEDFB5" />
               <Text
                 className="font-headline"
                 style={{
-                  fontSize: 24,
+                  fontSize: 17,
                   fontStyle: "italic",
-                  letterSpacing: -0.5,
+                  letterSpacing: -0.3,
                   color: "#E5E2E1",
                 }}
               >
-                {cost} Credits
+                {t("studio.cost_credits", { count: cost })}
               </Text>
             </View>
           </View>
@@ -419,8 +461,10 @@ export default function StyleTransferScreen() {
           {/* CTA Button */}
           <Pressable
             onPress={handleNext}
+            disabled={!canProceed}
             style={({ pressed }) => ({
-              transform: [{ scale: pressed ? 0.98 : 1 }],
+              transform: [{ scale: pressed && canProceed ? 0.98 : 1 }],
+              opacity: canProceed ? 1 : 0.55,
             })}
           >
             <LinearGradient
@@ -431,30 +475,41 @@ export default function StyleTransferScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
+                height: 54,
+                borderRadius: 14,
+                paddingHorizontal: 22,
                 borderWidth: 1,
-                borderColor: "rgba(196,168,130,0.3)",
+                borderColor: "rgba(254,223,181,0.35)",
+                shadowColor: "#C4A882",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.35,
+                shadowRadius: 14,
+                elevation: 8,
               }}
             >
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: "700",
-                  letterSpacing: 1.5,
+                  letterSpacing: 1.8,
                   textTransform: "uppercase",
                   color: "#3F2D11",
                 }}
               >
-                Next: Render Sequence
+                {canProceed
+                  ? t("studio.next_review")
+                  : t("studio.upload_reference_first")}
               </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+              <Ionicons
+                name={canProceed ? "arrow-forward" : "cloud-upload-outline"}
+                size={20}
+                color="#3F2D11"
+              />
             </LinearGradient>
           </Pressable>
-        </View>
-      </ScrollView>
+        </BlurView>
+      </View>
     </SafeAreaView>
   );
 }

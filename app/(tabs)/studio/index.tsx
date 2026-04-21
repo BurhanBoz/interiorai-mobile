@@ -1,7 +1,5 @@
 import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -11,7 +9,6 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const tips = [
   {
@@ -35,7 +32,6 @@ export default function StudioScreen() {
   const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
   const { openDrawer } = useDrawer();
-  const photo = useStudioStore(s => s.photo);
   const setPhoto = useStudioStore(s => s.setPhoto);
 
   const handleUpload = async () => {
@@ -43,6 +39,7 @@ export default function StudioScreen() {
     const result = await pickImage("gallery");
     if (result) {
       setPhoto(result);
+      router.push("/studio/uploaded");
     }
   };
 
@@ -51,6 +48,7 @@ export default function StudioScreen() {
     const result = await pickImage("camera");
     if (result) {
       setPhoto(result);
+      router.push("/studio/uploaded");
     }
   };
 
@@ -76,108 +74,9 @@ export default function StudioScreen() {
     return () => loop.stop();
   }, [uploadPulse]);
 
-  const handleContinue = () => {
-    router.push("/studio/uploaded");
-  };
-
-  /* ── Photo uploaded state ── */
-  if (photo) {
-    return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-        {/* App Header */}
-        <View className="flex-row items-center justify-between px-6 py-4">
-          <View className="flex-row items-center" style={{ gap: 16 }}>
-            <Pressable onPress={openDrawer} hitSlop={8}>
-              <Ionicons name="menu" size={24} color="#E1C39B" />
-            </Pressable>
-            <Text
-              className="font-headline text-[#E1C39B]"
-              style={{
-                fontSize: 14,
-                lineHeight: 16,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {"ARCHITECTURAL\nLENS"}
-            </Text>
-          </View>
-          <UserAvatar size="sm" onPress />
-        </View>
-
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Step indicator */}
-          <View className="mb-2">
-            <Text
-              className="font-label text-primary"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                fontWeight: "500",
-              }}
-            >
-              {t("studio.step_1_of_4")}
-            </Text>
-          </View>
-
-          {/* Headline */}
-          <Text
-            className="font-headline text-on-surface mb-10"
-            style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
-          >
-            {t("studio.step1_title")}
-          </Text>
-
-          {/* Uploaded photo */}
-          <View className="rounded-xl overflow-hidden mb-4">
-            <Image
-              source={{ uri: photo.uri }}
-              className="w-full rounded-xl"
-              style={{ aspectRatio: 4 / 3 }}
-              contentFit="cover"
-            />
-            <Pressable
-              onPress={() => setPhoto(null)}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full items-center justify-center"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-            >
-              <Ionicons name="close" size={18} color="#FFFFFF" />
-            </Pressable>
-          </View>
-
-          {/* Change photo link */}
-          <Pressable onPress={handleUpload} className="items-center mb-6">
-            <Text
-              className="font-label text-primary"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("studio.change_photo")}
-            </Text>
-          </Pressable>
-        </ScrollView>
-
-        {/* CTA */}
-        <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
-          <PrimaryButton
-            label={t("studio.continue_to_architecture")}
-            onPress={handleContinue}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  /* ── Empty upload state ── */
+  /* ── Empty upload state — a selected photo takes the user directly to
+       /studio/uploaded via the handlers above, so we never render a photo
+       branch here. ── */
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
       {/* App Header */}
@@ -199,7 +98,7 @@ export default function StudioScreen() {
             {"ARCHITECTURAL\nLENS"}
           </Text>
         </View>
-        <UserAvatar size="sm" />
+        <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView

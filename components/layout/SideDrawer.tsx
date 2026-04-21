@@ -6,10 +6,13 @@ import {
   Animated,
   useWindowDimensions,
   Alert,
+  StyleSheet,
 } from "react-native";
 import { useRef, useEffect, useCallback } from "react";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
@@ -110,6 +113,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
 
   const navigate = useCallback(
     (route: string) => {
+      Haptics.selectionAsync();
       onClose();
       setTimeout(() => router.push(route as any), 150);
     },
@@ -161,7 +165,6 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
           bottom: 0,
           left: 0,
           width: drawerWidth,
-          backgroundColor: "#1C1B1B",
           transform: [{ translateX: slideAnim }],
           paddingTop: insets.top + 32,
           paddingBottom: insets.bottom + 16,
@@ -174,8 +177,20 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
           shadowOpacity: 0.5,
           shadowRadius: 24,
           elevation: 24,
+          overflow: "hidden",
         }}
       >
+        <BlurView
+          intensity={80}
+          tint="dark"
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: "rgba(28,27,27,0.85)" },
+          ]}
+        />
         {/* Profile Header */}
         <View
           style={{
@@ -215,7 +230,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                   fontSize: 8,
                   fontWeight: "700",
                   textTransform: "uppercase",
-                  letterSpacing: -0.3,
+                  letterSpacing: 1,
                   color: "#3F2D11",
                 }}
               >
@@ -229,10 +244,12 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
             <Text
               className="font-headline text-on-surface"
               style={{
-                fontSize: 20,
+                fontSize: user?.displayName ? 20 : 16,
                 fontWeight: "700",
-                lineHeight: 24,
+                lineHeight: 22,
               }}
+              numberOfLines={1}
+              ellipsizeMode="middle"
             >
               {user?.displayName || user?.email || t("drawer.architect")}
             </Text>
@@ -289,18 +306,31 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
                   paddingHorizontal: 12,
-                  paddingVertical: 12,
+                  paddingVertical: 22,
                   borderRadius: 8,
                   backgroundColor: isActive
-                    ? "#2A2A2A"
+                    ? "rgba(225,195,155,0.08)"
                     : pressed
                       ? "rgba(42,42,42,0.5)"
                       : "transparent",
-                  marginBottom: 4,
+                  marginBottom: 18,
+                  position: "relative",
                 })}
               >
+                {isActive && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 10,
+                      bottom: 10,
+                      width: 3,
+                      borderRadius: 2,
+                      backgroundColor: "#E1C39B",
+                    }}
+                  />
+                )}
                 <View
                   style={{
                     flexDirection: "row",
@@ -325,18 +355,12 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                     {label}
                   </Text>
                 </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={16}
-                  color={isActive ? "#E1C39B" : "#E5E2E1"}
-                  style={{ opacity: isActive ? 0.4 : 0 }}
-                />
               </Pressable>
             );
           })}
 
           {/* Settings Section Label */}
-          <View style={{ marginTop: 32, marginBottom: 12, paddingHorizontal: 10 }}>
+          <View style={{ marginTop: 44, marginBottom: 16, paddingHorizontal: 12 }}>
             <Text
               className="font-label"
               style={{
@@ -361,12 +385,12 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingHorizontal: 12,
-                paddingVertical: 12,
+                paddingVertical: 18,
                 borderRadius: 8,
                 backgroundColor: pressed
                   ? "rgba(42,42,42,0.5)"
                   : "transparent",
-                marginBottom: 4,
+                marginBottom: 12,
               })}
             >
               <View

@@ -10,12 +10,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState, useEffect, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { CatalogItemResponse } from "@/types/api";
 import type { ImageSource } from "expo-image";
 
@@ -158,6 +159,7 @@ function getStyleImage(code: string): ImageSource | null {
 }
 
 export default function StyleScreen() {
+  const { t } = useTranslation();
   const { roomType, designStyle, setRoomType, setDesignStyle } =
     useStudioStore();
 
@@ -256,7 +258,7 @@ export default function StyleScreen() {
               fontFamily: "NotoSerif",
             }}
           >
-            Select Space
+            {t("studio.select_space")}
           </Text>
         </View>
 
@@ -453,7 +455,7 @@ export default function StyleScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: 240 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Step Indicator & Headline */}
@@ -468,18 +470,18 @@ export default function StyleScreen() {
               marginBottom: 8,
             }}
           >
-            STEP 2 OF 4
+            {t("studio.step_2_of_4")}
           </Text>
           <Text
             style={{
-              fontSize: 36,
-              lineHeight: 40,
+              fontSize: 30,
+              lineHeight: 34,
               fontWeight: "700",
               color: "#E5E2E1",
               fontFamily: "NotoSerif",
             }}
           >
-            Describe Your Space
+            {t("studio.step2_title")}
           </Text>
         </View>
 
@@ -495,7 +497,7 @@ export default function StyleScreen() {
                 color: "#998F84",
               }}
             >
-              Loading catalog…
+              {t("studio.loading_catalog")}
             </Text>
           </View>
         ) : (
@@ -512,19 +514,21 @@ export default function StyleScreen() {
                   color: "#998F84",
                 }}
               >
-                ROOM TYPE
+                {t("studio.room_type")}
               </Text>
               <Pressable onPress={() => setRoomPickerVisible(true)}>
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: "rgba(42,42,42,0.6)",
+                    backgroundColor: roomType
+                      ? "rgba(42,42,42,0.6)"
+                      : "rgba(28,27,27,0.8)",
                     borderRadius: 14,
                     borderWidth: 1,
                     borderColor: roomType
-                      ? "rgba(224,194,154,0.35)"
-                      : "rgba(77,70,60,0.25)",
+                      ? "rgba(224,194,154,0.4)"
+                      : "rgba(224,194,154,0.15)",
                     paddingHorizontal: 16,
                     height: 56,
                   }}
@@ -559,9 +563,15 @@ export default function StyleScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    {roomType ? roomType.name : "Select a room type…"}
+                    {roomType
+                      ? roomType.name
+                      : t("studio.select_room_placeholder")}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#998F84" />
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={roomType ? "#E1C39B" : "#E0C29A"}
+                  />
                 </View>
               </Pressable>
             </View>
@@ -578,7 +588,7 @@ export default function StyleScreen() {
                   color: "#998F84",
                 }}
               >
-                DESIGN STYLE
+                {t("studio.design_style")}
               </Text>
               <View
                 style={{
@@ -663,7 +673,7 @@ export default function StyleScreen() {
                                   textTransform: "uppercase",
                                 }}
                               >
-                                Selected
+                                {t("common.selected")}
                               </Text>
                             </View>
                           )}
@@ -723,44 +733,11 @@ export default function StyleScreen() {
           paddingTop: 16,
         }}
       >
-        <Pressable
+        <PrimaryButton
+          label={t("common.next_step")}
           onPress={handleNext}
           disabled={!canProceed}
-          style={({ pressed }) => ({
-            opacity: canProceed ? 1 : 0.5,
-            transform: [{ scale: pressed && canProceed ? 0.98 : 1 }],
-          })}
-        >
-          <LinearGradient
-            colors={["#C4A882", "#A68A62"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 56,
-              borderRadius: 16,
-              paddingHorizontal: 24,
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                color: "#3F2D11",
-              }}
-            >
-              Next Step
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
-          </LinearGradient>
-        </Pressable>
+        />
       </View>
     </SafeAreaView>
   );

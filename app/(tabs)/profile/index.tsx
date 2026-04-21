@@ -4,28 +4,39 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Circle } from "react-native-svg";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useDrawer } from "@/components/layout/DrawerProvider";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useState, useEffect, useMemo } from "react";
 import * as userService from "@/services/user";
 import { pushWithReturn } from "@/utils/navigation";
 
 /* ─────────────────── Credit Ring ─────────────────── */
+/**
+ * Smooth SVG-based progress ring. When `max` is unknown (null/0) we hide
+ * the ring entirely and just show the number — anything else would draw
+ * a fake-full ring that misleads the user.
+ */
 function CreditRing({
   value,
-  max = 200,
+  max,
   size = 64,
 }: {
   value: number;
-  max?: number;
+  max: number | null;
   size?: number;
 }) {
   const strokeWidth = 3;
-  const progress = Math.min(value / max, 1);
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const hasMax = !!max && max > 0;
+  const progress = hasMax ? Math.min(value / max, 1) : 0;
+  const dashOffset = circumference * (1 - progress);
 
   return (
     <View
@@ -36,34 +47,36 @@ function CreditRing({
         justifyContent: "center",
       }}
     >
-      {/* Track circle */}
-      <View
-        style={{
-          position: "absolute",
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: strokeWidth,
-          borderColor: "rgba(77,70,60,0.20)",
-        }}
-      />
-      {/* Progress arc (approximation using border trick) */}
-      <View
-        style={{
-          position: "absolute",
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: strokeWidth,
-          borderColor: "#E0C29A",
-          borderTopColor: progress > 0.25 ? "#E0C29A" : "transparent",
-          borderRightColor: progress > 0.5 ? "#E0C29A" : "transparent",
-          borderBottomColor: progress > 0.75 ? "#E0C29A" : "transparent",
-          borderLeftColor: progress > 0 ? "#E0C29A" : "transparent",
-          transform: [{ rotate: "-90deg" }],
-          opacity: progress > 0 ? 1 : 0,
-        }}
-      />
+      {hasMax && (
+        <Svg
+          width={size}
+          height={size}
+          style={{
+            position: "absolute",
+            transform: [{ rotate: "-90deg" }],
+          }}
+        >
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="rgba(77,70,60,0.25)"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#E0C29A"
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+          />
+        </Svg>
+      )}
       <Text className="font-headline text-on-surface" style={{ fontSize: 22 }}>
         {value}
       </Text>
@@ -77,8 +90,17 @@ const MENU_ITEMS: {
   icon: keyof typeof Ionicons.glyphMap;
   route?: string;
   hasBadge?: boolean;
+  extraParams?: Record<string, string>;
 }[] = [
-  { labelKey: "profile.curated_favorites", icon: "heart", route: "/(tabs)/gallery" },
+  {
+    labelKey: "profile.curated_favorites",
+    icon: "heart",
+    // Deep-link so the gallery lands on the Favorites filter already active.
+    // extraParams is the proper way to pass query state through expo-router —
+    // a "?filter=favorites" suffix on the pathname string gets swallowed.
+    route: "/(tabs)/gallery",
+    extraParams: { filter: "favorites" },
+  },
   { labelKey: "profile.notifications", icon: "notifications", route: "/settings/notifications", hasBadge: true },
   { labelKey: "profile.credit_packs", icon: "flash-outline", route: "/credits/packs" },
   { labelKey: "profile.billing_history", icon: "card-outline", route: "/credits" },
@@ -214,30 +236,7 @@ export default function ProfileScreen() {
         >
           {t("app.name")}
         </Text>
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "rgba(77,70,60,0.20)",
-            backgroundColor: "#2A2A2A",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {initials ? (
-            <Text
-              className="font-label"
-              style={{ fontSize: 11, color: "#E0C29A", fontWeight: "700" }}
-            >
-              {initials}
-            </Text>
-          ) : (
-            <Ionicons name="person" size={16} color="#998F84" />
-          )}
-        </View>
+        <UserAvatar size="sm" />
       </View>
 
       <ScrollView
@@ -253,11 +252,14 @@ export default function ProfileScreen() {
           {/* Avatar + PRO badge */}
           <View style={{ marginBottom: 24 }}>
             <View
-              className="rounded-xl overflow-hidden items-center justify-center"
+              className="items-center justify-center"
               style={{
-                width: 100,
-                height: 120,
+                width: 108,
+                height: 108,
+                borderRadius: 54,
                 backgroundColor: "#2A2A2A",
+                borderWidth: 2,
+                borderColor: "rgba(225,195,155,0.2)",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.4,
@@ -268,7 +270,7 @@ export default function ProfileScreen() {
               {initials ? (
                 <Text
                   className="font-headline"
-                  style={{ fontSize: 36, color: "#E0C29A" }}
+                  style={{ fontSize: 36, color: "#E0C29A", letterSpacing: 2 }}
                 >
                   {initials}
                 </Text>
@@ -281,8 +283,8 @@ export default function ProfileScreen() {
               <View
                 style={{
                   position: "absolute",
-                  bottom: -8,
-                  right: -8,
+                  bottom: -4,
+                  right: -4,
                 }}
               >
                 <LinearGradient
@@ -330,7 +332,9 @@ export default function ProfileScreen() {
           {email ? (
             <Text
               className="text-on-surface-variant font-body"
-              style={{ fontSize: 12, fontWeight: "300", letterSpacing: 0.5 }}
+              style={{ fontSize: 13, fontWeight: "400", letterSpacing: 0.3 }}
+              numberOfLines={1}
+              ellipsizeMode="middle"
             >
               {email}
             </Text>
@@ -341,22 +345,24 @@ export default function ProfileScreen() {
         <View className="flex-row px-6" style={{ gap: 12, marginBottom: 48 }}>
           {/* Credits Card */}
           <View
-            className="flex-1 bg-surface-container-low rounded-xl items-center justify-center"
+            className="flex-1 bg-surface-container-low rounded-xl justify-center"
             style={{ padding: 20 }}
           >
-            <View style={{ marginBottom: 12 }}>
-              <CreditRing value={balance} max={monthlyLimit || 200} />
-            </View>
             <Text
-              className="font-label text-on-surface-variant"
+              className="font-label text-secondary"
               style={{
-                fontSize: 11,
+                fontSize: 10,
+                fontWeight: "600",
                 letterSpacing: 3,
                 textTransform: "uppercase",
+                marginBottom: 8,
               }}
             >
               {t("profile.credits_label")}
             </Text>
+            <View style={{ marginTop: 4 }}>
+              <CreditRing value={balance} max={monthlyLimit > 0 ? monthlyLimit : null} />
+            </View>
           </View>
 
           {/* Plan Card */}
@@ -396,12 +402,13 @@ export default function ProfileScreen() {
         {/* ── Account Settings ── */}
         <View className="px-6">
           <Text
-            className="font-label text-secondary"
+            className="font-label"
             style={{
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: "700",
-              letterSpacing: 2,
+              letterSpacing: 3,
               textTransform: "uppercase",
+              color: "rgba(224,194,154,0.6)",
               marginBottom: 16,
             }}
           >
@@ -413,7 +420,8 @@ export default function ProfileScreen() {
               <Pressable
                 key={item.labelKey}
                 onPress={() => {
-                  if (item.route) pushWithReturn(item.route, "profile");
+                  if (item.route)
+                    pushWithReturn(item.route, "profile", item.extraParams);
                 }}
                 className="flex-row items-center active:opacity-70"
                 style={{
@@ -423,7 +431,7 @@ export default function ProfileScreen() {
                 }}
               >
                 <View style={{ position: "relative" }}>
-                  <Ionicons name={item.icon} size={22} color="#D1C5B8" />
+                  <Ionicons name={item.icon} size={22} color="#D0C5B8" />
                   {item.hasBadge && (
                     <View
                       style={{
@@ -446,23 +454,37 @@ export default function ProfileScreen() {
                 >
                   {t(item.labelKey)}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color="#4D463C" />
+                <Ionicons name="chevron-forward" size={16} color="#998F84" />
               </Pressable>
             ))}
 
-            {/* Sign Out */}
+            {/* Sign Out — destructive red, matches the drawer convention,
+                confirmation dialog prevents single-tap mistakes. */}
             <Pressable
-              onPress={logout}
+              onPress={() =>
+                Alert.alert(
+                  t("drawer.sign_out_confirm_title"),
+                  t("drawer.sign_out_confirm_description"),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    {
+                      text: t("drawer.sign_out"),
+                      style: "destructive",
+                      onPress: logout,
+                    },
+                  ],
+                )
+              }
               className="flex-row items-center active:opacity-70"
               style={{ paddingVertical: 20, marginTop: 8 }}
             >
-              <Ionicons name="log-out-outline" size={22} color="#E0C29A" />
+              <Ionicons name="log-out-outline" size={22} color="#FFB4AB" />
               <Text
                 className="font-body flex-1"
                 style={{
                   fontSize: 15,
                   marginLeft: 16,
-                  color: "#E0C29A",
+                  color: "#FFB4AB",
                   fontWeight: "500",
                 }}
               >
