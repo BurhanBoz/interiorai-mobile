@@ -13,12 +13,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { getOutputDownloadUrl } from "@/services/files";
 import { upscaleJob, cancelJob } from "@/services/jobs";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useCreditStore } from "@/stores/creditStore";
-import type { JobResponse, JobStatus } from "@/types/api";
+import type { JobResponse, JobStatus, QualityTier } from "@/types/api";
 
 /**
  * Upscale screen — user-initiated from the result screen.
@@ -41,11 +42,16 @@ export default function UpscaleScreen() {
   const authHeaders = useAuthHeaders();
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
 
+  const { t } = useTranslation();
   const [upscaleJobId, setUpscaleJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
+  // Target tier comes back from the backend after job submission. We show
+  // "Upscaling to HD" for Free/Basic/Pro and "Upscaling to Ultra HD" for Max.
+  // Previously hardcoded to Ultra HD — wrong for everyone below Max.
+  const [targetTier, setTargetTier] = useState<QualityTier | null>(null);
   const startedAt = useRef<number>(Date.now());
   const spinRotation = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -65,6 +71,7 @@ export default function UpscaleScreen() {
         const job = await upscaleJob(parentJobId, outputId ?? undefined);
         setUpscaleJobId(job.id);
         setStatus(job.status);
+        if (job.qualityTier) setTargetTier(job.qualityTier);
       } catch (e: any) {
         const message =
           e?.response?.data?.message ??
@@ -200,7 +207,15 @@ export default function UpscaleScreen() {
             className="font-headline text-on-surface"
             style={{ fontSize: 34, lineHeight: 42, fontStyle: "italic" }}
           >
-            {error ? "Upscale Failed" : initError ? "Couldn't Start" : "Upscaling to Ultra HD…"}
+            {error
+              ? t("upscale.failed_title")
+              : initError
+              ? t("upscale.couldnt_start")
+              : targetTier === "HD"
+              ? t("upscale.upscaling_to_hd")
+              : targetTier === "ULTRA_HD"
+              ? t("upscale.upscaling_to_ultra_hd")
+              : t("upscale.upscaling_generic")}
           </Text>
         </View>
 
@@ -299,8 +314,12 @@ export default function UpscaleScreen() {
                   style={{ fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase" }}
                 >
                   {status === "COMPLETED"
-                    ? "Ultra HD Complete"
-                    : "HD Upscaling In Progress"}
+                    ? targetTier === "HD"
+                      ? t("upscale.hd_complete")
+                      : t("upscale.ultra_hd_complete")
+                    : targetTier === "HD"
+                    ? t("upscale.hd_in_progress")
+                    : t("upscale.ultra_hd_in_progress")}
                 </Text>
               </View>
               <Text

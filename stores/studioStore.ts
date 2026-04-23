@@ -71,7 +71,15 @@ export const useStudioStore = create<StudioState>((set) => ({
     setPhoto: (photo) => set({ photo }),
     setRoomType: (roomType) => set({ roomType }),
     setDesignStyle: (designStyle) => set({ designStyle }),
-    setMode: (mode) => set({ mode }),
+    setMode: (mode) =>
+        // preserve_layout is only meaningful for REDESIGN. When switching
+        // to EMPTY_ROOM / INPAINT / STYLE_TRANSFER, force it off so the
+        // backend never receives a stale `true` that would trigger the
+        // wildcard-fallback routing bug + furniture-pin directive.
+        set((state) => ({
+            mode,
+            preserveLayout: mode === "REDESIGN" ? state.preserveLayout : false,
+        })),
     setQualityTier: (qualityTier) => set({ qualityTier }),
     setSpeedMode: (speedMode) => set({ speedMode }),
     setNumOutputs: (numOutputs) => set({ numOutputs }),

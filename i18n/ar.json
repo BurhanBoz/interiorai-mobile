@@ -203,7 +203,24 @@
     "upload_reference_first": "ارفع مرجعًا أولاً",
     "next_review": "التالي: المراجعة",
     "strength_helper_style_transfer": "يتحكم في تأثير الصورة المرجعية على الإخراج. منخفض = إلهام خفيف، مرتفع = قرب النسخ للنمط.",
-    "strength_helper_generic": "مدى ابتعاد التحويل عن الأصل. الخفيف يحافظ على الغرفة، الدراماتيكي يُعيد بناء الأجواء."
+    "strength_helper_generic": "مدى ابتعاد التحويل عن الأصل. الخفيف يحافظ على الغرفة، الدراماتيكي يُعيد بناء الأجواء.",
+    "preserve_layout_only_redesign": "الحفاظ على التخطيط يسري فقط في وضع إعادة التصميم. الغرفة الفارغة والتعديل الجزئي ونقل النمط تستخدم منطقاً هيكلياً مختلفاً.",
+    "prompt_suggestions_label": "اقتراحات — انقر للإضافة",
+    "strength_min_redesign": "المواد فقط",
+    "strength_max_redesign": "كل شيء",
+    "strength_min_empty_room": "احتفظ بالبعض",
+    "strength_max_empty_room": "فارغ تماماً",
+    "strength_min_inpaint": "تعديل طفيف",
+    "strength_max_inpaint": "إعادة رسم كاملة",
+    "strength_min_style_transfer": "إلهام خفيف",
+    "strength_max_style_transfer": "نسخة كاملة",
+    "speed_fast_duration": "~30ث",
+    "speed_balanced_duration": "~45ث",
+    "speed_quality_duration": "~65ث",
+    "seed_help_long": "البذرة رقم يجعل التوليد قابلاً للتكرار. نفس البذرة + نفس الإعدادات = نفس النتيجة. اضغط على النرد للاستكشاف، أو الصق بذرة نتيجة أعجبتك.",
+    "seed_placeholder_long": "أدخل رقمًا أو اضغط النرد",
+    "seed_locked_hint": "سيتم استخدام البذرة {{seed}}.",
+    "seed_empty_hint": "اتركها فارغة لبذرة عشوائية جديدة في كل توليد."
   },
   "gallery": {
     "title": "المعرض",
@@ -484,6 +501,7 @@
     "style": "الأسلوب",
     "mode": "الوضع",
     "quality": "الجودة",
+    "resolution": "الدقة",
     "credits_consumed": "النقاط المستهلكة",
     "generation_time": "وقت التوليد",
     "seconds": "{{count}}ث",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "المشاركة غير متاحة",
     "share_unavailable_body": "جهازك لا يدعم المشاركة حاليًا.",
     "share_failed_title": "فشل المشاركة",
-    "share_failed_body": "تعذّر فتح نافذة المشاركة. يرجى المحاولة مجددًا."
+    "share_failed_body": "تعذّر فتح نافذة المشاركة. يرجى المحاولة مجددًا.",
+    "seed": "البذرة",
+    "seed_copied": "تم نسخ البذرة",
+    "upscale_locked": "ترقية (Pro+)",
+    "upscale_locked_hint": "الترقية لفتح الميزة"
   },
   "settings": {
     "notifications_title": "الإشعارات",
@@ -598,5 +620,16 @@
     "network": "خطأ في الشبكة. الرجاء التحقق من الاتصال.",
     "generic": "حدث خطأ ما. الرجاء المحاولة مرة أخرى.",
     "unauthorized": "انتهت صلاحية جلستك. الرجاء تسجيل الدخول مرة أخرى."
+  },
+  "upscale": {
+    "upscaling_to_hd": "جاري الترقية إلى HD…",
+    "upscaling_to_ultra_hd": "جاري الترقية إلى Ultra HD…",
+    "upscaling_generic": "جاري الترقية…",
+    "failed_title": "فشل الترقية",
+    "couldnt_start": "تعذر البدء",
+    "hd_complete": "اكتملت HD",
+    "ultra_hd_complete": "اكتملت Ultra HD",
+    "hd_in_progress": "جاري ترقية HD",
+    "ultra_hd_in_progress": "جاري ترقية Ultra HD"
   }
 }

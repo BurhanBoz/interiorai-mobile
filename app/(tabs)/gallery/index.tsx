@@ -23,9 +23,11 @@ import * as jobsService from "@/services/jobs";
 import { getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
+import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { FreeWatermark } from "@/components/ui/FreeWatermark";
 
 const TAB_BAR_HEIGHT = 96;
 const FILTER_ALL = "__ALL__";
@@ -121,6 +123,10 @@ export default function GalleryScreen() {
   const favoriteIds = useFavoritesStore(s => s.ids);
   const toggleFavorite = useFavoritesStore(s => s.toggle);
   const isFavorite = useFavoritesStore(s => s.isFavorite);
+  // Free plan users see a tiny corner mark on each gallery tile; Basic+
+  // plans don't (watermark=false in plan row).
+  const planCode = useCreditStore(s => s.planCode);
+  const showWatermark = !planCode || planCode === "FREE";
 
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(0);
@@ -380,6 +386,9 @@ export default function GalleryScreen() {
             </Text>
           </View>
         )}
+
+        {/* Free plan tiny corner mark */}
+        {showWatermark && <FreeWatermark size="sm" />}
       </Pressable>
     ),
     [
@@ -390,6 +399,7 @@ export default function GalleryScreen() {
       handleLongPress,
       handleToggleFavorite,
       isFavorite,
+      showWatermark,
     ],
   );
 

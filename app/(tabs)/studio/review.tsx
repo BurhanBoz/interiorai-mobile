@@ -367,6 +367,16 @@ export default function ReviewScreen() {
                   : m === "BALANCED"
                   ? "studio.speed_balanced"
                   : "studio.speed_quality";
+              // Expected wall-clock range per mode — real number varies by
+              // model tier + queue but these ranges are tight enough that
+              // users get a usable "how long will this take" signal.
+              const durationKey =
+                m === "FAST"
+                  ? "studio.speed_fast_duration"
+                  : m === "BALANCED"
+                  ? "studio.speed_balanced_duration"
+                  : "studio.speed_quality_duration";
+              const emoji = m === "FAST" ? "⚡" : m === "BALANCED" ? "🎯" : "✨";
               return (
                 <Pressable
                   key={m}
@@ -382,15 +392,17 @@ export default function ReviewScreen() {
                   }}
                   style={{
                     flex: 1,
-                    paddingVertical: 12,
+                    paddingVertical: 10,
                     borderRadius: 8,
                     backgroundColor: isSelected ? "#FEDFB5" : "transparent",
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: isLocked ? 0.5 : 1,
+                    gap: 2,
                   }}
                 >
                   <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Text style={{ fontSize: 14 }}>{emoji}</Text>
                     <Text
                       className="font-label"
                       style={{
@@ -411,6 +423,18 @@ export default function ReviewScreen() {
                       />
                     )}
                   </View>
+                  <Text
+                    style={{
+                      fontSize: 9,
+                      letterSpacing: 0.8,
+                      color: isSelected
+                        ? "rgba(40,24,1,0.6)"
+                        : "rgba(229,226,225,0.55)",
+                      marginTop: 2,
+                    }}
+                  >
+                    {t(durationKey)}
+                  </Text>
                 </Pressable>
               );
             })}

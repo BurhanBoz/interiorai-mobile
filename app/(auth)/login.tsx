@@ -194,16 +194,20 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Social Login */}
+          {/* Social Login — larger tap target, more breathing room.
+              height 56 → 64 lets the text sit centered vertically without
+              crowding the icon; bumped gap and letterSpacing to feel more
+              native (Apple HIG calls for ≥64pt for primary auth actions). */}
           <View className="flex-row" style={{ gap: 12 }}>
             <Pressable
               onPress={signInWithGoogle}
               disabled={busy}
               className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
               style={({ pressed }) => ({
-                height: 56,
-                gap: 10,
-                paddingHorizontal: 16,
+                minHeight: 64,
+                paddingVertical: 18,
+                paddingHorizontal: 20,
+                gap: 12,
                 opacity: busy ? 0.5 : pressed ? 0.8 : 1,
               })}
             >
@@ -211,10 +215,14 @@ export default function LoginScreen() {
                 <ActivityIndicator size="small" color="#E5E2E1" />
               ) : (
                 <>
-                  <Ionicons name="logo-google" size={20} color="#E5E2E1" />
+                  <Ionicons name="logo-google" size={22} color="#E5E2E1" />
                   <Text
                     className="font-body font-medium text-on-surface"
-                    style={{ fontSize: 14, letterSpacing: 0.3 }}
+                    style={{
+                      fontSize: 15,
+                      letterSpacing: 0.4,
+                      textAlign: "center",
+                    }}
                     numberOfLines={1}
                   >
                     {t("auth.google")}
@@ -228,9 +236,10 @@ export default function LoginScreen() {
                 disabled={busy}
                 className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
                 style={({ pressed }) => ({
-                  height: 56,
-                  gap: 10,
-                  paddingHorizontal: 16,
+                  minHeight: 64,
+                  paddingVertical: 18,
+                  paddingHorizontal: 20,
+                  gap: 12,
                   opacity: busy ? 0.5 : pressed ? 0.8 : 1,
                 })}
               >
@@ -238,10 +247,14 @@ export default function LoginScreen() {
                   <ActivityIndicator size="small" color="#E5E2E1" />
                 ) : (
                   <>
-                    <Ionicons name="logo-apple" size={22} color="#E5E2E1" />
+                    <Ionicons name="logo-apple" size={24} color="#E5E2E1" />
                     <Text
                       className="font-body font-medium text-on-surface"
-                      style={{ fontSize: 14, letterSpacing: 0.3 }}
+                      style={{
+                        fontSize: 15,
+                        letterSpacing: 0.4,
+                        textAlign: "center",
+                      }}
                       numberOfLines={1}
                     >
                       {t("auth.apple")}

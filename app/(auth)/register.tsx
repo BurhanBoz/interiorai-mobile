@@ -183,16 +183,17 @@ export default function RegisterScreen() {
               <View className="flex-1 h-px bg-surface-container-high" />
             </View>
 
-            {/* Social Buttons */}
+            {/* Social Buttons — matches login.tsx sizing (minHeight 64) */}
             <View className="flex-row" style={{ gap: 12 }}>
               <Pressable
                 onPress={signInWithGoogle}
                 disabled={busy}
                 className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
                 style={({ pressed }) => ({
-                  height: 56,
-                  gap: 10,
-                  paddingHorizontal: 16,
+                  minHeight: 64,
+                  paddingVertical: 18,
+                  paddingHorizontal: 20,
+                  gap: 12,
                   opacity: busy ? 0.5 : pressed ? 0.8 : 1,
                 })}
               >
@@ -200,10 +201,14 @@ export default function RegisterScreen() {
                   <ActivityIndicator size="small" color="#E5E2E1" />
                 ) : (
                   <>
-                    <Ionicons name="logo-google" size={20} color="#E5E2E1" />
+                    <Ionicons name="logo-google" size={22} color="#E5E2E1" />
                     <Text
                       className="font-body font-medium text-on-surface"
-                      style={{ fontSize: 14, letterSpacing: 0.3 }}
+                      style={{
+                        fontSize: 15,
+                        letterSpacing: 0.4,
+                        textAlign: "center",
+                      }}
                       numberOfLines={1}
                     >
                       {t("auth.google")}
@@ -217,9 +222,10 @@ export default function RegisterScreen() {
                   disabled={busy}
                   className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
                   style={({ pressed }) => ({
-                    height: 56,
-                    gap: 10,
-                    paddingHorizontal: 16,
+                    minHeight: 64,
+                    paddingVertical: 18,
+                    paddingHorizontal: 20,
+                    gap: 12,
                     opacity: busy ? 0.5 : pressed ? 0.8 : 1,
                   })}
                 >
@@ -227,10 +233,14 @@ export default function RegisterScreen() {
                     <ActivityIndicator size="small" color="#E5E2E1" />
                   ) : (
                     <>
-                      <Ionicons name="logo-apple" size={22} color="#E5E2E1" />
+                      <Ionicons name="logo-apple" size={24} color="#E5E2E1" />
                       <Text
                         className="font-body font-medium text-on-surface"
-                        style={{ fontSize: 14, letterSpacing: 0.3 }}
+                        style={{
+                          fontSize: 15,
+                          letterSpacing: 0.4,
+                          textAlign: "center",
+                        }}
                         numberOfLines={1}
                       >
                         {t("auth.apple")}

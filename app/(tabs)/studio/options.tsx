@@ -19,6 +19,8 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useEntitlement, usePlanPermission } from "@/hooks/useEntitlement";
 import { useCreditCost } from "@/hooks/useCreditCost";
+import { usePromptSuggestions } from "@/hooks/usePromptSuggestions";
+import { resolveFeatureCode } from "@/utils/featureCode";
 import type { DesignMode, QualityTier } from "@/types/api";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -77,6 +79,22 @@ export default function OptionsScreen() {
   const seed = useStudioStore(s => s.seed);
   const setSeed = useStudioStore(s => s.setSeed);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
+  const roomType = useStudioStore(s => s.roomType);
+  const designStyle = useStudioStore(s => s.designStyle);
+
+  // Contextual chip suggestions — backend ranks by specificity (style+room
+  // beats style alone beats wildcard). Falls back to [] on network error.
+  const { suggestions: promptSuggestions } = usePromptSuggestions({
+    style: designStyle?.code,
+    room: roomType?.code,
+    mode,
+  });
+  const appendSuggestion = (text: string) => {
+    Haptics.selectionAsync();
+    const current = prompt.trim();
+    const next = current.length === 0 ? text : `${current}, ${text}`;
+    setPrompt(next);
+  };
   // Plan-level permission checks — these reflect the current plan's
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
@@ -86,11 +104,17 @@ export default function OptionsScreen() {
   const creditRules = useSubscriptionStore(s => s.creditRules);
   const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
 
-  // Determine which quality tiers are available for the current mode
+  // Determine which quality tiers are available for the current mode.
+  // Each tier can map to a different feature_code (HD/ULTRA_HD of REDESIGN
+  // live under HD_REDESIGN since V25), so we resolve per-tier rather than
+  // once for the mode. The previous single-code filter silently hid HD/
+  // ULTRA_HD chips for Pro & Max — they'd see only STANDARD.
   const currentFeatureCode = FEATURE_CODE_MAP[mode] ?? "INTERIOR_REDESIGN";
   const availableQualityTiers = QUALITY_TIERS.filter(tier =>
     creditRules.some(
-      r => r.featureCode === currentFeatureCode && r.qualityTier === tier.key,
+      r =>
+        r.featureCode === resolveFeatureCode(mode, tier.key) &&
+        r.qualityTier === tier.key,
     ),
   );
   // If no credit rules loaded yet, show all tiers (graceful fallback)
@@ -100,16 +124,32 @@ export default function OptionsScreen() {
     availableQualityTiers.length > 0 &&
     !availableQualityTiers.some(t => t.key === tierKey);
 
-  // Determine which design modes are available
+  const { allowed: referenceImageAllowed } = usePlanPermission("allow_reference_image");
+  const { allowed: maskEditingAllowed } = usePlanPermission("allow_mask_editing");
+
+  // Determine which design modes are available. A mode is only available when
+  // BOTH its feature flag is on AND the plan-wide permission for that mode's
+  // prerequisite control is granted:
+  //   STYLE_TRANSFER → requires allow_reference_image (MAX only)
+  //   INPAINT        → requires allow_mask_editing   (PRO+)
+  // Previously this only checked feature enablement, so PRO users saw
+  // STYLE_TRANSFER as active even though the backend (correctly) blocked it
+  // via entitlement validation.
   const isModeAvailable = (modeKey: DesignMode) => {
     const fc = FEATURE_CODE_MAP[modeKey];
-    return fc ? isFeatureEnabled(fc) : false;
+    if (!fc || !isFeatureEnabled(fc)) return false;
+    if (modeKey === "STYLE_TRANSFER" && !referenceImageAllowed) return false;
+    if (modeKey === "INPAINT" && !maskEditingAllowed) return false;
+    return true;
   };
 
-  // Determine max variants from credit rules
+  // Determine max variants from credit rules. Must use the tier-aware
+  // feature_code so HD jobs look up HD_REDESIGN rules (not INTERIOR_REDESIGN)
+  // — same V25-split gotcha as availableQualityTiers above.
   const maxVariants = (() => {
+    const resolvedFc = resolveFeatureCode(mode, qualityTier);
     const rulesForMode = creditRules.filter(
-      r => r.featureCode === currentFeatureCode,
+      r => r.featureCode === resolvedFc && r.qualityTier === qualityTier,
     );
     if (rulesForMode.length === 0) return 8; // fallback
     return Math.max(...rulesForMode.map(r => r.numOutputs), 1);
@@ -436,18 +476,25 @@ export default function OptionsScreen() {
               disabled={!strengthAllowed}
               style={{ width: "100%", height: 32 }}
             />
+            {/* Mode-aware min/max labels — "Subtle → Dramatic" is too
+                abstract. Per-mode pairs frame the slider in the vocabulary
+                that matches the user's intent (materials vs empty vs copy). */}
             <View className="flex-row justify-between" style={{ marginTop: 4 }}>
               <Text
                 className="font-label"
                 style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
               >
-                {t("studio.strength_subtle")}
+                {t(`studio.strength_min_${mode.toLowerCase()}`, {
+                  defaultValue: t("studio.strength_subtle"),
+                })}
               </Text>
               <Text
                 className="font-label"
                 style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
               >
-                {t("studio.strength_dramatic")}
+                {t(`studio.strength_max_${mode.toLowerCase()}`, {
+                  defaultValue: t("studio.strength_dramatic"),
+                })}
               </Text>
             </View>
             {/* Mode-aware helper — STYLE_TRANSFER uses this value as the
@@ -593,33 +640,70 @@ export default function OptionsScreen() {
             </View>
           </View>
 
-          {/* Preserve Layout Toggle */}
-          <View
-            className="flex-row items-center justify-between"
-            style={{
-              padding: 24,
-              borderRadius: 12,
-              backgroundColor: "#1C1B1B",
-            }}
-          >
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("studio.preserve_layout")}
-            </Text>
-            <Switch
-              value={preserveLayout}
-              onValueChange={setPreserveLayout}
-              trackColor={{ false: "#353534", true: "#584325" }}
-              thumbColor="#E1C39B"
-              ios_backgroundColor="#353534"
-            />
-          </View>
+          {/* Preserve Layout Toggle — only meaningful for REDESIGN mode.
+              EMPTY_ROOM (emptying conflicts with "keep furniture" directive),
+              INPAINT (masked edit is region-local), and STYLE_TRANSFER
+              (reference image already defines aesthetic) don't combine with
+              preserve_layout → disabled + helper text to avoid confusion. */}
+          {(() => {
+            const preserveLayoutApplicable = mode === "REDESIGN";
+            return (
+              <View
+                style={{
+                  padding: 24,
+                  borderRadius: 12,
+                  backgroundColor: "#1C1B1B",
+                  opacity: preserveLayoutApplicable ? 1 : 0.5,
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    {!preserveLayoutApplicable && (
+                      <Ionicons
+                        name="lock-closed"
+                        size={12}
+                        color="#998F84"
+                      />
+                    )}
+                    <Text
+                      className="font-label text-on-surface-variant"
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t("studio.preserve_layout")}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={preserveLayoutApplicable && preserveLayout}
+                    onValueChange={setPreserveLayout}
+                    disabled={!preserveLayoutApplicable}
+                    trackColor={{ false: "#353534", true: "#584325" }}
+                    thumbColor={
+                      preserveLayoutApplicable ? "#E1C39B" : "#998F84"
+                    }
+                    ios_backgroundColor="#353534"
+                  />
+                </View>
+                {!preserveLayoutApplicable && (
+                  <Text
+                    className="font-body"
+                    style={{
+                      fontSize: 12,
+                      color: "#998F84",
+                      lineHeight: 18,
+                      marginTop: 12,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {t("studio.preserve_layout_only_redesign")}
+                  </Text>
+                )}
+              </View>
+            );
+          })()}
         </View>
 
         {/* Preview Card */}
@@ -695,6 +779,116 @@ export default function OptionsScreen() {
           >
             {t("studio.custom_prompt")}
           </Text>
+
+          {/* Suggestion chips — 2-col grid of card-style pills with a
+              category icon. Replaces the earlier horizontal strip that
+              stretched awkwardly off-screen; a grid wraps naturally and
+              surfaces every chip without forcing a scroll gesture.
+              Already-added chips show a checkmark (auto-detect from the
+              current prompt text) so users don't re-add duplicates. */}
+          {promptSuggestions.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  color: "#998F84",
+                  marginBottom: 12,
+                }}
+              >
+                {t("studio.prompt_suggestions_label")}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
+                {promptSuggestions.map(chip => {
+                  const alreadyAdded = prompt
+                    .toLowerCase()
+                    .includes(chip.text.toLowerCase());
+                  // Category → icon map. Keeps the card content visually
+                  // anchored and gives the grid a subtle rhythm.
+                  const iconMap: Record<string, string> = {
+                    MATERIAL: "layers-outline",
+                    LIGHT: "sunny-outline",
+                    MOOD: "leaf-outline",
+                    OBJECT: "bulb-outline",
+                    COLOR: "color-palette-outline",
+                    STYLE_DETAIL: "sparkles-outline",
+                    ERA: "time-outline",
+                  };
+                  const iconName = iconMap[chip.category] ?? "add-outline";
+                  return (
+                    <Pressable
+                      key={chip.id}
+                      onPress={() => {
+                        if (!alreadyAdded) appendSuggestion(chip.text);
+                      }}
+                      disabled={alreadyAdded}
+                      style={({ pressed }) => ({
+                        width: "48.5%",
+                        minHeight: 58,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        backgroundColor: alreadyAdded
+                          ? "rgba(143,227,161,0.06)"
+                          : "rgba(225,195,155,0.08)",
+                        borderWidth: 1,
+                        borderColor: alreadyAdded
+                          ? "rgba(143,227,161,0.30)"
+                          : "rgba(225,195,155,0.22)",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        transform: [{ scale: pressed && !alreadyAdded ? 0.97 : 1 }],
+                      })}
+                    >
+                      <View
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 14,
+                          backgroundColor: alreadyAdded
+                            ? "rgba(143,227,161,0.12)"
+                            : "rgba(225,195,155,0.16)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Ionicons
+                          name={alreadyAdded ? "checkmark" : (iconName as any)}
+                          size={14}
+                          color={alreadyAdded ? "#8FE3A1" : "#E0C29A"}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontSize: 12,
+                          fontWeight: "500",
+                          color: alreadyAdded
+                            ? "rgba(229,226,225,0.55)"
+                            : "#E5E2E1",
+                          letterSpacing: 0.2,
+                          lineHeight: 16,
+                        }}
+                        numberOfLines={2}
+                      >
+                        {chip.text}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           <TextInput
             className="font-body text-on-surface"
             style={{
@@ -768,11 +962,11 @@ export default function OptionsScreen() {
             <View style={{ marginTop: 12 }}>
               <Text
                 className="font-body text-on-surface-variant"
-                style={{ fontSize: 12, marginBottom: 8 }}
+                style={{ fontSize: 12, marginBottom: 10, lineHeight: 18 }}
               >
-                {t("studio.seed_help")}
+                {t("studio.seed_help_long")}
               </Text>
-              <View className="flex-row items-center" style={{ gap: 10 }}>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
                 <TextInput
                   className="font-body text-on-surface"
                   style={{
@@ -780,28 +974,79 @@ export default function OptionsScreen() {
                     backgroundColor: "#1C1B1B",
                     borderRadius: 12,
                     paddingHorizontal: 16,
-                    paddingVertical: 12,
+                    paddingVertical: 14,
                     fontSize: 14,
+                    borderWidth: 1,
+                    borderColor: seed !== undefined
+                      ? "rgba(225,195,155,0.35)"
+                      : "rgba(255,255,255,0.08)",
                   }}
-                  placeholder={t("studio.seed_placeholder")}
+                  placeholder={t("studio.seed_placeholder_long")}
                   placeholderTextColor="#998F84"
                   keyboardType="number-pad"
+                  returnKeyType="done"
+                  maxLength={10}
                   value={seed !== undefined ? String(seed) : ""}
                   onChangeText={text => {
-                    if (!text.trim()) {
+                    const trimmed = text.trim();
+                    if (!trimmed) {
                       setSeed(undefined);
-                    } else {
-                      const n = parseInt(text, 10);
-                      if (!isNaN(n) && n >= 0) setSeed(n);
+                      return;
                     }
+                    // Strip non-digits defensively (number-pad on Android can
+                    // still surface locale separators on some devices).
+                    const digits = trimmed.replace(/[^0-9]/g, "");
+                    if (!digits) return;
+                    const n = parseInt(digits, 10);
+                    if (!isNaN(n) && n >= 0 && n <= 2147483647) setSeed(n);
                   }}
                 />
+                {/* Random button — generates a fresh 32-bit positive int. */}
+                <Pressable
+                  onPress={() => {
+                    const random = Math.floor(Math.random() * 2147483647);
+                    setSeed(random);
+                  }}
+                  hitSlop={8}
+                  style={({ pressed }) => ({
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(225,195,155,0.1)",
+                    borderWidth: 1,
+                    borderColor: "rgba(225,195,155,0.35)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Ionicons name="dice" size={20} color="#E0C29A" />
+                </Pressable>
                 {seed !== undefined && (
-                  <Pressable onPress={() => setSeed(undefined)} hitSlop={8}>
-                    <Ionicons name="close-circle" size={20} color="#998F84" />
+                  <Pressable
+                    onPress={() => setSeed(undefined)}
+                    hitSlop={8}
+                    style={({ pressed }) => ({
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: pressed ? 0.5 : 1,
+                    })}
+                  >
+                    <Ionicons name="close-circle" size={22} color="#998F84" />
                   </Pressable>
                 )}
               </View>
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{ fontSize: 10, marginTop: 8, letterSpacing: 0.3 }}
+              >
+                {seed !== undefined
+                  ? t("studio.seed_locked_hint", { seed })
+                  : t("studio.seed_empty_hint")}
+              </Text>
             </View>
           )}
 

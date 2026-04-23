@@ -203,7 +203,24 @@
     "upload_reference_first": "先にリファレンスをアップロード",
     "next_review": "次へ:確認",
     "strength_helper_style_transfer": "参照画像の出力への影響度を制御します。低=わずかなインスピレーション、高=スタイルのほぼコピー。",
-    "strength_helper_generic": "変換が原画像からどれだけ離れるか。控えめは部屋を保存、劇的は雰囲気を再構築。"
+    "strength_helper_generic": "変換が原画像からどれだけ離れるか。控えめは部屋を保存、劇的は雰囲気を再構築。",
+    "preserve_layout_only_redesign": "レイアウト保持はリデザインモードでのみ有効です。空の部屋、インペイント、スタイル転送は別の構造ロジックを使用します。",
+    "prompt_suggestions_label": "提案 — タップで追加",
+    "strength_min_redesign": "素材のみ",
+    "strength_max_redesign": "すべて",
+    "strength_min_empty_room": "一部を残す",
+    "strength_max_empty_room": "完全に空",
+    "strength_min_inpaint": "軽い修正",
+    "strength_max_inpaint": "完全に描き直し",
+    "strength_min_style_transfer": "軽い影響",
+    "strength_max_style_transfer": "完全コピー",
+    "speed_fast_duration": "~30秒",
+    "speed_balanced_duration": "~45秒",
+    "speed_quality_duration": "~65秒",
+    "seed_help_long": "シードは生成を再現可能にする数値です。同じシード+同じ設定=同じ結果。サイコロで新しい表情を探すか、気に入った結果のシードを貼り付けます。",
+    "seed_placeholder_long": "数値を入力またはサイコロをタップ",
+    "seed_locked_hint": "シード {{seed}} が使用されます。",
+    "seed_empty_hint": "毎回新しいランダムシードを使うには空のままにします。"
   },
   "gallery": {
     "title": "ギャラリー",
@@ -484,6 +501,7 @@
     "style": "スタイル",
     "mode": "モード",
     "quality": "品質",
+    "resolution": "解像度",
     "credits_consumed": "使用クレジット",
     "generation_time": "生成時間",
     "seconds": "{{count}}秒",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "共有できません",
     "share_unavailable_body": "現在このデバイスでは共有に対応していません。",
     "share_failed_title": "共有に失敗しました",
-    "share_failed_body": "共有シートを開けませんでした。もう一度お試しください。"
+    "share_failed_body": "共有シートを開けませんでした。もう一度お試しください。",
+    "seed": "シード",
+    "seed_copied": "シードをコピーしました",
+    "upscale_locked": "アップスケール (Pro+)",
+    "upscale_locked_hint": "アップグレードで解放"
   },
   "settings": {
     "notifications_title": "通知",
@@ -598,5 +620,16 @@
     "network": "ネットワークエラーです。接続を確認してください。",
     "generic": "問題が発生しました。再試行してください。",
     "unauthorized": "セッションが期限切れです。再度サインインしてください。"
+  },
+  "upscale": {
+    "upscaling_to_hd": "HDへアップスケール中…",
+    "upscaling_to_ultra_hd": "Ultra HDへアップスケール中…",
+    "upscaling_generic": "アップスケール中…",
+    "failed_title": "アップスケール失敗",
+    "couldnt_start": "開始できませんでした",
+    "hd_complete": "HD完了",
+    "ultra_hd_complete": "Ultra HD完了",
+    "hd_in_progress": "HDアップスケール中",
+    "ultra_hd_in_progress": "Ultra HDアップスケール中"
   }
 }

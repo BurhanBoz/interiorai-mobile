@@ -203,7 +203,24 @@
     "upload_reference_first": "Sube primero una referencia",
     "next_review": "Siguiente: Revisar",
     "strength_helper_style_transfer": "Controla la influencia de la imagen de referencia. Menor = inspiración sutil, mayor = casi copia del estilo.",
-    "strength_helper_generic": "Qué tan lejos se aleja la transformación del original. Sutil preserva, Dramático rehace la atmósfera."
+    "strength_helper_generic": "Qué tan lejos se aleja la transformación del original. Sutil preserva, Dramático rehace la atmósfera.",
+    "preserve_layout_only_redesign": "Preservar Diseño solo aplica al modo Rediseño. Habitación Vacía, Inpaint y Transferencia de Estilo usan lógica estructural distinta.",
+    "prompt_suggestions_label": "SUGERENCIAS — TOCA PARA AÑADIR",
+    "strength_min_redesign": "Materiales",
+    "strength_max_redesign": "Todo",
+    "strength_min_empty_room": "Conservar algo",
+    "strength_max_empty_room": "Totalmente vacío",
+    "strength_min_inpaint": "Retoque leve",
+    "strength_max_inpaint": "Redibujo total",
+    "strength_min_style_transfer": "Ligera inspiración",
+    "strength_max_style_transfer": "Copia total",
+    "speed_fast_duration": "~30s",
+    "speed_balanced_duration": "~45s",
+    "speed_quality_duration": "~65s",
+    "seed_help_long": "Un seed es un número que hace las generaciones repetibles. Mismo seed + mismos ajustes = resultado idéntico. Toca dado para explorar, pega un seed de un resultado que te gustó.",
+    "seed_placeholder_long": "Ingresa un número o pulsa el dado",
+    "seed_locked_hint": "Se usará el seed {{seed}}.",
+    "seed_empty_hint": "Déjalo vacío para un nuevo seed aleatorio en cada generación."
   },
   "gallery": {
     "title": "Galería",
@@ -484,6 +501,7 @@
     "style": "Estilo",
     "mode": "Modo",
     "quality": "Calidad",
+    "resolution": "Resolución",
     "credits_consumed": "Créditos Usados",
     "generation_time": "Tiempo de Generación",
     "seconds": "{{count}}s",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "Compartir No Disponible",
     "share_unavailable_body": "Tu dispositivo no admite compartir ahora mismo.",
     "share_failed_title": "Error al Compartir",
-    "share_failed_body": "No se pudo abrir el panel de compartir. Inténtalo de nuevo."
+    "share_failed_body": "No se pudo abrir el panel de compartir. Inténtalo de nuevo.",
+    "seed": "Semilla",
+    "seed_copied": "Semilla copiada",
+    "upscale_locked": "Escalar (Pro+)",
+    "upscale_locked_hint": "Mejorar para desbloquear"
   },
   "settings": {
     "notifications_title": "Notificaciones",
@@ -598,5 +620,16 @@
     "network": "Error de red. Verifica tu conexión.",
     "generic": "Algo salió mal. Intenta de nuevo.",
     "unauthorized": "Tu sesión expiró. Inicia sesión de nuevo."
+  },
+  "upscale": {
+    "upscaling_to_hd": "Escalando a HD…",
+    "upscaling_to_ultra_hd": "Escalando a Ultra HD…",
+    "upscaling_generic": "Escalando…",
+    "failed_title": "Escalado fallido",
+    "couldnt_start": "No se pudo iniciar",
+    "hd_complete": "HD completado",
+    "ultra_hd_complete": "Ultra HD completado",
+    "hd_in_progress": "Escalado HD en curso",
+    "ultra_hd_in_progress": "Escalado Ultra HD en curso"
   }
 }

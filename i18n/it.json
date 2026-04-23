@@ -203,7 +203,24 @@
     "upload_reference_first": "Carica prima un riferimento",
     "next_review": "Avanti: Revisione",
     "strength_helper_style_transfer": "Controlla l'influenza dell'immagine di riferimento. Basso = ispirazione sottile, alto = quasi copia dello stile.",
-    "strength_helper_generic": "Quanto la trasformazione si allontana dall'originale. Sottile preserva, Drammatico ricostruisce l'atmosfera."
+    "strength_helper_generic": "Quanto la trasformazione si allontana dall'originale. Sottile preserva, Drammatico ricostruisce l'atmosfera.",
+    "preserve_layout_only_redesign": "Preserva Layout vale solo per la modalità Ridisegno. Stanza Vuota, Inpaint e Style Transfer usano una logica strutturale diversa.",
+    "prompt_suggestions_label": "SUGGERIMENTI — TOCCA PER AGGIUNGERE",
+    "strength_min_redesign": "Materiali",
+    "strength_max_redesign": "Tutto",
+    "strength_min_empty_room": "Conserva qualcosa",
+    "strength_max_empty_room": "Completamente vuoto",
+    "strength_min_inpaint": "Piccolo ritocco",
+    "strength_max_inpaint": "Ridisegno totale",
+    "strength_min_style_transfer": "Lieve ispirazione",
+    "strength_max_style_transfer": "Copia completa",
+    "speed_fast_duration": "~30s",
+    "speed_balanced_duration": "~45s",
+    "speed_quality_duration": "~65s",
+    "seed_help_long": "Un seed è un numero che rende le generazioni riproducibili. Stesso seed + stesse impostazioni = risultato identico. Tocca il dado per esplorare o incolla un seed.",
+    "seed_placeholder_long": "Inserisci un numero o tocca il dado",
+    "seed_locked_hint": "Verrà usato il seed {{seed}}.",
+    "seed_empty_hint": "Lascia vuoto per un nuovo seed casuale ad ogni generazione."
   },
   "gallery": {
     "title": "Galleria",
@@ -484,6 +501,7 @@
     "style": "Stile",
     "mode": "Modalità",
     "quality": "Qualità",
+    "resolution": "Risoluzione",
     "credits_consumed": "Crediti Usati",
     "generation_time": "Tempo di Generazione",
     "seconds": "{{count}}s",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "Condivisione Non Disponibile",
     "share_unavailable_body": "Il dispositivo non supporta la condivisione al momento.",
     "share_failed_title": "Condivisione Fallita",
-    "share_failed_body": "Impossibile aprire il pannello di condivisione. Riprova."
+    "share_failed_body": "Impossibile aprire il pannello di condivisione. Riprova.",
+    "seed": "Seme",
+    "seed_copied": "Seme copiato",
+    "upscale_locked": "Upscale (Pro+)",
+    "upscale_locked_hint": "Aggiorna per sbloccare"
   },
   "settings": {
     "notifications_title": "Notifiche",
@@ -598,5 +620,16 @@
     "network": "Errore di rete. Controlla la connessione.",
     "generic": "Qualcosa è andato storto. Riprova.",
     "unauthorized": "La tua sessione è scaduta. Accedi di nuovo."
+  },
+  "upscale": {
+    "upscaling_to_hd": "Upscaling a HD…",
+    "upscaling_to_ultra_hd": "Upscaling a Ultra HD…",
+    "upscaling_generic": "Upscaling…",
+    "failed_title": "Upscaling fallito",
+    "couldnt_start": "Avvio non riuscito",
+    "hd_complete": "HD completato",
+    "ultra_hd_complete": "Ultra HD completato",
+    "hd_in_progress": "Upscaling HD in corso",
+    "ultra_hd_in_progress": "Upscaling Ultra HD in corso"
   }
 }

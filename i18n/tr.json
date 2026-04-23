@@ -203,7 +203,24 @@
     "upload_reference_first": "Önce referans yükle",
     "next_review": "İleri: İnceleme",
     "strength_helper_style_transfer": "Referans görselin çıktıya etkisini belirler. Düşük = hafif ilham, yüksek = referans stile yakın kopya.",
-    "strength_helper_generic": "Dönüşümün orijinalden ne kadar uzaklaştığını ayarlar. Subtle odayı korur, Dramatic atmosferi yeniden kurar."
+    "strength_helper_generic": "Dönüşümün orijinalden ne kadar uzaklaştığını ayarlar. Subtle odayı korur, Dramatic atmosferi yeniden kurar.",
+    "preserve_layout_only_redesign": "Düzeni Koru yalnızca Yeniden Tasarla modunda geçerlidir. Boş Oda, Inpaint ve Style Transfer farklı yapısal mantıkla çalışır.",
+    "prompt_suggestions_label": "ÖNERİLER — EKLEMEK İÇİN DOKUN",
+    "strength_min_redesign": "Malzemeler",
+    "strength_max_redesign": "Her şey",
+    "strength_min_empty_room": "Bir kısmı kalsın",
+    "strength_max_empty_room": "Bomboş",
+    "strength_min_inpaint": "Hafif rötuş",
+    "strength_max_inpaint": "Tam yeniden çiz",
+    "strength_min_style_transfer": "Hafif ilham",
+    "strength_max_style_transfer": "Tam kopya",
+    "speed_fast_duration": "~30s",
+    "speed_balanced_duration": "~45s",
+    "speed_quality_duration": "~65s",
+    "seed_help_long": "Seed, üretimi tekrarlanabilir kılan bir sayıdır. Aynı seed + aynı ayar = birebir aynı çıktı. Yeni görünümler için Zar'a bas, beğendiğin bir çıktının seed'ini yapıştırabilirsin.",
+    "seed_placeholder_long": "Bir sayı gir veya zara bas",
+    "seed_locked_hint": "Seed {{seed}} kullanılacak. Rastgele kapalı — her üretim aynı görünür.",
+    "seed_empty_hint": "Her üretimde farklı sonuç istiyorsan boş bırak."
   },
   "gallery": {
     "title": "Galeri",
@@ -484,6 +501,7 @@
     "style": "Stil",
     "mode": "Mod",
     "quality": "Kalite",
+    "resolution": "Çözünürlük",
     "credits_consumed": "Kullanılan Kredi",
     "generation_time": "Üretim Süresi",
     "seconds": "{{count}}sn",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "Paylaşım Kullanılamıyor",
     "share_unavailable_body": "Cihazın şu anda paylaşımı desteklemiyor.",
     "share_failed_title": "Paylaşım Başarısız",
-    "share_failed_body": "Paylaşım ekranı açılamadı. Tekrar dene."
+    "share_failed_body": "Paylaşım ekranı açılamadı. Tekrar dene.",
+    "seed": "Tohum",
+    "seed_copied": "Tohum kopyalandı",
+    "upscale_locked": "Büyüt (Pro+)",
+    "upscale_locked_hint": "Açmak için yükselt"
   },
   "settings": {
     "notifications_title": "Bildirimler",
@@ -598,5 +620,16 @@
     "network": "Ağ hatası. Bağlantını kontrol et.",
     "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
     "unauthorized": "Oturumun sona erdi. Lütfen tekrar giriş yap."
+  },
+  "upscale": {
+    "upscaling_to_hd": "HD'ye büyütülüyor…",
+    "upscaling_to_ultra_hd": "Ultra HD'ye büyütülüyor…",
+    "upscaling_generic": "Büyütülüyor…",
+    "failed_title": "Büyütme başarısız",
+    "couldnt_start": "Başlatılamadı",
+    "hd_complete": "HD tamamlandı",
+    "ultra_hd_complete": "Ultra HD tamamlandı",
+    "hd_in_progress": "HD büyütme sürüyor",
+    "ultra_hd_in_progress": "Ultra HD büyütme sürüyor"
   }
 }

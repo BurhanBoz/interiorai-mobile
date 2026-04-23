@@ -203,7 +203,24 @@
     "upload_reference_first": "Upload reference first",
     "next_review": "Next: Review",
     "strength_helper_style_transfer": "Controls how strongly the reference image drives the output. Lower = subtle inspiration, higher = near-copy of the reference style.",
-    "strength_helper_generic": "How far the transformation pushes from the original. Subtle preserves the room, dramatic rebuilds the atmosphere."
+    "strength_helper_generic": "How far the transformation pushes from the original. Subtle preserves the room, dramatic rebuilds the atmosphere.",
+    "preserve_layout_only_redesign": "Preserve Layout only applies to Redesign mode. Empty Room, Inpaint, and Style Transfer use different structural logic.",
+    "prompt_suggestions_label": "SUGGESTIONS — TAP TO ADD",
+    "strength_min_redesign": "Materials",
+    "strength_max_redesign": "Everything",
+    "strength_min_empty_room": "Keep some",
+    "strength_max_empty_room": "Blank slate",
+    "strength_min_inpaint": "Minor tweak",
+    "strength_max_inpaint": "Full redraw",
+    "strength_min_style_transfer": "Light hint",
+    "strength_max_style_transfer": "Full copy",
+    "speed_fast_duration": "~30s",
+    "speed_balanced_duration": "~45s",
+    "speed_quality_duration": "~65s",
+    "seed_help_long": "A seed is a number that makes generations repeatable. Same seed + same settings = identical output. Use Random to explore new looks, or paste a seed from a result you liked.",
+    "seed_placeholder_long": "Paste a number or tap dice",
+    "seed_locked_hint": "Seed {{seed}} will be used. Random is off — every generation will look the same.",
+    "seed_empty_hint": "Leave empty for a fresh random seed on each generation."
   },
   "gallery": {
     "title": "Gallery",
@@ -484,6 +501,7 @@
     "style": "Style",
     "mode": "Mode",
     "quality": "Quality",
+    "resolution": "Resolution",
     "credits_consumed": "Credits Used",
     "generation_time": "Generation Time",
     "seconds": "{{count}}s",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "Sharing Unavailable",
     "share_unavailable_body": "Your device doesn't support sharing right now.",
     "share_failed_title": "Share Failed",
-    "share_failed_body": "Couldn't open the share sheet. Please try again."
+    "share_failed_body": "Couldn't open the share sheet. Please try again.",
+    "seed": "Seed",
+    "seed_copied": "Seed copied",
+    "upscale_locked": "Upscale (Pro+)",
+    "upscale_locked_hint": "Upgrade to unlock"
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -598,5 +620,16 @@
     "network": "Network error. Please check your connection.",
     "generic": "Something went wrong. Please try again.",
     "unauthorized": "Your session has expired. Please sign in again."
+  },
+  "upscale": {
+    "upscaling_to_hd": "Upscaling to HD…",
+    "upscaling_to_ultra_hd": "Upscaling to Ultra HD…",
+    "upscaling_generic": "Upscaling…",
+    "failed_title": "Upscale Failed",
+    "couldnt_start": "Couldn't Start",
+    "hd_complete": "HD Complete",
+    "ultra_hd_complete": "Ultra HD Complete",
+    "hd_in_progress": "HD Upscaling In Progress",
+    "ultra_hd_in_progress": "Ultra HD Upscaling In Progress"
   }
 }

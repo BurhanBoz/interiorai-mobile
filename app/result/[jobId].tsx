@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   FlatList,
   Dimensions,
+  Modal,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,6 +15,8 @@ import { useState, useEffect, useRef } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { TopBar } from "@/components/layout/TopBar";
@@ -20,6 +24,9 @@ import { getJob } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useImageActions } from "@/hooks/useImageActions";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useCreditStore } from "@/stores/creditStore";
+import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -49,6 +56,23 @@ export default function ResultDetailScreen() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [seedCopied, setSeedCopied] = useState(false);
+  // Tap on a generated image → fullscreen modal. Null = closed.
+  const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
+
+  // Gate the upscale button by plan: only show when the active plan has at
+  // least one ULTRA_HD_UPSCALE credit rule. Free users don't — hiding it
+  // avoids confusing 403 responses after they tap.
+  const creditRules = useSubscriptionStore(s => s.creditRules);
+  const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
+  const canUpscale =
+    isFeatureEnabled("ULTRA_HD_UPSCALE") &&
+    creditRules.some(r => r.featureCode === "ULTRA_HD_UPSCALE");
+
+  // Free plan gets a small corner watermark over the image. Basic+ plans
+  // have `watermark=false` in the plan row → no overlay rendered.
+  const planCode = useCreditStore(s => s.planCode);
+  const showWatermark = !planCode || planCode === "FREE";
   const flatListRef = useRef<FlatList>(null);
   const authHeaders = useAuthHeaders();
 
@@ -230,33 +254,43 @@ export default function ResultDetailScreen() {
                 setActiveIndex(index);
               }}
               renderItem={({ item }) => (
-                <Image
-                  source={getImageSource(item)}
+                <Pressable
+                  onPress={() => setFullscreenUrl(getOutputImageUrl(job!.id, item))}
                   style={{ width: IMAGE_WIDTH, height: "100%", zIndex: 1 }}
-                  contentFit="cover"
-                  onError={e =>
-                    console.log(
-                      "[Result] Image load error:",
-                      getOutputImageUrl(job!.id, item),
-                      e,
-                    )
-                  }
-                />
+                >
+                  <Image
+                    source={getImageSource(item)}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                    onError={e =>
+                      console.log(
+                        "[Result] Image load error:",
+                        getOutputImageUrl(job!.id, item),
+                        e,
+                      )
+                    }
+                  />
+                </Pressable>
               )}
             />
           ) : currentOutput ? (
-            <Image
-              source={getImageSource(currentOutput)}
+            <Pressable
+              onPress={() => setFullscreenUrl(getOutputImageUrl(job!.id, currentOutput))}
               style={{ width: "100%", height: "100%", zIndex: 1 }}
-              contentFit="cover"
-              onError={e =>
-                console.log(
-                  "[Result] Image load error:",
-                  getOutputImageUrl(job!.id, currentOutput),
-                  e,
-                )
-              }
-            />
+            >
+              <Image
+                source={getImageSource(currentOutput)}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+                onError={e =>
+                  console.log(
+                    "[Result] Image load error:",
+                    getOutputImageUrl(job!.id, currentOutput),
+                    e,
+                  )
+                }
+              />
+            </Pressable>
           ) : (
             <View
               className="flex-1 items-center justify-center"
@@ -290,6 +324,10 @@ export default function ResultDetailScreen() {
               </Text>
             </View>
           )}
+
+          {/* Free plan corner mark — bottom-right, non-intrusive. Replaces
+              the earlier "reklamımız" that covered the entire image. */}
+          {showWatermark && <FreeWatermark size="md" />}
 
           {/* Pagination Dots */}
           {outputs.length > 1 && (
@@ -395,18 +433,21 @@ export default function ResultDetailScreen() {
             </Text>
           </View>
 
-          {/* Upscale Button */}
-          <Pressable
-            onPress={() => {
-              if (!currentOutput?.id) return;
-              router.push(
-                `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
-              );
-            }}
-            className="flex-1 flex-row items-center justify-between bg-surface-container-high rounded-xl"
-            style={{ height: 48, marginLeft: 8, paddingHorizontal: 20 }}
-          >
-            <View>
+          {/* Upscale Button — gated by plan entitlement. Free plan has no
+              ULTRA_HD_UPSCALE credit rule so the button disappears; Basic+
+              see it and land on /generation/upscale where target tier is
+              resolved by the backend. */}
+          {canUpscale ? (
+            <Pressable
+              onPress={() => {
+                if (!currentOutput?.id) return;
+                router.push(
+                  `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
+                );
+              }}
+              className="flex-1 flex-row items-center justify-between bg-surface-container-high rounded-xl"
+              style={{ height: 48, marginLeft: 8, paddingHorizontal: 20 }}
+            >
               <Text
                 className="font-label text-on-surface font-bold"
                 style={{
@@ -417,20 +458,48 @@ export default function ResultDetailScreen() {
               >
                 {t("result.upscale")}
               </Text>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 9,
-                  letterSpacing: 0.5,
-                  textTransform: "uppercase",
-                  color: "rgba(254,223,181,0.7)",
-                }}
-              >
-                {t("result.upscale_credits_hint")}
-              </Text>
-            </View>
-            <Ionicons name="sparkles" size={20} color="#FEDFB5" />
-          </Pressable>
+              <Ionicons name="sparkles" size={20} color="#FEDFB5" />
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => router.push("/plans")}
+              className="flex-1 flex-row items-center justify-between rounded-xl"
+              style={{
+                height: 48,
+                marginLeft: 8,
+                paddingHorizontal: 20,
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.3)",
+                backgroundColor: "rgba(225,195,155,0.06)",
+              }}
+            >
+              <View>
+                <Text
+                  className="font-label font-bold"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    color: "#E0C29A",
+                  }}
+                >
+                  {t("result.upscale_locked")}
+                </Text>
+                <Text
+                  className="font-label"
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: 0.5,
+                    textTransform: "uppercase",
+                    color: "rgba(224,194,154,0.65)",
+                  }}
+                >
+                  {t("result.upscale_locked_hint")}
+                </Text>
+              </View>
+              <Ionicons name="lock-closed" size={16} color="#E0C29A" />
+            </Pressable>
+          )}
         </View>
 
         {/* Metadata Card */}
@@ -459,7 +528,7 @@ export default function ResultDetailScreen() {
           </View>
         </View>
 
-        {/* Generation Info */}
+        {/* Generation Info + Seed (Copy) */}
         {currentOutput?.generationTimeMs > 0 && (
           <View className="bg-surface-container-low rounded-xl p-6 mb-8">
             <View className="flex-row flex-wrap">
@@ -481,24 +550,72 @@ export default function ResultDetailScreen() {
                   {(currentOutput.generationTimeMs / 1000).toFixed(1)}s
                 </Text>
               </View>
-              <View className="w-1/2 mb-2">
-                <Text
-                  className="font-label text-on-surface-variant mb-1"
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {t("result.quality")}
-                </Text>
-                <Text
-                  className="font-headline text-on-surface"
-                  style={{ fontSize: 14 }}
-                >
-                  {currentOutput.width}×{currentOutput.height}
-                </Text>
-              </View>
+              {currentOutput.seed ? (
+                <View className="w-1/2 mb-2">
+                  <Text
+                    className="font-label text-on-surface-variant mb-1"
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("result.seed")}
+                  </Text>
+                  {/* Seed pill — monospace for legibility, Copy icon
+                      writes the value to the clipboard + haptic tick.
+                      Lets Pro+ users lock compositions across iterations. */}
+                  <Pressable
+                    onPress={async () => {
+                      await Clipboard.setStringAsync(String(currentOutput.seed));
+                      Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success,
+                      );
+                      setSeedCopied(true);
+                      setTimeout(() => setSeedCopied(false), 1600);
+                    }}
+                    className="flex-row items-center"
+                    style={{ gap: 8 }}
+                    hitSlop={6}
+                  >
+                    <Text
+                      className="font-headline text-on-surface"
+                      style={{
+                        fontSize: 14,
+                        letterSpacing: 0.5,
+                        fontVariant: ["tabular-nums"],
+                      }}
+                    >
+                      {currentOutput.seed}
+                    </Text>
+                    <Ionicons
+                      name={seedCopied ? "checkmark-circle" : "copy-outline"}
+                      size={14}
+                      color={seedCopied ? "#8FE3A1" : "#E0C29A"}
+                    />
+                  </Pressable>
+                </View>
+              ) : null}
+              {currentOutput.width && currentOutput.height ? (
+                <View className="w-1/2 mb-2">
+                  <Text
+                    className="font-label text-on-surface-variant mb-1"
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("result.resolution")}
+                  </Text>
+                  <Text
+                    className="font-headline text-on-surface"
+                    style={{ fontSize: 14 }}
+                  >
+                    {currentOutput.width}×{currentOutput.height}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
         )}
@@ -512,6 +629,50 @@ export default function ResultDetailScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Fullscreen image viewer — tap anywhere to close */}
+      <Modal
+        visible={fullscreenUrl !== null}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setFullscreenUrl(null)}
+        statusBarTranslucent
+      >
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <Pressable
+          onPress={() => setFullscreenUrl(null)}
+          style={{
+            flex: 1,
+            backgroundColor: "#000",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {fullscreenUrl ? (
+            <Image
+              source={{ uri: fullscreenUrl, headers: authHeaders }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="contain"
+            />
+          ) : null}
+          <Pressable
+            onPress={() => setFullscreenUrl(null)}
+            style={{
+              position: "absolute",
+              top: 48,
+              right: 20,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

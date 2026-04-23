@@ -203,7 +203,24 @@
     "upload_reference_first": "Zuerst Referenz hochladen",
     "next_review": "Weiter: Prüfen",
     "strength_helper_style_transfer": "Bestimmt, wie stark das Referenzbild den Output beeinflusst. Niedrig = dezente Inspiration, hoch = nahe Kopie des Stils.",
-    "strength_helper_generic": "Wie weit sich die Transformation vom Original entfernt. Subtil behält den Raum bei, dramatisch erfindet die Atmosphäre neu."
+    "strength_helper_generic": "Wie weit sich die Transformation vom Original entfernt. Subtil behält den Raum bei, dramatisch erfindet die Atmosphäre neu.",
+    "preserve_layout_only_redesign": "„Layout beibehalten“ gilt nur im Redesign-Modus. Leerer Raum, Inpaint und Style Transfer arbeiten mit anderer struktureller Logik.",
+    "prompt_suggestions_label": "VORSCHLÄGE — ZUM HINZUFÜGEN TIPPEN",
+    "strength_min_redesign": "Materialien",
+    "strength_max_redesign": "Alles",
+    "strength_min_empty_room": "Teilweise behalten",
+    "strength_max_empty_room": "Komplett leer",
+    "strength_min_inpaint": "Kleine Anpassung",
+    "strength_max_inpaint": "Neu zeichnen",
+    "strength_min_style_transfer": "Leichte Inspiration",
+    "strength_max_style_transfer": "Vollständige Kopie",
+    "speed_fast_duration": "~30s",
+    "speed_balanced_duration": "~45s",
+    "speed_quality_duration": "~65s",
+    "seed_help_long": "Ein Seed ist eine Zahl, mit der Generierungen reproduzierbar werden. Gleicher Seed + gleiche Einstellungen = identisches Ergebnis. Würfel für neue Looks, oder Seed einfügen.",
+    "seed_placeholder_long": "Zahl eingeben oder Würfel tippen",
+    "seed_locked_hint": "Seed {{seed}} wird verwendet.",
+    "seed_empty_hint": "Leer lassen für eine neue Zufallszahl bei jedem Durchlauf."
   },
   "gallery": {
     "title": "Galerie",
@@ -484,6 +501,7 @@
     "style": "Stil",
     "mode": "Modus",
     "quality": "Qualität",
+    "resolution": "Auflösung",
     "credits_consumed": "Verbrauchte Credits",
     "generation_time": "Generierungszeit",
     "seconds": "{{count}}s",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "Teilen nicht verfügbar",
     "share_unavailable_body": "Dein Gerät unterstützt das Teilen derzeit nicht.",
     "share_failed_title": "Teilen fehlgeschlagen",
-    "share_failed_body": "Teilen-Dialog konnte nicht geöffnet werden. Bitte erneut versuchen."
+    "share_failed_body": "Teilen-Dialog konnte nicht geöffnet werden. Bitte erneut versuchen.",
+    "seed": "Seed",
+    "seed_copied": "Seed kopiert",
+    "upscale_locked": "Hochskalieren (Pro+)",
+    "upscale_locked_hint": "Upgrade zum Freischalten"
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
@@ -598,5 +620,16 @@
     "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "unauthorized": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+  },
+  "upscale": {
+    "upscaling_to_hd": "Hochskalierung auf HD…",
+    "upscaling_to_ultra_hd": "Hochskalierung auf Ultra HD…",
+    "upscaling_generic": "Hochskalierung…",
+    "failed_title": "Hochskalierung fehlgeschlagen",
+    "couldnt_start": "Konnte nicht starten",
+    "hd_complete": "HD abgeschlossen",
+    "ultra_hd_complete": "Ultra HD abgeschlossen",
+    "hd_in_progress": "HD-Hochskalierung läuft",
+    "ultra_hd_in_progress": "Ultra-HD-Hochskalierung läuft"
   }
 }

@@ -306,15 +306,15 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 12,
-                  paddingVertical: 22,
-                  borderRadius: 8,
+                  paddingHorizontal: 14,
+                  paddingVertical: 28,
+                  borderRadius: 10,
                   backgroundColor: isActive
-                    ? "rgba(225,195,155,0.08)"
+                    ? "rgba(225,195,155,0.10)"
                     : pressed
                       ? "rgba(42,42,42,0.5)"
                       : "transparent",
-                  marginBottom: 18,
+                  marginBottom: 26,
                   position: "relative",
                 })}
               >
@@ -323,9 +323,9 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                     style={{
                       position: "absolute",
                       left: 0,
-                      top: 10,
-                      bottom: 10,
-                      width: 3,
+                      top: 14,
+                      bottom: 14,
+                      width: 4,
                       borderRadius: 2,
                       backgroundColor: "#E1C39B",
                     }}
@@ -335,18 +335,18 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 16,
+                    gap: 18,
                   }}
                 >
                   <Ionicons
                     name={item.icon}
-                    size={22}
+                    size={24}
                     color={isActive ? "#E1C39B" : "#E5E2E1"}
                   />
                   <Text
                     className="font-body"
                     style={{
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: isActive ? "700" : "500",
                       letterSpacing: 0.5,
                       color: isActive ? "#E1C39B" : "#E5E2E1",
@@ -359,8 +359,10 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
             );
           })}
 
-          {/* Settings Section Label */}
-          <View style={{ marginTop: 44, marginBottom: 16, paddingHorizontal: 12 }}>
+          {/* Settings Section Label — extra breathing space above so the
+              handoff between NAV and SETTINGS reads as a deliberate section
+              break, not a crowded continuation. */}
+          <View style={{ marginTop: 56, marginBottom: 20, paddingHorizontal: 14 }}>
             <Text
               className="font-label"
               style={{
@@ -384,27 +386,27 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                paddingHorizontal: 12,
-                paddingVertical: 18,
-                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 24,
+                borderRadius: 10,
                 backgroundColor: pressed
                   ? "rgba(42,42,42,0.5)"
                   : "transparent",
-                marginBottom: 12,
+                marginBottom: 20,
               })}
             >
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 16,
+                  gap: 18,
                 }}
               >
-                <Ionicons name={item.icon} size={22} color="#E5E2E1" />
+                <Ionicons name={item.icon} size={24} color="#E5E2E1" />
                 <Text
                   className="font-body"
                   style={{
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: "500",
                     letterSpacing: 0.5,
                     color: "#E5E2E1",

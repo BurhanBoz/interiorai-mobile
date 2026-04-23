@@ -203,7 +203,24 @@
     "upload_reference_first": "먼저 참조를 업로드하세요",
     "next_review": "다음: 검토",
     "strength_helper_style_transfer": "참조 이미지가 출력에 미치는 영향을 조절합니다. 낮음=은은한 영감, 높음=스타일 거의 복사.",
-    "strength_helper_generic": "변환이 원본에서 얼마나 멀어지는지. 미묘는 방을 유지, 극적은 분위기를 재구성."
+    "strength_helper_generic": "변환이 원본에서 얼마나 멀어지는지. 미묘는 방을 유지, 극적은 분위기를 재구성.",
+    "preserve_layout_only_redesign": "레이아웃 유지는 리디자인 모드에서만 적용됩니다. 빈 방, 인페인트, 스타일 전송은 다른 구조 로직을 사용합니다.",
+    "prompt_suggestions_label": "제안 — 탭하여 추가",
+    "strength_min_redesign": "소재만",
+    "strength_max_redesign": "모두",
+    "strength_min_empty_room": "일부 유지",
+    "strength_max_empty_room": "완전히 비움",
+    "strength_min_inpaint": "가벼운 수정",
+    "strength_max_inpaint": "완전 재작성",
+    "strength_min_style_transfer": "가벼운 영감",
+    "strength_max_style_transfer": "완전 복사",
+    "speed_fast_duration": "~30초",
+    "speed_balanced_duration": "~45초",
+    "speed_quality_duration": "~65초",
+    "seed_help_long": "시드는 생성을 재현 가능하게 만드는 숫자입니다. 같은 시드+같은 설정=같은 결과. 주사위를 눌러 새 결과를 탐색하거나 좋아한 시드를 붙여넣으세요.",
+    "seed_placeholder_long": "숫자 입력 또는 주사위 탭",
+    "seed_locked_hint": "시드 {{seed}}이(가) 사용됩니다.",
+    "seed_empty_hint": "매번 새로운 랜덤 시드를 원하면 비워두세요."
   },
   "gallery": {
     "title": "갤러리",
@@ -484,6 +501,7 @@
     "style": "스타일",
     "mode": "모드",
     "quality": "품질",
+    "resolution": "해상도",
     "credits_consumed": "사용된 크레딧",
     "generation_time": "생성 시간",
     "seconds": "{{count}}초",
@@ -499,7 +517,11 @@
     "share_unavailable_title": "공유를 사용할 수 없습니다",
     "share_unavailable_body": "현재 기기에서 공유를 지원하지 않습니다.",
     "share_failed_title": "공유 실패",
-    "share_failed_body": "공유 화면을 열 수 없습니다. 다시 시도해 주세요."
+    "share_failed_body": "공유 화면을 열 수 없습니다. 다시 시도해 주세요.",
+    "seed": "시드",
+    "seed_copied": "시드 복사됨",
+    "upscale_locked": "업스케일 (Pro+)",
+    "upscale_locked_hint": "업그레이드하여 잠금 해제"
   },
   "settings": {
     "notifications_title": "알림",
@@ -598,5 +620,16 @@
     "network": "네트워크 오류입니다. 연결을 확인해 주세요.",
     "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
     "unauthorized": "세션이 만료되었습니다. 다시 로그인해 주세요."
+  },
+  "upscale": {
+    "upscaling_to_hd": "HD로 업스케일링 중…",
+    "upscaling_to_ultra_hd": "Ultra HD로 업스케일링 중…",
+    "upscaling_generic": "업스케일링 중…",
+    "failed_title": "업스케일 실패",
+    "couldnt_start": "시작할 수 없음",
+    "hd_complete": "HD 완료",
+    "ultra_hd_complete": "Ultra HD 완료",
+    "hd_in_progress": "HD 업스케일링 진행 중",
+    "ultra_hd_in_progress": "Ultra HD 업스케일링 진행 중"
   }
 }
