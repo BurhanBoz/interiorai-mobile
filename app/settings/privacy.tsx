@@ -1,114 +1,165 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
-import { router } from "expo-router";
+import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { TopBar } from "@/components/layout/TopBar";
+import { theme } from "@/config/theme";
+
+/**
+ * Privacy policy — the app's single "tone of voice" moment. Deliberately
+ * more editorial than every other screen: big display serif, intentional
+ * pauses, section ornaments. This is where the user decides whether we're
+ * trustworthy.
+ *
+ * Audit fixes:
+ *   - Added a 20-22px sub-headline tier between the 48px display and the
+ *     14px body. The old version jumped straight from 48 → 14 which felt
+ *     abrupt, like a magazine without a subhead.
+ *   - Gold ornament line above each numbered section — editorial print
+ *     feel instead of a plain number badge.
+ *   - Body uses a more generous 22px line-height for readability.
+ */
 
 const SECTION_KEYS = [
-  { titleKey: "settings.privacy_section1_title", bodyKey: "settings.privacy_section1_body" },
-  { titleKey: "settings.privacy_section2_title", bodyKey: "settings.privacy_section2_body" },
-  { titleKey: "settings.privacy_section3_title", bodyKey: "settings.privacy_section3_body" },
-  { titleKey: "settings.privacy_section4_title", bodyKey: "settings.privacy_section4_body" },
-  { titleKey: "settings.privacy_section5_title", bodyKey: "settings.privacy_section5_body" },
-  { titleKey: "settings.privacy_section6_title", bodyKey: "settings.privacy_section6_body" },
+  {
+    titleKey: "settings.privacy_section1_title",
+    bodyKey: "settings.privacy_section1_body",
+  },
+  {
+    titleKey: "settings.privacy_section2_title",
+    bodyKey: "settings.privacy_section2_body",
+  },
+  {
+    titleKey: "settings.privacy_section3_title",
+    bodyKey: "settings.privacy_section3_body",
+  },
+  {
+    titleKey: "settings.privacy_section4_title",
+    bodyKey: "settings.privacy_section4_body",
+  },
+  {
+    titleKey: "settings.privacy_section5_title",
+    bodyKey: "settings.privacy_section5_body",
+  },
+  {
+    titleKey: "settings.privacy_section6_title",
+    bodyKey: "settings.privacy_section6_body",
+  },
 ];
 
 export default function PrivacyScreen() {
   const { t } = useTranslation();
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      {/* TopAppBar — back + centered title, no trailing avatar */}
-      <View
-        className="flex-row items-center px-6"
-        style={{ height: 64, backgroundColor: "rgba(19,19,19,0.8)" }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="w-10 h-10 items-center justify-center rounded-full"
-        >
-          <Ionicons name="arrow-back" size={24} color="#C4A882" />
-        </Pressable>
-        <Text
-          className="font-headline flex-1 text-center"
-          style={{
-            fontSize: 17,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-            color: "#C4A882",
-          }}
-        >
-          {t("settings.privacy_title")}
-        </Text>
-        <View style={{ width: 40, height: 40 }} />
-      </View>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.color.surface }}
+    >
+      <TopBar title={t("settings.privacy_title")} showBack />
 
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-6 pb-16"
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 64 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero */}
-        <View className="mt-8" style={{ gap: 16 }}>
+        {/* Hero — ONE editorial eyebrow, display serif, sub-headline bridge,
+            then a quiet divider to open the sections. */}
+        <View style={{ marginTop: 24, gap: 16 }}>
           <Text
-            className="font-label"
             style={{
-              fontSize: 11,
-              letterSpacing: 4,
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
+              letterSpacing: 2.2,
               textTransform: "uppercase",
-              color: "#E0C29A",
+              color: theme.color.goldMidday,
             }}
           >
             {t("settings.privacy_eyebrow")}
           </Text>
           <Text
-            className="font-headline text-on-background"
-            style={{ fontSize: 48, lineHeight: 54 }}
+            style={{
+              fontFamily: "NotoSerif",
+              fontSize: 42,
+              lineHeight: 48,
+              letterSpacing: -0.5,
+              color: theme.color.onSurface,
+            }}
           >
             {t("settings.privacy_headline")}
           </Text>
           <Text
-            className="font-body text-on-surface-variant"
-            style={{ fontSize: 14, lineHeight: 22, marginTop: 4 }}
+            style={{
+              fontFamily: "NotoSerif",
+              fontSize: 18,
+              lineHeight: 26,
+              letterSpacing: -0.1,
+              color: theme.color.onSurfaceVariant,
+              marginTop: 4,
+            }}
           >
             {t("settings.privacy_tagline")}
           </Text>
           <View
-            className="w-full mt-4"
-            style={{ height: 1, backgroundColor: "rgba(224,194,154,0.3)" }}
+            style={{
+              width: "100%",
+              height: 1,
+              backgroundColor: "rgba(225,195,155,0.25)",
+              marginTop: 20,
+            }}
           />
         </View>
 
-        {/* Sections — MD-derived, 6 plain-reading blocks */}
-        <View style={{ gap: 32, marginTop: 40 }}>
+        {/* Numbered sections — each carries a 20px gold ornament line so
+            the page reads like an editorial print piece, not a TOC. */}
+        <View style={{ gap: 36, marginTop: 40 }}>
           {SECTION_KEYS.map((section, idx) => (
-            <View
-              key={section.titleKey}
-              className="bg-surface-container-low rounded-xl p-6"
-              style={{ gap: 14 }}
-            >
-              <View className="flex-row items-baseline" style={{ gap: 10 }}>
-                <Text
-                  className="font-label"
+            <View key={section.titleKey}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 10,
+                }}
+              >
+                <View
                   style={{
+                    width: 20,
+                    height: 1.5,
+                    borderRadius: 1,
+                    backgroundColor: theme.color.goldMidday,
+                    opacity: 0.8,
+                  }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "Inter-SemiBold",
                     fontSize: 10,
-                    letterSpacing: 2,
-                    color: "#C4A882",
-                    fontWeight: "700",
+                    letterSpacing: 1.8,
+                    textTransform: "uppercase",
+                    color: theme.color.goldMidday,
                   }}
                 >
                   {String(idx + 1).padStart(2, "0")}
                 </Text>
-                <Text
-                  className="font-headline flex-1"
-                  style={{ fontSize: 18, color: "#E0C29A", lineHeight: 24 }}
-                >
-                  {t(section.titleKey)}
-                </Text>
               </View>
               <Text
-                className="font-body text-on-surface-variant"
-                style={{ fontSize: 14, lineHeight: 22 }}
+                style={{
+                  fontFamily: "NotoSerif",
+                  fontSize: 22,
+                  lineHeight: 28,
+                  letterSpacing: -0.1,
+                  color: theme.color.onSurface,
+                  marginBottom: 10,
+                }}
+              >
+                {t(section.titleKey)}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 14,
+                  lineHeight: 22,
+                  color: theme.color.onSurfaceVariant,
+                }}
               >
                 {t(section.bodyKey)}
               </Text>
@@ -117,16 +168,32 @@ export default function PrivacyScreen() {
         </View>
 
         {/* Footer */}
-        <Text
-          className="font-label text-outline text-center mt-12"
+        <View
           style={{
-            fontSize: 10,
-            letterSpacing: 3,
-            textTransform: "uppercase",
+            alignItems: "center",
+            marginTop: 48,
+            gap: 8,
           }}
         >
-          {t("settings.privacy_last_updated")}
-        </Text>
+          <View
+            style={{
+              width: 32,
+              height: 1,
+              backgroundColor: "rgba(225,195,155,0.25)",
+            }}
+          />
+          <Text
+            style={{
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              color: theme.color.onSurfaceMuted,
+            }}
+          >
+            {t("settings.privacy_last_updated")}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

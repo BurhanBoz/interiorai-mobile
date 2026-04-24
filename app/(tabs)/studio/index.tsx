@@ -9,20 +9,45 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { Brand } from "@/components/brand/Brand";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
+import type { ComponentProps } from "react";
 
-const tips = [
+type IconName = ComponentProps<typeof Ionicons>["name"];
+
+/**
+ * Studio Step 1 — "Analyse Your Space". The user's first meaningful
+ * decision in the flow: upload a photo, or take one. Everything on this
+ * screen optimises for that decision.
+ *
+ * Changes from the previous version:
+ *   - Unified brand mark (SVG) replaces the hardcoded "ARCHITECTURAL\nLENS"
+ *   - Tips icon tiles are warm gold-tinted, not cold grey (#353534 was
+ *     breaking the editorial palette)
+ *   - Tip section headers are sentence-case, not a second eyebrow
+ *     fighting the first one
+ *   - Avatar tap explicitly routes to Profile (previously `onPress` was a
+ *     boolean that did nothing visible)
+ */
+
+const tips: Array<{
+  icon: IconName;
+  titleKey: string;
+  textKey: string;
+}> = [
   {
-    icon: "sunny-outline" as const,
+    icon: "sunny-outline",
     titleKey: "studio.tip_lighting_title",
     textKey: "studio.tip_lighting_description",
   },
   {
-    icon: "scan-outline" as const,
+    icon: "scan-outline",
     titleKey: "studio.tip_perspective_title",
     textKey: "studio.tip_perspective_description",
   },
   {
-    icon: "navigate-outline" as const,
+    icon: "navigate-outline",
     titleKey: "studio.tip_pathways_title",
     textKey: "studio.tip_pathways_description",
   },
@@ -32,7 +57,7 @@ export default function StudioScreen() {
   const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
   const { openDrawer } = useDrawer();
-  const setPhoto = useStudioStore(s => s.setPhoto);
+  const setPhoto = useStudioStore((s) => s.setPhoto);
 
   const handleUpload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -52,8 +77,9 @@ export default function StudioScreen() {
     }
   };
 
-  // Subtle breathing animation on the idle upload icon — premium cue that
-  // the zone is tappable without adding visual noise.
+  // Breathing animation on the idle upload glyph — a quiet "this is alive"
+  // cue. Stopped on unmount so the app doesn't keep animating in the
+  // background.
   const uploadPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -61,11 +87,13 @@ export default function StudioScreen() {
         Animated.timing(uploadPulse, {
           toValue: 0.55,
           duration: 1800,
+          easing: theme.motion.easing.standard,
           useNativeDriver: true,
         }),
         Animated.timing(uploadPulse, {
           toValue: 1,
           duration: 1800,
+          easing: theme.motion.easing.standard,
           useNativeDriver: true,
         }),
       ]),
@@ -74,47 +102,48 @@ export default function StudioScreen() {
     return () => loop.stop();
   }, [uploadPulse]);
 
-  /* ── Empty upload state — a selected photo takes the user directly to
-       /studio/uploaded via the handlers above, so we never render a photo
-       branch here. ── */
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* App Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={openDrawer} hitSlop={8}>
-            <Ionicons name="menu" size={24} color="#E1C39B" />
-          </Pressable>
-          <Text
-            className="font-headline text-[#E1C39B]"
-            style={{
-              fontSize: 14,
-              lineHeight: 16,
-              fontWeight: "700",
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-            }}
-          >
-            {"ARCHITECTURAL\nLENS"}
-          </Text>
-        </View>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+      {/* Top bar */}
+      <View
+        style={{
+          height: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+        }}
+      >
+        <Pressable
+          onPress={openDrawer}
+          hitSlop={8}
+          style={{
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
+        </Pressable>
+        <Brand variant="inline" size="sm" tone="gold" />
         <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Step indicator */}
-        <View className="mb-2">
+        {/* Step indicator — the ONE uppercase eyebrow allowed on this screen */}
+        <View style={{ marginTop: 12, marginBottom: 10 }}>
           <Text
-            className="font-label text-primary"
             style={{
-              fontSize: 11,
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
               letterSpacing: 2,
               textTransform: "uppercase",
-              fontWeight: "500",
+              color: theme.color.goldMidday,
             }}
           >
             {t("studio.step_1_of_4")}
@@ -123,145 +152,149 @@ export default function StudioScreen() {
 
         {/* Headline */}
         <Text
-          className="font-headline text-on-surface mb-10"
-          style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+          style={{
+            fontFamily: "NotoSerif",
+            fontSize: 34,
+            lineHeight: 40,
+            letterSpacing: -0.4,
+            color: theme.color.onSurface,
+            marginBottom: 36,
+          }}
         >
           {t("studio.step1_title")}
         </Text>
 
-        {/* Upload Zone */}
+        {/* Primary upload zone */}
         <Pressable
           onPress={handleUpload}
           disabled={isUploading}
           style={({ pressed }) => ({
             transform: [{ scale: pressed ? 0.98 : 1 }],
-            height: 200,
-            borderWidth: 2,
+            height: 208,
+            borderWidth: 1.5,
             borderStyle: "dashed",
-            borderColor: "#4D463C",
-            borderRadius: 12,
+            borderColor: "rgba(225,195,155,0.35)",
+            borderRadius: 18,
+            backgroundColor: "rgba(225,195,155,0.03)",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 16,
+            opacity: isUploading ? 0.7 : 1,
+            ...theme.elevation.goldGlowSoft,
           })}
-          className="w-full items-center justify-center bg-surface-container-low mb-6"
         >
-          <Animated.View style={{ opacity: uploadPulse, marginBottom: 16 }}>
+          <Animated.View style={{ opacity: uploadPulse, marginBottom: 14 }}>
             <Ionicons
               name="cloud-upload-outline"
-              size={36}
-              color="#E0C29A"
+              size={38}
+              color={theme.color.goldMidday}
             />
           </Animated.View>
           <Text
-            className="font-label text-on-surface-variant"
             style={{
+              fontFamily: "Inter-SemiBold",
               fontSize: 11,
-              letterSpacing: 3,
+              letterSpacing: 2.4,
               textTransform: "uppercase",
+              color: theme.color.onSurface,
             }}
           >
             {isUploading ? t("studio.uploading") : t("studio.tap_to_upload")}
           </Text>
-        </Pressable>
-
-        {/* OR Divider */}
-        <View className="flex-row items-center mb-6" style={{ gap: 16 }}>
-          <View
-            className="flex-1"
-            style={{ height: 1, backgroundColor: "#4D463C" }}
-          />
           <Text
-            className="font-label text-on-surface-variant"
             style={{
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              fontFamily: "Inter",
+              fontSize: 12,
+              color: theme.color.onSurfaceMuted,
+              marginTop: 6,
+              letterSpacing: 0.2,
             }}
           >
-            {t("common.or")}
+            JPG · PNG · HEIC
           </Text>
-          <View
-            className="flex-1"
-            style={{ height: 1, backgroundColor: "#4D463C" }}
+        </Pressable>
+
+        {/* Camera — quiet text link under the primary zone (no competing CTA) */}
+        <View style={{ alignItems: "center", marginBottom: 40 }}>
+          <Button
+            title={t("studio.take_a_photo")}
+            variant="tertiary"
+            size="sm"
+            onPress={handleCamera}
+            disabled={isUploading}
+            icon="camera-outline"
+            iconLeft
+            fullWidth={false}
           />
         </View>
 
-        {/* Take a Photo Button */}
-        <Pressable
-          onPress={handleCamera}
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            borderWidth: 1,
-            borderColor: "#4D463C",
-            borderRadius: 12,
-          })}
-          className="w-full flex-row items-center justify-center py-4 mb-8"
-          disabled={isUploading}
-        >
-          <Ionicons
-            name="camera-outline"
-            size={20}
-            color="#E0C29A"
-            style={{ marginRight: 12 }}
-          />
+        {/* Professional tips — sentence-case section title, warm icon tiles */}
+        <View style={{ gap: 18 }}>
           <Text
-            className="font-label text-primary"
             style={{
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-            }}
-          >
-            {t("studio.take_a_photo")}
-          </Text>
-        </Pressable>
-
-        {/* Professional Tips Section */}
-        <View style={{ gap: 24 }}>
-          <Text
-            className="font-label text-on-surface-variant"
-            style={{
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              fontFamily: "Inter-SemiBold",
+              fontSize: 14,
+              letterSpacing: 0.2,
+              color: theme.color.onSurfaceVariant,
             }}
           >
             {t("studio.professional_tips")}
           </Text>
 
-          <View style={{ gap: 16 }}>
-            {tips.map(tip => (
+          <View style={{ gap: 12 }}>
+            {tips.map((tip) => (
               <View
                 key={tip.icon}
-                className="bg-surface-container-low rounded-xl flex-row items-start"
-                style={{ padding: 24, gap: 24 }}
+                style={{
+                  padding: 18,
+                  borderRadius: 16,
+                  backgroundColor: theme.color.surfaceContainerLow,
+                  borderWidth: 1,
+                  borderColor: "rgba(77,70,60,0.25)",
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 16,
+                }}
               >
-                {/* Tip Icon Container */}
                 <View
-                  className="bg-surface-container-highest items-center justify-center"
                   style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 8,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(225,195,155,0.08)",
+                    borderWidth: 1,
+                    borderColor: "rgba(225,195,155,0.18)",
+                    alignItems: "center",
+                    justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <Ionicons name={tip.icon} size={28} color="#E1C39B" />
+                  <Ionicons
+                    name={tip.icon}
+                    size={20}
+                    color={theme.color.goldMidday}
+                  />
                 </View>
-
-                {/* Tip Text */}
-                <View className="flex-1">
+                <View style={{ flex: 1 }}>
                   <Text
-                    className="text-primary font-medium mb-1"
                     style={{
-                      fontSize: 14,
-                      letterSpacing: 1.5,
+                      fontFamily: "Inter-SemiBold",
+                      fontSize: 13,
+                      letterSpacing: 1.4,
                       textTransform: "uppercase",
+                      color: theme.color.goldMidday,
+                      marginBottom: 4,
                     }}
                   >
                     {t(tip.titleKey)}
                   </Text>
                   <Text
-                    className="text-on-surface-variant font-body"
-                    style={{ fontSize: 12, lineHeight: 18 }}
+                    style={{
+                      fontFamily: "Inter",
+                      fontSize: 13,
+                      lineHeight: 19,
+                      color: theme.color.onSurfaceVariant,
+                    }}
                   >
                     {t(tip.textKey)}
                   </Text>

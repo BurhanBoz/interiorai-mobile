@@ -1,0 +1,746 @@
+Ready for review
+Select text to add comments on the plan
+Interior AI Mobile — Premium UX/UI Audit
+Denetleyen perspektif: Üst düzey mobil ürün tasarım denetçisi + senior UX danışmanı Kaynak: 14 ekran görüntüsü + interiorai-mobile/ kod tabanı Tarih: 2026-04-24 Ton: Eleştirel, somut, uygulanabilir.
+
+A. Yönetici Özeti
+Boyut	Skor
+Genel UX/UI	6.0 / 10
+Premium algı	5.5 / 10
+Kullanılabilirlik	6.5 / 10
+Görsel tutarlılık	5.0 / 10
+Erişilebilirlik	4.0 / 10
+Ortalama bir "dark + gold" interior design uygulaması kıvamında. Editorial bir ton için doğru dili seçmişsin (NotoSerif + Inter, dark surface, gold accent) ama dilin disiplini yok — token sistemi var, ekranlar bypass ediyor; typography ölçeği var, tek bir sesi tekrar ediyor; ikonlar Ionicons standart setinden geliyor; offline banner status bar ile çakışıyor. Kredi miktarları, CTA netliği, tier işaretlemesi gibi kritik dönüşüm noktalarında güven kaybı var. Bu uygulama "premium görünmek istiyor ama cesareti yok".
+En kritik 5 problem
+1. OfflineBanner status bar'ın altında kalıyor / yazı kırpılıyor — components/ui/OfflineBanner.tsx:48-57. Her ekranda "broken app" izlenimi. P0.
+2. "ARCHITECTURAL\nLENS" iki satırlık brand yazısı hardcoded \n karakteriyle Text olarak render ediliyor — SVG logo olmadığı için her ekranda font weight/spacing kayıyor, Studio'da iki satır, Profile'da tek satır. Brand inconsistency.
+3. Typography hiyerarşisi tek notada sıkışmış — Tüm section header'lar fontSize 11 / letterSpacing 2-3 / uppercase kullanıyor (Drawer, Studio, Gallery, Profile, Notifications, Credit Packs). 14 ekran × 3-4 label = ~50 uppercase tracked caption. Tekrarlandığında vurgu öldürür.
+4. Ionicons genel setten gelen outline ikonlar — cube-outline, grid-outline, time-outline, color-palette-outline, sunny-outline, scan-outline (SideDrawer.tsx:23-48, studio/index.tsx:13-29). Generic. Editorial luxury ile çelişiyor.
+5. "Upgrade for More Credits" Max kullanıcı için gösteriliyor — app/plans/index.tsx Manage Plan ekranında Max plan kullanıcısı için "upgrade" CTA solid gold gradient olarak öne çıkıyor. Max = en üst tier. Dead CTA, güven kaybı.
+En yüksek etki yaratacak 5 iyileştirme
+1. Özel ikon kitaplığı (24–32 ikon yeterli) — cube→curated volume mark, grid→editorial mosaic, clock→page-corner, palette→tone circle. Editorial lüks = özel ikon.
+2. Brand logo'yu SVG'ye taşı + tek satır / iki satır varyantlarını <Brand variant="stacked|inline"/> component'ine kapat — tüm header'larda tek kaynak.
+3. Typography scale'i 5 tona çıkar + uppercase caption'ı sadece BIR kere/ekran kullan — Display Serif / Headline Serif / Body / Caption / Micro. Section header'ları normal-case sentence case'e al.
+4. OfflineBanner'ı SafeAreaProvider'ın root'una yeniden yerleştir + "Signal lost. Your work is safe." gibi premium copy. P0 bug + yazı iyileştirme.
+5. CTA hiyerarşisi 3 katmana indir + her ekranda tek primary kural — Primary gradient (1x), Secondary ghost border (1x), Tertiary text link. Şu an bir ekranda hem gradient "Continue" hem ghost "Change Photo" hem icon-text "Take a Photo" hem underlined "Start" karışık duruyor.
+
+B. İlk İzlenim Değerlendirmesi
+İlk görsel etki: Dark + gold, NotoSerif editorial — konsept net, renk disiplini var. Ekranlar ilk saniyede "tasarlanmış" izlenimi veriyor. Ancak dikkatli bakınca ince detayların çoğu brutalize — offline banner kırılmış görünüyor, drawer'daki MAX rozet avatar'a yapıştırılmış bir etiket gibi duruyor, üç farklı tier işaretlemesi yan yana var.
+Güven hissi: Orta. Finansal akışta (Credit Packs, Manage Plan) karar netliği düşük: "Buy for $4.99" outline, "Buy for $14.99" solid gold, Upgrade CTA gold gradient yeniden — aynı kararın çeşitlenmesi kullanıcıda "kazık yiyor muyum?" tereddüdünü besler. "Dev mode — RevenueCat not configured. Purchases run on the DUMMY provider..." banner'ı dev build'de görünmesi normal ama Credit Packs ekranının ortasında yer alması release öncesi mutlaka gate edilmeli.
+Modernlik: 2024 mobil standartlarının gerisinde değil ama yeni bir şey de denemiyor. BlurView tab bar ve dark luxury uygulamalarda artık baseline. Farklı olmak için motion + özel ikonografi + grid kırıcı kompozisyon gerekir.
+Açıklık: İyi. 4-step Studio flow "STEP X OF 4" indikatörü + headline + alt metin ile takip edilebilir. Ancak stepper sadece metin — visual progress göstergesi yok, kullanıcı nerede olduğunu hatırlamak zorunda kalıyor.
+Ürün kalitesi algısı: Ortalama-premium arası. NotoSerif + gold accent kararı uygulamayı aynı sınıftaki "TheApp.ai", "InteriorAI", "REimaginehome" gibi rakiplerden ayırıyor — onlar genelde Inter-only, stock purple/blue kullanıyor. Fakat execution aynı seviyede değil. Apple Environment Report, Nike SNKRS, Vercel gibi gerçek premium dijital ürünlerle karşılaştırıldığında: onlar tipografiyi 4-5 sesle yönetiyor, tek bir signature motion'a sahip, ikonlar bespoke. Interior AI bunların sadece ton seçimini yapmış, sistemini kurmamış.
+Verdict: Premium değil, premium-cosplay. Doğru giysileri giyiyor ama konuşması hâlâ ortalama.
+
+C. Ekran Bazlı İnceleme
+C.1 Drawer (Sidebar) — components/layout/SideDrawer.tsx
+Güçlü yönler
+* Slide animation + BlurView backdrop + haptic feedback (satır 83-121) solid mobile foundation.
+* Active route için 4px sol border + bg rgba(225,195,155,0.10) (satır 321-332) net visual signal.
+* Sign Out dialog confirmation'ı var (satır 123-139) — yanlışlıkla logout engellenmiş.
+Zayıf yönler
+* MAX rozet = yapıştırılmış etiket. satır 216-239. backgroundColor: "#FEDFB5", fontSize: 8, position: absolute bottom: -4 right: -4. Avatar'a ait değil, yan yana oturuyor, bitişiği kötü. Profile ekranındaki LinearGradient gradient + shadow'lu rozet ile aynı tasarım dili değil (profile/index.tsx:289-317). İki farklı "premium tier badge" dilinin aynı app'te olması — UI kod debt'inin canlı kanıtı.
+* Double tier signal. Avatar üstünde "MAX" rozet + isim yanında "PREMIUM MEMBER" pill (satır 256-277). İkisi aynı bilgi. Biri gitmeli. Premium tercihim: rozet kalır, pill gider, boş alan isim + email için kullanılır.
+* "PREMIUM MEMBER" bg rgba(88,67,37,0.3) + color #E0C29A — opak olmayan kahverengi leke ekranda temiz okunmuyor. Gold üstü gold. Contrast problem.
+* Drawer item padding paddingVertical: 28 (satır 310) aşırı ferah; navbar gibi kısa list'te bu 28px user'a "touch target genişliği için değil, alan doldurmak için" hissi verir. 18-20 daha profesyonel.
+* Settings section başlığı üstünde marginTop: 56 (satır 365) — koddaki yorum "deliberate section break" diyor, sonuç çok büyük boşluk. Sidebar'da 2 section var, 56 fazla.
+* Menu icon'ları: cube-outline, grid-outline, time-outline, person-outline (satır 25-47). Bottom tab'da tam olarak AYNI item'lar color-palette, images, time, person kullanıyor (GlassNavBar.tsx:8-13). Studio drawer'da küp, tab bar'da palet ise aynı şeye iki farklı metafor veriyorsun. Kullanıcı zihninde "Studio = ne?" sorusu oluşuyor.
+* Sign Out color #FFB4AB (salmon pink) (satır 440, 447) — uygulamanın altın-toprak paletinde yabancı ton. iOS destructive red'in direkt aktarımı gibi duruyor. Editorial premium app'te destructive action daha sessiz olur: underline + muted text, ya da #998F84 + sola-hizalı "Sign out" mikro text.
+Görsel hiyerarşi sorunları
+* User card (avatar + name + pill) çok büyük — dikeyde ~100px yer kaplıyor. Drawer'ın 500px görünür alanının 1/5'i. Navigation daha önemli, bu zincir zayıf başlıyor.
+* NAVIGATE / SETTINGS label'ları aynı renkte (rgba(224,194,154,0.6)), aynı letterSpacing (3), aynı fontSize (11). İki section ayrılamıyor.
+Premium seviyeye çıkarmak için
+* User card'ı yatay kompakt hale getir: 48x48 avatar + 2 satır metin. Tier'i isim altında pill değil, isimden sonra · MAX tek satır inline text olarak ver. Boş alan kazan.
+* Tek tutarlı tier rozet component'i: <TierBadge tier="max"/> — gradient variant + shadow + rounded-full + paddingX:10 paddingY:3 fontSize:9 tracking:2. Drawer + Profile + Studio header'da bu kullanılır.
+* Menu item iconografisi custom SVG'ye taşı — 4 ikon yeterli. Her biri 24x24 2px stroke weight.
+* Sign Out'u ayrı bir sessiz <DrawerFooter/> bloğuna al — icon + muted label, border-top ile bölünmüş. Bugünkü "menu item gibi" sign out satırı ciddiyeti eksiltiyor.
+
+C.2 Studio Step 1 — "Analyze Your Space" (app/(tabs)/studio/index.tsx)
+Güçlü yönler
+* Upload zone'da breathing animation (satır 57-75) premium cue — sessiz, sürekli, doğru kullanımı.
+* cloud-upload-outline + "TAP TO UPLOAD" dashed border + bg-surface-container-low solid üst seviye default pattern.
+* Professional Tips cards editorial — "NATURAL LIGHTING", "WIDE PERSPECTIVES", "CLEAR PATHWAYS" label + serif değil caps tracked + icon tile: doğru karar.
+Zayıf yönler
+* "Take a Photo" butonu primary upload zone ile yarışıyor (satır 188-215). Dashed upload zone (200px tall) + OR divider + bordered "Take a Photo" (py-4) — ikinci opsiyon ilkinin yarısı kadar yer kaplıyor ama eşit kararlı görünüyor. "Take a Photo" camera icon + uppercase label + border → üst uygulamalarda (Lensa, Photoroom) bu ikinci opsiyon 100% outline subtle text link olur.
+* cloud-upload-outline ikon kitaplığı genel. Bu brand için özel uploadtile ikonu yapılmalı: stylized architectural rectangle + upward arrow — brand'in "analiz" vaadini görseller.
+* "PROFESSIONAL TIPS" başlığı 3 card + tek kelime etiket karışımı — card başlıkları NATURAL LIGHTING 14px uppercase bold (satır 252-259), ama section başlığı PROFESSIONAL TIPS 11px rgba(224,194,154,0.6) (satır 221-226). Aynı tip etikette iki farklı ağırlık — hiyerarşi bozuk.
+* Tip card icon tile bg-surface-container-highest (#353534) — soğuk gri arka plan, gold ikon. Paleti kırıyor. Tile'ı daha sıcak yap: bg-surface-container-low + border: 1px rgba(224,194,154,0.15) + icon gold. Gri ton bu editorial paletin rakibi.
+* Upload zone içinde isUploading state'i var (satır 161) ama skeleton veya progress indicator yok — TAP TO UPLOAD yazısı "UPLOADING..." olarak değişiyor. 1MB resim için yeterli olabilir ama büyük fotoğraflarda 3+ saniye donmuş görünür.
+Kullanılabilirlik sorunları
+* Header'daki "MT" avatar button (UserAvatar size="sm" onPress — satır 101) onPress'e prop alıyor ama callback yok — bu component'in ne yaptığını kod'dan anlamak mümkün değil, onPress prop'u değer geçmemiş sadece boolean. Muhtemelen default bir profile navigation. Silent API bug.
+Premium seviyeye çıkarmak için
+* Upload zone: dashed border yerine subtle animated gradient border (rotating) — "AI dinliyor" hissi.
+* Tips section'ı bottom sheet olarak gizle — bir ? mikro ikon açınca çıkar. Studio ekranı ilk saniyede "bir fotoğraf yükle + take a photo" kadar temiz olsun. Tip'ler şu an scroll alanının yarısını yiyor.
+
+C.3 Studio Step 2 — "Room Type & Style" (app/(tabs)/studio/options.tsx veya style.tsx)
+(Koddan kesin doğrulanamadı — options.tsx 1100+ satır ve dropdown + style grid karışık görünüyor. Ekran görüntüsüne dayanıyorum.)
+Güçlü yönler
+* Room Type dropdown: "LIVING ROOM" uppercase + tv ikonu + chevron — Material-esque ama gold accent'le ayrıştırılmış. Temiz.
+* Design Style 2x2 card grid — seçili "SELECTED" badge + gold border + checkmark. Feedback var.
+Zayıf yönler
+* "SELECTED" badge image üstünde dark-on-dark — ekran görüntüsünde "SELECTED" yazısı image'ın koyu bölgesi üstünde okunaksız. bg: muhtemelen rgba(19,19,19,0.7), text: #FDDEB4 veya benzeri. Contrast AA altında kalıyor.
+* Checkmark (gold tick) card'ın ALTINDA, "Modern" label'ından sonra — card + label + checkmark üçgeni dağınık. Checkmark card'ın içinde sağ üstte olmalı.
+* Card border: SELECTED card'ta gold border var, diğerinde yok — iyi. Ama card köşe radius'u image radius'uyla tutarsız; border image'ı yemiş gibi görünüyor.
+* Grid gap'leri küçük (ekran görüntüsünden ~8px tahmini). Editorial breath yok.
+Premium seviyeye çıkarmak için
+* Seçili card için image üstü dark overlay 40% + center'da büyük gold checkmark 32px — "SELECTED" caption'a gerek yok.
+* Label card'ın altına değil, card'ın sol alt köşesine caption olarak (editorial print magazine pattern): 01 — MODERN / LIVING ROOM.
+* Design Style'da pre-view fotoğraflarını kendi job output'larından görselle — kullanıcı "bu stili seçince böyle bir oda alacağım" algısı. Bugünkü stock render'lar reklam fotoğrafı gibi.
+
+C.4 Studio Step 3 — "Design Specifications" (app/(tabs)/studio/options.tsx)
+Güçlü yönler
+* 4 design mode tabs (Redesign / Empty Room / Inpaint / Style Transfer) + locked variant'lar (dashed border + #998F84 text) — feature gating görsel olarak temiz.
+* Strength slider 80% + "Minor tweak / Full redraw" min-max label + italic helper text (satır 2600-2650 civarı) — iyi düşünülmüş explainer.
+* QUALITY TIER segmented control'de seçili pil bg: rgba(225,195,155,0.12) + border rgba(225,195,155,0.3) — ince, modern.
+Zayıf yönler
+* Segmented control'de STANDARD pil gold, HD + "ULTRA HD PRO" plain text — ekran görüntüsünde HD ve ULTRA HD disabled sanılıyor. PRO lock rozet çok küçük + low contrast (fontSize: 8, rgba(224,194,154,0.15) bg). Kullanıcı "benim planımda sadece STANDARD mı var?" diye düşünür. Buradaki trade-off upgrade fırsatı ama sunum kafa karıştırıyor.
+* Slider yuvarlak thumb + track gold, ama tick veya percentage marker yok — 80% değerini ekrandan elde ettim. Kullanıcı %75 mi %80 mi tam bilmez. iOS 17 trend: step'li slider + anlık numeric overlay.
+* "Design Mode" chips (Redesign | Empty Room | Inpaint | Style Transfer) horizontal overflow eder büyük ekranda, küçük ekranda taşar mı? Safe değil. Ekran genişliğine göre scrollable olmalı veya 2x2 grid.
+Premium seviyeye çıkarmak için
+* Quality Tier: 3 seçenek eşit ağırlıkta kart halinde — her biri 1 satır açıklama ile. "STANDARD 5 credits" / "HD 6 credits" / "ULTRA HD 7 credits". Locked olanlar yarı-opak ama tıklayınca paywall bottom sheet açar.
+* Slider üstünde floating number chip — drag sırasında 80% bubble thumb'un üstünde belirir. Figma benzeri.
+
+C.5 Gallery — app/(tabs)/gallery/index.tsx
+Güçlü yönler
+* "CURATION 01 / Gallery / CURATED COLLECTION" editorial eyebrow + display serif + caption hiyerarşisi = doğru editorial voice.
+* Search input + filter icon trailing (satır ~2) — functional.
+* Chip row (All Interiors / Favorites / Living Room) sade, Tailwind class'larla.
+* 2-column image grid 4:5 portrait aspect — yatay yerine portrait kararı oda fotoğrafları için doğru.
+Zayıf yönler
+* "CURATION 01" label ne anlama geliyor? Kullanıcı görüyor. Sadece stylistic bir "editorial number" ise — tek ekranda kullanmak özgün; tüm settings/notifications ekranlarında "CURATION 02" görmek Apple Environmental Report numaralamasının absürt copy-paste'i gibi duruyor. CURATION 01 Gallery'de mantıklı ama Notifications'ta "CURATION 02 / Announcements" kafaya batıyor. Bu naming convention 3 ekranı geçerse özentilik sinyali verir.
+* Heart icon over image — ekran görüntüsünde semi-transparent dark circle + white/gold heart outline. Circle rengi muddy rgba(0,0,0,0.4-0.5) muhtemelen. Light image üstünde görünür ama editorial luxury app'te bu "Instagram like button" deneyiminin ötesine geçmeli.
+* Label overlay "Modern / LIVING ROOM" card'ın alt kısmında gradient overlay olmadan doğrudan image üstünde — dark image'larda görünür ama açık renkli oda fotoğraflarında kaybolur. Linear gradient from-transparent to-rgba(0,0,0,0.6) şart.
+* "CONTINUE CURATING / Your next composition awaits" CTA banner — gold "Start →" link formatıyla. Link olduğunu belli etmek için underline veya border-bottom yok, "Start" yanındaki ok dışında interactive kod yok. Passive görünüyor.
+Premium seviyeye çıkarmak için
+* Grid'i mason edit olarak 3 farklı boyut aspect — portrait (4:5), square, landscape (16:9) karışık. Editorial tempo yaratır.
+* Heart icon yerine long-press → haptic tap → gold flash animation + heart'ı card'ın sağ alt köşesine taşı. iOS Photos benzeri.
+* Filter chips'in altına count ekle: "All Interiors · 12 | Favorites · 0 | Living Room · 8" — kullanıcı boş filter'a tıklamadan önce bilir.
+
+C.6 Gallery Favorites (Empty State) — app/(tabs)/gallery/favorites.tsx
+Güçlü yönler
+* 96x96 icon tile + büyük muted heart ikonu + 2 satır açıklama — standart empty state. Temiz.
+* "0 DESIGNS" eyebrow + "Favorites" display + "CURATED FAVORITES" caption — iyi hiyerarşi.
+Zayıf yönler
+* CTA yok. Kullanıcı "Tap the heart on any design to save it here" mesajını okuyor ama Gallery'e git butonu yok. Etkileşimsel dead-end. Sadece bottom tab ile Gallery'e dönebilir.
+* Heart ikon muted gray rgba(208,197,184,?) — editorial premium için daha sıcak ton gerekir. Outline heart, Stroke:1.5px, Color #E1C39B opacity 0.5.
+Premium seviyeye çıkarmak için
+* "Browse Gallery" secondary button ekle — tek tap ile explore.
+* Empty state illustration: tek çizgi minimal heart çizimi (SVG) + sparkle micro-animation. Canlanır.
+
+C.7 History — app/(tabs)/history/index.tsx
+Güçlü yönler
+* Time bucket'lar (TODAY 3 / YESTERDAY / THIS WEEK) + gold tracked caption — editorial ve işlevsel.
+* Status badges COMPLETED (green) / FAILED (red) / PROCESSING (yellow) — semantic + net.
+* Card gradient border rgba(224,194,154,0.18→0.04) + iç bg #1A1919 — premium.
+* Card time relative ("53m", "54m", "56m") — human readable.
+Zayıf yönler
+* FAILED ve İkinci COMPLETED kayıtlarında thumbnail yok — sadece gray placeholder rectangle. Ekran görüntüsünde bu çok göze batıyor. Muhtemelen image load failure veya Replicate output kayıp. Fallback UI eksik: placeholder rectangle yerine, failed → warning ikon + "Image unavailable"; successful ama image kayıp → retry CTA olmalı.
+* "#6FF07 · 5 CREDITS" meta — hash ID kullanıcının bilmesi gereken bir şey değil. Support için mi, debug için mi? UI'dan kaldır, detail sayfasına koy.
+* "53m / 54m / 56m" aşırı hassas — 3 kayıt birbirine 1-3 dakika arayla? Anlamsız çeşitleme. Kullanıcı "neden bu kadar hassas zaman?" diye düşünür.
+* Card'lara chevron yok — tıklanabilir olduğu belli değil. Card pressable ise visual affordance ekle (chevron-forward sağda, muted).
+Premium seviyeye çıkarmak için
+* FAILED kart için: "Retry" secondary button card içinde — kullanıcının 0 credit harcadığı (zaten ekran 0 CREDITS diyor) için tek tıkla yeniden deneme.
+* Bucket başlıkları'na saat yapış — "TODAY · 23:19" gibi, editorial timestamp efekti.
+* Hover/press'te card içindeki image ince scale-up — premium interaction.
+
+C.8 Profile — app/(tabs)/profile/index.tsx
+Güçlü yönler
+* Big centered MT avatar + MAX gradient rozet — odak nokta.
+* CREDITS ring + CURRENT PLAN card 2-col — information density kararlı.
+* Settings list 6 item + border-bottom divider + chevron — konvansiyonel ama clean.
+* Footer'da "ARCHITECTURAL LENS v1.0.0" monospace version — geliştirici kararlı detay, developer trust signal.
+Zayıf yönler
+* Avatar + MT initials 108x108, fontSize 36 NotoSerif gold letterSpacing 2 (satır 257-279) — bu brand mark kıvamında. "MT" initials değil, "Morocco Tower Hotel" logosu gibi duruyor. Kullanıcı kimliği değil, kurumsal marka hissiyatı. Daha küçük (80x80), letterSpacing 0, normal weight.
+* CREDITS ring partial fill (~70%) + "154" merkez — kullanıcı 154'ün neyin %'si olduğunu bilmiyor. Eksik kritik info: "154 / 200" veya ring altında micro-text "of 200 monthly". Şu an sadece "154" var, anlamı boş. Profile screen bu info eksikliği üstünde durmuyor ama finansal tablo için kırmızı bayrak.
+* CURRENT PLAN "Max / Renews in 30 days" — "Renews" iyi info, ama "Change plan" micro-link yok. Card pressable mi? Ekran görüntüsünden belli değil. Eğer pressable değilse: card içinde "Manage →" micro-button ekle.
+* Settings list: Curated Favorites, Notifications, Credit Packs, Manage Plan — 4 menu item + Sign Out. İyi ama "Privacy & Data" ve "Billing History" kesiliyor ekran dışında — ilk ekranda görünmüyor. Altta daha var mı yok mu kullanıcı anlamıyor.
+* Heart ikon 22px "Curated Favorites" önünde filled + subtle gold — diğer icon'lar outline. Inconsistency. Tüm icon'lar ya filled ya outline olmalı.
+Premium seviyeye çıkarmak için
+* Avatar düzeyini düşür, user identity block horizontal kompakt: 64x64 avatar + sağında isim + email + plan chip. İlk scroll'da 3 önemli info birden görünür.
+* Credits + Plan kartlarını tek "Vault" kartına birleştir: "AVAILABLE BALANCE / 154 / of 200 monthly · renews in 30d / [Buy Credits] [Upgrade]" — bir ekranda tüm finansal pano.
+* Settings item'larına description line ekle: "Notifications · Design completed alerts", "Credit Packs · Top up without subscription". Card density artar, tap öncesi bilgi verir.
+
+C.9 Notifications — app/settings/notifications.tsx
+Güçlü yönler
+* "CURATION 02 / Announcements / STUDIO UPDATES" editorial pattern tutarlı (gallery ile eşleşiyor).
+* "You're on the Max tier. Enjoy every feature." banner — star icon + gold accent. Positive reinforcement.
+* "Top up with a credit pack" upsell card + gradient "UPGRADE →" micro-link — iyi cross-sell pattern.
+* Toggle rows (Design completed / General push / Offers & promotions) + description — labeling açık.
+Zayıf yönler
+* Toggle switch renkleri kafa karıştırıcı: Design completed switch'i dark track + cream thumb sağda (ON gibi görünüyor ama koyu background renk seçimi OFF'a yakın duruyor). General push ve Offers switch'leri cream track + white thumb sağda (ON). Üç toggle arasında farklı on/off ton. satır —notifications.tsx'te trackColor false: #353534 / true: #FEDFB5, thumbColor: #281801 / #d1c5b8. Dark mode'da FEDFB5 track + D1C5B8 thumb neredeyse aynı tonda — OFF'a benzer.
+* "Top up with a credit pack" box'unda icon container #bg #2A2A2A-benzeri dark circle + flash ikonu + subtle — editorial lüks app'te upsell bu kadar sade olmaz, hafif shimmer + gradient border ile ayrıştırılmalı. Aksi halde sadece bir info mesajı sanılıyor.
+* "CURATION 02" numaralandırması Notifications'ta yersiz. Editorial concept "curation" sergi/koleksiyon anlamı taşır, notifications listesi değil. Naming dekorasyon olmuş.
+* "Enable push notifications from Interior AI on this device." 2 satırlık description — karakter yoğun, font-size 12, color text-on-surface-variant. Okumak yorucu. 1 satıra sıkıştır: "Alerts from Interior AI."
+Premium seviyeye çıkarmak için
+* Toggle switch renk kontrastını trackColor off:#2A2A2A + thumb #998F84 / on: #E0C29A + thumb #FFF yap. State okunsun.
+* Upsell card'ı subtle animated gradient border + hover-shimmer ile "belongs to a premium offer" işaretle.
+* "CURATION 02" yerine "SYSTEM · ANNOUNCEMENTS" gibi semantic etikete dön. Numaralama'yı Gallery'e özel bırak.
+
+C.10 Credit Packs — app/credits/packs.tsx
+Güçlü yönler
+* Top-level "Top up credits" display serif + explainer copy "One-time purchase — no subscription, credits never expire" — dürüst, güven verici.
+* 3 pack card: Small / Medium (POPULAR badge) / Large (BEST VALUE badge) — classic pricing psychology.
+* Medium pack solid gold "Buy for $14.99" + Small pack outline "Buy for $4.99" — hiyerarşi doğru yönde.
+* "+10 BONUS / +30 BONUS" green label — clear value signal.
+Zayıf yönler
+* "Dev mode — RevenueCat not configured..." banner release'te gizlenmiyor mu? Kod: packs.tsx'te muhtemelen env.isDev. Eğer production'a bu kayarsa trust yokedici. P0 kontrol.
+* Card geometrisi 3'ünde aynı (padding, radius) ama popular card highlight yok — sadece "POPULAR" rozet farkı var. Medium card'ın etrafında ince gold outer-glow + light inner gradient beklenirdi.
+* "30 credits · quick top-up" açıklama metni çok short. "30 credits = ~6 standard redesigns" gibi relatable calculation kullanıcı satın alma kararını netleştirir.
+* Medium pack "Buy for $14.99" solid gold gradient ≠ Profile ekranındaki "Upgrade for More Credits" solid gold gradient. İkisi aynı action hiyerarşisi mi? Upgrade plan değişikliği, Buy credits one-time — farklı destinations, aynı buton. Hiyerarşi çakışması.
+Premium seviyeye çıkarmak için
+* Her pack card altında "~X designs" calculation micro-text — "30 credits ≈ 6 standard redesigns or 5 HD".
+* Popular card: tam genişlik gold gradient border 2px + subtle pulse animation + "~ 3x dev" biraz daha dramatic overlay.
+* Stripe/Apple Pay prominent logo — güven kuruşu.
+
+C.11 Manage Plan — app/plans/index.tsx
+Güçlü yönler
+* "AVAILABLE BALANCE / 154" extra-large display number + "Credits remain in your Studio vault." editorial copy — dramatic, premium.
+* 2 CTA hiyerarşi: Solid gold "UPGRADE FOR MORE CREDITS" + Outline "BUY CREDITS · ONE-TIME" — visual weight doğru.
+* Reference Guide table: Standard 5, HD 6, Smart Edit 5, Style Transfer 8, Empty Room 5, Ultra HD 7 — cost transparency, premium detay.
+Zayıf yönler
+* Max plan kullanıcısı "UPGRADE FOR MORE CREDITS" butonunu görüyor. Max = highest tier. Upgrade nereye? Bu buton Max user için disabled olmalı veya "You're on the top tier" mesajıyla değiştirilmeli. Trust-breaking.
+* Reference Guide'da "MAX" badge sağ üstte — kullanıcıya hangi tier'daki cost'ları gösterdiğini belirtiyor ama alternative tier'ın fiyatlarını göstermiyor. Kullanıcı "LITE'da Smart Edit kaç credit?" merak ederse cevap yok. Expandable comparison table.
+* "5 credits / 6 credits" number'ları header + divider'lı liste — muhasebe tablosu gibi duruyor. Editorial premium için her action için mini illustration + cost — Apple iCloud pricing pattern.
+Premium seviyeye çıkarmak için
+* MAX tier için "UPGRADE" CTA'yı "MANAGE SUBSCRIPTION" olarak değiştir + opsiyon: pause, downgrade, cancel.
+* Reference Guide'ı collapsible section yap: "Credit Costs ▾" — default closed, temizlik.
+* Balance number'ı animate count-up on screen mount — 0'dan 154'e rise.
+
+C.12 Choose Your Plan — app/plans/index.tsx
+Güçlü yönler
+* Plan cards (Free / Basic / Pro) standart 3-tier layout.
+* "MOST POPULAR" badge Pro'da.
+* "Confirm & Subscribe" clear CTA.
+Zayıf yönler
+* Ekran görüntüsünde sadece 3 plan görünüyor (Free, Basic, Pro) ama CLAUDE.md'de 4 plan var (Free, Basic, Pro, Max). Scroll altında Max var muhtemelen ama kritik "en iyi" opsiyon user'a fold altında — güven erozyonu.
+* "$0 /month" rakam boyutu Free için aşırı büyük (fontSize 48+). "$0" on kelime, büyük puntoyla dramatik olmuyor, sadece ücretsiz hissini vurguluyor. Premium app değer vurgulamalı ("10 credits / month") büyük, fiyat ikincil.
+* "FREE / 10 credits/month · LITE model" caption + "$0 /month" + "Confirm & Subscribe" — üç ayrı stil (caption + display + action). Card içindeki ritim bozuk.
+* "MOST POPULAR" badge #E0C29A + #3F2D11 text Pro card üstünde mi yoksa altında mı tam belirsiz. Badge absolute pozisyonlu ama card alt kenarına çok yakın.
+* Plan card'ların feature comparison yok. Kullanıcı Free ile Basic farkını anlamıyor. 3 bullet point gerekli: "Faster model, Higher quality, Unlimited variants".
+Premium seviyeye çıkarmak için
+* Her plan card'ı 2-section: Price block (top) + Feature list (bottom, 3-4 bullet with check icon).
+* Current plan için "YOUR PLAN" badge gold.
+* Max plan için shimmer gradient effect card bg'de.
+* Toggle: Monthly / Annual (−20%) üstte — annual pricing uplift premium psych.
+
+C.13 Privacy Policy — app/settings/privacy.tsx
+Güçlü yönler
+* "Data, held in trust." dramatic editorial headline — tone solid, güven kuruyor. Tek premium moment'in burada olması doğru.
+* Numbered sections "01 Who we are / 02 What we collect" — editorial convention.
+* Copy editorial voice: "Your data powers your designs — and nothing else."
+Zayıf yönler
+* Headline'ın display serif 48px ama body text fontSize 14 sans (Inter) arasında intermediate tier yok. Jump çok sert. 20-22px "sub-headline serif" katmanı eksik.
+* "Your email and display name, the room photos and style-reference images you upload, device type and app version, and Apple receipt transaction IDs..." 3 satır kesintisiz akış — readability problem. Bullet list formatı + her bullet 1 satır daha okunur.
+* "We do NOT collect: your Apple or Google password, payment card numbers..." — capitalized NOT emphasis legitimate ama italic veya farklı weight kullanılabilir.
+Premium seviyeye çıkarmak için
+* "We Collect" ve "We Don't Collect" iki ayrı card yan yana — visual contrast = trust.
+* Her numbered section üstünde ornament (gold line, dot, ya da mini icon) — editorial print feel.
+* Sticky sub-nav: "1. Who we are | 2. What we collect | 3. Why | 4. Share | 5. Rights | 6. Contact" — uzun scroll'da yerini kaybetmez.
+
+C.14 Studio uploaded (Step 1 completed) — app/(tabs)/studio/uploaded.tsx
+Güçlü yönler
+* Uploaded image preview 4:3 aspect + rounded-xl + subtle dark overlay — clean.
+* Close button (X) sağ üstte 40x40 black round — affordance clear.
+* "CHANGE PHOTO" text link altında — secondary action correctly muted.
+* "For best results, use a well-lit photo taken straight on with no people or pets in the frame." bulb icon + helper text — actionable guidance.
+* Bottom "CONTINUE TO ARCHITECTURE" gold gradient CTA — primary net.
+Zayıf yönler
+* "Continue to Architecture" — neden "Architecture"? "Options" veya "Style" olmalıydı. Copy brand'e yaklaşım olarak "Architecture" overdramatic. Step 2 = Room Type & Style, "Architecture" değil.
+* Close (X) button bg rgba(19,19,19,0.8) — image'ın üstünde yarı-transparent dark. Light image'larda görünmez olabilir. Contrast fallback gerekli.
+* "CHANGE PHOTO" 11px uppercase tracked — text link küçük tap target (~24px tall). iOS HIG min 44pt.
+
+D. Component Bazlı İnceleme
+D.1 Butonlar — components/ui/Button.tsx
+Var olan varyantlar (satır 6):
+* primary: LinearGradient #C4A882 → #A68E6B, h-14 rounded-xl, gradient 45°.
+* secondary: bg-surface-container-highest (#353534), same h-14 rounded-xl.
+* tertiary: text-only, text-primary font-medium text-sm.
+Güçlü yönler
+* Haptic feedback on press (satır 25-27).
+* Press scale 0.98 — subtle, premium.
+* 3 varyant baseline yeterli.
+Zayıf yönler
+* Gradient renkleri hardcoded #C4A882, #A68E6B (satır 41) — token yok. Tailwind config'de primary var (#E1C39B). Button primary ve Tailwind primary farklı tonlar. Design-code drift.
+* Secondary button bg-surface-container-highest = #353534 — cold gray. Gold hover olmadığı için "just another dark button" duruyor. Editorial premium için secondary: subtle gold border 1px + transparent bg çok daha premium.
+* Destructive variant yok. Sign Out ve Delete Account için ayrı bir stil yok, salmon color hardcoded inline.
+* Loading state yok. Button submit sırasında user pressable kalır, double submit riski. PrimaryButton (ayrı component'te muhtemelen) var diye kod var ama Button.tsx bu feature'ı karşılamıyor.
+* Size varyantı yok — sadece h-14 (56px). Mobile UI'da h-12 (48px) dense contexts için, h-16 (64px) hero CTA için gerekir.
+Önerilen mini standart (aşağıda K bölümünde detaylandırılıyor).
+
+D.2 İkonlar
+Library: @expo/vector-icons (Ionicons) — tek library, karışım yok. İyi.
+Kullanılan ikonlar (örnek set):
+* Navigation: menu, arrow-back, chevron-forward, close
+* Actions: cloud-upload-outline, camera-outline, refresh, options, lock-closed
+* Semantic: heart, heart-outline, star, shield-checkmark-outline
+* Tab: color-palette, images, time, person (+ outline variants)
+* Drawer: cube-outline, grid-outline, language-outline, help-circle-outline, log-out-outline
+Zayıf yönler
+* Ionicons tamamen jenerik — bu set App Store'daki 10.000 iOS uygulamasında kullanılıyor. "Architectural Lens" gibi bespoke editorial brand için özel 24-ikon setine geçiş şart. Lucide bile Ionicons'tan farklı bir ses verir ama ideal custom SVG.
+* Filled vs outline tutarsız. Tab bar: seçili = filled, seçilmemiş = outline (kod: isActive ? tab.icon : ${tab.icon}-outline``) — doğru pattern. Ama Profile satırında "Curated Favorites" için heart filled + diğerleri outline (flash-outline, card-outline, ribbon-outline, shield-checkmark-outline). Tek listede karışık.
+* İkon renkleri hardcoded — #C4A882, #E1C39B, #D0C5B8, #E0C29A, #998F84 paralel kullanımda. Token'a (text-primary, text-on-surface-variant) geçiş yarım.
+* "XA" Language ikonu (language-outline) — bu Ionicons asset'i tipik olarak globe + "A" karakteri oluyor. Font rendering'de Italic-benzeri görünüyor. Yüksek DPI'da bozuk görünebilir. SVG'ye geçiş önerilir.
+* İkon size'ları da karışık: 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48 — her ekran farklı. Token gerekir: icon.xs (12), sm (16), md (20), lg (24), xl (32).
+Premium alternatif: Custom SVG set — 24 ikon yeterli.
+* Studio → Architectural cube (isometric)
+* Gallery → Gold-bordered mosaic
+* History → Clock with gold hand
+* Profile → Bust minimal line
+* Upload → Architectural plan + upward arrow
+* Credits → Stylized bar diamond
+* Privacy → Shield with key
+* Settings → Geometric gear
+
+D.3 Tipografi — tailwind.config.js + app/_layout.tsx
+Kurulum:
+* Font families: NotoSerif (headline), Inter (body, label) — tailwind.config.js:79-82.
+* Font file loading: _layout.tsx:39-47 aynı Inter-Regular.ttf + NotoSerif-Regular.ttf yükleniyor, Medium/Bold/SemiBold alias'ları aynı dosyaya point ediyor (Explore agent'ın tespiti). Yani fontWeight: "700" verildiğinde sistem Regular TTF'yi synthesized bold olarak render eder — anti-aliasing kalitesi düşer.
+Kullanılan size set:
+* Display: 36, 48 (headline)
+* Body: 13, 14, 15 (main copy)
+* Caption: 10, 11, 12 (section labels)
+* Micro: 8, 9 (rozet, badge)
+Zayıf yönler
+* Synthesized weights — NotoSerif-Bold.ttf + Inter-Medium/Bold .ttf yüklemesi eksik. Production'da kritik typographic problem. expo-font üzerinden 5 variant yüklenmeli.
+* letterSpacing kullanımı abartılı — 2, 3, 4 uppercase tracked label app'ın her yerinde. Her başlık + her micro caption + brand header tracked. Tracked caption'ın özel olması için sadece 1x kullanılması gerekir, 10x kullanıldığında vurgu ölür.
+* Line-height disiplinsiz — 16, 18, 22, 26, 40, 42 karışık kullanılıyor. Token gerekir: tight (1.1), snug (1.3), normal (1.5), relaxed (1.6), loose (1.8).
+* Sentence case yok. Her şey UPPERCASE, UPPERCASE, UPPERCASE. Editorial premium: UPPERCASE sadece brand + 1 eyebrow / ekran. Diğer section header'lar sentence case + weight difference.
+Önerilen scale:
+display      NotoSerif 48/52/700
+headline     NotoSerif 32/38/700
+title        NotoSerif 22/28/600
+body         Inter    15/22/400
+body-strong  Inter    15/22/600
+caption      Inter    12/16/500
+label        Inter    11/14/600/uppercase/tracking(0.15em)
+micro        Inter     9/12/700/uppercase/tracking(0.2em)
+
+D.4 Spacing
+Kullanım:
+* padding: 20, 24, 32 common — studio/index.tsx paddingHorizontal 24, options.tsx paddingHorizontal 24, drawer paddingHorizontal 24/32/34 karışık.
+* gap: 8, 12, 14, 16, 18, 24 — her ekran farklı karar.
+* marginBottom: 6, 8, 10, 12, 16, 20, 24, 32, 40, 48 — ritim yok.
+Zayıf yönler
+* Spacing scale token yok. tailwind.config.js'te borderRadius var ama spacing yok — Tailwind default (4/8/12/16/20/24/32/40/48/56/64) kullanılıyor ama disiplinsiz.
+* "24" ve "32" arasındaki anlam farkı kod içinde belirsiz. 24 = content padding, 32 = section gap kabulü yok.
+* Drawer'da paddingHorizontal: 32 header'da, paddingHorizontal: 24 menu body'de, paddingHorizontal: 34 navigate label'da (!) — bu drift göze çarpmaz ama sub-pixel level'da hizalama bozuyor.
+Önerilen scale:
+0  →  0
+1  →  4
+2  →  8
+3  →  12
+4  →  16
+5  →  20   (inline xs)
+6  →  24   (standart padding)
+7  →  32   (section gap)
+8  →  40   (major section)
+9  →  48   (hero spacing)
+10 →  64
+
+D.5 Form alanları — components/ui/Input.tsx
+Güçlü yönler
+* Focus state'te bg change + shadow overlay (satır 34-42).
+* Placeholder color rgba(208, 197, 184, 0.3) — subtle, doğru.
+* Icon + TextInput flex-row layout — functional.
+Zayıf yönler
+* Shadow color hardcoded #E1C39B (token value ama inline). Focus state için gold glow oldukça agresif; editorial premium app'lerde focus daha sessiz olur: 1px gold border + subtle animation.
+* Validation state (error) yok. label-error veya border-error color output'u eksik. Login/register/profile'da zorunlu field'larda kullanıcı error feedback almıyor.
+* Label treatment ekrandan ekrana tutarsız — login'de "EMAIL" uppercase tracked, register'da same, profile'da ise menu item icon+text (label yok). Form label pattern yerleşmemiş.
+
+D.6 Kartlar
+Var olan Card component: components/ui/Card.tsx — 15 satır, sadece bg-surface-container-high p-6 rounded-xl wrapper. Çok zayıf.
+Screen'lerde kullanım:
+* History cards: gradient border + inner bg + padding 14 (premium).
+* Gallery tiles: image + heart overlay + label overlay (OK).
+* Profile cards (Credits + Plan): padding 20 + rounded-xl + bg-surface-container-low (flat).
+* Credit Pack cards: padding 24 + border 1px rgba(224,194,154,0.3) (popular) (OK).
+* Notification cards: padding 20 + rounded-xl + border rgba(225,195,155,0.18) (OK).
+Zayıf yönler
+* Card radius'ları 10, 12, 14, 17, 18 karışık — rounded-xl (12) standart ama codebase'de hardcoded borderRadius: 10, 12, 14, 17, 18 örnekleri var (Explore agent raporu). Drift belirgin.
+* Shadow/elevation disiplinsiz — bazı card'larda shadowOpacity: 0.06, bazılarında 0.4, bazılarında 0.6. Elevation scale yok.
+* Hover/press state yok. Card'lar pressable ama visual press feedback minimal (sadece opacity 0.7 active).
+
+D.7 Header / Top bar
+Her ekranda: Menu button sol + "ARCHITECTURAL LENS" ortada + UserAvatar (veya +) sağda.
+Zayıf yönler
+* Brand text hardcoded {"ARCHITECTURAL\nLENS"} (studio/index.tsx:98) vs {"ARCHITECTURAL LENS"} tek satır (diğer ekranlarda). İnconsistency.
+* Header yüksekliği: Studio'da py-4 (muhtemelen ~16 yukarı-aşağı + content = ~56), Profile'da style={{ height: 56 }}. Tutarlı değerlerden ayrık.
+* UserAvatar sağ üstte her ekranda ama Gallery'de UserAvatar yerine + var. Dialog'dan dolayı (yeni design create) ama icon anlamı kaybolmuş.
+
+D.8 Drawer (analiz C.1'de yapıldı)
+
+D.9 Bottom Navigation — components/layout/GlassNavBar.tsx
+Güçlü yönler
+* BlurView intensity 55 + transparent dark rgba(19,19,19,0.45) — premium glass effect.
+* iOS shadow F5F0EB 0.06 opacity 40 radius — subtle luxury.
+* Active/inactive icon switch (filled vs outline).
+* Active color #E1C39B, inactive #D0C5B8 — soft contrast.
+Zayıf yönler
+* Active indicator 3×3 dot badge — bu notification dot pattern, "selected state" pattern değil. Kullanıcı "Studio'da unread message mı var?" algılıyor. iOS HIG: segment highlight = fill change + label color. Dot optional.
+* "STUDIO / GALLERY / HISTORY / PROFILE" 10px uppercase tracked labels — bottom nav'da UPPERCASE tracked label overkill. iOS-native tab bar sentence case 10-12px medium kullanır. Editorial luxury için sentence case + tracked = karışık. Tek karar lazım: yalnız icon, ya da icon + normal case label.
+* Tab height ~72px + safe-area inset. Standart. Ama backdrop rgba(19,19,19,0.45) arkasındaki content görünüyor — kötü content (crowded gallery) tab bar alanından sızıyor. Intensity 80+ olabilir.
+
+D.10 Tab / Segmented control
+Use case: Studio Step 3 Quality Tier (STANDARD / HD / ULTRA HD PRO). C.4'te detaylı.
+Başka kullanım: Design Mode chips (Redesign / Empty Room / Inpaint / Style Transfer) — bunlar tabs gibi davranıyor ama horizontal scrollable chip row.
+Zayıf yönler
+* İki farklı pattern için component unification yok. Segmented control = selected fills vs unfilled = gold vs muted. Chip = hepsi equal selected bg. Pattern kafası karışık.
+* Locked state (PRO+) — chip dashed border (doğru visual) + low contrast label. Rozet "PRO" sağ üstte 8px. Gürültü karışık: locked card + PRO rozet + dashed border = 3 signal, hepsi mute tonda.
+
+D.11 Modal / Bottom Sheet
+Ekran görüntülerinde modal yok. Kod tabanında:
+* Alert.alert (native iOS alert) — Sign Out, Delete Account confirm. iOS-native, güvenli.
+* Image preview modal (result screen'de muhtemelen).
+* Drawer Modal — tamam.
+Eksik: Bottom sheet pattern yok. Credit packs buy flow'da bottom sheet (drag-to-dismiss) çok premium olurdu. Studio Step 3 Quality Tier locked → PRO upgrade bottom sheet yine aynı.
+
+D.12 Liste
+Başlıca liste screens: History, Profile settings, Notifications toggles, Credit Packs.
+Consistent pattern: row height ~60-80px, divider border-bottom 1px rgba, icon + label + chevron.
+Zayıf yönler
+* History'de card format (gradient border + thumbnail), Profile'da list-divider format. Aynı app'te farklı list biçimleri.
+* Swipe actions yok: History'de job delete, Notifications'ta mark-as-read swipe olabilir.
+
+D.13 Chip / Badge
+Tipler:
+* Gallery filter chips (All Interiors / Favorites / Living Room)
+* Studio Step 3 Design Mode chips
+* Status badges (COMPLETED / FAILED / PROCESSING)
+* Tier badges (MAX, PREMIUM MEMBER, POPULAR, BEST VALUE, MOST POPULAR, PRO)
+Zayıf yönler
+* "MAX", "POPULAR", "BEST VALUE", "MOST POPULAR", "PRO", "PREMIUM MEMBER" — 6 farklı rozet, hepsi aynı aileden değil. PRO 8px square, POPULAR 12px medium, MAX 8px pill, MOST POPULAR 10px pill. Tek component'te unify edilmeli: <Badge variant="tier|popular|warning|gold-gradient" size="xs|sm|md"/>.
+* Status badges COMPLETED/FAILED/PROCESSING kıymetli (dot + text + colored outline). Bu pattern diğer rozetlere de taşınmalı.
+
+D.14 Empty states
+İncelenenler:
+* Favorites empty (C.6'da detay).
+* History empty (kod'da var, ekran yok).
+* Gallery empty (kod'da var, ekran yok).
+Pattern: 96x96 icon tile + muted icon + title + 1-line description + (sometimes) CTA.
+Zayıf yönler
+* CTA tutarsız. Favorites'te CTA yok (dead-end), History'de "Start Your First Design" var, Gallery'de "Start Designing" var. Tutarsız action anlamı.
+* Empty state illustration yok — tüm empty state'ler Ionicons tek ikon. Premium: custom empty illustration (SVG line drawing) + micro-animation.
+
+D.15 Loading states
+Kod'da:
+* isUploading prop Studio upload zone (satır 161 → "UPLOADING..." text).
+* generation/progress.tsx — spinner + progress bar + phase labels.
+* ActivityIndicator muhtemelen some screens.
+Zayıf yönler
+* Skeleton screens yok. Gallery, History, Profile — hepsi fetch sonucu. İlk mount'ta "CREDITS ... loading" skeleton olmadan sadece empty gözüküyor olabilir.
+* Tek genel loading component yok. <ActivityIndicator> vs custom <CreditRing> vs <Animated.View rotation> — 3 farklı kullanım.
+
+D.16 Error states
+Offline banner sıkı (ama position broken). Job FAILED card (History'de) — colored badge + card.
+Eksik:
+* Form validation errors (login/register password too short?).
+* Generation failure toast or inline message.
+* Permission denied (camera access, photo library) modal or inline.
+
+E. Görsel Tasarım Sistemi Değerlendirmesi
+Alan	Durum	Not
+Typography ölçeği	Partial	Sizes var, weights synthesized; sentence case eksik; uppercase tracking abartılı
+Spacing ölçeği	Yok	Tailwind default; anlam katmanı yok
+Renk sistemi	Olgun ama ignoredu	Tailwind config 77 semantic color; code 433 hardcoded hex
+Icon sistemi	Generic	Ionicons-only; bespoke eksik
+Border radius	Karışık	4/8/10/12/14/17/18 — token 4/8/12/9999
+Shadow / elevation	Hiç yok	Her file'da inline shadow
+Component tutarlılığı	Düşük	Card.tsx wrapper minimal; screen'ler kendi card'ını stiller
+Gerçek design system	YOK	Tokens scaffolded, adoption ~%20
+Skor: 3/10. Tokens var ama kullanılmıyor. Bu daha kötü bir durum çünkü developer'lar "var sanıyor" ve kopyalamaya devam ediyor, drift artıyor. Mevcut Tailwind config'i şiddetle enforce eden bir policy (ESLint rule "no-hardcoded-hex") + component contract test'leri olmadan bu uygulama 6 ay sonra unmaintainable görsel kalite'ye düşer.
+
+F. UX / Kullanılabilirlik Değerlendirmesi
+Alan	Değerlendirme
+Navigation netliği	Orta. 4-tab + drawer dual pattern. Drawer'da AYNI 4 tab item + Settings — redundant.
+Keşfedilebilirlik	Orta-düşük. Credit Packs → Profile → scroll → card. 3 tap. Studio'dan direkt access yok.
+Sürtünme noktaları	Offline banner her ekranda görünüyor → "bu app online mı?" ikilemi. Reference guide cost table'ı okumadan ücret bilinmez.
+Bilişsel yük	Yüksek Studio Step 3'te — 4 design mode + 3 quality tier + strength slider + color palette + variants stepper + preserve layout toggle + prompt + custom prompt + seed control + generation cost = 8+ control. Fold içinde sığmıyor.
+Etkileşimlerin öngörülebilirliği	Orta. Card'ların pressable olup olmadığı visual affordance olmadan belli değil.
+Form kullanılabilirliği	OK. Login/register conventional; validation feedback zayıf.
+CTA netliği	Zayıf. "Upgrade" 3 farklı context'te (Profile, Manage Plan, Notifications), her birinde farklı destination.
+İçerik yoğunluğu	Fazla. Her ekranda 3+ section. Editorial = white space; bu ekranlarda white space var ama content yine de dense.
+Tek elle mobil kullanım	İyi. Primary CTA'lar bottom'da fixed. Drawer sol üstte (hamburger için stretch gerekir — çoğu premium app drawer'ı alt-center'a taşıyor ama convention'a uyulmuş).
+Dönüşüm / güven riskleri	Yüksek: Dev mode dummy provider mesajı, Upgrade CTA Max user'a, "MT" brand-like avatar.
+G. Erişilebilirlik ve Ergonomi
+Alan	Skor	Not
+Dokunma alanı boyutları	Orta	Button.tsx h-14 (56px) solid, drawer item 28+24 = 80px (OK), ama "Change Photo" text link 24px — iOS HIG 44pt ihlali
+Kontrast	Düşük	#998F84 on #131313 = ~3.5:1 (fail WCAG AA for body); rgba(224,194,154,0.6) on dark = ~2.8:1 (fail). Tüm muted text'ler potansiyel fail
+Metin okunabilirliği	Orta	12-13px body text dark bg üstünde göz yoruyor. min 14px
+İkon anlaşılabilirliği	İyi	Ionicons universal recognition
+Sadece renge bağımlı anlatım	RİSK	Status badges COMPLETED/FAILED sadece renkle ayırıyor (green/red); renk körü kullanıcılar için dot+colorful outline zaten var, OK. Ama Quality Tier locked state sadece opacity ile. Lock ikon ekle.
+Dynamic font size	BROKEN	Tüm fontSize hardcoded px. iOS dynamic type scale uygulanmıyor
+Screen reader	Unknown	accessibilityLabel grep'lemesi gerekir. Otomatik test edilmiyor olabilir
+Gesture karmaşası	Yok	Standard tap only
+En kritik erişilebilirlik sorunu: Dynamic type support yok. iPhone'un accessibility ayarlarında font size büyütüldüğünde uygulama kırılır. Bu App Store review'unda düşük skor + kullanıcı kaybı riski.
+
+H. React Native Teknik UX Notları
+H.1 Style tekrarları
+* Her screen'de inline StyleSheet.create yok — mostly NativeWind className + style={{...}} karışık. Kısmen OK ama inline style objeleri her Pressable altında ({pressed}) => ({...}) pattern'i tekrarlanıyor.
+* Gradient renkleri (#C4A882 → #A68E6B), shadow (shadowOpacity: 0.06, shadowRadius: 40), border radius values — 30+ file'da tekrar.
+H.2 Kırılgan layout desenleri
+* SafeAreaView edges={["top"]} + SafeAreaView + fixed bottom CTA karışık kullanılıyor. keyboardAvoidingView bazı screen'lerde yok — login/register dışında input + klavye birlikte sorun çıkarabilir (Custom prompt Studio Step 3).
+* ScrollView contentContainerStyle={{ paddingBottom: 128 }} — bottom CTA'nın altında boşluk bırakmak için magic number.
+* Keyboard + floating CTA interaction: Studio Step 3 "Custom Prompt" input klavye açılınca CTA görünür mu? Kesin test edilmeli.
+H.3 Hardcoded spacing / font / color problemleri
+* 433+ hardcoded hex (Explore agent).
+* Magic spacing numbers: paddingTop: 64, marginBottom: 48, gap: 24, paddingHorizontal: 32 her ekranda farklı.
+* letterSpacing: 2, 3, 4 — hepsi magic.
+H.4 Responsive davranış
+* iPhone 15 Pro (430x932 px) tasarlanmış. iPhone SE 3 (375x667 px) için:
+    * Studio Step 3'te 8+ control fold altına iter.
+    * Design Mode chip row horizontal overflow.
+    * "$7.99 /month" size 48px — küçük ekranda sığmaz.
+* Dynamic typography scaling yok (bkz. G bölümü).
+* Landscape orientation test edilmemiş (app screen'lerinin çoğu portrait-only).
+H.5 Bakım zorluğu yaratan yapılar
+* options.tsx 1100+ satır — tek dosyada Studio Step 3'ün TÜM control'leri. Bunu <QualityTierSelector/>, <StrengthSlider/>, <ColorPalette/>, <VariantsStepper/>, <PreserveLayoutToggle/>, <PromptComposer/>, <SeedControls/>, <GenerationCostCard/> component'lerine bölmek 1 hafta'lık bir iş, ondan sonra maintainability 10x artar.
+* SideDrawer.tsx 458 satır — Menu item'lar hardcoded MENU_ITEMS array'de, config'den gelmeli.
+* Button.tsx sadece 3 variant var ama PrimaryButton.tsx ayrı bir component var — Button redundant mi, PrimaryButton legacy mi? Duplikasyon.
+H.6 Akıcılık algısını bozan performans problemleri
+* FlatList kullanımı Gallery + History'de — pagination/infinite scroll varsa iyi. keyExtractor, getItemLayout kritik — büyük gallery'de scroll lag'i olabilir.
+* BlurView pahalı render. Tab bar + Drawer + belki notification modal'da BlurView. iOS'ta acceptable ama Android'de çok yavaş — bu sadece iOS hedef kitle için OK.
+* Animated.loop(uploadPulse, ...) Studio'da 3.6s döngü. Ekran kapatıldığında stop ediliyor (return loop.stop()) — iyi. Ama 5 farklı ekrana yayılmış loop animation'ları var (Explore agent: generation/progress.tsx spinner + pulse + progress bar 3 animation aynı anda).
+H.7 Reusable component fırsatları
+* <SectionHeader label="..."/> — uppercase caption pattern'i 50+ yerde tekrar.
+* <StatsCard label="..." value="..."/> — Profile + Manage Plan + Credits card.
+* <ListItem icon="..." label="..." meta="..." onPress={}/> — Profile + Notifications + Credits settings.
+* <EmptyState icon="..." title="..." description="..." action={}/> — Favorites + History + Gallery.
+* <TierBadge tier="max|pro|basic|free"/> — Drawer + Profile + StudioHeader.
+H.8 Design token'a dönüştürülebilecek alanlar
+* Shadow scale → elevation-1, elevation-2, elevation-3 (her biri offset+opacity+radius).
+* Spacing scale → space.1 ... space.10.
+* Typography scale → text.display, text.headline, text.title, text.body, text.caption, text.label, text.micro (her biri family+size+lineHeight+weight).
+* Icon size scale → icon.xs (12), sm (16), md (20), lg (24), xl (32).
+* Motion scale → motion.fast (120ms), motion.base (200ms), motion.slow (320ms) + Easing.
+
+I. Premium Seviyeye Çıkarmak İçin İleri Düzey Öneriler
+I.1 Tipografi iyileştirmeleri
+1. 5 fontWeight variant yükle: NotoSerif-Regular, Medium, Bold + Inter-Regular, Medium, SemiBold, Bold. expo-font üzerinden.
+2. Sentence case'e çevir: Section header'lar "Professional Tips" (sentence), sadece brand + 1 eyebrow / ekran UPPERCASE.
+3. Oranlı letterSpacing: uppercase → tracking-[0.15em] (10.5% of body), display serif → tracking-[-0.01em] (ince -1%). Şu an 1.5-4 magic değerler.
+4. Numeric font feature: style={{ fontVariant: ["tabular-nums"] }} — credits, prices, time gibi number gösterimlerinde. Visual jitter önler.
+I.2 Spacing iyileştirmeleri
+1. Spacing token'ını Tailwind config'e ekle: spacing: { '0.5': 2, 1: 4, 2: 8, ... } + rule: hardcoded magic number yasak.
+2. 4px grid discipline: Tüm spacing 4'ün katı olsun. Bugün 6, 10, 14, 18 gibi off-grid değerler var (drawer paddingHorizontal 34).
+3. Section spacing sabitle: section-gap = 40, sub-section-gap = 24, inline-gap = 8.
+I.3 İkon iyileştirmeleri
+1. Özel ikon set — 24-32 ikon. SVG format + react-native-svg. Figma'dan export, 2px stroke.
+2. Icon color tokens: icon-primary (gold), icon-muted (muted gold), icon-on-surface (#E5E2E1), icon-on-primary (#3F2D11), icon-destructive.
+3. Consistent weight: ya hep 2px stroke outline, ya hep 1.5px + fill. Karışık asla.
+4. Tab bar özel — outline vs filled yerine two-tone gradient fill on selected premium signature.
+I.4 Buton hiyerarşisi
+(Detay K bölümünde. Özet: 3 variant → 5 variant: primary gradient / primary solid / secondary ghost / tertiary text / destructive muted.)
+I.5 Sidebar iyileştirmeleri
+* User card kompakt + tek tier badge.
+* Menu item padding 18px (28 değil).
+* Settings section margin-top 32px (56 değil).
+* Sign Out ayrı footer bloğu.
+* Logo mikro-version drawer'ın üstünde.
+I.6 Footer / bottom nav iyileştirmeleri
+* 3x3 dot indicator'ı 4x1 line indicator'a çevir (selected tab'ın altında 20px gold line).
+* Label'ları uppercase → sentence case OR tamamen kaldır (icon-only).
+* BlurView intensity 80+.
+* Bottom inset + 16px bottom padding.
+I.7 Görsel hiyerarşi
+* Bir ekranda bir tane "hero element". Profile → centered avatar. Studio → upload zone. Gallery → search. Belirlenen hero'ya 2x weight, diğerleri supporting.
+* Secondary elements 40-60% opacity.
+* Actionable elements gold accent, passive elements muted text.
+I.8 Premium his artıracak dokunuşlar
+1. Signature motion — her screen transition için aynı easing (cubic-bezier(0.4, 0, 0.2, 1)) + duration 280ms. Bugün screen'ler instant.
+2. Staggered mount animation — yeni ekran geldiğinde, header 0ms, hero 80ms, content 160ms, CTA 240ms opacity + translateY 8→0. Sessiz premium.
+3. Long-press haptic + visual feedback — Gallery heart, Result download, Credit pack buy. Bugün tek-tap only.
+4. Subtle grain overlay — dark bg üstünde 2% opacity noise texture. Flat dark → depth.
+5. Golden hour gradient — primary accent'in 3 variant'ı (morning gold #FDDEB5, midday gold #E1C39B, dusk gold #A68E6B). Contextual.
+I.9 Motion / mikro etkileşim fırsatları
+1. Credit ring count-up — Profile mount'ta 0 → 154 (600ms ease-out).
+2. "SELECTED" card morph — Style card tap → border animation (not instant).
+3. Empty state illustration — heart breathing (Favorites).
+4. Loading state — skeleton shimmer gold-tinted.
+5. Drawer open bounce — Animated.spring(stiffness: 200, damping: 25) zaten var. Ama scale: 0.95 → 1 ile küçük bounce premium verir.
+I.10 Güven oluşturan tasarım geliştirmeleri
+1. Credits display — "154 / 200 monthly" tam format + "renews in 30d" inline.
+2. Price transparency — her pack card'ında "taxes included" micro-text.
+3. Apple logo + "Secure payment via Apple" Credit Packs'te.
+4. Data usage micro-transparency — Privacy ikon + 1-line "Your uploads are processed in-region" her upload ekranında.
+5. "Success" post-purchase confirmation — gradient gold checkmark + "You now have 184 credits" animated.
+
+J. Önceliklendirilmiş Aksiyon Planı
+Hızlı Kazanımlar (1-3 gün, tek geliştirici)
+Aksiyon	Etki	Zorluk	Nereden başlanmalı
+Offline banner clip bug fix	Her ekranda app-broken algısı kalkar	Düşük	OfflineBanner.tsx + SafeAreaProvider root'ta
+"Dev mode" banner release build'te gizle	Credit Packs güvenilir	Düşük	packs.tsx env flag
+Upgrade CTA Max user için disabled veya değiştir	Dead CTA giderilir	Düşük	plans/index.tsx conditional rendering
+Profile avatar MT initials stilini normalize et	Brand confusion kalkar	Düşük	profile/index.tsx:270-279
+Settings section'larda 1'den fazla uppercase label kullanımını azalt	Hiyerarşi iyileşir	Düşük	Section header component + replace
+Tab bar 3x3 dot → 20px line indicator	"Selected" state doğru okunur	Düşük	GlassNavBar.tsx
+Toggle switch renklerini netleştir	ON/OFF karışıklığı giderilir	Düşük	notifications.tsx + diğer toggle'lar
+Drawer MAX + PREMIUM MEMBER rozet duplikasyonunu kaldır	Visual noise azalır	Düşük	SideDrawer.tsx:256-277
+Orta Efor / Yüksek Etki (1-2 hafta)
+Aksiyon	Etki	Zorluk	Nereden başlanmalı
+Design token enforcement: Spacing + shadow + icon size + fontWeight'i Tailwind config'e, ESLint rule ile hardcoded hex yasağı	Bakım 10x kolaylaşır	Orta	tailwind.config.js + .eslintrc
+Fontları gerçek weight variant'larıyla yükle	Typography kalitesi görünür artar	Düşük	_layout.tsx:39-47 font assets
+<SectionHeader>, <StatsCard>, <ListItem>, <EmptyState>, <TierBadge> component'lerini yaz + kullan	Consistency 80% → 95%	Orta	components/ui/
+Credit display "154 / 200 · renews in 30d" full format	Trust signal	Düşük	profile/index.tsx + Manage Plan
+Studio options.tsx (1100 satır) → 8 parçaya böl	Maintainability	Orta-yüksek	Kompleks refactor
+Bottom sheet pattern ekle (credit buy, paywall, info hints)	Premium interaction	Orta	@gorhom/bottom-sheet veya native
+Sentence case migration uppercase label'ların 80%'i için	Hiyerarşi restored	Orta	i18n string replace + style
+Daha Büyük Refactor Alanları (3-6 hafta)
+Aksiyon	Etki	Zorluk	Nereden başlanmalı
+Özel 24-ikon SVG kitaplığı	Generic → bespoke; brand identity 2x	Yüksek (designer + dev)	Figma → SVG → components/icons/
+Typography scale'i yeniden yazıyoruz (display/headline/title/body/caption/label/micro + tracked caption sadece 1x/ekran kuralı)	Editorial kalite tavanı yükselir	Yüksek	tailwind.config.js + her screen
+Dark → Light theme toggle + real conditional tokens	Uzun vadeli ürün adaptasyonu	Yüksek	settingsStore + useTheme() hook'u
+Motion design system (signature easing + 5 motion token + staggered mount)	Premium polish sonsuz	Yüksek	components/motion/ veya Reanimated config
+Accessibility audit (WCAG AA contrast + dynamic type + VoiceOver labels)	App Store rating + compliance	Yüksek	Axe + manuel test
+Brand logo SVG'ye geçiş + <Brand variant/> component	Cross-screen consistency	Orta	components/brand/
+K. Nihai Hüküm
+Bu uygulama şu haliyle premium hissettiriyor mu?
+Hayır. Premium bir konsept seçilmiş (dark editorial + NotoSerif + gold) ama execution orta seviyede. "Premium cosplay" yapıyor — yani doğru malzemeleri giymiş ama duruşu ortalama. Kullanıcı ilk 3 saniyede "bu özenle tasarlanmış" hisseder; 30 saniye sonra detaylar sızmaya başlar (offline banner broken, tier badge iki farklı stil, upgrade CTA Max user'a, generic ikonlar, uppercase label enflasyonu).
+Premium demek: disiplin. Her ekranda aynı pattern. Her ekranda aynı hiyerarşi. Her ekranda aynı motion. Interior AI bunu %40 seviyesinde yapıyor. Apple, Linear, Things3, Arc gibi premium dijital ürünlerin seviyesi %95.
+En çok ne geri çekiyor?
+Disiplinsizlik. 77 semantic token tanımlı ama 433 hardcoded hex var. 3-variant Button component var ama screen'lerde inline <LinearGradient> kullanılıyor. Drawer'da MAX badge bir stilde, Profile'da başka stilde. Tab bar icon'u color-palette, Drawer'da aynı item cube-outline. İş yapılmış ama enforcement yok.
+En dramatik fark yaratacak 3 değişiklik
+1. Özel ikon setine geçiş (24-32 SVG ikon). Editorial "luxury" vaadinin fiziksel karşılığı. Ionicons stamp'i çıktığı an brand yaşanır.
+2. Typography enforcement + sentence case migration. Uppercase tracked caption'ı "özel" olarak geri kazan. Display serif'i 1x/ekran kullan. Size hierarchy'yi token'a bağla ve hardcoded fontSize yasakla.
+3. Motion signature ekle. Screen transition (280ms cubic-bezier), staggered mount (80ms stagger), press feedback (scale 0.98), loading shimmer (gold tinted). 5 tane motion token, her yerde kullanılır. App'in yürüyüşü değişir.
+Bunu talepkâr kullanıcılara sunacak olsan ilk neyi düzeltirdin?
+OfflineBanner clip bug + Dev mode banner gizleme + Upgrade CTA Max user disable. Bu 3 şey release-blocker. Üçü de 1 saatlik iş. Release öncesi bu 3 fix olmadan app store'a koymak ürün kalitesi açısından intihar. Bir talepkâr kullanıcı ilk 10 saniye bu 3 bug'tan birini görür ve güvenini kaybeder.
+Sonra: Profile screen'in MT initials'ını düzeltmek + drawer'da double tier badge'i kaldırmak + settings list iconlarını tek family'e normalize etmek. Bu 3 fix de 2-3 saat. Bu 6 fix'ten sonra app ekran görüntüsünde %30 daha "düşünülmüş" görünür.
+
+EK-1: En amatör görünen 10 detay
+1. Offline banner clip — metin yarısı status bar altında. Test edilmemiş safe area.
+2. "ARCHITECTURAL\nLENS" hardcoded \n — Text olarak 2 satır logo. Brand hak etmediği bir çözüm.
+3. Sign Out salmon pink (#FFB4AB) — iOS destructive color copy-paste, gold palette'le çelişiyor.
+4. Profile "MT" 36px NotoSerif gold letterSpacing 2 — brand logo sanılan user initials.
+5. Drawer MAX badge — yapıştırılmış sticker görünümü, fontSize 8, absolute positioning detached.
+6. "Dev mode — RevenueCat not configured..." banner — Credit Packs canlı üretim öncesi release için gate edilmemiş.
+7. Upgrade CTA Max user için aktif — En üst tier'daki kullanıcı upgrade yapamaz, buton hâlâ solid gold gradient.
+8. Tab bar 3x3 dot indicator — notification dot kıvamında; selected state olarak okunamıyor.
+9. History "#6FF07 · 5 CREDITS" hash ID — kullanıcıya gereksiz, debug info UI'da.
+10. Uppercase tracked caption enflasyonu — 14 ekran × ortalama 3 uppercase label / ekran = 50+ uppercase caption. Hiyerarşi ölmüş.
+
+EK-2: Bu uygulamayı premium gösteren 10 detay ne olmalıydı
+1. Signature motion — her ekran girişinde 80ms stagger + 280ms cubic-bezier ease-out.
+2. Özel 24 ikon SVG kitaplığı — cube yerine isometric architectural volume; palette yerine stylized tone circle.
+3. Gerçek gradient brand logo SVG — "ARCHITECTURAL LENS" monogram veya mini lens grafiği.
+4. Number animation — count-up on mount — credits ring 0 → 154 (600ms), price rendering tabular-nums.
+5. Granular typography tone map — section header sentence case + serif 20px medium; eyebrow caption uppercase tracked sadece 1x/ekran.
+6. Subtle noise/grain overlay — dark bg üstünde 2% opacity grain texture, depth yaratır.
+7. Long-press + haptic + glow — Gallery heart, Favorites save, Credit pack select. Tactile premium.
+8. Skeleton shimmer gold-tinted — data fetch'lerde blank screen yerine shimmer.
+9. Smart empty states — Favorites'te breathing heart animation + CTA; History'de "Your first design awaits" editorial copy + one-click upload.
+10. Trust signals in checkout flow — Apple logo + "Payments secured by Apple"; "Taxes included"; animated success state post-purchase; "Your credits never expire" micro-reassurance.
+
+EK-3: Mini Tasarım Standardı — Component Kontratları
+Primary Button
+<PrimaryButton>
+  Height: 56                     // h-14
+  Padding-X: 24
+  Border-radius: 12              // rounded-xl
+  Background: LinearGradient(
+    from: token.primary.fixed (#FDDEB5),
+    to:   token.primary (#E1C39B),
+    angle: 135deg
+  )
+  Text: Inter Semibold 15 / tracking 0.3 / color token.on-primary (#3F2D11)
+  Icon (optional): 18px, color token.on-primary, 8px gap right of text
+  Press: scale 0.98 + haptic ImpactFeedbackStyle.Medium
+  Loading: replace text with gold-tinted spinner 18px, maintain height
+  Disabled: opacity 0.4, no press feedback
+  Shadow: 0 8px 24 -8px rgba(253, 222, 181, 0.35)     // gold glow
+</PrimaryButton>
+Secondary Button
+<SecondaryButton>
+  Height: 56
+  Background: transparent
+  Border: 1px solid token.outline.variant (#4D463C)
+  Border-radius: 12
+  Text: Inter Medium 15 / tracking 0.3 / color token.on-surface (#E5E2E1)
+  Icon (optional): 18px, color token.primary
+  Press: bg rgba(225, 195, 155, 0.08) + scale 0.98 + haptic Light
+  Hover (if web): border color → token.primary
+</SecondaryButton>
+Input
+<Input>
+  Height: 56
+  Padding-X: 16, Padding-Y: 14
+  Border-radius: 12
+  Background: transparent
+  Border-bottom: 1px solid rgba(77, 70, 60, 0.4)    // default
+  Border-bottom (focus): 1.5px solid token.primary
+  Text: Inter Regular 15 / color token.on-surface
+  Placeholder: Inter Regular 15 / color rgba(208, 197, 184, 0.35)
+  Label (above): Inter Medium 11 / uppercase / tracking 0.15em / color token.on-surface.variant
+  Error state: border-bottom color token.error, label color token.error, micro-text below in error color
+  Icon prefix/suffix: 18px, color token.on-surface.variant, 12px gap
+  Transition: border-color 200ms ease-out
+</Input>
+Card
+<Card variant="flat|elevated|bordered">
+  Padding: 24 (flat/elevated), 20 (bordered)
+  Border-radius: 16                 // NOT 12 — kart daha yumuşak
+  Background (flat): token.surface.container-low (#1C1B1B)
+  Background (elevated): token.surface.container (#201F1F)
+  Background (bordered): transparent + 1px border rgba(224, 194, 154, 0.12)
+  Shadow (elevated only): 0 4px 16 -4px rgba(0,0,0,0.4)
+  Press (if pressable): scale 0.99 + bg -= 5% darkness + haptic Selection
+</Card>
+Section Header
+<SectionHeader eyebrow={?} title={} action={?}>
+  Container: padding-X 24, margin-bottom 20
+  Eyebrow (optional, above title): Inter Semibold 11 / uppercase / tracking 0.2em / color rgba(224,194,154,0.7) / margin-bottom 6
+  Title: NotoSerif 22 / line-height 28 / weight 600 / color token.on-surface / sentence case
+  Action (right, optional): "View all →" TertiaryButton
+  Accent (optional): 20px gold line below title / height 1px / background token.primary / margin-top 8
+</SectionHeader>
+Drawer Item
+<DrawerItem icon={} label={} active={?} onPress={}>
+  Height: 52
+  Padding-X: 18, Padding-Y: 14
+  Border-radius: 10
+  Background: active ? rgba(225,195,155,0.10) : transparent
+  Background (press): rgba(225,195,155,0.04)
+  Active accent: 3px gold vertical bar, position absolute left 0, top 14, bottom 14
+  Icon: 22px (custom SVG from brand icon set), color: active ? token.primary : token.on-surface, 14px gap right
+  Label: Inter Medium (active: Semibold) 15 / color matches icon / tracking 0.2
+  Haptic: Selection on press
+  Transition: bg 160ms ease-out
+</DrawerItem>
+Bottom Nav Item
+<BottomNavItem icon={} label={} active={?}>
+  Container: flex-1, py-8, items-center, justify-center
+  Icon: 24px custom SVG, color active ? token.primary : rgba(208,197,184,0.6)
+  Label (optional, sentence case): Inter Medium 10 / tracking 0.2 / color matches icon / margin-top 4
+  Active indicator: 20px horizontal line, height 2px, background token.primary, border-radius 1px, position bottom -8 from label
+  Press: haptic Selection + icon scale 1.05 (spring)
+  Transition: all props 180ms ease-out
+</BottomNavItem>
+
+Verification
+Bu audit bir implementation değil; incelenebilir ve uygulanabilir bir product design review dökümanıdır. Aksiyonların doğrulanması:
+* Ekran bazlı fix'ler: Her değişiklik uygulandıktan sonra iPhone 15 Pro simulator + iPhone SE 3 simulator + fiziksel cihazda görsel inspection.
+* Token adoption testi: ESLint rule ekle: no-hardcoded-hex-color + no-inline-style-fontSize. CI'ye bağla. Mevcut violation sayısını baseline yap, her PR'da violation artışı bloklansın.
+* Typography tone map testi: Her screen için grep "textTransform.*uppercase" — her ekranda max 2 instance olmalı.
+* Accessibility: Apple'ın "Accessibility Inspector" + contrast checker (Color Contrast Analyser).
+* Motion disiplini: Tüm Animated.timing çağrılarında duration bir token constant'tan gelmeli — MOTION.BASE, MOTION.FAST, MOTION.SLOW.
+
+Not: Bu audit plan modunda yazıldı. Execution istiyorsan onaylaman yeterli — önerilen değişiklikleri Hızlı Kazanımlar bloğundan başlayarak uygulayabilirim.
+
+---
+
+## Implementation Status (2026-04-24)
+
+### ✅ Pass 1 (CHANGELOG 0.8.0)
+Foundation layer + 10 screen refactor + 3 P0 fix. Full list in /docs/CHANGELOG.md.
+
+### ✅ Pass 1 hot-fix (CHANGELOG 0.8.1)
+- **Floating CTA clip bug**: studio/review, options, style, uploaded had bottom CTAs clipped behind the blurred tab bar on iPhone X+. Fixed by introducing components/layout/BottomBar.tsx with tab-bar-aware math (visible height + outer padding + breathing + insets.bottom). All four screens + their ScrollView paddingBottom now route through this.
+- **Drawer item spacing**: paddingVertical 14 to 18, marginBottom 6 to 10 per item. Settings section break tightened from 28 to 24.
+- **Drawer Sign Out row**: icon + label were rendering as a column on some builds (Pressable style-function inheritance edge case). Now wrapped in an explicit <View flexDirection="row"> inside the Pressable so no future prop conflict can collapse it. Padding bumped to 14 for a more generous tap target.
+
+### ⏳ Pass 2 (scheduled for Saturday 2026-04-25 — remote agent)
+- Auth screens rewrite (onboarding, login, register, forgot/reset-password) using new primitives
+- generation/progress.tsx motion tokens migration
+- Real font weight TTF assets bundled
+- Optional: ESLint no-hardcoded-hex rule
+
+See docs/GAPS_AND_ISSUES.md items P2-02b, P2-12, P2-13.

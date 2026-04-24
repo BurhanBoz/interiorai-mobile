@@ -17,6 +17,8 @@ import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Brand } from "@/components/brand/Brand";
+import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import type { CatalogItemResponse } from "@/types/api";
 import type { ImageSource } from "expo-image";
 
@@ -437,25 +439,17 @@ export default function StyleScreen() {
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
         <Text
-          style={{
-            fontSize: 14,
-            lineHeight: 16,
-            fontWeight: "700",
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            textAlign: "center",
-            color: "#E1C39B",
-            fontFamily: "NotoSerif",
-          }}
+          style={{ display: "none" }}
         >
-          {"ARCHITECTURAL\nLENS"}
+          {""}
         </Text>
+        <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 240 }}
+        contentContainerStyle={{ paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true) }}
         showsVerticalScrollIndicator={false}
       >
         {/* Step Indicator & Headline */}
@@ -721,24 +715,14 @@ export default function StyleScreen() {
       {/* Room Picker Modal */}
       <RoomPickerModal />
 
-      {/* Floating CTA */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 24,
-          paddingBottom: 96,
-          paddingTop: 16,
-        }}
-      >
+      {/* Floating CTA — tab-bar-aware via BottomBar */}
+      <BottomBar overTabBar>
         <PrimaryButton
           label={t("common.next_step")}
           onPress={handleNext}
           disabled={!canProceed}
         />
-      </View>
+      </BottomBar>
     </SafeAreaView>
   );
 }

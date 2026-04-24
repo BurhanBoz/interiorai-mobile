@@ -16,12 +16,23 @@ import { useCreditPacksStore } from "@/stores/creditPacksStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
+import { TopBar } from "@/components/layout/TopBar";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
 import type { CreditPackResponse } from "@/types/api";
 
 function formatPrice(cents: number, currency: string): string {
     const amount = (cents / 100).toFixed(2);
     return currency === "USD" ? `$${amount}` : `${amount} ${currency}`;
 }
+
+/**
+ * Average credits per design across the common quality tiers — used to
+ * translate a pack size like "30 credits" into "~5 HD redesigns". Keeps
+ * users from having to mentally divide before a purchase.
+ */
+const AVG_CREDITS_PER_STANDARD = 5;
+const AVG_CREDITS_PER_HD = 6;
 
 function PackCard({
     pack,
@@ -36,35 +47,64 @@ function PackCard({
 }) {
     const { t } = useTranslation();
     const isFeatured = pack.badgeLabel != null;
+
+    const standardDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_STANDARD);
+    const hdDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_HD);
+
     return (
         <View
-            className="bg-surface-container-low rounded-xl"
-            style={[
-                { padding: 24, marginBottom: 16 },
-                isFeatured && {
-                    borderWidth: 1,
-                    borderColor: "rgba(224,194,154,0.3)",
-                },
-            ]}
+            style={{
+                marginBottom: 16,
+                padding: 20,
+                borderRadius: 18,
+                backgroundColor: theme.color.surfaceContainerLow,
+                borderWidth: 1,
+                borderColor: isFeatured
+                    ? "rgba(225,195,155,0.45)"
+                    : "rgba(77,70,60,0.22)",
+                ...(isFeatured ? theme.elevation.goldGlowSoft : theme.elevation.sm),
+            }}
         >
-            {pack.badgeLabel && (
-                <View style={{ position: "absolute", top: 12, right: 12 }}>
+            {/* Featured card: subtle gold inner wash so the "popular" card
+                reads as distinct from the regular cards even before reading
+                the badge. */}
+            {isFeatured ? (
+                <LinearGradient
+                    colors={["rgba(225,195,155,0.08)", "rgba(225,195,155,0)"]}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 18,
+                    }}
+                    pointerEvents="none"
+                />
+            ) : null}
+
+            {pack.badgeLabel ? (
+                <View style={{ position: "absolute", top: -10, left: 20 }}>
                     <LinearGradient
-                        colors={["#C4A882", "#A68A62"]}
+                        colors={theme.gradient.primary}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
-                            borderRadius: 9999,
-                            paddingHorizontal: 10,
-                            paddingVertical: 3,
+                            borderRadius: 999,
+                            paddingHorizontal: 12,
+                            paddingVertical: 4,
+                            borderWidth: 0.5,
+                            borderColor: "rgba(63,45,17,0.2)",
                         }}
                     >
                         <Text
                             style={{
-                                fontSize: 9,
-                                fontWeight: "700",
-                                color: "#3F2D11",
-                                letterSpacing: 1.5,
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 10,
+                                color: theme.color.onGold,
+                                letterSpacing: 1.8,
                                 textTransform: "uppercase",
                             }}
                         >
@@ -72,119 +112,119 @@ function PackCard({
                         </Text>
                     </LinearGradient>
                 </View>
-            )}
+            ) : null}
 
             <Text
-                className="font-label text-secondary"
                 style={{
+                    fontFamily: "Inter-SemiBold",
                     fontSize: 10,
-                    letterSpacing: 2,
+                    letterSpacing: 1.8,
                     textTransform: "uppercase",
-                    marginBottom: 6,
+                    color: "rgba(208,197,184,0.7)",
+                    marginBottom: 8,
+                    marginTop: pack.badgeLabel ? 8 : 0,
                 }}
             >
                 {pack.name}
             </Text>
 
-            <View className="flex-row items-baseline" style={{ gap: 8, marginBottom: 4 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "baseline",
+                    gap: 8,
+                    marginBottom: 6,
+                }}
+            >
                 <Text
-                    className="font-headline text-on-surface"
-                    style={{ fontSize: 32 }}
+                    style={{
+                        fontFamily: "NotoSerif",
+                        fontSize: 36,
+                        lineHeight: 40,
+                        letterSpacing: -0.6,
+                        color: theme.color.onSurface,
+                        fontVariant: ["tabular-nums"],
+                    }}
                 >
                     {pack.totalCredits}
                 </Text>
                 <Text
-                    className="font-body text-secondary"
-                    style={{ fontSize: 13 }}
+                    style={{
+                        fontFamily: "Inter",
+                        fontSize: 13,
+                        color: theme.color.onSurfaceVariant,
+                    }}
                 >
                     {t("credit_packs.credits_suffix")}
                 </Text>
-                {pack.bonusCredits > 0 && (
-                    <Text
-                        className="font-label"
+                {pack.bonusCredits > 0 ? (
+                    <View
                         style={{
-                            fontSize: 11,
-                            color: "#4ade80",
-                            fontWeight: "700",
-                            letterSpacing: 1,
+                            marginLeft: 4,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 6,
+                            backgroundColor: "rgba(123,179,138,0.14)",
+                            borderWidth: 1,
+                            borderColor: "rgba(123,179,138,0.35)",
                         }}
                     >
-                        {t("credit_packs.bonus_suffix", { count: pack.bonusCredits })}
-                    </Text>
-                )}
+                        <Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 10,
+                                color: theme.color.success,
+                                letterSpacing: 1.2,
+                                textTransform: "uppercase",
+                            }}
+                        >
+                            {t("credit_packs.bonus_suffix", {
+                                count: pack.bonusCredits,
+                            })}
+                        </Text>
+                    </View>
+                ) : null}
             </View>
 
-            {pack.description && (
+            {/* Relatable calculation — "~X standard or Y HD designs" */}
+            <Text
+                style={{
+                    fontFamily: "Inter",
+                    fontSize: 12,
+                    lineHeight: 16,
+                    color: theme.color.onSurfaceMuted,
+                    marginBottom: pack.description ? 6 : 18,
+                }}
+            >
+                ≈ {standardDesigns} standard · {hdDesigns} HD designs
+            </Text>
+
+            {pack.description ? (
                 <Text
-                    className="font-body text-on-surface-variant"
-                    style={{ fontSize: 12, marginBottom: 20 }}
+                    style={{
+                        fontFamily: "Inter",
+                        fontSize: 12,
+                        lineHeight: 16,
+                        color: theme.color.onSurfaceMuted,
+                        marginBottom: 18,
+                    }}
                     numberOfLines={2}
                 >
                     {pack.description}
                 </Text>
-            )}
+            ) : null}
 
-            <Pressable
+            <Button
+                title={t("credit_packs.buy_for", {
+                    price: formatPrice(pack.priceCents, pack.currency),
+                })}
+                variant={isFeatured ? "primary" : "secondary"}
+                size="sm"
                 onPress={onPress}
                 disabled={disabled}
-                style={({ pressed }) => ({
-                    transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
-                    opacity: disabled ? 0.5 : 1,
-                })}
-            >
-                {isFeatured ? (
-                    <LinearGradient
-                        colors={["#C4A882", "#A68A62"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={{
-                            height: 48,
-                            borderRadius: 10,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                        }}
-                    >
-                        {isPurchasing ? (
-                            <ActivityIndicator color="#3F2D11" />
-                        ) : (
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontWeight: "700",
-                                    color: "#3F2D11",
-                                    letterSpacing: 1,
-                                }}
-                            >
-                                {t("credit_packs.buy_for", { price: formatPrice(pack.priceCents, pack.currency) })}
-                            </Text>
-                        )}
-                    </LinearGradient>
-                ) : (
-                    <View
-                        style={{
-                            height: 48,
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: "#4D463C",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        {isPurchasing ? (
-                            <ActivityIndicator color="#E0C29A" />
-                        ) : (
-                            <Text
-                                className="font-body text-secondary"
-                                style={{ fontSize: 14, fontWeight: "600" }}
-                            >
-                                {t("credit_packs.buy_for", { price: formatPrice(pack.priceCents, pack.currency) })}
-                            </Text>
-                        )}
-                    </View>
-                )}
-            </Pressable>
+                loading={isPurchasing}
+                fullWidth
+            />
         </View>
     );
 }
@@ -215,78 +255,100 @@ export default function CreditPacksScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
-            const message = e instanceof Error
-                ? e.message
-                : t("credit_packs.purchase_failed_default");
+            const message =
+                e instanceof Error
+                    ? e.message
+                    : t("credit_packs.purchase_failed_default");
             Alert.alert(t("credit_packs.purchase_failed_title"), message);
         }
     };
 
+    // The dev banner is only ever shown in development builds. In release
+    // builds __DEV__ is false even if the RevenueCat keys happen to be
+    // missing, so the banner can never leak into a TestFlight / App Store
+    // build. Previously this was a trust-destroying P0 in the audit.
+    const showDevBanner = isDummyMode && __DEV__;
+
     return (
-        <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-            <View
-                className="flex-row items-center justify-between px-6"
-                style={{ height: 56 }}
-            >
-                <Pressable onPress={handleBack} hitSlop={8}>
-                    <Ionicons name="arrow-back" size={24} color="#E0C29A" />
-                </Pressable>
-                <Text
-                    className="font-label text-on-surface-variant"
-                    style={{
-                        fontSize: 11,
-                        letterSpacing: 2.2,
-                        textTransform: "uppercase",
-                    }}
-                >
-                    {t("credit_packs.title")}
-                </Text>
-                <View style={{ width: 24 }} />
-            </View>
+        <SafeAreaView
+            edges={["top"]}
+            style={{ flex: 1, backgroundColor: theme.color.surface }}
+        >
+            <TopBar
+                title={t("credit_packs.title")}
+                showBack
+                onBack={handleBack}
+            />
 
             <ScrollView
-                className="flex-1"
+                style={{ flex: 1 }}
                 contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ marginTop: 16, marginBottom: 32 }}>
+                <View style={{ marginTop: 12, marginBottom: 32 }}>
                     <Text
-                        className="font-headline text-on-surface"
-                        style={{ fontSize: 32, lineHeight: 36, marginBottom: 8 }}
+                        style={{
+                            fontFamily: "NotoSerif",
+                            fontSize: 32,
+                            lineHeight: 38,
+                            letterSpacing: -0.3,
+                            color: theme.color.onSurface,
+                            marginBottom: 10,
+                        }}
                     >
                         {t("credit_packs.headline")}
                     </Text>
                     <Text
-                        className="font-body text-secondary"
-                        style={{ fontSize: 14 }}
+                        style={{
+                            fontFamily: "Inter",
+                            fontSize: 14,
+                            lineHeight: 20,
+                            color: theme.color.onSurfaceVariant,
+                        }}
                     >
                         {t("credit_packs.subtitle", { balance })}
                     </Text>
                 </View>
 
-                {isDummyMode && (
+                {showDevBanner ? (
                     <View
-                        className="rounded-lg"
                         style={{
                             padding: 12,
-                            marginBottom: 16,
-                            backgroundColor: "rgba(224,194,154,0.08)",
+                            marginBottom: 20,
+                            borderRadius: 10,
+                            backgroundColor: "rgba(229,181,103,0.08)",
                             borderWidth: 1,
-                            borderColor: "rgba(224,194,154,0.2)",
+                            borderColor: "rgba(229,181,103,0.22)",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 8,
                         }}
                     >
+                        <Ionicons
+                            name="construct-outline"
+                            size={14}
+                            color={theme.color.warning}
+                        />
                         <Text
-                            className="font-body text-on-surface-variant"
-                            style={{ fontSize: 11 }}
+                            style={{
+                                flex: 1,
+                                fontFamily: "Inter",
+                                fontSize: 11,
+                                lineHeight: 15,
+                                color: theme.color.warning,
+                            }}
                         >
-                            Dev mode — RevenueCat not configured. Purchases run on the DUMMY
-                            provider and credits are granted without payment.
+                            Dev build · RevenueCat not configured. Dummy purchases are active
+                            and credits will be granted without payment.
                         </Text>
                     </View>
-                )}
+                ) : null}
 
                 {loading && packs.length === 0 ? (
-                    <ActivityIndicator color="#E0C29A" style={{ marginTop: 48 }} />
+                    <ActivityIndicator
+                        color={theme.color.goldMidday}
+                        style={{ marginTop: 48 }}
+                    />
                 ) : (
                     packs.map((pack) => (
                         <PackCard
@@ -299,14 +361,54 @@ export default function CreditPacksScreen() {
                     ))
                 )}
 
-                {!loading && packs.length === 0 && (
+                {!loading && packs.length === 0 ? (
                     <Text
-                        className="font-body text-on-surface-variant text-center"
-                        style={{ marginTop: 48, fontSize: 14 }}
+                        style={{
+                            fontFamily: "Inter",
+                            fontSize: 14,
+                            textAlign: "center",
+                            color: theme.color.onSurfaceVariant,
+                            marginTop: 48,
+                        }}
                     >
                         No credit packs available right now.
                     </Text>
-                )}
+                ) : null}
+
+                {/* Trust signal — quiet, Apple Pay affordance */}
+                {packs.length > 0 ? (
+                    <View
+                        style={{
+                            marginTop: 24,
+                            alignItems: "center",
+                            gap: 8,
+                        }}
+                    >
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 6,
+                            }}
+                        >
+                            <Ionicons
+                                name="lock-closed"
+                                size={12}
+                                color={theme.color.onSurfaceMuted}
+                            />
+                            <Text
+                                style={{
+                                    fontFamily: "Inter",
+                                    fontSize: 11,
+                                    color: theme.color.onSurfaceMuted,
+                                    letterSpacing: 0.3,
+                                }}
+                            >
+                                Payments secured by Apple · Taxes included
+                            </Text>
+                        </View>
+                    </View>
+                ) : null}
             </ScrollView>
         </SafeAreaView>
     );

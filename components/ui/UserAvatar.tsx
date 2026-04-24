@@ -50,12 +50,15 @@ const SIZE_MAP = {
         iconSize: 20,
         fontSize: 14,
     },
+    // Hero is now a circle with sans-serif initials — the previous 108×108
+    // serif "MT" at letterSpacing 2 read as a brand logo, not user
+    // identity. A plain circle at 80 says "this is you" immediately.
     hero: {
-        width: 100,
-        height: 120,
-        borderRadius: 12,
-        iconSize: 42,
-        fontSize: 36,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        iconSize: 32,
+        fontSize: 22,
     },
 } as const;
 
@@ -104,12 +107,11 @@ export function UserAvatar({ size = "sm", initialsOverride, style, onPress }: Us
 
     const inner = initials ? (
         <Text
-            className={size === "hero" ? "font-headline" : "font-label"}
             style={{
+                fontFamily: "Inter-SemiBold",
                 fontSize: dims.fontSize,
                 color: "#E0C29A",
-                fontWeight: size === "hero" ? "400" : "700",
-                letterSpacing: size === "hero" ? 2 : 0.5,
+                letterSpacing: 0.5,
             }}
         >
             {initials}

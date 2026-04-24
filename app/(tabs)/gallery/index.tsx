@@ -28,67 +28,38 @@ import type { JobResponse } from "@/types/api";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
 
 const TAB_BAR_HEIGHT = 96;
 const FILTER_ALL = "__ALL__";
 const FILTER_FAVORITES = "__FAVORITES__";
 
 /* ─────────────────── Empty State ─────────────────── */
-function EmptyState() {
+// The "no designs yet" state — delegates to the shared <EmptyState/>
+// primitive so every blank screen in the app reads as the same product.
+// The primitive owns the breathing-icon animation and CTA slot; we only
+// supply copy and the action.
+function GalleryEmpty() {
   const { t } = useTranslation();
   return (
-    <View className="flex-1 items-center justify-center px-8 -mt-12">
-      <View style={{ width: 96, height: 96, marginBottom: 32 }}>
-        <View
-          className="bg-surface-container-low rounded-xl items-center justify-center"
-          style={{ width: 96, height: 96 }}
-        >
-          <Ionicons
-            name="grid"
-            size={48}
-            color="#E0C29A"
-            style={{ opacity: 0.6 }}
+    <View style={{ flex: 1, justifyContent: "center" }}>
+      <EmptyState
+        icon="grid-outline"
+        title={t("gallery.empty_title")}
+        description={t("gallery.empty_description")}
+        action={
+          <Button
+            title={t("gallery.empty_cta")}
+            variant="primary"
+            size="md"
+            onPress={() => router.push("/(tabs)/studio")}
+            fullWidth={false}
+            icon="arrow-forward"
           />
-        </View>
-        <View
-          className="bg-surface-container-high rounded-lg items-center justify-center absolute"
-          style={{
-            width: 40,
-            height: 40,
-            bottom: -8,
-            right: -8,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-        >
-          <Ionicons name="compass-outline" size={24} color="#E0C29A" />
-        </View>
-      </View>
-
-      <View className="items-center mb-10">
-        <Text
-          className="font-headline text-on-surface text-center mb-3"
-          style={{ fontSize: 22 }}
-        >
-          {t("gallery.empty_title")}
-        </Text>
-        <Text
-          className="font-body text-on-surface-variant text-center"
-          style={{ fontSize: 14, lineHeight: 22, maxWidth: 280, opacity: 0.8 }}
-        >
-          {t("gallery.empty_description")}
-        </Text>
-      </View>
-
-      <View className="w-full items-center" style={{ maxWidth: 360 }}>
-        <PrimaryButton
-          label={t("gallery.empty_cta")}
-          onPress={() => router.push("/(tabs)/studio")}
-        />
-      </View>
+        }
+      />
     </View>
   );
 }
@@ -339,22 +310,24 @@ export default function GalleryScreen() {
             position: "absolute",
             top: 10,
             right: 10,
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: "rgba(19,19,19,0.55)",
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: isFavorite(item.outputId)
+              ? "rgba(225,195,155,0.22)"
+              : "rgba(19,19,19,0.6)",
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
             borderColor: isFavorite(item.outputId)
-              ? "rgba(255,180,171,0.5)"
-              : "rgba(255,255,255,0.15)",
+              ? "rgba(225,195,155,0.65)"
+              : "rgba(255,255,255,0.12)",
           }}
         >
           <Ionicons
             name={isFavorite(item.outputId) ? "heart" : "heart-outline"}
             size={16}
-            color={isFavorite(item.outputId) ? "#FFB4AB" : "#E5E2E1"}
+            color={isFavorite(item.outputId) ? theme.color.goldDawn : "#E5E2E1"}
           />
         </Pressable>
 
@@ -641,7 +614,7 @@ export default function GalleryScreen() {
               {t("gallery.curated_collection")}
             </Text>
           </View>
-          <EmptyState />
+          <GalleryEmpty />
         </View>
       ) : (
         <FlatList
@@ -787,39 +760,26 @@ export default function GalleryScreen() {
           }
           ListEmptyComponent={
             activeRoomFilter === FILTER_FAVORITES ? (
-              // Favorites filter active with zero items — dedicated empty
-              // state that teaches the gesture (tap the heart) instead of
-              // the generic "no designs" copy.
-              <View
-                style={{
-                  paddingHorizontal: EDGE,
-                  paddingTop: 80,
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="heart-outline"
-                  size={48}
-                  color="#998F84"
-                  style={{ marginBottom: 16 }}
+              // Favorites filter active with zero items — use the shared
+              // EmptyState primitive + a "Browse Gallery" CTA so the user
+              // isn't left in an interactional dead-end.
+              <View style={{ paddingTop: 40 }}>
+                <EmptyState
+                  icon="heart-outline"
+                  title={t("gallery.no_favorites_title")}
+                  description={t("gallery.no_favorites_description")}
+                  action={
+                    <Button
+                      title={t("gallery.filter_all", {
+                        defaultValue: "Browse Gallery",
+                      })}
+                      variant="secondary"
+                      size="sm"
+                      onPress={() => setActiveRoomFilter(FILTER_ALL)}
+                      fullWidth={false}
+                    />
+                  }
                 />
-                <Text
-                  className="font-headline text-on-surface"
-                  style={{ fontSize: 20, marginBottom: 8 }}
-                >
-                  {t("gallery.no_favorites_title")}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: "#998F84",
-                    textAlign: "center",
-                    maxWidth: 260,
-                    lineHeight: 20,
-                  }}
-                >
-                  {t("gallery.no_favorites_description")}
-                </Text>
               </View>
             ) : null
           }

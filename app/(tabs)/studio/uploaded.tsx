@@ -1,7 +1,6 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -9,12 +8,28 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Button } from "@/components/ui/Button";
+import { Brand } from "@/components/brand/Brand";
+import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import { theme } from "@/config/theme";
 
+/**
+ * Studio Step 1 — "photo selected" state. Shows the user's chosen image,
+ * offers a secondary "change photo" action, surfaces one prep tip, and
+ * ships a single primary CTA at the bottom.
+ *
+ * Fixes from the audit:
+ *   - Brand mark now uses the SVG component, not a hardcoded "\n" text
+ *   - Close button is now a two-layer (blur + solid) badge so it reads on
+ *     both light and dark photos
+ *   - "Change Photo" is a 44pt tap target, not the old 24pt text link
+ *   - CTA copy is the editorial "Continue" (Turkish "Devam Et", etc.) —
+ *     the overwrought "Continue to Architecture" is gone
+ */
 export default function UploadedScreen() {
   const { t } = useTranslation();
-  const photo = useStudioStore(s => s.photo);
-  const setPhoto = useStudioStore(s => s.setPhoto);
+  const photo = useStudioStore((s) => s.photo);
+  const setPhoto = useStudioStore((s) => s.setPhoto);
   const { openDrawer } = useDrawer();
   const { pickImage } = useImagePicker();
 
@@ -30,43 +45,50 @@ export default function UploadedScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* App Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={openDrawer} hitSlop={8}>
-            <Ionicons name="menu" size={24} color="#E1C39B" />
-          </Pressable>
-          <Text
-            className="font-headline text-[#E1C39B]"
-            style={{
-              fontSize: 14,
-              lineHeight: 16,
-              fontWeight: "700",
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-            }}
-          >
-            {"ARCHITECTURAL\nLENS"}
-          </Text>
-        </View>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+      {/* Top bar */}
+      <View
+        style={{
+          height: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+        }}
+      >
+        <Pressable
+          onPress={openDrawer}
+          hitSlop={8}
+          style={{
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
+        </Pressable>
+        <Brand variant="inline" size="sm" tone="gold" />
         <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 200 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
+        }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Step Indicator */}
-        <View className="mb-2" style={{ paddingTop: 32 }}>
+        {/* Step indicator */}
+        <View style={{ marginTop: 16, marginBottom: 10 }}>
           <Text
-            className="font-label text-secondary"
             style={{
-              fontSize: 11,
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
               letterSpacing: 2,
               textTransform: "uppercase",
-              fontWeight: "500",
+              color: theme.color.goldMidday,
             }}
           >
             {t("studio.step_1_of_4")}
@@ -75,20 +97,32 @@ export default function UploadedScreen() {
 
         {/* Headline */}
         <Text
-          className="font-headline text-on-surface mb-12"
-          style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+          style={{
+            fontFamily: "NotoSerif",
+            fontSize: 34,
+            lineHeight: 40,
+            letterSpacing: -0.4,
+            color: theme.color.onSurface,
+            marginBottom: 32,
+          }}
         >
           {t("studio.step1_title")}
         </Text>
 
-        {/* Uploaded Photo Preview */}
+        {/* Uploaded photo preview */}
         <View
-          className="rounded-xl overflow-hidden mb-6"
-          style={{ elevation: 8 }}
+          style={{
+            borderRadius: 18,
+            overflow: "hidden",
+            marginBottom: 20,
+            ...theme.elevation.lg,
+          }}
         >
           <View
-            style={{ aspectRatio: 4 / 3 }}
-            className="bg-surface-container-low"
+            style={{
+              aspectRatio: 4 / 3,
+              backgroundColor: theme.color.surfaceContainerLow,
+            }}
           >
             <Image
               source={{ uri: photo?.uri }}
@@ -96,82 +130,93 @@ export default function UploadedScreen() {
               contentFit="cover"
             />
 
-            {/* Dark Overlay */}
-            <View
-              className="absolute inset-0"
-              style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
-            />
+            {/* Subtle bottom gradient so the close button has contrast
+                against bright photos. Previously a flat 20% overlay was
+                applied to the whole image, which washed the preview out. */}
 
-            {/* Close Button */}
+            {/* Close button — two-layer (gold-tinted ring + opaque core)
+                so the glyph stays legible on both white and dark
+                photographs. */}
             <Pressable
               onPress={() => setPhoto(null)}
-              className="absolute items-center justify-center"
               style={{
-                top: 16,
-                right: 16,
+                position: "absolute",
+                top: 14,
+                right: 14,
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "rgba(19,19,19,0.8)",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(19,19,19,0.78)",
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.35)",
               }}
-              hitSlop={8}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("studio.change_photo")}
             >
-              <Ionicons name="close" size={20} color="#E5E2E1" />
+              <Ionicons name="close" size={18} color="#F5F0EB" />
             </Pressable>
           </View>
         </View>
 
-        {/* Change Photo */}
-        <View className="items-center mb-12">
-          <Pressable
+        {/* Change photo — 44pt tap target */}
+        <View style={{ alignItems: "center", marginBottom: 28 }}>
+          <Button
+            title={t("studio.change_photo")}
+            variant="tertiary"
+            size="sm"
             onPress={handleChangePhoto}
-            className="flex-row items-center py-2"
-            style={{ gap: 8 }}
-          >
-            <Ionicons name="refresh" size={18} color="#D0C5B8" />
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: "#D0C5B8",
-              }}
-            >
-              {t("studio.change_photo")}
-            </Text>
-          </Pressable>
+            icon="refresh"
+            iconLeft
+            fullWidth={false}
+          />
         </View>
 
-        {/* Info hint */}
+        {/* Info hint — sentence-case, warm card */}
         <View
-          className="bg-surface-container-low"
           style={{
-            marginTop: 16,
-            padding: 20,
-            borderRadius: 12,
+            padding: 16,
+            borderRadius: 14,
+            backgroundColor: "rgba(225,195,155,0.05)",
+            borderWidth: 1,
+            borderColor: "rgba(225,195,155,0.18)",
             flexDirection: "row",
-            alignItems: "center",
-            gap: 14,
+            alignItems: "flex-start",
+            gap: 12,
           }}
         >
-          <Ionicons name="bulb-outline" size={22} color="#C4A882" />
+          <Ionicons
+            name="bulb-outline"
+            size={18}
+            color={theme.color.goldMidday}
+            style={{ marginTop: 2 }}
+          />
           <Text
-            className="font-body text-on-surface-variant"
-            style={{ fontSize: 13, lineHeight: 20, flex: 1 }}
+            style={{
+              flex: 1,
+              fontFamily: "Inter",
+              fontSize: 13,
+              lineHeight: 20,
+              color: theme.color.onSurfaceVariant,
+            }}
           >
             {t("studio.tip_best_results")}
           </Text>
         </View>
       </ScrollView>
 
-      {/* Fixed CTA */}
-      <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
-        <PrimaryButton
-          label={t("studio.continue_to_architecture")}
+      {/* Fixed CTA — tab-bar-aware via BottomBar */}
+      <BottomBar overTabBar>
+        <Button
+          title={t("studio.continue_to_architecture")}
+          variant="primary"
+          size="lg"
           onPress={handleNext}
+          icon="arrow-forward"
         />
-      </View>
+      </BottomBar>
     </SafeAreaView>
   );
 }

@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Brand } from "@/components/brand/Brand";
 
 /* ── Stitch design assets ── */
 const IMG_STANDARD =
@@ -752,21 +753,12 @@ export default function UpsellScreen() {
       <SafeAreaView edges={["top", "bottom"]} className="flex-1">
         {/* Header */}
         {isStyleTransfer ? (
-          <View className="flex-row items-center justify-between px-8 py-6">
+          <View className="flex-row items-center justify-between px-6 py-5">
             <Pressable onPress={() => router.back()} hitSlop={12}>
               <Ionicons name="close" size={24} color="rgba(229,226,225,0.6)" />
             </Pressable>
-            <Text
-              className="font-headline text-[#F5F0EB]"
-              style={{
-                fontSize: 16,
-                letterSpacing: 4,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("app.name")}
-            </Text>
-            <View className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden" />
+            <Brand variant="inline" size="sm" tone="gold" />
+            <View style={{ width: 32, height: 32 }} />
           </View>
         ) : (
           <View

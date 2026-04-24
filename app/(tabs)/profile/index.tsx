@@ -1,9 +1,7 @@
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Circle } from "react-native-svg";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
@@ -12,20 +10,29 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { TierBadge } from "@/components/ui/TierBadge";
+import { ListItem } from "@/components/ui/ListItem";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Button } from "@/components/ui/Button";
+import { Brand } from "@/components/brand/Brand";
 import { useState, useEffect, useMemo } from "react";
+import type { ComponentProps } from "react";
 import * as userService from "@/services/user";
 import { pushWithReturn } from "@/utils/navigation";
+import { theme } from "@/config/theme";
+
+type IconName = ComponentProps<typeof Ionicons>["name"];
 
 /* ─────────────────── Credit Ring ─────────────────── */
 /**
- * Smooth SVG-based progress ring. When `max` is unknown (null/0) we hide
- * the ring entirely and just show the number — anything else would draw
- * a fake-full ring that misleads the user.
+ * The circular progress ring around the balance. When `max` is unknown
+ * we draw just the track + center number — no fake-full ring that would
+ * mislead a user into thinking they have unlimited credits.
  */
 function CreditRing({
   value,
   max,
-  size = 64,
+  size = 72,
 }: {
   value: number;
   max: number | null;
@@ -47,37 +54,44 @@ function CreditRing({
         justifyContent: "center",
       }}
     >
-      {hasMax && (
-        <Svg
-          width={size}
-          height={size}
-          style={{
-            position: "absolute",
-            transform: [{ rotate: "-90deg" }],
-          }}
-        >
+      <Svg
+        width={size}
+        height={size}
+        style={{
+          position: "absolute",
+          transform: [{ rotate: "-90deg" }],
+        }}
+      >
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="rgba(77,70,60,0.3)"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        {hasMax ? (
           <Circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke="rgba(77,70,60,0.25)"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#E0C29A"
+            stroke={theme.color.goldMidday}
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             strokeLinecap="round"
           />
-        </Svg>
-      )}
-      <Text className="font-headline text-on-surface" style={{ fontSize: 22 }}>
+        ) : null}
+      </Svg>
+      <Text
+        style={{
+          fontFamily: "NotoSerif",
+          fontSize: 22,
+          color: theme.color.onSurface,
+          fontVariant: ["tabular-nums"],
+        }}
+      >
         {value}
       </Text>
     </View>
@@ -85,45 +99,69 @@ function CreditRing({
 }
 
 /* ─────────────────── Menu Items ─────────────────── */
-const MENU_ITEMS: {
+
+interface MenuItemConfig {
   labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  descriptionKey?: string;
+  icon: IconName;
   route?: string;
   hasBadge?: boolean;
   extraParams?: Record<string, string>;
-}[] = [
+}
+
+// All icons are outline-style for consistency — previously "heart" was
+// filled while everything else was outline, which read as an accidental
+// emphasis on one row.
+const MENU_ITEMS: MenuItemConfig[] = [
   {
     labelKey: "profile.curated_favorites",
-    icon: "heart",
-    // Deep-link so the gallery lands on the Favorites filter already active.
-    // extraParams is the proper way to pass query state through expo-router —
-    // a "?filter=favorites" suffix on the pathname string gets swallowed.
+    icon: "heart-outline",
     route: "/(tabs)/gallery",
     extraParams: { filter: "favorites" },
   },
-  { labelKey: "profile.notifications", icon: "notifications", route: "/settings/notifications", hasBadge: true },
-  { labelKey: "profile.credit_packs", icon: "flash-outline", route: "/credits/packs" },
-  { labelKey: "profile.billing_history", icon: "card-outline", route: "/credits" },
-  { labelKey: "profile.manage_plan", icon: "ribbon-outline", route: "/plans" },
-  { labelKey: "profile.privacy_data", icon: "shield-checkmark-outline", route: "/settings/privacy" },
+  {
+    labelKey: "profile.notifications",
+    icon: "notifications-outline",
+    route: "/settings/notifications",
+    hasBadge: true,
+  },
+  {
+    labelKey: "profile.credit_packs",
+    icon: "flash-outline",
+    route: "/credits/packs",
+  },
+  {
+    labelKey: "profile.billing_history",
+    icon: "receipt-outline",
+    route: "/credits",
+  },
+  {
+    labelKey: "profile.manage_plan",
+    icon: "ribbon-outline",
+    route: "/plans",
+  },
+  {
+    labelKey: "profile.privacy_data",
+    icon: "shield-checkmark-outline",
+    route: "/settings/privacy",
+  },
 ];
 
 /* ─────────────────── Main Screen ─────────────────── */
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { openDrawer } = useDrawer();
-  const user = useAuthStore(s => s.user);
-  const logout = useAuthStore(s => s.logout);
-  const balance = useCreditStore(s => s.balance);
-  const monthlyLimit = useCreditStore(s => s.monthlyLimit);
-  const planCode = useCreditStore(s => s.planCode);
-  const subscription = useSubscriptionStore(s => s.subscription);
-  const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
-  const fetchPlans = useSubscriptionStore(s => s.fetchPlans);
-  const fetchBalance = useCreditStore(s => s.fetchBalance);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const balance = useCreditStore((s) => s.balance);
+  const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
+  const planCode = useCreditStore((s) => s.planCode);
+  const subscription = useSubscriptionStore((s) => s.subscription);
+  const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+  const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
+  const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const [deleting, setDeleting] = useState(false);
 
-  // Fetch fresh data on mount
   useEffect(() => {
     fetchBalance();
     fetchPlans()
@@ -135,9 +173,8 @@ export default function ProfileScreen() {
   const email = user?.email || "";
   const isFree = !planCode || planCode === "FREE";
   const planLabel = subscription?.planName ?? (isFree ? t("profile.free") : planCode);
-  const badgeLabel = planLabel?.toUpperCase() ?? null;
 
-  // Compute renewal text from subscription period
+  // Renewal copy — "renews in 30 days" / "renews tomorrow" / "renews today"
   const renewalText = useMemo(() => {
     if (!subscription?.currentPeriodEnd) return null;
     const end = new Date(subscription.currentPeriodEnd);
@@ -149,21 +186,8 @@ export default function ProfileScreen() {
     return t("profile.renews_in_days", { days: diffDays });
   }, [subscription?.currentPeriodEnd, t]);
 
-  // Initials for avatar fallback
-  const initials = useMemo(() => {
-    if (!displayName) return null;
-    return (
-      displayName
-        .split(" ")
-        .filter(w => w.length > 0)
-        .map(w => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2) || null
-    );
-  }, [displayName]);
-
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+  const hasLimit = monthlyLimit > 0;
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -216,303 +240,306 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleSignOut = () =>
+    Alert.alert(
+      t("drawer.sign_out_confirm_title"),
+      t("drawer.sign_out_confirm_description"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("drawer.sign_out"),
+          style: "destructive",
+          onPress: logout,
+        },
+      ],
+    );
+
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       {/* ── Top App Bar ── */}
       <View
-        className="flex-row items-center justify-between px-6"
-        style={{ height: 56 }}
+        style={{
+          height: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+        }}
       >
-        <Pressable onPress={openDrawer} hitSlop={8}>
-          <Ionicons name="menu" size={24} color="#E5E2E1" />
+        <Pressable onPress={openDrawer} hitSlop={8} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
         </Pressable>
-        <Text
-          className="font-headline text-on-surface"
-          style={{
-            fontSize: 14,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-          }}
-        >
-          {t("app.name")}
-        </Text>
-        <UserAvatar size="sm" />
+        <Brand variant="inline" size="sm" tone="gold" />
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* ── Profile Hero Section (centered) ── */}
+        {/* ── Identity — compact horizontal ── */}
         <View
-          className="items-center"
-          style={{ paddingTop: 32, marginBottom: 40 }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 16,
+            paddingHorizontal: 24,
+            paddingTop: 24,
+            marginBottom: 32,
+          }}
         >
-          {/* Avatar + PRO badge */}
-          <View style={{ marginBottom: 24 }}>
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 108,
-                height: 108,
-                borderRadius: 54,
-                backgroundColor: "#2A2A2A",
-                borderWidth: 2,
-                borderColor: "rgba(225,195,155,0.2)",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.4,
-                shadowRadius: 16,
-                elevation: 12,
-              }}
-            >
-              {initials ? (
-                <Text
-                  className="font-headline"
-                  style={{ fontSize: 36, color: "#E0C29A", letterSpacing: 2 }}
-                >
-                  {initials}
-                </Text>
-              ) : (
-                <Ionicons name="person" size={48} color="#998F84" />
-              )}
-            </View>
-            {/* PRO badge – bottom-right */}
-            {!isFree && (
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: -4,
-                  right: -4,
-                }}
-              >
-                <LinearGradient
-                  colors={["#C4A882", "#A68A62"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 9999,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 4,
-                  }}
-                >
-                  <Text
-                    className="font-label text-on-primary"
-                    style={{
-                      fontSize: 10,
-                      fontWeight: "700",
-                      letterSpacing: 2,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {badgeLabel}
-                  </Text>
-                </LinearGradient>
-              </View>
-            )}
-          </View>
-
-          {/* Name */}
-          {displayName && (
-            <Text
-              className="text-on-surface font-headline"
-              style={{ fontSize: 22, marginBottom: 4 }}
-            >
-              {displayName}
-            </Text>
-          )}
-
-          {/* Email */}
-          {email ? (
-            <Text
-              className="text-on-surface-variant font-body"
-              style={{ fontSize: 13, fontWeight: "400", letterSpacing: 0.3 }}
-              numberOfLines={1}
-              ellipsizeMode="middle"
-            >
-              {email}
-            </Text>
-          ) : null}
-        </View>
-
-        {/* ── Stats Row ── */}
-        <View className="flex-row px-6" style={{ gap: 12, marginBottom: 48 }}>
-          {/* Credits Card */}
-          <View
-            className="flex-1 bg-surface-container-low rounded-xl justify-center"
-            style={{ padding: 20 }}
-          >
-            <Text
-              className="font-label text-secondary"
-              style={{
-                fontSize: 10,
-                fontWeight: "600",
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
-              {t("profile.credits_label")}
-            </Text>
-            <View style={{ marginTop: 4 }}>
-              <CreditRing value={balance} max={monthlyLimit > 0 ? monthlyLimit : null} />
-            </View>
-          </View>
-
-          {/* Plan Card */}
-          <View
-            className="flex-1 bg-surface-container-low rounded-xl justify-center"
-            style={{ padding: 20 }}
-          >
-            <Text
-              className="font-label text-secondary"
-              style={{
-                fontSize: 10,
-                fontWeight: "600",
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
-              {t("plans.current_plan")}
-            </Text>
-            <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 22, lineHeight: 26 }}
-            >
-              {planLabel}
-            </Text>
-            {renewalText && (
+          <UserAvatar size="hero" />
+          <View style={{ flex: 1 }}>
+            {displayName ? (
               <Text
-                className="font-body text-on-surface-variant"
-                style={{ fontSize: 11, marginTop: 4 }}
+                style={{
+                  fontFamily: "NotoSerif",
+                  fontSize: 22,
+                  lineHeight: 28,
+                  color: theme.color.onSurface,
+                  letterSpacing: -0.1,
+                }}
+                numberOfLines={1}
               >
-                {renewalText}
+                {displayName}
               </Text>
-            )}
+            ) : null}
+            {email ? (
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 13,
+                  color: theme.color.onSurfaceVariant,
+                  marginTop: 2,
+                  letterSpacing: 0.2,
+                }}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {email}
+              </Text>
+            ) : null}
+            <View style={{ flexDirection: "row", marginTop: 10 }}>
+              <TierBadge tier={planCode ?? "FREE"} size="sm" label={planLabel?.toUpperCase()} />
+            </View>
           </View>
         </View>
 
-        {/* ── Account Settings ── */}
-        <View className="px-6">
-          <Text
-            className="font-label"
+        {/* ── Vault — unified balance card ── */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+          <View
             style={{
-              fontSize: 11,
-              fontWeight: "700",
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "rgba(224,194,154,0.6)",
-              marginBottom: 16,
+              padding: 24,
+              borderRadius: 20,
+              backgroundColor: "rgba(225,195,155,0.05)",
+              borderWidth: 1,
+              borderColor: "rgba(225,195,155,0.22)",
+              ...theme.elevation.goldGlowSoft,
             }}
           >
-            {t("drawer.settings")}
-          </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: theme.color.goldMidday,
+                }}
+              >
+                {t("profile.available_balance") ?? "Available Balance"}
+              </Text>
+              <CreditRing value={balance} max={hasLimit ? monthlyLimit : null} size={44} />
+            </View>
 
-          <View>
-            {MENU_ITEMS.map(item => (
-              <Pressable
+            <Text
+              style={{
+                fontFamily: "NotoSerif",
+                fontSize: 44,
+                lineHeight: 50,
+                letterSpacing: -0.8,
+                color: theme.color.onSurface,
+                fontVariant: ["tabular-nums"],
+              }}
+            >
+              {balance}
+              {hasLimit ? (
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 18,
+                    color: theme.color.onSurfaceMuted,
+                  }}
+                >
+                  {" "}
+                  / {monthlyLimit}
+                </Text>
+              ) : null}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 13,
+                lineHeight: 18,
+                color: theme.color.onSurfaceVariant,
+                marginTop: 6,
+              }}
+            >
+              {hasLimit
+                ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
+                : t("plans.credits_never_expire", {
+                    defaultValue: "Credits never expire",
+                  })}
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                marginTop: 20,
+              }}
+            >
+              <Button
+                title={t("profile.buy_credits") ?? "Buy Credits"}
+                variant="secondary"
+                size="sm"
+                onPress={() => router.push("/credits/packs")}
+                fullWidth
+                style={{ flex: 1 }}
+              />
+              {isFree ? (
+                <Button
+                  title={t("profile.upgrade") ?? "Upgrade"}
+                  variant="primary"
+                  size="sm"
+                  onPress={() => router.push("/plans")}
+                  fullWidth
+                  style={{ flex: 1 }}
+                />
+              ) : (
+                <Button
+                  title={t("profile.manage") ?? "Manage"}
+                  variant="primary"
+                  size="sm"
+                  onPress={() => router.push("/plans")}
+                  fullWidth
+                  style={{ flex: 1 }}
+                />
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* ── Settings ── */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <SectionHeader
+            title={t("drawer.settings")}
+            serif={false}
+            style={{ marginBottom: 4 }}
+          />
+          <View
+            style={{
+              borderRadius: 16,
+              backgroundColor: theme.color.surfaceContainerLow,
+              borderWidth: 1,
+              borderColor: "rgba(77,70,60,0.18)",
+              paddingHorizontal: 16,
+              paddingVertical: 4,
+            }}
+          >
+            {MENU_ITEMS.map((item, idx) => (
+              <ListItem
                 key={item.labelKey}
+                icon={item.icon}
+                label={t(item.labelKey)}
                 onPress={() => {
                   if (item.route)
                     pushWithReturn(item.route, "profile", item.extraParams);
                 }}
-                className="flex-row items-center active:opacity-70"
-                style={{
-                  paddingVertical: 20,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "rgba(77,70,60,0.20)",
-                }}
-              >
-                <View style={{ position: "relative" }}>
-                  <Ionicons name={item.icon} size={22} color="#D0C5B8" />
-                  {item.hasBadge && (
+                last={idx === MENU_ITEMS.length - 1}
+                trailing={
+                  item.hasBadge ? (
                     <View
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: "#E0C29A",
-                        borderWidth: 2,
-                        borderColor: "#131313",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
                       }}
-                    />
-                  )}
-                </View>
-                <Text
-                  className="text-on-surface font-body flex-1"
-                  style={{ fontSize: 15, marginLeft: 16 }}
-                >
-                  {t(item.labelKey)}
-                </Text>
-                <Ionicons name="chevron-forward" size={16} color="#998F84" />
-              </Pressable>
+                    >
+                      <View
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 4,
+                          backgroundColor: theme.color.goldMidday,
+                        }}
+                      />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color="rgba(153,143,132,0.55)"
+                      />
+                    </View>
+                  ) : undefined
+                }
+              />
             ))}
-
-            {/* Sign Out — destructive red, matches the drawer convention,
-                confirmation dialog prevents single-tap mistakes. */}
-            <Pressable
-              onPress={() =>
-                Alert.alert(
-                  t("drawer.sign_out_confirm_title"),
-                  t("drawer.sign_out_confirm_description"),
-                  [
-                    { text: t("common.cancel"), style: "cancel" },
-                    {
-                      text: t("drawer.sign_out"),
-                      style: "destructive",
-                      onPress: logout,
-                    },
-                  ],
-                )
-              }
-              className="flex-row items-center active:opacity-70"
-              style={{ paddingVertical: 20, marginTop: 8 }}
-            >
-              <Ionicons name="log-out-outline" size={22} color="#FFB4AB" />
-              <Text
-                className="font-body flex-1"
-                style={{
-                  fontSize: 15,
-                  marginLeft: 16,
-                  color: "#FFB4AB",
-                  fontWeight: "500",
-                }}
-              >
-                {t("drawer.sign_out")}
-              </Text>
-            </Pressable>
           </View>
+
+          {/* Sign Out — quiet destructive, separated from the settings group */}
+          <View style={{ marginTop: 20 }}>
+            <Button
+              title={t("drawer.sign_out")}
+              variant="destructive"
+              size="md"
+              onPress={handleSignOut}
+              iconLeft
+              icon="log-out-outline"
+            />
+          </View>
+
+          {/* Delete account — the quietest possible CTA */}
+          <Pressable
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+            hitSlop={10}
+            style={({ pressed }) => ({
+              alignSelf: "center",
+              marginTop: 16,
+              opacity: pressed ? 0.6 : 0.7,
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 12,
+                color: theme.color.onSurfaceMuted,
+                textDecorationLine: "underline",
+                letterSpacing: 0.3,
+              }}
+            >
+              {t("profile.delete_my_account")}
+            </Text>
+          </Pressable>
         </View>
 
-        {/* ── Footer Watermark ── */}
-        <View className="items-center" style={{ paddingVertical: 32, gap: 8 }}>
-          <Text
-            className="font-label"
-            style={{
-              fontSize: 11,
-              color: "#998F84",
-              letterSpacing: 4,
-              textTransform: "uppercase",
-              fontWeight: "500",
-            }}
-          >
-            {t("app.name")}
-          </Text>
+        {/* ── Footer ── */}
+        <View style={{ alignItems: "center", paddingVertical: 36, gap: 8 }}>
+          <Brand variant="wordmark" size="xs" tone="muted" />
           <Text
             style={{
               fontSize: 10,
-              color: "rgba(153,143,131,0.6)",
-              fontFamily: "monospace",
+              color: "rgba(153,143,131,0.55)",
+              fontFamily: "Courier",
+              letterSpacing: 1,
             }}
           >
             v{appVersion}

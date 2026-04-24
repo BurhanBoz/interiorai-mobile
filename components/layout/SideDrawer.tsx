@@ -16,59 +16,195 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
-import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { TierBadge } from "@/components/ui/TierBadge";
+import { Brand } from "@/components/brand/Brand";
+import type { ComponentProps } from "react";
+import { theme } from "@/config/theme";
 
-const MENU_ITEMS = [
+type IconName = ComponentProps<typeof Ionicons>["name"];
+
+/**
+ * The app's side drawer. Contract:
+ *   - Compact user identity (64 avatar, name, email) — one tier badge only
+ *   - Navigation section with the same tab-bar icons (no metaphor mismatch)
+ *   - Settings section with a smaller break
+ *   - Quiet destructive footer for Sign Out, separated by a divider
+ *
+ * Visual inspiration: Arc sidebar, Things 3 preferences pane — both focus
+ * on navigation density over hero branding.
+ */
+
+interface MenuItem {
+  icon: IconName;
+  iconOutline: IconName;
+  labelKey: string;
+  route: string;
+  match: string;
+}
+
+// Note: icons now match the bottom tab bar exactly so the drawer and tab
+// bar speak the same metaphor. Previously the drawer used cube/grid/time
+// while the tab bar used palette/images/time — same items, different
+// mental models. That tension is gone.
+const MENU_ITEMS: MenuItem[] = [
   {
-    icon: "cube-outline" as const,
+    icon: "color-palette",
+    iconOutline: "color-palette-outline",
     labelKey: "tabs.studio",
-    route: "/(tabs)/studio" as const,
+    route: "/(tabs)/studio",
     match: "/studio",
   },
   {
-    icon: "grid-outline" as const,
+    icon: "images",
+    iconOutline: "images-outline",
     labelKey: "tabs.gallery",
-    route: "/(tabs)/gallery" as const,
+    route: "/(tabs)/gallery",
     match: "/gallery",
   },
   {
-    icon: "time-outline" as const,
+    icon: "time",
+    iconOutline: "time-outline",
     labelKey: "tabs.history",
-    route: "/(tabs)/history" as const,
+    route: "/(tabs)/history",
     match: "/history",
   },
   {
-    icon: "person-outline" as const,
+    icon: "person",
+    iconOutline: "person-outline",
     labelKey: "tabs.profile",
-    route: "/(tabs)/profile" as const,
+    route: "/(tabs)/profile",
     match: "/profile",
   },
-] as const;
+];
 
-const SETTINGS_ITEMS = [
+const SETTINGS_ITEMS: Array<{ icon: IconName; labelKey: string; route: string }> = [
   {
-    icon: "language-outline" as const,
+    icon: "language-outline",
     labelKey: "drawer.language",
-    route: "/settings/language" as const,
+    route: "/settings/language",
   },
   {
-    icon: "help-circle-outline" as const,
+    icon: "help-circle-outline",
     labelKey: "drawer.help",
-    route: "/settings/help" as const,
+    route: "/settings/help",
   },
-] as const;
+];
 
 interface SideDrawerProps {
   visible: boolean;
   onClose: () => void;
 }
 
+/* ───────── DrawerItem: a single row in either nav or settings group ───────── */
+
+interface DrawerItemProps {
+  icon: IconName;
+  iconOutline?: IconName;
+  label: string;
+  active?: boolean;
+  onPress: () => void;
+}
+
+function DrawerItem({
+  icon,
+  iconOutline,
+  label,
+  active = false,
+  onPress,
+}: DrawerItemProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        // Explicit row direction at the Pressable level AND on the inner
+        // view so neither NativeWind nor a parent flex layout can collapse
+        // the content into a column on any screen size.
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 14,
+        paddingVertical: 18,
+        borderRadius: 12,
+        backgroundColor: active
+          ? "rgba(225,195,155,0.10)"
+          : pressed
+            ? "rgba(42,42,42,0.45)"
+            : "transparent",
+        marginBottom: 10,
+        position: "relative",
+      })}
+    >
+      {active ? (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 14,
+            bottom: 14,
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: theme.color.goldMidday,
+          }}
+        />
+      ) : null}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 16,
+          flex: 1,
+        }}
+      >
+        <Ionicons
+          name={active ? icon : (iconOutline ?? icon)}
+          size={22}
+          color={active ? theme.color.goldMidday : theme.color.onSurface}
+        />
+        <Text
+          style={{
+            fontFamily: active ? "Inter-SemiBold" : "Inter-Medium",
+            fontSize: 15,
+            letterSpacing: 0.2,
+            color: active ? theme.color.goldMidday : theme.color.onSurface,
+          }}
+        >
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+/* ───────── SectionLabel: quiet eyebrow above each group ───────── */
+
+function SectionLabel({ children, compact = false }: { children: string; compact?: boolean }) {
+  return (
+    <Text
+      style={{
+        fontFamily: "Inter-SemiBold",
+        fontSize: compact ? 10 : 11,
+        letterSpacing: 2,
+        textTransform: "uppercase",
+        color: "rgba(225,195,155,0.45)",
+        paddingHorizontal: 14,
+        marginBottom: 14,
+        // Settings section sits a comfortable gap below the nav group so
+        // the break between "Navigate" and "Settings" reads as deliberate.
+        marginTop: compact ? 24 : 0,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+/* ───────── Main drawer ───────── */
+
 export function SideDrawer({ visible, onClose }: SideDrawerProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const drawerWidth = width * 0.8;
+  const drawerWidth = Math.min(width * 0.82, 340);
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(-drawerWidth)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -78,7 +214,8 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
   const logout = useAuthStore((s) => s.logout);
   const subscription = useSubscriptionStore((s) => s.subscription);
 
-  const tierLabel = subscription?.planName ?? t("profile.free");
+  const planCode = subscription?.planCode ?? "FREE";
+  const displayName = user?.displayName || t("drawer.architect");
 
   useEffect(() => {
     if (visible) {
@@ -86,12 +223,12 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
         Animated.spring(slideAnim, {
           toValue: 0,
           useNativeDriver: true,
-          damping: 25,
-          stiffness: 200,
+          damping: 24,
+          stiffness: 220,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 250,
+          duration: theme.motion.duration.base,
           useNativeDriver: true,
         }),
       ]).start();
@@ -99,23 +236,23 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: -drawerWidth,
-          duration: 200,
+          duration: theme.motion.duration.fast,
           useNativeDriver: true,
         }),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: theme.motion.duration.fast,
           useNativeDriver: true,
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, drawerWidth, slideAnim, fadeAnim]);
 
   const navigate = useCallback(
     (route: string) => {
       Haptics.selectionAsync();
       onClose();
-      setTimeout(() => router.push(route as any), 150);
+      setTimeout(() => router.push(route as any), 140);
     },
     [onClose],
   );
@@ -150,7 +287,7 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
       <Animated.View
         style={{
           flex: 1,
-          backgroundColor: "rgba(19,19,19,0.8)",
+          backgroundColor: theme.color.scrim,
           opacity: fadeAnim,
         }}
       >
@@ -166,285 +303,170 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
           left: 0,
           width: drawerWidth,
           transform: [{ translateX: slideAnim }],
-          paddingTop: insets.top + 32,
-          paddingBottom: insets.bottom + 16,
-          borderTopRightRadius: 16,
-          borderBottomRightRadius: 16,
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 12,
+          borderTopRightRadius: 20,
+          borderBottomRightRadius: 20,
           borderRightWidth: 1,
-          borderRightColor: "rgba(77,70,60,0.1)",
+          borderRightColor: "rgba(77,70,60,0.15)",
           shadowColor: "#000",
           shadowOffset: { width: 8, height: 0 },
-          shadowOpacity: 0.5,
+          shadowOpacity: 0.45,
           shadowRadius: 24,
           elevation: 24,
           overflow: "hidden",
         }}
       >
         <BlurView
-          intensity={80}
+          intensity={90}
           tint="dark"
           style={StyleSheet.absoluteFillObject}
         />
         <View
           style={[
             StyleSheet.absoluteFillObject,
-            { backgroundColor: "rgba(28,27,27,0.85)" },
+            { backgroundColor: "rgba(22,21,21,0.88)" },
           ]}
         />
-        {/* Profile Header */}
+
+        {/* Brand mark (tiny, quiet) */}
+        <View
+          style={{
+            paddingHorizontal: 24,
+            marginBottom: 20,
+          }}
+        >
+          <Brand variant="inline" size="xs" tone="muted" />
+        </View>
+
+        {/* User identity — compact horizontal layout */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 16,
-            paddingHorizontal: 32,
-            marginBottom: 48,
+            gap: 14,
+            paddingHorizontal: 24,
+            paddingBottom: 22,
+            marginBottom: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(77,70,60,0.18)",
           }}
         >
-          {/* Avatar with tier badge */}
-          <View style={{ position: "relative" }}>
-            <UserAvatar
-              size="md"
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                borderWidth: 2,
-                borderColor: "rgba(225,195,155,0.3)",
-              }}
-            />
-            <View
-              style={{
-                position: "absolute",
-                bottom: -4,
-                right: -4,
-                backgroundColor: "#FEDFB5",
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                borderRadius: 999,
-              }}
-            >
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 8,
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  color: "#3F2D11",
-                }}
-              >
-                {tierLabel}
-              </Text>
-            </View>
-          </View>
-
-          {/* Name & membership */}
+          <UserAvatar size="md" />
           <View style={{ flex: 1 }}>
-            <Text
-              className="font-headline text-on-surface"
-              style={{
-                fontSize: user?.displayName ? 20 : 16,
-                fontWeight: "700",
-                lineHeight: 22,
-              }}
-              numberOfLines={1}
-              ellipsizeMode="middle"
-            >
-              {user?.displayName || user?.email || t("drawer.architect")}
-            </Text>
             <View
               style={{
-                marginTop: 6,
-                backgroundColor: "rgba(88,67,37,0.3)",
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 4,
-                alignSelf: "flex-start",
-              }}
-            >
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  textTransform: "uppercase",
-                  letterSpacing: 2,
-                  color: "#E0C29A",
-                }}
-              >
-                {t("drawer.premium_member")}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Navigate Section Label */}
-        <View style={{ paddingHorizontal: 34, marginBottom: 12 }}>
-          <Text
-            className="font-label"
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "rgba(224,194,154,0.6)",
-            }}
-          >
-            {t("drawer.navigate")}
-          </Text>
-        </View>
-
-        {/* Navigation Items */}
-        <View style={{ paddingHorizontal: 24, marginBottom: 32, flex: 1 }}>
-          {MENU_ITEMS.map((item) => {
-            const isActive = pathname.includes(item.match);
-            const label = t(item.labelKey);
-            return (
-              <Pressable
-                key={item.labelKey}
-                onPress={() => navigate(item.route)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 14,
-                  paddingVertical: 28,
-                  borderRadius: 10,
-                  backgroundColor: isActive
-                    ? "rgba(225,195,155,0.10)"
-                    : pressed
-                      ? "rgba(42,42,42,0.5)"
-                      : "transparent",
-                  marginBottom: 26,
-                  position: "relative",
-                })}
-              >
-                {isActive && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 14,
-                      bottom: 14,
-                      width: 4,
-                      borderRadius: 2,
-                      backgroundColor: "#E1C39B",
-                    }}
-                  />
-                )}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 18,
-                  }}
-                >
-                  <Ionicons
-                    name={item.icon}
-                    size={24}
-                    color={isActive ? "#E1C39B" : "#E5E2E1"}
-                  />
-                  <Text
-                    className="font-body"
-                    style={{
-                      fontSize: 15,
-                      fontWeight: isActive ? "700" : "500",
-                      letterSpacing: 0.5,
-                      color: isActive ? "#E1C39B" : "#E5E2E1",
-                    }}
-                  >
-                    {label}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-
-          {/* Settings Section Label — extra breathing space above so the
-              handoff between NAV and SETTINGS reads as a deliberate section
-              break, not a crowded continuation. */}
-          <View style={{ marginTop: 56, marginBottom: 20, paddingHorizontal: 14 }}>
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                color: "rgba(224,194,154,0.6)",
-              }}
-            >
-              {t("drawer.settings")}
-            </Text>
-          </View>
-
-          {/* Settings Items */}
-          {SETTINGS_ITEMS.map((item) => (
-            <Pressable
-              key={item.labelKey}
-              onPress={() => navigate(item.route)}
-              style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 14,
-                paddingVertical: 24,
-                borderRadius: 10,
-                backgroundColor: pressed
-                  ? "rgba(42,42,42,0.5)"
-                  : "transparent",
-                marginBottom: 20,
-              })}
+                gap: 8,
+                flexWrap: "wrap",
+              }}
             >
-              <View
+              <Text
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 18,
+                  fontFamily: "NotoSerif",
+                  fontSize: 17,
+                  color: theme.color.onSurface,
+                  letterSpacing: -0.1,
+                  flexShrink: 1,
                 }}
+                numberOfLines={1}
               >
-                <Ionicons name={item.icon} size={24} color="#E5E2E1" />
-                <Text
-                  className="font-body"
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "500",
-                    letterSpacing: 0.5,
-                    color: "#E5E2E1",
-                  }}
-                >
-                  {t(item.labelKey)}
-                </Text>
-              </View>
-            </Pressable>
+                {displayName}
+              </Text>
+              <TierBadge tier={planCode} size="xs" />
+            </View>
+            {user?.email ? (
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 12,
+                  color: theme.color.onSurfaceMuted,
+                  marginTop: 3,
+                }}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {user.email}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Navigate */}
+        <View
+          style={{
+            paddingHorizontal: 14,
+            marginTop: 18,
+            flex: 1,
+          }}
+        >
+          <SectionLabel>{t("drawer.navigate")}</SectionLabel>
+          {MENU_ITEMS.map((item) => (
+            <DrawerItem
+              key={item.labelKey}
+              icon={item.icon}
+              iconOutline={item.iconOutline}
+              label={t(item.labelKey)}
+              active={pathname.includes(item.match)}
+              onPress={() => navigate(item.route)}
+            />
+          ))}
+
+          {/* Settings — smaller break, not 56px dead space */}
+          <SectionLabel compact>{t("drawer.settings")}</SectionLabel>
+          {SETTINGS_ITEMS.map((item) => (
+            <DrawerItem
+              key={item.labelKey}
+              icon={item.icon}
+              label={t(item.labelKey)}
+              onPress={() => navigate(item.route)}
+            />
           ))}
         </View>
 
-        {/* Sign Out — matches the menu-item row style (icon + text inline) */}
-        <View style={{ paddingHorizontal: 24 }}>
+        {/* Footer — quiet destructive row, visually separated by the divider.
+            The inner row uses an explicit flexDirection View so the icon +
+            label stay side-by-side even if the Pressable style function
+            dance ever breaks the direction inheritance. */}
+        <View
+          style={{
+            paddingHorizontal: 14,
+            paddingTop: 14,
+            marginTop: 8,
+            borderTopWidth: 1,
+            borderTopColor: "rgba(77,70,60,0.18)",
+          }}
+        >
           <Pressable
             onPress={handleSignOut}
             style={({ pressed }) => ({
-              paddingHorizontal: 12,
-              paddingVertical: 12,
-              borderRadius: 8,
-              backgroundColor: pressed ? "rgba(255,180,171,0.1)" : "transparent",
+              paddingHorizontal: 14,
+              paddingVertical: 14,
+              borderRadius: 10,
+              backgroundColor: pressed
+                ? "rgba(153,143,132,0.08)"
+                : "transparent",
             })}
           >
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 16,
+                gap: 14,
               }}
             >
-              <Ionicons name="log-out-outline" size={22} color="#FFB4AB" />
+              <Ionicons
+                name="log-out-outline"
+                size={18}
+                color={theme.color.onSurfaceMuted}
+              />
               <Text
-                className="font-body"
                 style={{
+                  fontFamily: "Inter-Medium",
                   fontSize: 14,
-                  fontWeight: "500",
-                  letterSpacing: 0.5,
-                  color: "#FFB4AB",
+                  letterSpacing: 0.3,
+                  color: theme.color.onSurfaceMuted,
                 }}
               >
                 {t("drawer.sign_out")}

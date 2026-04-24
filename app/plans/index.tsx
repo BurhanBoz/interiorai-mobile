@@ -7,6 +7,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useBackHandler } from "@/utils/navigation";
+import { TopBar } from "@/components/layout/TopBar";
+import { theme } from "@/config/theme";
 import type { PlanResponse } from "@/types/api";
 
 /* ------------------------------------------------------------------ */
@@ -93,50 +95,85 @@ function PlanCard({ plan, isCurrent, isPopular, onPress }: PlanCardProps) {
         tier: plan.modelTier ?? "ENTRY",
     });
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
+    const isMaxTier = plan.code === "MAX";
 
     return (
         <View
-            className="bg-surface-container-low rounded-xl"
             style={[
-                { padding: 32 },
-                isPopular && {
+                {
+                    padding: 28,
+                    borderRadius: 20,
+                    backgroundColor: theme.color.surfaceContainerLow,
                     borderWidth: 1,
-                    borderColor: "rgba(224,194,154,0.3)",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 24 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 48,
-                    elevation: 12,
+                    borderColor: "rgba(77,70,60,0.22)",
+                },
+                isPopular && {
+                    borderColor: "rgba(225,195,155,0.45)",
+                    ...theme.elevation.md,
                 },
                 isCurrent && !isPopular && {
-                    borderWidth: 1,
-                    borderColor: "rgba(224,194,154,0.6)",
+                    borderColor: "rgba(225,195,155,0.55)",
+                    backgroundColor: "rgba(225,195,155,0.04)",
                 },
+                isMaxTier && !isCurrent && theme.elevation.goldGlowSoft,
             ]}
         >
-            {/* Badge — Most Popular OR Current */}
-            {(isPopular || isCurrent) && (
-                <View style={{ position: "absolute", top: 16, right: 16 }}>
+            {/* MAX shimmer wash — signals "top tier" without a loud badge. */}
+            {isMaxTier ? (
+                <LinearGradient
+                    colors={[
+                        "rgba(253,222,181,0.10)",
+                        "rgba(225,195,155,0.02)",
+                        "rgba(253,222,181,0.08)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 20,
+                    }}
+                />
+            ) : null}
+
+            {(isPopular || isCurrent) ? (
+                <View style={{ position: "absolute", top: -10, right: 20 }}>
                     <LinearGradient
-                        colors={isCurrent ? ["#353534", "#2A2A2A"] : ["#C4A882", "#A68A62"]}
+                        colors={
+                            isCurrent
+                                ? [theme.color.goldDawn, theme.color.goldMidday]
+                                : [theme.color.goldMidday, theme.color.goldDusk]
+                        }
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 4 }}
+                        style={{
+                            borderRadius: 999,
+                            paddingHorizontal: 12,
+                            paddingVertical: 4,
+                            borderWidth: 0.5,
+                            borderColor: "rgba(63,45,17,0.2)",
+                        }}
                     >
                         <Text
                             style={{
+                                fontFamily: "Inter-SemiBold",
                                 fontSize: 10,
-                                fontWeight: "700",
-                                color: isCurrent ? "#E0C29A" : "#3F2D11",
+                                color: theme.color.onGold,
                                 textTransform: "uppercase",
-                                letterSpacing: 2,
+                                letterSpacing: 1.8,
                             }}
                         >
-                            {isCurrent ? t("plans.active") : t("plans.most_popular")}
+                            {isCurrent
+                                ? t("plans.your_plan", { defaultValue: "Your Plan" })
+                                : t("plans.most_popular")}
                         </Text>
                     </LinearGradient>
                 </View>
-            )}
+            ) : null}
 
             {/* Tier & subtitle */}
             <View style={{ marginBottom: 24 }}>
@@ -364,22 +401,8 @@ export default function PlansScreen() {
     );
 
     return (
-        <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-            <View
-                className="flex-row items-center justify-between px-6"
-                style={{ height: 56 }}
-            >
-                <Pressable onPress={handleBack} hitSlop={8}>
-                    <Ionicons name="arrow-back" size={24} color="#E0C29A" />
-                </Pressable>
-                <Text
-                    className="font-label text-on-surface-variant"
-                    style={{ fontSize: 11, letterSpacing: 2.2, textTransform: "uppercase" }}
-                >
-                    {t("plans.title")}
-                </Text>
-                <View style={{ width: 24 }} />
-            </View>
+        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+            <TopBar title={t("plans.title")} showBack onBack={handleBack} />
 
             <ScrollView
                 className="flex-1"

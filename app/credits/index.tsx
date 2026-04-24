@@ -20,6 +20,8 @@ import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { TopBar } from "@/components/layout/TopBar";
+import { theme } from "@/config/theme";
 import type { CreditLedgerEntry } from "@/types/api";
 
 /**
@@ -312,27 +314,17 @@ export default function CreditsScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* ── Top App Bar ── */}
-      <View
-        className="flex-row items-center justify-between px-6"
-        style={{ height: 56 }}
-      >
-        <Pressable onPress={handleBack} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color="#C4A882" />
-        </Pressable>
-        <Text
-          className="font-headline text-on-surface"
-          style={{
-            fontSize: 14,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-          }}
-        >
-          {t("app.name")}
-        </Text>
-        <UserAvatar size="sm" onPress />
-      </View>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+      {/* Billing-history header — brand mark + quick-access avatar.
+          Back button behavior routes through useBackHandler so the
+          "profile → credits → back" loop lands on Profile, not the
+          tab-bar root. */}
+      <TopBar
+        showBranding
+        onBack={handleBack}
+        showBack
+        rightElement={<UserAvatar size="sm" onPress />}
+      />
 
       <FlatList
         data={filteredLedger}

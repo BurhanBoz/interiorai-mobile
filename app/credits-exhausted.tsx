@@ -1,80 +1,93 @@
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useTranslation } from "react-i18next";
+import { TopBar } from "@/components/layout/TopBar";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
 
-const DECORATIVE_IMG =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDU7r9__I63ld_MU2Pfj2wo4UQW6Lod_d9FztpK-PPyFScIcA-Dzu3UBr_pv75_4cYqjqDU4uNbcDz1l73QcJrsit8NhR-WBYFxOJJuoZ7ub6D5R4Hbbklqd8ZcXl6a5QnecpAFpbVlYw6Ao0philBKEn5_Lyw3TiConpiymRFfz9U28XJv5pkC21S9zUFdeCRtIP-3NqR0tYcvBzA-_6vnqFna2-ioWWxAvSos3aW25W6lXCVyKEy7AUodKT4kgNVMr8wNLOkCfcM";
-
+/**
+ * The "you're out of credits" interstitial. Users land here when they try
+ * to kick off a generation but their wallet is empty.
+ *
+ * Audit fixes:
+ *   - Hardcoded Google decorative image URL removed (replaced with a
+ *     soft gradient glow — no external fetch, no cache-miss UI)
+ *   - Hardcoded brand text routed through <TopBar showBranding/>
+ *   - Gold hex literals consolidated through theme tokens
+ *   - Main CTA now uses the new <Button> primary variant; "buy credits
+ *     pack" is a quiet <Button variant="tertiary">, not an ambiguous
+ *     underlined link
+ */
 export default function CreditsExhaustedScreen() {
   const { t } = useTranslation();
   return (
-    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
-      {/* ── Top App Bar ── */}
-      <View
-        className="flex-row items-center justify-between px-6"
-        style={{ height: 56 }}
-      >
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color="#C4A882" />
-        </Pressable>
-        <Text
-          className="font-headline text-on-surface"
-          style={{
-            fontSize: 14,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-          }}
-        >
-          {t("app.name")}
-        </Text>
-        <UserAvatar size="sm" onPress />
-      </View>
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={{ flex: 1, backgroundColor: theme.color.surface }}
+    >
+      <TopBar
+        showBranding
+        rightElement={<UserAvatar size="sm" onPress />}
+      />
 
-      {/* ── Main Content ── */}
       <View
-        className="flex-1 items-center justify-center px-6"
-        style={{ paddingBottom: 24 }}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 24,
+        }}
       >
-        {/* Credit Ring */}
+        {/* Credit ring — zero state. No fake progress fill. */}
         <View
-          className="items-center justify-center"
-          style={{ width: 192, height: 192, marginBottom: 40 }}
+          style={{
+            width: 180,
+            height: 180,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 40,
+          }}
         >
           <View
             style={{
               position: "absolute",
-              width: 192,
-              height: 192,
-              borderRadius: 96,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
               borderWidth: 8,
-              borderColor: "#2A2A2A",
+              borderColor: "rgba(77,70,60,0.35)",
             }}
           />
-          <View className="items-center">
+          <View style={{ alignItems: "center" }}>
             <Ionicons
               name="hourglass-outline"
-              size={48}
-              color="#998F84"
-              style={{ opacity: 0.5, marginBottom: 8 }}
+              size={42}
+              color={theme.color.onSurfaceMuted}
+              style={{ opacity: 0.55, marginBottom: 8 }}
             />
             <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 48, lineHeight: 52 }}
+              style={{
+                fontFamily: "NotoSerif",
+                fontSize: 44,
+                lineHeight: 48,
+                letterSpacing: -0.5,
+                color: theme.color.onSurface,
+                fontVariant: ["tabular-nums"],
+              }}
             >
               0
             </Text>
             <Text
-              className="font-label text-secondary"
               style={{
-                fontSize: 11,
+                fontFamily: "Inter-SemiBold",
+                fontSize: 10,
                 letterSpacing: 2.2,
                 textTransform: "uppercase",
-                marginTop: 4,
+                color: theme.color.onSurfaceVariant,
+                marginTop: 6,
               }}
             >
               {t("profile.credits_label")}
@@ -82,90 +95,104 @@ export default function CreditsExhaustedScreen() {
           </View>
         </View>
 
-        {/* Headline & Body */}
-        <View className="items-center" style={{ marginBottom: 48 }}>
-          <Text
-            className="font-headline text-on-surface"
-            style={{ fontSize: 28, lineHeight: 34, marginBottom: 16 }}
-          >
-            {t("credits_exhausted.title")}
-          </Text>
-          <Text
-            className="font-body text-center"
-            style={{
-              fontSize: 14,
-              lineHeight: 22,
-              color: "rgba(224,194,154,0.8)",
-              maxWidth: 280,
-            }}
-          >
-            {t("credits_exhausted.description")}
-          </Text>
-        </View>
-
-        {/* Pro Recommendation Card */}
-        <View
-          className="w-full rounded-xl bg-surface-container-low overflow-hidden"
-          style={{ padding: 32 }}
+        {/* Headline + body */}
+        <Text
+          style={{
+            fontFamily: "NotoSerif",
+            fontSize: 28,
+            lineHeight: 34,
+            letterSpacing: -0.3,
+            color: theme.color.onSurface,
+            textAlign: "center",
+            marginBottom: 14,
+          }}
         >
-          {/* Decorative corner image */}
+          {t("credits_exhausted.title")}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontSize: 14,
+            lineHeight: 22,
+            color: theme.color.onSurfaceVariant,
+            textAlign: "center",
+            maxWidth: 300,
+            marginBottom: 40,
+          }}
+        >
+          {t("credits_exhausted.description")}
+        </Text>
+
+        {/* Pro-recommendation card — editorial, no external image */}
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            padding: 24,
+            borderRadius: 20,
+            backgroundColor: "rgba(225,195,155,0.05)",
+            borderWidth: 1,
+            borderColor: "rgba(225,195,155,0.22)",
+            overflow: "hidden",
+            ...theme.elevation.goldGlowSoft,
+          }}
+        >
+          {/* Soft gold halo in the corner — replaces the remote decorative
+              image that was 404-prone and cache-miss-ugly. */}
           <View
+            pointerEvents="none"
             style={{
               position: "absolute",
-              top: 0,
-              right: 0,
-              width: 128,
-              height: 128,
-              opacity: 0.1,
+              top: -40,
+              right: -40,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              backgroundColor: "rgba(253,222,181,0.08)",
+            }}
+          />
+
+          <Text
+            style={{
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              color: theme.color.goldMidday,
+              marginBottom: 12,
             }}
           >
-            <Image
-              source={{ uri: DECORATIVE_IMG }}
-              style={{ width: 128, height: 128 }}
-              contentFit="cover"
-            />
-          </View>
+            {t("credits_exhausted.pro_recommendation")}
+          </Text>
 
-          <View style={{ position: "relative", zIndex: 10 }}>
-            <Text
-              className="font-label text-secondary"
-              style={{
-                fontSize: 10,
-                fontWeight: "700",
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
-                marginBottom: 12,
-              }}
-            >
-              {t("credits_exhausted.pro_recommendation")}
-            </Text>
-            <Text
-              className="font-body text-on-surface-variant"
-              style={{ fontSize: 14, lineHeight: 22, marginBottom: 32 }}
-            >
-              {t("credits_exhausted.upgrade_copy")}
-            </Text>
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 14,
+              lineHeight: 22,
+              color: theme.color.onSurfaceVariant,
+              marginBottom: 24,
+            }}
+          >
+            {t("credits_exhausted.upgrade_copy")}
+          </Text>
 
-            {/* Signature CTA */}
-            <PrimaryButton label={t("credits_exhausted.view_plans")} onPress={() => router.push("/plans")} />
+          <Button
+            title={t("credits_exhausted.view_plans")}
+            variant="primary"
+            size="md"
+            onPress={() => router.push("/plans")}
+            icon="arrow-forward"
+          />
 
-            {/* One-time credit pack alternative */}
-            <Pressable
+          <View style={{ alignItems: "center", marginTop: 8 }}>
+            <Button
+              title={t("credits_bridge.or_buy_credits")}
+              variant="tertiary"
+              size="sm"
               onPress={() => router.push("/credits/packs")}
-              style={{ marginTop: 16, alignItems: "center" }}
-            >
-              <Text
-                className="font-body text-on-surface-variant"
-                style={{
-                  fontSize: 13,
-                  fontWeight: "500",
-                  textDecorationLine: "underline",
-                  textDecorationColor: "rgba(224,194,154,0.3)",
-                }}
-              >
-                {t("credits_bridge.or_buy_credits")}
-              </Text>
-            </Pressable>
+              fullWidth={false}
+            />
           </View>
         </View>
       </View>

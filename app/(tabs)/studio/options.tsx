@@ -25,6 +25,8 @@ import type { DesignMode, QualityTier } from "@/types/api";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { Brand } from "@/components/brand/Brand";
+import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   REDESIGN: "INTERIOR_REDESIGN",
@@ -193,25 +195,13 @@ export default function OptionsScreen() {
         >
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
-        <Text
-          className="font-headline text-center"
-          style={{
-            fontSize: 14,
-            lineHeight: 16,
-            fontWeight: "700",
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            color: "#E1C39B",
-          }}
-        >
-          {"ARCHITECTURAL\nLENS"}
-        </Text>
+        <Brand variant="inline" size="sm" tone="gold" />
         <UserAvatar size="sm" onPress />
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true) }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -1083,15 +1073,16 @@ export default function OptionsScreen() {
         </View>
       </ScrollView>
 
-      {/* Floating CTA */}
-      <View className="absolute bottom-0 left-0 right-0 px-6 pb-24 pt-4">
+      {/* Floating CTA — BottomBar handles the safe-area + tab-bar math so
+          the Next button always sits a breathing-cushion above the blurred
+          tab bar pill. */}
+      <BottomBar overTabBar>
         <PrimaryButton
           label={t("common.next")}
           onPress={() => {
             // STYLE_TRANSFER requires a reference image. If the user hasn't
-            // picked one yet (e.g. navigated away from the style-transfer
-            // screen without uploading), send them back instead of letting
-            // Review proceed to a guaranteed backend 400.
+            // picked one yet, bounce them back instead of letting Review
+            // proceed to a guaranteed backend 400.
             if (mode === "STYLE_TRANSFER" && !referencePhoto?.fileId) {
               Alert.alert(
                 t("studio.mode_style_transfer"),
@@ -1103,7 +1094,7 @@ export default function OptionsScreen() {
             router.push("/(tabs)/studio/review");
           }}
         />
-      </View>
+      </BottomBar>
     </SafeAreaView>
   );
 }

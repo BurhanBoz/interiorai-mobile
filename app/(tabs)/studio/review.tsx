@@ -20,6 +20,8 @@ import { createJob } from "@/services/jobs";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { Brand } from "@/components/brand/Brand";
+import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import type { SpeedMode } from "@/types/api";
 
 const qualityLabelKeys: Record<string, string> = {
@@ -147,19 +149,7 @@ export default function ReviewScreen() {
         >
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
-        <Text
-          className="font-headline text-center"
-          style={{
-            fontSize: 14,
-            lineHeight: 16,
-            fontWeight: "700",
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            color: "#E1C39B",
-          }}
-        >
-          {"ARCHITECTURAL\nLENS"}
-        </Text>
+        <Brand variant="inline" size="sm" tone="gold" />
         <UserAvatar size="sm" onPress />
       </View>
 
@@ -194,7 +184,7 @@ export default function ReviewScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true) }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -497,37 +487,34 @@ export default function ReviewScreen() {
           </View>
         </View>
 
-        {/* CTA Section */}
-        <View
+      </ScrollView>
+
+      {/* Floating Generate CTA — sits above the bottom tab bar via
+          <BottomBar/> math so the user can always tap Generate regardless
+          of where the list scrolls. Previously the inline CTA was clipped
+          behind the blurred tab bar on iPhone X+. */}
+      <BottomBar overTabBar>
+        <PrimaryButton
+          label={t("studio.generate")}
+          onPress={handleGenerate}
+          loading={isSubmitting}
+          icon="sparkles"
+        />
+        <Text
+          className="font-label"
           style={{
-            marginTop: 32,
-            paddingHorizontal: 24,
-            alignItems: "center",
-            gap: 16,
+            marginTop: 10,
+            fontSize: 10,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            opacity: 0.55,
+            textAlign: "center",
+            color: "#D0C5B8",
           }}
         >
-          <View style={{ width: "100%" }}>
-            <PrimaryButton
-              label={t("studio.generate")}
-              onPress={handleGenerate}
-              loading={isSubmitting}
-              icon="sparkles"
-            />
-          </View>
-
-          <Text
-            className="font-label text-on-surface-variant"
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              opacity: 0.6,
-            }}
-          >
-            Estimated time: 45 seconds
-          </Text>
-        </View>
-      </ScrollView>
+          Estimated time: 45 seconds
+        </Text>
+      </BottomBar>
     </SafeAreaView>
   );
 }

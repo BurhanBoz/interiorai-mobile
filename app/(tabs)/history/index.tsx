@@ -208,8 +208,41 @@ function HistoryCard({ item }: { item: JobResponse }) {
                 transition={300}
               />
             ) : (
-              <View className="flex-1 items-center justify-center">
-                <Ionicons name="image-outline" size={28} color="#998F84" />
+              // Fallback when the render has no thumbnail. For FAILED
+              // jobs we show a warning glyph so the missing image reads
+              // as "this run failed" instead of "the app is broken".
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                  paddingHorizontal: 8,
+                }}
+              >
+                <Ionicons
+                  name={
+                    item.status === "FAILED"
+                      ? "alert-circle-outline"
+                      : "image-outline"
+                  }
+                  size={26}
+                  color={item.status === "FAILED" ? "#D98A7B" : "#998F84"}
+                />
+                <Text
+                  style={{
+                    fontSize: 9,
+                    lineHeight: 12,
+                    color: "#998F84",
+                    textAlign: "center",
+                    letterSpacing: 0.3,
+                  }}
+                  numberOfLines={2}
+                >
+                  {item.status === "FAILED"
+                    ? "Image\nunavailable"
+                    : "No preview"}
+                </Text>
               </View>
             )}
             {/* Quality badge on thumbnail */}
@@ -301,7 +334,11 @@ function HistoryCard({ item }: { item: JobResponse }) {
               {title}
             </Text>
 
-            {/* Row 3: Meta — render id + credits, with open icon on far right */}
+            {/* Row 3: Meta — credits + chevron. The hash-ID prefix that
+                used to live here was support/debug information, not
+                user-facing copy; users don't care that their job is
+                #6FF07, and seeing it made the card feel like an admin
+                dashboard. Credits consumed is the meaningful piece. */}
             <View
               style={{
                 flexDirection: "row",
@@ -316,10 +353,10 @@ function HistoryCard({ item }: { item: JobResponse }) {
                   letterSpacing: 1.2,
                   textTransform: "uppercase",
                   opacity: 0.7,
+                  fontVariant: ["tabular-nums"],
                 }}
                 numberOfLines={1}
               >
-                #{item.id.slice(0, 5).toUpperCase()} ·{" "}
                 {item.creditsConsumed}{" "}
                 {item.creditsConsumed === 1 ? "credit" : "credits"}
               </Text>
