@@ -32,9 +32,29 @@ import type { JobResponse, JobOutputResponse } from "@/types/api";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
 
-/** Resolve the image URL — use backend proxy for private S3 bucket */
-function getOutputImageUrl(jobId: string, output: JobOutputResponse): string {
-  return getOutputDownloadUrl(jobId, output.id);
+/**
+ * Resolve the image URL for display.
+ *
+ * Uses the pre-signed S3 URL returned by the backend in
+ * {@code JobResponse.outputs[].url} (1-hour expiry, re-issued on every
+ * job fetch). We deliberately do NOT go through the backend's
+ * {@code /api/jobs/{id}/outputs/{outputId}/download} redirect endpoint
+ * — iOS URLSession forwards the {@code Authorization: Bearer} header
+ * to the S3 redirect target, which conflicts with S3's
+ * {@code X-Amz-Signature} query-param auth and returns 403.
+ *
+ * The direct {@code output.url} is already presigned by the backend;
+ * no auth header is required (or wanted — supplying one breaks S3).
+ * The download proxy endpoint is still the right call for
+ * save-to-photos / share flows where we intentionally pipe through
+ * the backend for transaction logging.
+ *
+ * @param _jobId   unused — kept in signature so callers don't have to
+ *                 re-plumb. Will be dropped in a future cleanup.
+ * @param output   the output entity; {@code output.url} is used.
+ */
+function getOutputImageUrl(_jobId: string, output: JobOutputResponse): string {
+  return output.url;
 }
 
 const qualityLabelKeys: Record<string, string> = {
@@ -94,10 +114,16 @@ export default function ResultDetailScreen() {
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
 
-  /** Build an authenticated image source for expo-image */
+  /**
+   * Build the image source for expo-image.
+   *
+   * No {@code headers} — the URI is a pre-signed S3 URL
+   * (see {@link getOutputImageUrl}). Supplying an Authorization
+   * header forces S3 to refuse the request (403 — mixed auth
+   * mechanisms).
+   */
   const getImageSource = (output: JobOutputResponse) => ({
     uri: getOutputImageUrl(job!.id, output),
-    headers: authHeaders,
   });
 
   const { saveToPhotos, shareImage, isDownloading, isSharing } =
@@ -108,11 +134,11 @@ export default function ResultDetailScreen() {
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
-    // Share the actual image file (downloaded from the auth-protected
-    // backend), not just the URL string. iMessage / WhatsApp / Mail get
-    // a real attachment instead of a paste-this-into-a-browser link.
+    // Share the actual image file (downloaded from the pre-signed S3
+    // URL), not just the URL string. iMessage / WhatsApp / Mail get a
+    // real attachment instead of a paste-this-into-a-browser link.
+    // No auth headers — the URL is pre-signed (see getOutputImageUrl).
     await shareImage(url, {
-      headers: authHeaders,
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
     });
   };
@@ -122,8 +148,8 @@ export default function ResultDetailScreen() {
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
+    // No auth headers — see getOutputImageUrl.
     await saveToPhotos(url, {
-      headers: authHeaders,
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
     });
   };
@@ -650,7 +676,9 @@ export default function ResultDetailScreen() {
         >
           {fullscreenUrl ? (
             <Image
-              source={{ uri: fullscreenUrl, headers: authHeaders }}
+              // fullscreenUrl comes from getOutputImageUrl → pre-signed S3.
+              // No auth header (supplying one → S3 403, see getOutputImageUrl).
+              source={{ uri: fullscreenUrl }}
               style={{ width: "100%", height: "100%" }}
               contentFit="contain"
             />

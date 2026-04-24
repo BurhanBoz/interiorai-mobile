@@ -173,7 +173,12 @@ export default function GalleryScreen() {
         j.outputs.map(o => ({
           jobId: j.id,
           outputId: o.id,
-          imageUrl: getOutputDownloadUrl(j.id, o.id),
+          // Direct pre-signed S3 URL (1-hour expiry). Going through the
+          // backend /download redirect breaks on iOS — URLSession forwards
+          // the Authorization header to the S3 redirect target and S3
+          // returns 403 because the request has both Bearer auth AND
+          // X-Amz-Signature query auth. See result/[jobId].tsx.
+          imageUrl: o.url,
           roomTypeName: j.roomTypeName ?? "",
           designStyleName: j.designStyleName ?? "",
           qualityTier: j.qualityTier,
@@ -253,7 +258,9 @@ export default function GalleryScreen() {
         })}
       >
         <Image
-          source={{ uri: item.imageUrl, headers: authHeaders }}
+          // item.imageUrl is the pre-signed S3 URL; no Authorization
+          // header (supplying one → S3 403 on redirect target).
+          source={{ uri: item.imageUrl }}
           style={{ width: tileWidth, height: tileHeight }}
           contentFit="cover"
           transition={200}
@@ -801,7 +808,8 @@ export default function GalleryScreen() {
           <StatusBar barStyle="light-content" />
           {previewItem && (
             <Image
-              source={{ uri: previewItem.imageUrl, headers: authHeaders }}
+              // Pre-signed S3 URL; no auth headers (see above).
+              source={{ uri: previewItem.imageUrl }}
               style={{ flex: 1 }}
               contentFit="contain"
               transition={200}
