@@ -90,7 +90,14 @@
     "social_not_configured_title": "No Configurado",
     "social_not_configured_description": "Faltan los client IDs de Google. Configura EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID y EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID en .env.",
     "apple_not_available_title": "No Disponible",
-    "apple_not_available_description": "Iniciar sesión con Apple solo está disponible en iOS."
+    "apple_not_available_description": "Iniciar sesión con Apple solo está disponible en iOS.",
+    "email_required": "Por favor ingresa tu correo.",
+    "password_required": "Por favor ingresa tu contraseña.",
+    "invalid_email": "Eso no parece un correo válido.",
+    "toggle_password_visibility": "Mostrar u ocultar contraseña",
+    "password_helper": "Al menos 8 caracteres.",
+    "login_eyebrow": "Bienvenido de nuevo",
+    "register_eyebrow": "Comienza tu estudio"
   },
   "forgot_password": {
     "title": "Restablecer Contraseña",
@@ -110,7 +117,9 @@
     "resending": "Reenviando…",
     "link_resent_title": "Enlace reenviado",
     "link_resent_description": "Si existe una cuenta, enviamos un nuevo enlace.",
-    "remember_password": "¿Recuerdas tu contraseña?"
+    "remember_password": "¿Recuerdas tu contraseña?",
+    "eyebrow": "¿Perdiste la llave?",
+    "success_eyebrow": "Enviado"
   },
   "reset_password": {
     "title": "Nueva Contraseña",
@@ -126,7 +135,8 @@
     "request_new_link": "Solicitar un nuevo enlace",
     "passwords_dont_match": "Las contraseñas no coinciden.",
     "password_too_short": "La contraseña debe tener al menos 8 caracteres.",
-    "generic_error": "No pudimos restablecer tu contraseña. Intenta de nuevo."
+    "generic_error": "No pudimos restablecer tu contraseña. Intenta de nuevo.",
+    "eyebrow": "Acceso seguro"
   },
   "studio": {
     "step_1_of_4": "PASO 1 DE 4",

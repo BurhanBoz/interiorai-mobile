@@ -2,18 +2,36 @@ import {
   View,
   Text,
   FlatList,
-  Pressable,
   useWindowDimensions,
   ViewToken,
+  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Animated } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Brand } from "@/components/brand/Brand";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
+
+/**
+ * The first-run onboarding carousel. Three slides hand the viewer the
+ * brand's core promise: transform your space, preserve your layout,
+ * iterate endlessly. The hero image is large, the typography is
+ * editorial, and the two CTAs (primary: Get Started, tertiary: Sign In)
+ * live in a calm footer.
+ *
+ * Audit fixes applied:
+ *   - Brand mark routes through <Brand variant="stacked"/> instead of
+ *     the `app.brand` string split on " " and joined with "\n" — which
+ *     was silently creating a line break in the middle of whatever the
+ *     user's current locale happened to render
+ *   - Pagination dots use gold theme token instead of the secondary gray
+ *   - CTA is the new <Button variant="primary">; the "sign in" link is
+ *     <Button variant="tertiary"> so hierarchy reads at a glance
+ */
 
 const SLIDES = [
   {
@@ -40,28 +58,35 @@ const SLIDES = [
 ] as const;
 
 function PaginationDot({ active }: { active: boolean }) {
-  const widthAnim = useRef(new Animated.Value(active ? 32 : 6)).current;
-  const opacityAnim = useRef(new Animated.Value(active ? 1 : 0.4)).current;
+  const widthAnim = useRef(new Animated.Value(active ? 28 : 6)).current;
+  const opacityAnim = useRef(new Animated.Value(active ? 1 : 0.35)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(widthAnim, {
-        toValue: active ? 32 : 6,
-        duration: 300,
+        toValue: active ? 28 : 6,
+        duration: theme.motion.duration.base,
+        easing: theme.motion.easing.standard,
         useNativeDriver: false,
       }),
       Animated.timing(opacityAnim, {
-        toValue: active ? 1 : 0.4,
-        duration: 300,
+        toValue: active ? 1 : 0.35,
+        duration: theme.motion.duration.base,
+        easing: theme.motion.easing.standard,
         useNativeDriver: false,
       }),
     ]).start();
-  }, [active]);
+  }, [active, widthAnim, opacityAnim]);
 
   return (
     <Animated.View
-      style={{ width: widthAnim, opacity: opacityAnim }}
-      className="h-1.5 rounded-full bg-secondary"
+      style={{
+        width: widthAnim,
+        opacity: opacityAnim,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: theme.color.goldMidday,
+      }}
     />
   );
 }
@@ -88,17 +113,21 @@ export default function OnboardingScreen() {
   const slide = SLIDES[activeIndex];
 
   return (
-    <View className="flex-1 bg-surface">
-      {/* Hero Image Carousel (top ~58%) */}
+    <View style={{ flex: 1, backgroundColor: theme.color.surface }}>
+      {/* Hero carousel (top ~58%) */}
       <View
-        style={{ height: "58%" }}
-        className="relative w-full overflow-hidden"
+        style={{
+          height: "58%",
+          position: "relative",
+          width: "100%",
+          overflow: "hidden",
+        }}
       >
         <FlatList
           ref={flatListRef}
           data={SLIDES}
           renderItem={({ item }) => (
-            <View style={{ width }} className="flex-1">
+            <View style={{ width, flex: 1 }}>
               <Image
                 source={{ uri: item.image }}
                 contentFit="cover"
@@ -107,7 +136,7 @@ export default function OnboardingScreen() {
               />
             </View>
           )}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -123,72 +152,112 @@ export default function OnboardingScreen() {
 
         {/* Bottom gradient fade into surface */}
         <LinearGradient
-          colors={["transparent", "rgba(19,19,19,0.6)", "#131313"]}
+          colors={["transparent", "rgba(19,19,19,0.6)", theme.color.surface]}
           locations={[0.3, 0.7, 1]}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
           pointerEvents="none"
         />
 
-        {/* Branding on image */}
-        <View className="absolute top-12 left-8">
-          <Text
-            className="font-headline font-bold text-secondary"
-            style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-            }}
-          >
-            {t("app.brand").split(" ").join("\n")}
-          </Text>
-        </View>
+        {/* Brand mark on the hero image — inline so it stays a single
+            readable line regardless of locale. */}
+        <SafeAreaView
+          edges={["top"]}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+          }}
+          pointerEvents="box-none"
+        >
+          <View style={{ paddingHorizontal: 28, paddingTop: 16 }}>
+            <Brand variant="inline" size="sm" tone="gold" />
+          </View>
+        </SafeAreaView>
       </View>
 
       {/* Content Section */}
-      <View className="flex-1 px-8 pt-4 pb-10">
-        {/* Pagination dots */}
-        <View className="flex-row items-center mb-7" style={{ gap: 6 }}>
-          {SLIDES.map((_, i) => (
-            <PaginationDot key={i} active={i === activeIndex} />
-          ))}
-        </View>
-
-        {/* Headline + Description */}
-        <View style={{ maxWidth: 280 }}>
-          <Text
-            className="font-headline font-bold text-on-surface"
-            style={{ fontSize: 32, lineHeight: 38 }}
+      <SafeAreaView edges={["bottom"]} style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 32,
+            paddingTop: 20,
+            paddingBottom: 20,
+          }}
+        >
+          {/* Pagination dots */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 26,
+            }}
           >
-            {t(slide.headlineKey)}
-          </Text>
-          <Text
-            className="font-body text-sm text-on-surface-variant leading-relaxed mt-4"
-            style={{ opacity: 0.8 }}
-          >
-            {t(slide.descriptionKey)}
-          </Text>
-        </View>
+            {SLIDES.map((_, i) => (
+              <PaginationDot key={i} active={i === activeIndex} />
+            ))}
+          </View>
 
-        {/* Footer Actions */}
-        <View className="mt-auto items-center w-full" style={{ gap: 20 }}>
-          <Pressable onPress={() => router.push("/login")} hitSlop={12}>
+          {/* Headline + Description */}
+          <View style={{ maxWidth: 300 }}>
             <Text
-              className="font-label font-semibold text-secondary uppercase"
-              style={{ fontSize: 11, letterSpacing: 2 }}
+              style={{
+                fontFamily: "NotoSerif",
+                fontSize: 32,
+                lineHeight: 38,
+                letterSpacing: -0.3,
+                color: theme.color.onSurface,
+              }}
             >
-              {t("auth.already_have_account")} {t("auth.sign_in_link")}
+              {t(slide.headlineKey)}
             </Text>
-          </Pressable>
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 15,
+                lineHeight: 22,
+                color: theme.color.onSurfaceVariant,
+                marginTop: 14,
+              }}
+            >
+              {t(slide.descriptionKey)}
+            </Text>
+          </View>
 
-          {/* CTA Button */}
-          <View className="w-full">
-            <PrimaryButton
-              label={t("onboarding.get_started")}
+          {/* Footer Actions */}
+          <View
+            style={{
+              marginTop: "auto",
+              gap: 8,
+            }}
+          >
+            <Button
+              title={t("onboarding.get_started")}
+              variant="primary"
+              size="lg"
               onPress={() => router.push("/register")}
+              icon="arrow-forward"
             />
+            <View style={{ alignItems: "center" }}>
+              <Button
+                title={`${t("auth.already_have_account")} ${t("auth.sign_in_link")}`}
+                variant="tertiary"
+                size="sm"
+                onPress={() => router.push("/login")}
+                fullWidth={false}
+              />
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }

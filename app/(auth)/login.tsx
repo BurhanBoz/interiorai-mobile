@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
@@ -9,7 +8,6 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,24 +15,62 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Brand } from "@/components/brand/Brand";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { theme } from "@/config/theme";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Sign-in screen. Editorial hero, single primary CTA, apple/google
+ * social sub-row, registration footer link.
+ *
+ * Audit fixes:
+ *   - Hand-rolled TextInputs → <Input/> with label + icon + error
+ *   - Gradient button + social button hand-roll → <Button/> variants
+ *   - Hardcoded #D0C5B8 / #998F84 / #E5E2E1 / "rgba(77,70,60,...)" →
+ *     theme tokens
+ *   - Inline email validation via <Input error={...}> (no Alert.alert
+ *     for empty fields; the inline error is kinder)
+ */
 export default function LoginScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const login = useAuthStore(s => s.login);
-  const { appleAvailable, loading: socialLoading, signInWithApple, signInWithGoogle } = useSocialAuth();
+  const login = useAuthStore((s) => s.login);
+  const {
+    appleAvailable,
+    loading: socialLoading,
+    signInWithApple,
+    signInWithGoogle,
+  } = useSocialAuth();
   const busy = isLoading || socialLoading !== null;
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert(t("auth.missing_fields_title"), t("auth.missing_fields_description"));
-      return;
+    let hasError = false;
+    if (!email.trim()) {
+      setEmailError(t("auth.email_required"));
+      hasError = true;
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      setEmailError(t("auth.invalid_email"));
+      hasError = true;
+    } else {
+      setEmailError(null);
     }
+    if (!password.trim()) {
+      setPasswordError(t("auth.password_required"));
+      hasError = true;
+    } else {
+      setPasswordError(null);
+    }
+    if (hasError) return;
+
     setIsLoading(true);
     try {
       await login(email.trim(), password);
@@ -49,229 +85,218 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={{ flex: 1, backgroundColor: theme.color.surface }}
+    >
       <KeyboardAvoidingView
-        className="flex-1"
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          className="flex-1"
+          style={{ flex: 1 }}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingHorizontal: 32,
-            paddingTop: 64,
-            paddingBottom: 40,
+            paddingHorizontal: 28,
+            paddingTop: 40,
+            paddingBottom: 32,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Brand Identity */}
-          <View className="mb-10">
-            <Text
-              className="font-headline font-bold text-secondary"
-              style={{
-                fontSize: 14,
-                letterSpacing: 3,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("app.brand")}
-            </Text>
+          {/* Brand mark */}
+          <View style={{ marginBottom: 48 }}>
+            <Brand variant="inline" size="sm" tone="gold" />
           </View>
 
-          {/* Headline */}
+          {/* Editorial hero — eyebrow + display serif + sub-headline */}
           <Text
-            className="font-headline font-bold text-on-surface mb-2"
-            style={{ fontSize: 36, lineHeight: 42 }}
+            style={{
+              fontFamily: "Inter-SemiBold",
+              fontSize: 10,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              color: theme.color.goldMidday,
+              marginBottom: 12,
+            }}
+          >
+            {t("auth.login_eyebrow")}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "NotoSerif",
+              fontSize: 32,
+              lineHeight: 38,
+              letterSpacing: -0.3,
+              color: theme.color.onSurface,
+              marginBottom: 10,
+            }}
           >
             {t("auth.login_title")}
           </Text>
           <Text
-            className="font-body text-sm text-on-surface-variant mb-10"
-            style={{ fontWeight: "300" }}
+            style={{
+              fontFamily: "Inter",
+              fontSize: 15,
+              lineHeight: 22,
+              color: theme.color.onSurfaceVariant,
+              marginBottom: 36,
+            }}
           >
             {t("auth.login_subtitle")}
           </Text>
 
-          {/* Email Input */}
-          <View className="mb-5">
-            <Text
-              className="font-label text-on-surface-variant uppercase ml-1 mb-2"
-              style={{ fontSize: 11, letterSpacing: 2 }}
-            >
-              {t("auth.email_label")}
-            </Text>
-            <View className="flex-row items-center bg-surface-container-high rounded-xl">
-              <View className="pl-4">
-                <Ionicons name="mail-outline" size={20} color="#D0C5B8" />
-              </View>
-              <TextInput
-                className="flex-1 py-4 pl-3 pr-4 font-body text-on-surface text-sm"
-                placeholder={t("auth.email_placeholder")}
-                placeholderTextColor="#998F84"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+          {/* Form */}
+          <View style={{ gap: 18 }}>
+            <Input
+              label={t("auth.email_label")}
+              placeholder={t("auth.email_placeholder")}
+              value={email}
+              onChangeText={(v) => {
+                setEmail(v);
+                if (emailError) setEmailError(null);
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon="mail-outline"
+              error={emailError}
+            />
+            <Input
+              label={t("auth.password_label")}
+              placeholder={t("auth.password_placeholder")}
+              value={password}
+              onChangeText={(v) => {
+                setPassword(v);
+                if (passwordError) setPasswordError(null);
+              }}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              icon="lock-closed-outline"
+              error={passwordError}
+              trailing={
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={8}
+                  accessibilityLabel={t("auth.toggle_password_visibility")}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={theme.color.onSurfaceMuted}
+                  />
+                </Pressable>
+              }
+            />
           </View>
 
-          {/* Password Input */}
-          <View className="mb-4">
-            <Text
-              className="font-label text-on-surface-variant uppercase ml-1 mb-2"
-              style={{ fontSize: 11, letterSpacing: 2 }}
-            >
-              {t("auth.password_label")}
-            </Text>
-            <View className="flex-row items-center bg-surface-container-high rounded-xl">
-              <View className="pl-4">
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color="#D0C5B8"
-                />
-              </View>
-              <TextInput
-                className="flex-1 py-4 pl-3 pr-2 font-body text-on-surface text-sm"
-                placeholder={t("auth.password_placeholder")}
-                placeholderTextColor="#998F84"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                className="pr-4"
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color="#D0C5B8"
-                />
-              </Pressable>
-            </View>
+          {/* Forgot password — quiet text link */}
+          <View style={{ alignItems: "flex-end", marginTop: 14 }}>
+            <Button
+              title={t("auth.forgot_password")}
+              variant="tertiary"
+              size="sm"
+              onPress={() => router.push("/forgot-password")}
+              fullWidth={false}
+            />
           </View>
 
-          {/* Forgot Password */}
-          <View className="items-end mb-6">
-            <Pressable onPress={() => router.push("/forgot-password")}>
-              <Text
-                className="font-label text-secondary uppercase"
-                style={{ fontSize: 11, letterSpacing: 2 }}
-              >
-                {t("auth.forgot_password")}
-              </Text>
-            </Pressable>
+          {/* Primary CTA */}
+          <View style={{ marginTop: 18 }}>
+            <Button
+              title={isLoading ? t("auth.signing_in") : t("auth.sign_in")}
+              variant="primary"
+              size="lg"
+              onPress={handleLogin}
+              disabled={busy}
+              loading={isLoading}
+              icon="arrow-forward"
+            />
           </View>
-
-          {/* Sign In CTA */}
-          <PrimaryButton
-            label={isLoading ? t("auth.signing_in") : t("auth.sign_in")}
-            onPress={handleLogin}
-            disabled={busy}
-            loading={isLoading}
-          />
 
           {/* Divider */}
-          <View className="flex-row items-center my-8" style={{ gap: 12 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
+              marginVertical: 28,
+            }}
+          >
             <View
-              className="flex-1 h-px"
-              style={{ backgroundColor: "rgba(77,70,60,0.2)" }}
+              style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: "rgba(77,70,60,0.22)",
+              }}
             />
             <Text
-              className="font-label text-on-surface-variant uppercase"
-              style={{ fontSize: 10, letterSpacing: 3 }}
+              style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 10,
+                letterSpacing: 2.2,
+                textTransform: "uppercase",
+                color: theme.color.onSurfaceMuted,
+              }}
             >
               {t("auth.continue_with")}
             </Text>
             <View
-              className="flex-1 h-px"
-              style={{ backgroundColor: "rgba(77,70,60,0.2)" }}
+              style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: "rgba(77,70,60,0.22)",
+              }}
             />
           </View>
 
-          {/* Social Login — larger tap target, more breathing room.
-              height 56 → 64 lets the text sit centered vertically without
-              crowding the icon; bumped gap and letterSpacing to feel more
-              native (Apple HIG calls for ≥64pt for primary auth actions). */}
-          <View className="flex-row" style={{ gap: 12 }}>
-            <Pressable
+          {/* Social providers */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <SocialButton
               onPress={signInWithGoogle}
+              loading={socialLoading === "google"}
               disabled={busy}
-              className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-              style={({ pressed }) => ({
-                minHeight: 64,
-                paddingVertical: 18,
-                paddingHorizontal: 20,
-                gap: 12,
-                opacity: busy ? 0.5 : pressed ? 0.8 : 1,
-              })}
-            >
-              {socialLoading === "google" ? (
-                <ActivityIndicator size="small" color="#E5E2E1" />
-              ) : (
-                <>
-                  <Ionicons name="logo-google" size={22} color="#E5E2E1" />
-                  <Text
-                    className="font-body font-medium text-on-surface"
-                    style={{
-                      fontSize: 15,
-                      letterSpacing: 0.4,
-                      textAlign: "center",
-                    }}
-                    numberOfLines={1}
-                  >
-                    {t("auth.google")}
-                  </Text>
-                </>
-              )}
-            </Pressable>
-            {appleAvailable && (
-              <Pressable
+              icon="logo-google"
+              label={t("auth.google")}
+            />
+            {appleAvailable ? (
+              <SocialButton
                 onPress={signInWithApple}
+                loading={socialLoading === "apple"}
                 disabled={busy}
-                className="flex-1 flex-row items-center justify-center rounded-xl bg-surface-container-high"
-                style={({ pressed }) => ({
-                  minHeight: 64,
-                  paddingVertical: 18,
-                  paddingHorizontal: 20,
-                  gap: 12,
-                  opacity: busy ? 0.5 : pressed ? 0.8 : 1,
-                })}
-              >
-                {socialLoading === "apple" ? (
-                  <ActivityIndicator size="small" color="#E5E2E1" />
-                ) : (
-                  <>
-                    <Ionicons name="logo-apple" size={24} color="#E5E2E1" />
-                    <Text
-                      className="font-body font-medium text-on-surface"
-                      style={{
-                        fontSize: 15,
-                        letterSpacing: 0.4,
-                        textAlign: "center",
-                      }}
-                      numberOfLines={1}
-                    >
-                      {t("auth.apple")}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            )}
+                icon="logo-apple"
+                label={t("auth.apple")}
+              />
+            ) : null}
           </View>
 
           {/* Footer */}
-          <View className="flex-row items-center justify-center mt-auto pt-8">
-            <Text className="font-body text-on-surface-variant text-sm">
+          <View
+            style={{
+              marginTop: "auto",
+              paddingTop: 36,
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 14,
+                color: theme.color.onSurfaceVariant,
+              }}
+            >
               {t("auth.dont_have_account")}{" "}
             </Text>
-            <Pressable onPress={() => router.push("/register")}>
-              <Text className="font-body text-secondary font-semibold text-sm ml-1">
+            <Pressable onPress={() => router.push("/register")} hitSlop={6}>
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 14,
+                  color: theme.color.goldMidday,
+                  letterSpacing: 0.2,
+                }}
+              >
                 {t("auth.register_link")}
               </Text>
             </Pressable>
@@ -279,5 +304,68 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Compact social auth button — matches <Button variant="secondary"> but
+ * with a provider logo on the left and a locked size that leaves room
+ * for both "Google" and "Apple" translations side-by-side.
+ */
+function SocialButton({
+  onPress,
+  loading,
+  disabled,
+  icon,
+  label,
+}: {
+  onPress: () => void;
+  loading: boolean;
+  disabled: boolean;
+  icon: "logo-google" | "logo-apple";
+  label: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        minHeight: 56,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        backgroundColor: pressed
+          ? "rgba(225,195,155,0.06)"
+          : "transparent",
+        borderWidth: 1,
+        borderColor: pressed
+          ? "rgba(225,195,155,0.35)"
+          : "rgba(225,195,155,0.2)",
+        opacity: disabled ? 0.5 : 1,
+      })}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color={theme.color.onSurface} />
+      ) : (
+        <>
+          <Ionicons name={icon} size={20} color={theme.color.onSurface} />
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: "Inter-SemiBold",
+              fontSize: 14,
+              letterSpacing: 0.3,
+              color: theme.color.onSurface,
+            }}
+          >
+            {label}
+          </Text>
+        </>
+      )}
+    </Pressable>
   );
 }

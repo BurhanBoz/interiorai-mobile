@@ -90,7 +90,14 @@
     "social_not_configured_title": "Not Configured",
     "social_not_configured_description": "Google Sign-In client IDs are missing. Set EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID and EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env.",
     "apple_not_available_title": "Not Available",
-    "apple_not_available_description": "Sign in with Apple is only available on iOS."
+    "apple_not_available_description": "Sign in with Apple is only available on iOS.",
+    "email_required": "Please enter your email.",
+    "password_required": "Please enter your password.",
+    "invalid_email": "That doesn't look like a valid email.",
+    "toggle_password_visibility": "Toggle password visibility",
+    "password_helper": "At least 8 characters.",
+    "login_eyebrow": "Welcome back",
+    "register_eyebrow": "Begin your studio"
   },
   "forgot_password": {
     "title": "Reset Password",
@@ -110,7 +117,9 @@
     "resending": "Resending…",
     "link_resent_title": "Link resent",
     "link_resent_description": "If an account exists, we've sent another reset link.",
-    "remember_password": "Remember your password?"
+    "remember_password": "Remember your password?",
+    "eyebrow": "Lost your key",
+    "success_eyebrow": "Sent"
   },
   "reset_password": {
     "title": "Set a New Password",
@@ -126,7 +135,8 @@
     "request_new_link": "Request a new reset link",
     "passwords_dont_match": "Passwords do not match.",
     "password_too_short": "Password must be at least 8 characters.",
-    "generic_error": "We couldn't reset your password. Please try again."
+    "generic_error": "We couldn't reset your password. Please try again.",
+    "eyebrow": "Secure access"
   },
   "studio": {
     "step_1_of_4": "STEP 1 OF 4",

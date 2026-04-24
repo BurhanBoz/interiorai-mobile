@@ -1,44 +1,53 @@
 import {
   View,
   Text,
-  TextInput,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import * as authService from "@/services/auth";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Brand } from "@/components/brand/Brand";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { TopBar } from "@/components/layout/TopBar";
+import { theme } from "@/config/theme";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Stage = "form" | "success";
 
+/**
+ * Password reset request screen. Two stages:
+ *   1. form — enter email, submit
+ *   2. success — soft confirmation + resend option
+ *
+ * Editorial treatment matches login / register. The success stage uses
+ * a warm gold hero glyph (mail-open) inside a quiet tile so it reads as
+ * "we sent it" not "something broke".
+ */
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<Stage>("form");
   const [sentTo, setSentTo] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const validate = (value: string): string | null => {
     if (!value.trim()) return t("forgot_password.missing_email");
-    if (!EMAIL_REGEX.test(value.trim())) return t("forgot_password.invalid_email_format");
+    if (!EMAIL_REGEX.test(value.trim()))
+      return t("forgot_password.invalid_email_format");
     return null;
   };
 
   const sendLink = async (targetEmail: string) => {
     setLoading(true);
     try {
-      // Backend always returns 200 to prevent user enumeration, so we don't
-      // surface "email not found" errors. Network-level errors are shown.
       await authService.forgotPassword(targetEmail);
       setSentTo(targetEmail);
       setStage("success");
@@ -53,114 +62,116 @@ export default function ForgotPasswordScreen() {
   };
 
   const handleSubmit = async () => {
-    const error = validate(email);
-    if (error) {
-      Alert.alert(t("forgot_password.invalid_email_title"), error);
+    const err = validate(email);
+    if (err) {
+      setError(err);
       return;
     }
+    setError(null);
     await sendLink(email.trim().toLowerCase());
   };
 
   const handleResend = async () => {
     if (loading || !sentTo) return;
     await sendLink(sentTo);
-    Alert.alert(t("forgot_password.link_resent_title"), t("forgot_password.link_resent_description"));
+    Alert.alert(
+      t("forgot_password.link_resent_title"),
+      t("forgot_password.link_resent_description"),
+    );
   };
 
   return (
-    <View className="flex-1 bg-surface">
-      <SafeAreaView className="flex-1">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
-        >
-          <View className="flex-1 px-8">
-            {/* Back Button */}
-            <View className="py-4">
-              <Pressable
-                onPress={() => router.back()}
-                className="w-10 h-10 rounded-full items-center justify-center"
-                style={({ pressed }) => ({
-                  backgroundColor: pressed ? "#2A2A2A" : "transparent",
-                })}
-              >
-                <Ionicons name="arrow-back" size={24} color="#E0C29A" />
-              </Pressable>
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={{ flex: 1, backgroundColor: theme.color.surface }}
+    >
+      <TopBar showBack />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={{ flex: 1, paddingHorizontal: 28, paddingTop: 8 }}>
+          {/* Hero glyph tile */}
+          <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                backgroundColor: "rgba(225,195,155,0.08)",
+              }}
+            />
+            <View
+              style={{
+                width: 104,
+                height: 104,
+                borderRadius: 28,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(225,195,155,0.06)",
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.24)",
+                ...theme.elevation.md,
+              }}
+            >
+              <Ionicons
+                name={stage === "success" ? "mail-open-outline" : "lock-closed-outline"}
+                size={40}
+                color={theme.color.goldMidday}
+              />
             </View>
-
-            {/* Hero Visual */}
-            <View className="items-center mt-6 mb-10">
-              <View
-                className="absolute rounded-full"
-                style={{
-                  width: 128,
-                  height: 128,
-                  backgroundColor: "rgba(224,194,154,0.1)",
-                }}
-              />
-              <View
-                className="w-32 h-32 rounded-full items-center justify-center bg-surface-container-low"
-                style={{ borderWidth: 1, borderColor: "rgba(77,70,60,0.2)" }}
-              >
-                <View className="w-20 h-20 rounded-full bg-surface-container-high items-center justify-center">
-                  <Ionicons
-                    name={stage === "success" ? "mail-open" : "lock-closed"}
-                    size={40}
-                    color="#E0C29A"
-                  />
-                </View>
-              </View>
-            </View>
-
-            {stage === "form" ? (
-              <FormStage
-                email={email}
-                onEmailChange={setEmail}
-                onSubmit={handleSubmit}
-                loading={loading}
-              />
-            ) : (
-              <SuccessStage
-                email={sentTo}
-                loading={loading}
-                onResend={handleResend}
-                onBackToLogin={() => router.replace("/(auth)/login")}
-                onEditEmail={() => setStage("form")}
-              />
-            )}
-
-            {/* Footer */}
-            {stage === "form" && (
-              <View className="mt-auto pb-10 items-center">
-                <Pressable
-                  onPress={() => router.back()}
-                  className="flex-row items-center"
-                  style={{ gap: 6 }}
-                >
-                  <Text
-                    className="font-label text-on-surface-variant uppercase"
-                    style={{ fontSize: 11, letterSpacing: 2 }}
-                  >
-                    {t("forgot_password.remember_password")}
-                  </Text>
-                  <Text
-                    className="font-label text-primary font-bold uppercase"
-                    style={{ fontSize: 11, letterSpacing: 2 }}
-                  >
-                    {t("auth.sign_in_link")}
-                  </Text>
-                </Pressable>
-              </View>
-            )}
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+
+          {stage === "form" ? (
+            <FormStage
+              email={email}
+              emailError={error}
+              onEmailChange={(v) => {
+                setEmail(v);
+                if (error) setError(null);
+              }}
+              onSubmit={handleSubmit}
+              loading={loading}
+            />
+          ) : (
+            <SuccessStage
+              email={sentTo}
+              loading={loading}
+              onResend={handleResend}
+              onBackToLogin={() => router.replace("/(auth)/login")}
+              onEditEmail={() => setStage("form")}
+            />
+          )}
+
+          {/* Form-stage footer */}
+          {stage === "form" ? (
+            <View style={{ marginTop: "auto", alignItems: "center", paddingBottom: 12 }}>
+              <Button
+                title={`${t("forgot_password.remember_password")} ${t("auth.sign_in_link")}`}
+                variant="tertiary"
+                size="sm"
+                onPress={() => router.back()}
+                fullWidth={false}
+              />
+            </View>
+          ) : null}
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
-function FormStage(props: {
+function FormStage({
+  email,
+  emailError,
+  onEmailChange,
+  onSubmit,
+  loading,
+}: {
   email: string;
+  emailError: string | null;
   onEmailChange: (v: string) => void;
   onSubmit: () => void;
   loading: boolean;
@@ -168,60 +179,81 @@ function FormStage(props: {
   const { t } = useTranslation();
   return (
     <>
-      <View className="items-center mb-8">
-        <Text
-          className="font-headline font-bold text-on-surface uppercase text-center mb-4"
-          style={{ fontSize: 36, lineHeight: 40, letterSpacing: -0.5 }}
-        >
-          {t("forgot_password.title")}
-        </Text>
-        <Text
-          className="font-body text-on-surface-variant leading-relaxed text-center"
-          style={{ maxWidth: 280 }}
-        >
-          {t("forgot_password.description")}
-        </Text>
-      </View>
+      <Text
+        style={{
+          fontFamily: "Inter-SemiBold",
+          fontSize: 10,
+          letterSpacing: 2.2,
+          textTransform: "uppercase",
+          color: theme.color.goldMidday,
+          textAlign: "center",
+          marginBottom: 10,
+        }}
+      >
+        {t("forgot_password.eyebrow")}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "NotoSerif",
+          fontSize: 30,
+          lineHeight: 36,
+          letterSpacing: -0.3,
+          color: theme.color.onSurface,
+          textAlign: "center",
+          marginBottom: 12,
+        }}
+      >
+        {t("forgot_password.title")}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontSize: 14,
+          lineHeight: 22,
+          color: theme.color.onSurfaceVariant,
+          textAlign: "center",
+          maxWidth: 320,
+          alignSelf: "center",
+          marginBottom: 28,
+        }}
+      >
+        {t("forgot_password.description")}
+      </Text>
 
-      <View className="mb-6">
-        <Text
-          className="font-label text-on-surface-variant uppercase ml-1 mb-2"
-          style={{ fontSize: 11, letterSpacing: 2 }}
-        >
-          {t("auth.email_label")}
-        </Text>
-        <TextInput
-          className="font-body text-on-surface bg-surface-container-low px-4 py-4"
-          style={{
-            borderBottomWidth: 2,
-            borderBottomColor: "rgba(77,70,60,0.3)",
-            borderTopLeftRadius: 12,
-            borderTopRightRadius: 12,
-          }}
-          placeholder={t("auth.email_placeholder")}
-          placeholderTextColor="rgba(229,226,225,0.2)"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          value={props.email}
-          onChangeText={props.onEmailChange}
-          editable={!props.loading}
-          selectionColor="#E1C39B"
-          returnKeyType="send"
-          onSubmitEditing={props.onSubmit}
+      <Input
+        label={t("auth.email_label")}
+        placeholder={t("auth.email_placeholder")}
+        value={email}
+        onChangeText={onEmailChange}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        icon="mail-outline"
+        error={emailError}
+      />
+
+      <View style={{ marginTop: 20 }}>
+        <Button
+          title={
+            loading ? t("common.sending") : t("forgot_password.submit")
+          }
+          variant="primary"
+          size="lg"
+          onPress={onSubmit}
+          loading={loading}
+          icon="arrow-forward"
         />
       </View>
-
-      <PrimaryButton
-        label={props.loading ? t("common.sending") : t("forgot_password.submit")}
-        onPress={props.onSubmit}
-        loading={props.loading}
-      />
     </>
   );
 }
 
-function SuccessStage(props: {
+function SuccessStage({
+  email,
+  loading,
+  onResend,
+  onBackToLogin,
+  onEditEmail,
+}: {
   email: string;
   loading: boolean;
   onResend: () => void;
@@ -231,48 +263,84 @@ function SuccessStage(props: {
   const { t } = useTranslation();
   return (
     <>
-      <View className="items-center mb-8">
+      <Text
+        style={{
+          fontFamily: "Inter-SemiBold",
+          fontSize: 10,
+          letterSpacing: 2.2,
+          textTransform: "uppercase",
+          color: theme.color.goldMidday,
+          textAlign: "center",
+          marginBottom: 10,
+        }}
+      >
+        {t("forgot_password.success_eyebrow")}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "NotoSerif",
+          fontSize: 28,
+          lineHeight: 34,
+          letterSpacing: -0.3,
+          color: theme.color.onSurface,
+          textAlign: "center",
+          marginBottom: 14,
+        }}
+      >
+        {t("forgot_password.success_title")}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontSize: 14,
+          lineHeight: 22,
+          color: theme.color.onSurfaceVariant,
+          textAlign: "center",
+          maxWidth: 340,
+          alignSelf: "center",
+          marginBottom: 6,
+        }}
+      >
+        {t("forgot_password.success_description_prefix")}{" "}
         <Text
-          className="font-headline font-bold text-on-surface uppercase text-center mb-4"
-          style={{ fontSize: 32, lineHeight: 38, letterSpacing: -0.5 }}
+          style={{
+            fontFamily: "Inter-SemiBold",
+            color: theme.color.onSurface,
+          }}
         >
-          {t("forgot_password.success_title")}
+          {email}
         </Text>
-        <Text
-          className="font-body text-on-surface-variant leading-relaxed text-center mb-4"
-          style={{ maxWidth: 320 }}
-        >
-          {t("forgot_password.success_description_prefix")}{" "}
-          <Text className="font-semibold text-on-surface">{props.email}</Text>,{" "}
-          {t("forgot_password.success_description_suffix")}
-        </Text>
-        <Pressable onPress={props.onEditEmail}>
-          <Text
-            className="font-label text-secondary uppercase"
-            style={{ fontSize: 11, letterSpacing: 2 }}
-          >
-            {t("forgot_password.wrong_email")}
-          </Text>
-        </Pressable>
+        , {t("forgot_password.success_description_suffix")}
+      </Text>
+
+      <View style={{ alignItems: "center", marginTop: 4, marginBottom: 28 }}>
+        <Button
+          title={t("forgot_password.wrong_email")}
+          variant="tertiary"
+          size="sm"
+          onPress={onEditEmail}
+          fullWidth={false}
+        />
       </View>
 
-      <PrimaryButton
-        label={t("forgot_password.back_to_login")}
-        onPress={props.onBackToLogin}
+      <Button
+        title={t("forgot_password.back_to_login")}
+        variant="primary"
+        size="lg"
+        onPress={onBackToLogin}
+        icon="arrow-forward"
       />
 
-      <Pressable
-        onPress={props.onResend}
-        disabled={props.loading}
-        className="items-center mt-6"
-      >
-        <Text
-          className="font-label text-on-surface-variant uppercase"
-          style={{ fontSize: 11, letterSpacing: 2, opacity: props.loading ? 0.5 : 1 }}
-        >
-          {props.loading ? t("forgot_password.resending") : t("forgot_password.resend")}
-        </Text>
-      </Pressable>
+      <View style={{ alignItems: "center", marginTop: 12 }}>
+        <Button
+          title={loading ? t("forgot_password.resending") : t("forgot_password.resend")}
+          variant="tertiary"
+          size="sm"
+          onPress={onResend}
+          disabled={loading}
+          fullWidth={false}
+        />
+      </View>
     </>
   );
 }

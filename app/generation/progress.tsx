@@ -14,6 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { useCreditStore } from "@/stores/creditStore";
+import { Brand } from "@/components/brand/Brand";
+import { theme } from "@/config/theme";
 import type { JobResponse, JobStatus } from "@/types/api";
 
 /**
@@ -45,32 +47,42 @@ export default function GenerationProgressScreen() {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   // ─── Spinner animations ───────────────────────────────
+  // Motion durations flow through `theme.motion` so the generate phase
+  // shares a signature cadence with every other wait state in the app.
+  // The rotation is a generous 10× base duration (slow spin = calm);
+  // the pulse uses glacial/2 for the two halves of a breath.
   useEffect(() => {
-    Animated.loop(
+    const rotationLoop = Animated.loop(
       Animated.timing(rotation, {
         toValue: 360,
-        duration: 3000,
+        duration: theme.motion.duration.base * 12, // ~2880ms
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-    ).start();
-    Animated.loop(
+    );
+    const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, {
           toValue: 0.7,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
+          duration: theme.motion.duration.glacial * 3, // ~1680ms
+          easing: theme.motion.easing.standard,
           useNativeDriver: true,
         }),
         Animated.timing(pulse, {
           toValue: 0.3,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
+          duration: theme.motion.duration.glacial * 3,
+          easing: theme.motion.easing.standard,
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, []);
+    );
+    rotationLoop.start();
+    pulseLoop.start();
+    return () => {
+      rotationLoop.stop();
+      pulseLoop.stop();
+    };
+  }, [rotation, pulse]);
 
   // ─── Elapsed-time ticker ──────────────────────────────
   useEffect(() => {
@@ -127,8 +139,8 @@ export default function GenerationProgressScreen() {
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: targetProgress,
-      duration: 600,
-      easing: Easing.out(Easing.cubic),
+      duration: theme.motion.duration.glacial, // ~560ms — matches token scale
+      easing: theme.motion.easing.exit,
       useNativeDriver: false,
     }).start();
   }, [targetProgress, progressAnim]);
@@ -178,19 +190,18 @@ export default function GenerationProgressScreen() {
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
       {/* Top bar */}
-      <View className="flex-row items-center justify-between px-8 py-6">
-        <Text
-          className="font-headline text-on-background"
-          style={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase" }}
-        >
-          {t("app.brand")}
-        </Text>
+      <View className="flex-row items-center justify-between px-6 py-4">
+        <Brand variant="inline" size="sm" tone="gold" />
         <Pressable
           onPress={handleClose}
           className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: "#2A2A2A" }}
+          style={{
+            width: 40,
+            height: 40,
+            backgroundColor: theme.color.surfaceContainerHigh,
+          }}
         >
-          <Ionicons name="close" size={20} color="#E5E2E1" />
+          <Ionicons name="close" size={20} color={theme.color.onSurface} />
         </Pressable>
       </View>
 

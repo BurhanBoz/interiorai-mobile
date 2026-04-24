@@ -36,14 +36,22 @@ export default function RootLayout() {
   // every child that uses t() is descendant of <Slot /> below.
   const { i18n: i18nInstance } = useTranslation();
 
+  // Real weight TTFs now land in assets/fonts/ — no more synthesized
+  // bold. Previously every non-regular alias pointed at the Regular
+  // file and the OS faked the boldness, which degrades anti-aliasing
+  // noticeably on dark backgrounds. Source TTFs:
+  //   - NotoSerif-Bold from notofonts/NotoSerif (hinted/instance_ttf)
+  //   - Inter-{Medium,SemiBold,Bold} from rsms/inter v4.1 extras/ttf
+  // sha256 verified against the remote-agent report.
   const [fontsLoaded, fontError] = useFonts({
     NotoSerif: require("../assets/fonts/NotoSerif-Regular.ttf"),
     "NotoSerif-Medium": require("../assets/fonts/NotoSerif-Regular.ttf"),
-    "NotoSerif-Bold": require("../assets/fonts/NotoSerif-Regular.ttf"),
+    "NotoSerif-Bold": require("../assets/fonts/NotoSerif-Bold.ttf"),
     Inter: require("../assets/fonts/Inter-Regular.ttf"),
     "Inter-Light": require("../assets/fonts/Inter-Regular.ttf"),
-    "Inter-Medium": require("../assets/fonts/Inter-Regular.ttf"),
-    "Inter-SemiBold": require("../assets/fonts/Inter-Regular.ttf"),
+    "Inter-Medium": require("../assets/fonts/Inter-Medium.ttf"),
+    "Inter-SemiBold": require("../assets/fonts/Inter-SemiBold.ttf"),
+    "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"),
   });
 
   const { isAuthenticated, isLoading, hydrate } = useAuthStore();

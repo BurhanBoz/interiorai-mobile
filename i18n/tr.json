@@ -90,7 +90,14 @@
     "social_not_configured_title": "Yapılandırılmamış",
     "social_not_configured_description": "Google Sign-In istemci kimlikleri eksik. .env dosyasına EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ve EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ekle.",
     "apple_not_available_title": "Kullanılamıyor",
-    "apple_not_available_description": "Apple ile Giriş yalnızca iOS'ta kullanılabilir."
+    "apple_not_available_description": "Apple ile Giriş yalnızca iOS'ta kullanılabilir.",
+    "email_required": "Lütfen email adresini gir.",
+    "password_required": "Lütfen şifreni gir.",
+    "invalid_email": "Geçerli bir email adresi değil.",
+    "toggle_password_visibility": "Şifreyi göster veya gizle",
+    "password_helper": "En az 8 karakter.",
+    "login_eyebrow": "Tekrar hoş geldin",
+    "register_eyebrow": "Stüdyonu başlat"
   },
   "forgot_password": {
     "title": "Şifreyi Sıfırla",
@@ -110,7 +117,9 @@
     "resending": "Tekrar gönderiliyor…",
     "link_resent_title": "Bağlantı tekrar gönderildi",
     "link_resent_description": "Hesap varsa yeni bir sıfırlama bağlantısı gönderdik.",
-    "remember_password": "Şifreni hatırladın mı?"
+    "remember_password": "Şifreni hatırladın mı?",
+    "eyebrow": "Anahtarını mı kaybettin",
+    "success_eyebrow": "Gönderildi"
   },
   "reset_password": {
     "title": "Yeni Şifre Belirle",
@@ -126,7 +135,8 @@
     "request_new_link": "Yeni bir sıfırlama bağlantısı iste",
     "passwords_dont_match": "Şifreler eşleşmiyor.",
     "password_too_short": "Şifre en az 8 karakter olmalı.",
-    "generic_error": "Şifren sıfırlanamadı. Lütfen tekrar dene."
+    "generic_error": "Şifren sıfırlanamadı. Lütfen tekrar dene.",
+    "eyebrow": "Erişimi yenile"
   },
   "studio": {
     "step_1_of_4": "ADIM 1 / 4",

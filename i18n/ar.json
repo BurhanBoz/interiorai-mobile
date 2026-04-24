@@ -90,7 +90,14 @@
     "social_not_configured_title": "غير مهيأ",
     "social_not_configured_description": "معرّفات عميل Google Sign-In مفقودة. قم بتعيين EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID و EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID في ملف .env.",
     "apple_not_available_title": "غير متاح",
-    "apple_not_available_description": "تسجيل الدخول عبر Apple متاح فقط على iOS."
+    "apple_not_available_description": "تسجيل الدخول عبر Apple متاح فقط على iOS.",
+    "email_required": "يرجى إدخال بريدك الإلكتروني.",
+    "password_required": "يرجى إدخال كلمة المرور.",
+    "invalid_email": "لا يبدو بريدًا إلكترونيًا صالحًا.",
+    "toggle_password_visibility": "إظهار أو إخفاء كلمة المرور",
+    "password_helper": "8 أحرف على الأقل.",
+    "login_eyebrow": "مرحبًا بعودتك",
+    "register_eyebrow": "ابدأ استوديوك"
   },
   "forgot_password": {
     "title": "إعادة تعيين كلمة المرور",
@@ -110,7 +117,9 @@
     "resending": "جارٍ الإعادة…",
     "link_resent_title": "تمت إعادة إرسال الرابط",
     "link_resent_description": "إذا كان الحساب موجوداً، فقد أرسلنا رابط إعادة تعيين آخر.",
-    "remember_password": "تذكرت كلمة المرور؟"
+    "remember_password": "تذكرت كلمة المرور؟",
+    "eyebrow": "هل فقدت مفتاحك",
+    "success_eyebrow": "تم الإرسال"
   },
   "reset_password": {
     "title": "تعيين كلمة مرور جديدة",
@@ -126,7 +135,8 @@
     "request_new_link": "طلب رابط إعادة تعيين جديد",
     "passwords_dont_match": "كلمتا المرور غير متطابقتين.",
     "password_too_short": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
-    "generic_error": "تعذّر إعادة تعيين كلمة المرور. الرجاء المحاولة مرة أخرى."
+    "generic_error": "تعذّر إعادة تعيين كلمة المرور. الرجاء المحاولة مرة أخرى.",
+    "eyebrow": "تأمين الوصول"
   },
   "studio": {
     "step_1_of_4": "الخطوة 1 من 4",

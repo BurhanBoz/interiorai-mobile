@@ -90,7 +90,14 @@
     "social_not_configured_title": "Nicht konfiguriert",
     "social_not_configured_description": "Google Sign-In Client-IDs fehlen. Setzen Sie EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID und EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env.",
     "apple_not_available_title": "Nicht verfügbar",
-    "apple_not_available_description": "Mit Apple anmelden ist nur auf iOS verfügbar."
+    "apple_not_available_description": "Mit Apple anmelden ist nur auf iOS verfügbar.",
+    "email_required": "Bitte gib deine E-Mail ein.",
+    "password_required": "Bitte gib dein Passwort ein.",
+    "invalid_email": "Das sieht nicht wie eine gültige E-Mail aus.",
+    "toggle_password_visibility": "Passwort-Sichtbarkeit umschalten",
+    "password_helper": "Mindestens 8 Zeichen.",
+    "login_eyebrow": "Willkommen zurück",
+    "register_eyebrow": "Starte dein Studio"
   },
   "forgot_password": {
     "title": "Passwort zurücksetzen",
@@ -110,7 +117,9 @@
     "resending": "Wird erneut gesendet…",
     "link_resent_title": "Link erneut gesendet",
     "link_resent_description": "Wenn ein Konto existiert, haben wir einen weiteren Zurücksetzen-Link gesendet.",
-    "remember_password": "Passwort wieder eingefallen?"
+    "remember_password": "Passwort wieder eingefallen?",
+    "eyebrow": "Schlüssel verloren",
+    "success_eyebrow": "Gesendet"
   },
   "reset_password": {
     "title": "Neues Passwort festlegen",
@@ -126,7 +135,8 @@
     "request_new_link": "Neuen Zurücksetzen-Link anfordern",
     "passwords_dont_match": "Die Passwörter stimmen nicht überein.",
     "password_too_short": "Das Passwort muss mindestens 8 Zeichen lang sein.",
-    "generic_error": "Wir konnten Ihr Passwort nicht zurücksetzen. Bitte versuchen Sie es erneut."
+    "generic_error": "Wir konnten Ihr Passwort nicht zurücksetzen. Bitte versuchen Sie es erneut.",
+    "eyebrow": "Zugang sichern"
   },
   "studio": {
     "step_1_of_4": "SCHRITT 1 VON 4",

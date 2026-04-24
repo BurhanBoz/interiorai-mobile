@@ -90,7 +90,14 @@
     "social_not_configured_title": "未設定",
     "social_not_configured_description": "Google Sign-InのクライアントIDが不足しています。.envにEXPO_PUBLIC_GOOGLE_IOS_CLIENT_IDとEXPO_PUBLIC_GOOGLE_WEB_CLIENT_IDを設定してください。",
     "apple_not_available_title": "利用不可",
-    "apple_not_available_description": "AppleでサインインはiOSでのみ利用可能です。"
+    "apple_not_available_description": "AppleでサインインはiOSでのみ利用可能です。",
+    "email_required": "メールアドレスを入力してください。",
+    "password_required": "パスワードを入力してください。",
+    "invalid_email": "有効なメールアドレスではないようです。",
+    "toggle_password_visibility": "パスワードの表示を切り替える",
+    "password_helper": "8文字以上。",
+    "login_eyebrow": "おかえりなさい",
+    "register_eyebrow": "スタジオを始める"
   },
   "forgot_password": {
     "title": "パスワードをリセット",
@@ -110,7 +117,9 @@
     "resending": "再送信中…",
     "link_resent_title": "リンクを再送信しました",
     "link_resent_description": "アカウントが存在する場合、別のリセットリンクを送信しました。",
-    "remember_password": "パスワードを思い出しましたか？"
+    "remember_password": "パスワードを思い出しましたか？",
+    "eyebrow": "鍵を紛失しましたか",
+    "success_eyebrow": "送信済み"
   },
   "reset_password": {
     "title": "新しいパスワードを設定",
@@ -126,7 +135,8 @@
     "request_new_link": "新しいリセットリンクをリクエスト",
     "passwords_dont_match": "パスワードが一致しません。",
     "password_too_short": "パスワードは少なくとも8文字必要です。",
-    "generic_error": "パスワードをリセットできませんでした。再試行してください。"
+    "generic_error": "パスワードをリセットできませんでした。再試行してください。",
+    "eyebrow": "アクセスを保護"
   },
   "studio": {
     "step_1_of_4": "ステップ 1 / 4",

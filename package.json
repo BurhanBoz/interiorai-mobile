@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "clean": "bash scripts/clean.sh",
     "clean:start": "bash scripts/clean.sh && npx expo start --clear",
-    "clean:ios": "bash scripts/clean.sh && npx expo run:ios"
+    "clean:ios": "bash scripts/clean.sh && npx expo run:ios",
+    "lint:tokens": "node scripts/lint-tokens.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",

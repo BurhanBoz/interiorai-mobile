@@ -90,7 +90,14 @@
     "social_not_configured_title": "Non configurato",
     "social_not_configured_description": "Gli ID client di Google Sign-In mancano. Imposta EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID e EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID nel file .env.",
     "apple_not_available_title": "Non disponibile",
-    "apple_not_available_description": "Accedi con Apple è disponibile solo su iOS."
+    "apple_not_available_description": "Accedi con Apple è disponibile solo su iOS.",
+    "email_required": "Inserisci la tua email.",
+    "password_required": "Inserisci la tua password.",
+    "invalid_email": "Non sembra un'email valida.",
+    "toggle_password_visibility": "Mostra o nascondi la password",
+    "password_helper": "Almeno 8 caratteri.",
+    "login_eyebrow": "Bentornato",
+    "register_eyebrow": "Inizia il tuo studio"
   },
   "forgot_password": {
     "title": "Reimposta Password",
@@ -110,7 +117,9 @@
     "resending": "Reinvio…",
     "link_resent_title": "Link reinviato",
     "link_resent_description": "Se l'account esiste, abbiamo inviato un altro link di ripristino.",
-    "remember_password": "Ricordi la password?"
+    "remember_password": "Ricordi la password?",
+    "eyebrow": "Chiave smarrita",
+    "success_eyebrow": "Inviato"
   },
   "reset_password": {
     "title": "Imposta una Nuova Password",
@@ -126,7 +135,8 @@
     "request_new_link": "Richiedi un nuovo link di ripristino",
     "passwords_dont_match": "Le password non corrispondono.",
     "password_too_short": "La password deve essere di almeno 8 caratteri.",
-    "generic_error": "Impossibile reimpostare la password. Riprova."
+    "generic_error": "Impossibile reimpostare la password. Riprova.",
+    "eyebrow": "Accesso sicuro"
   },
   "studio": {
     "step_1_of_4": "PASSO 1 DI 4",

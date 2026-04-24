@@ -90,7 +90,14 @@
     "social_not_configured_title": "설정되지 않음",
     "social_not_configured_description": "Google Sign-In 클라이언트 ID가 없습니다. .env에 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID와 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID를 설정해 주세요.",
     "apple_not_available_title": "사용 불가",
-    "apple_not_available_description": "Apple로 로그인은 iOS에서만 사용할 수 있습니다."
+    "apple_not_available_description": "Apple로 로그인은 iOS에서만 사용할 수 있습니다.",
+    "email_required": "이메일을 입력해주세요.",
+    "password_required": "비밀번호를 입력해주세요.",
+    "invalid_email": "올바른 이메일 형식이 아닙니다.",
+    "toggle_password_visibility": "비밀번호 표시 전환",
+    "password_helper": "최소 8자 이상.",
+    "login_eyebrow": "다시 오신 것을 환영합니다",
+    "register_eyebrow": "당신의 스튜디오를 시작하세요"
   },
   "forgot_password": {
     "title": "비밀번호 재설정",
@@ -110,7 +117,9 @@
     "resending": "재전송 중…",
     "link_resent_title": "링크 재전송됨",
     "link_resent_description": "계정이 존재하면 다른 재설정 링크를 보내드렸습니다.",
-    "remember_password": "비밀번호가 기억나셨나요?"
+    "remember_password": "비밀번호가 기억나셨나요?",
+    "eyebrow": "열쇠를 잃으셨나요",
+    "success_eyebrow": "전송 완료"
   },
   "reset_password": {
     "title": "새 비밀번호 설정",
@@ -126,7 +135,8 @@
     "request_new_link": "새 재설정 링크 요청",
     "passwords_dont_match": "비밀번호가 일치하지 않습니다.",
     "password_too_short": "비밀번호는 최소 8자 이상이어야 합니다.",
-    "generic_error": "비밀번호를 재설정할 수 없습니다. 다시 시도해 주세요."
+    "generic_error": "비밀번호를 재설정할 수 없습니다. 다시 시도해 주세요.",
+    "eyebrow": "접근 보호"
   },
   "studio": {
     "step_1_of_4": "1단계 / 4",
