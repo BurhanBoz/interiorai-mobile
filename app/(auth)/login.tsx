@@ -76,10 +76,14 @@ export default function LoginScreen() {
     try {
       await login(email.trim(), password);
     } catch (error: any) {
-      Alert.alert(
-        t("auth.login_failed_title"),
-        error?.message || t("auth.login_failed_description"),
-      );
+      const status = error?.response?.status;
+      const msg =
+        status === 429
+          ? t("errors.rate_limit")
+          : status >= 500
+            ? t("errors.generic")
+            : t("auth.login_failed_description");
+      Alert.alert(t("auth.login_failed_title"), msg);
     } finally {
       setIsLoading(false);
     }
@@ -251,7 +255,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Social providers */}
-          <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
             <SocialButton
               onPress={signInWithGoogle}
               loading={socialLoading === "google"}
@@ -334,7 +338,7 @@ function SocialButton({
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => ({
-        flex: 1,
+        minWidth: 155,
         opacity: disabled ? 0.5 : 1,
         transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
       })}
@@ -344,41 +348,35 @@ function SocialButton({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
           minHeight: 56,
+          paddingHorizontal: 20,
           borderRadius: 14,
           borderWidth: 1,
           borderColor: "rgba(63,45,17,0.18)",
         }}
       >
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            paddingHorizontal: 16,
-          }}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color={theme.color.onGold} />
-          ) : (
-            <>
-              <Ionicons name={icon} size={20} color={theme.color.onGold} />
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                  color: theme.color.onGold,
-                }}
-              >
-                {label}
-              </Text>
-            </>
-          )}
-        </View>
+        {loading ? (
+          <ActivityIndicator size="small" color={theme.color.onGold} />
+        ) : (
+          <>
+            <Ionicons name={icon} size={20} color={theme.color.onGold} />
+            <Text
+              numberOfLines={1}
+              style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 14,
+                letterSpacing: 0.3,
+                color: theme.color.onGold,
+              }}
+            >
+              {label}
+            </Text>
+          </>
+        )}
       </LinearGradient>
     </Pressable>
   );

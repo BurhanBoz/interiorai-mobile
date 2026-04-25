@@ -121,9 +121,18 @@ export default function ReviewScreen() {
 
       router.push(`/generation/progress?jobId=${job.id}`);
     } catch (err: any) {
+      const status = err?.response?.status;
       const msg =
-        err?.response?.data?.message ?? err?.message ?? "Something went wrong";
-      Alert.alert("Generation Failed", msg);
+        status === 402
+          ? t("studio.insufficient_credits")
+          : status === 429
+            ? t("errors.rate_limit")
+            : status >= 500
+              ? t("errors.generic")
+              : !err?.response
+                ? t("errors.network")
+                : t("errors.generic");
+      Alert.alert(t("generation.failed"), msg);
     } finally {
       setIsSubmitting(false);
     }

@@ -697,7 +697,8 @@
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",
     "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
-    "unauthorized": "Oturumun sona erdi. Lütfen tekrar giriş yap."
+    "unauthorized": "Oturumun sona erdi. Lütfen tekrar giriş yap.",
+    "rate_limit": "Çok fazla deneme. Lütfen bir süre bekleyip tekrar dene."
   },
   "upscale": {
     "upscaling_to_hd": "HD'ye büyütülüyor…",

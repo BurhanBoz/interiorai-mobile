@@ -155,6 +155,8 @@ export interface PlanResponse {
     permissions?: PlanPermissions;
     features: PlanFeatureResponse[];
     creditRules: PlanCreditRuleResponse[];
+    /** Bonus % on every credit-pack purchase for this plan. 0 = no bonus. */
+    creditPackBonusPct: number;
 }
 
 // ── Subscriptions ──────────────────────────────

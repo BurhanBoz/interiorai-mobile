@@ -25,6 +25,7 @@ interface SubscriptionState {
     features: PlanFeatureResponse[];
     creditRules: PlanCreditRuleResponse[];
     permissions: PlanPermissions;
+    creditPackBonusPct: number;
     fetchSubscription: () => Promise<void>;
     fetchPlans: () => Promise<void>;
     isFeatureEnabled: (featureCode: string) => boolean;
@@ -38,6 +39,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     features: [],
     creditRules: [],
     permissions: {},
+    creditPackBonusPct: 0,
 
     fetchSubscription: async () => {
         const subscription = await plansService.getActiveSubscription();
@@ -49,6 +51,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
             features: plan?.features ?? [],
             creditRules: plan?.creditRules ?? [],
             permissions: plan?.permissions ?? {},
+            creditPackBonusPct: plan?.creditPackBonusPct ?? 0,
         });
     },
 

@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
@@ -26,27 +27,34 @@ function formatPrice(cents: number, currency: string): string {
     return currency === "USD" ? `$${amount}` : `${amount} ${currency}`;
 }
 
-/**
- * Average credits per design across the common quality tiers — used to
- * translate a pack size like "30 credits" into "~5 HD redesigns". Keeps
- * users from having to mentally divide before a purchase.
- */
+// Average credits consumed per design — used to translate "30 credits" into
+// "~5 HD redesigns" so users don't have to do mental math before purchasing.
 const AVG_CREDITS_PER_STANDARD = 5;
 const AVG_CREDITS_PER_HD = 6;
+
+const PLAN_BONUS_LABEL: Record<string, string> = {
+    FREE: "",
+    BASIC: "+5% bonus",
+    PRO: "+20% bonus",
+    MAX: "+40% bonus",
+};
 
 function PackCard({
     pack,
     onPress,
     isPurchasing,
     disabled,
+    bonusPct,
 }: {
     pack: CreditPackResponse;
     onPress: () => void;
     isPurchasing: boolean;
     disabled: boolean;
+    bonusPct: number;
 }) {
     const { t } = useTranslation();
     const isFeatured = pack.badgeLabel != null;
+    const hasBonus = pack.bonusCredits > 0;
 
     const standardDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_STANDARD);
     const hdDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_HD);
@@ -65,9 +73,6 @@ function PackCard({
                 ...(isFeatured ? theme.elevation.goldGlowSoft : theme.elevation.sm),
             }}
         >
-            {/* Featured card: subtle gold inner wash so the "popular" card
-                reads as distinct from the regular cards even before reading
-                the badge. */}
             {isFeatured ? (
                 <LinearGradient
                     colors={["rgba(225,195,155,0.08)", "rgba(225,195,155,0)"]}
@@ -75,10 +80,7 @@ function PackCard({
                     end={{ x: 0.5, y: 1 }}
                     style={{
                         position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
+                        top: 0, left: 0, right: 0, bottom: 0,
                         borderRadius: 18,
                     }}
                     pointerEvents="none"
@@ -99,117 +101,105 @@ function PackCard({
                             borderColor: "rgba(63,45,17,0.2)",
                         }}
                     >
-                        <Text
-                            style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 10,
-                                color: theme.color.onGold,
-                                letterSpacing: 1.8,
-                                textTransform: "uppercase",
-                            }}
-                        >
+                        <Text style={{
+                            fontFamily: "Inter-SemiBold",
+                            fontSize: 10,
+                            color: theme.color.onGold,
+                            letterSpacing: 1.8,
+                            textTransform: "uppercase",
+                        }}>
                             {pack.badgeLabel}
                         </Text>
                     </LinearGradient>
                 </View>
             ) : null}
 
-            <Text
-                style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 10,
-                    letterSpacing: 1.8,
-                    textTransform: "uppercase",
-                    color: "rgba(208,197,184,0.7)",
-                    marginBottom: 8,
-                    marginTop: pack.badgeLabel ? 8 : 0,
-                }}
-            >
+            <Text style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 10,
+                letterSpacing: 1.8,
+                textTransform: "uppercase",
+                color: "rgba(208,197,184,0.7)",
+                marginBottom: 8,
+                marginTop: pack.badgeLabel ? 8 : 0,
+            }}>
                 {pack.name}
             </Text>
 
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "baseline",
-                    gap: 8,
-                    marginBottom: 6,
-                }}
-            >
-                <Text
-                    style={{
-                        fontFamily: "NotoSerif",
-                        fontSize: 36,
-                        lineHeight: 40,
-                        letterSpacing: -0.6,
-                        color: theme.color.onSurface,
-                        fontVariant: ["tabular-nums"],
-                    }}
-                >
+            {/* Credits row — base + bonus breakdown */}
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+                <Text style={{
+                    fontFamily: "NotoSerif",
+                    fontSize: 36,
+                    lineHeight: 40,
+                    letterSpacing: -0.6,
+                    color: theme.color.onSurface,
+                    fontVariant: ["tabular-nums"],
+                }}>
                     {pack.totalCredits}
                 </Text>
-                <Text
-                    style={{
-                        fontFamily: "Inter",
-                        fontSize: 13,
-                        color: theme.color.onSurfaceVariant,
-                    }}
-                >
+                <Text style={{
+                    fontFamily: "Inter",
+                    fontSize: 13,
+                    color: theme.color.onSurfaceVariant,
+                }}>
                     {t("credit_packs.credits_suffix")}
                 </Text>
-                {pack.bonusCredits > 0 ? (
-                    <View
-                        style={{
-                            marginLeft: 4,
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                            borderRadius: 6,
-                            backgroundColor: "rgba(123,179,138,0.14)",
-                            borderWidth: 1,
-                            borderColor: "rgba(123,179,138,0.35)",
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 10,
-                                color: theme.color.success,
-                                letterSpacing: 1.2,
-                                textTransform: "uppercase",
-                            }}
-                        >
-                            {t("credit_packs.bonus_suffix", {
-                                count: pack.bonusCredits,
-                            })}
+
+                {hasBonus && (
+                    <View style={{
+                        marginLeft: 4,
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                        borderRadius: 6,
+                        backgroundColor: "rgba(123,179,138,0.14)",
+                        borderWidth: 1,
+                        borderColor: "rgba(123,179,138,0.35)",
+                    }}>
+                        <Text style={{
+                            fontFamily: "Inter-SemiBold",
+                            fontSize: 10,
+                            color: theme.color.success,
+                            letterSpacing: 1.2,
+                            textTransform: "uppercase",
+                        }}>
+                            {t("credit_packs.bonus_suffix", { count: pack.bonusCredits })}
                         </Text>
                     </View>
-                ) : null}
+                )}
             </View>
 
-            {/* Relatable calculation — "~X standard or Y HD designs" */}
-            <Text
-                style={{
+            {/* Base vs bonus breakdown when bonus applies */}
+            {hasBonus && (
+                <Text style={{
                     fontFamily: "Inter",
-                    fontSize: 12,
-                    lineHeight: 16,
-                    color: theme.color.onSurfaceMuted,
-                    marginBottom: pack.description ? 6 : 18,
-                }}
-            >
+                    fontSize: 11,
+                    color: "rgba(123,179,138,0.75)",
+                    marginBottom: 4,
+                }}>
+                    {pack.credits} base + {pack.bonusCredits} loyalty bonus
+                </Text>
+            )}
+
+            {/* Relatable calculation */}
+            <Text style={{
+                fontFamily: "Inter",
+                fontSize: 12,
+                lineHeight: 16,
+                color: theme.color.onSurfaceMuted,
+                marginBottom: pack.description ? 6 : 18,
+            }}>
                 ≈ {standardDesigns} standard · {hdDesigns} HD designs
             </Text>
 
             {pack.description ? (
-                <Text
-                    style={{
-                        fontFamily: "Inter",
-                        fontSize: 12,
-                        lineHeight: 16,
-                        color: theme.color.onSurfaceMuted,
-                        marginBottom: 18,
-                    }}
-                    numberOfLines={2}
-                >
+                <Text style={{
+                    fontFamily: "Inter",
+                    fontSize: 12,
+                    lineHeight: 16,
+                    color: theme.color.onSurfaceMuted,
+                    marginBottom: 18,
+                }} numberOfLines={2}>
                     {pack.description}
                 </Text>
             ) : null}
@@ -237,6 +227,8 @@ export default function CreditPacksScreen() {
     const fetchPacks = useCreditPacksStore((s) => s.fetchPacks);
     const purchase = useCreditPacksStore((s) => s.purchase);
     const balance = useCreditStore((s) => s.balance);
+    const subscription = useSubscriptionStore((s) => s.subscription);
+    const creditPackBonusPct = useSubscriptionStore((s) => s.creditPackBonusPct);
     const handleBack = useBackHandler("/(tabs)/profile");
 
     useEffect(() => {
@@ -255,19 +247,21 @@ export default function CreditPacksScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
+            const status = (e as any)?.response?.status;
             const message =
-                e instanceof Error
-                    ? e.message
-                    : t("credit_packs.purchase_failed_default");
+                status === 429
+                    ? t("errors.rate_limit")
+                    : status >= 500
+                        ? t("errors.generic")
+                        : t("credit_packs.purchase_failed_default");
             Alert.alert(t("credit_packs.purchase_failed_title"), message);
         }
     };
 
-    // The dev banner is only ever shown in development builds. In release
-    // builds __DEV__ is false even if the RevenueCat keys happen to be
-    // missing, so the banner can never leak into a TestFlight / App Store
-    // build. Previously this was a trust-destroying P0 in the audit.
     const showDevBanner = isDummyMode && __DEV__;
+    const planCode = subscription?.planCode ?? "FREE";
+    const planName = subscription?.planName ?? "Free";
+    const hasBonusPlan = creditPackBonusPct > 0;
 
     return (
         <SafeAreaView
@@ -285,61 +279,100 @@ export default function CreditPacksScreen() {
                 contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ marginTop: 12, marginBottom: 32 }}>
-                    <Text
-                        style={{
-                            fontFamily: "NotoSerif",
-                            fontSize: 32,
-                            lineHeight: 38,
-                            letterSpacing: -0.3,
-                            color: theme.color.onSurface,
-                            marginBottom: 10,
-                        }}
-                    >
+                <View style={{ marginTop: 12, marginBottom: 24 }}>
+                    <Text style={{
+                        fontFamily: "NotoSerif",
+                        fontSize: 32,
+                        lineHeight: 38,
+                        letterSpacing: -0.3,
+                        color: theme.color.onSurface,
+                        marginBottom: 10,
+                    }}>
                         {t("credit_packs.headline")}
                     </Text>
-                    <Text
-                        style={{
-                            fontFamily: "Inter",
-                            fontSize: 14,
-                            lineHeight: 20,
-                            color: theme.color.onSurfaceVariant,
-                        }}
-                    >
+                    <Text style={{
+                        fontFamily: "Inter",
+                        fontSize: 14,
+                        lineHeight: 20,
+                        color: theme.color.onSurfaceVariant,
+                    }}>
                         {t("credit_packs.subtitle", { balance })}
                     </Text>
                 </View>
 
-                {showDevBanner ? (
-                    <View
-                        style={{
-                            padding: 12,
-                            marginBottom: 20,
-                            borderRadius: 10,
-                            backgroundColor: "rgba(229,181,103,0.08)",
-                            borderWidth: 1,
-                            borderColor: "rgba(229,181,103,0.22)",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 8,
-                        }}
-                    >
-                        <Ionicons
-                            name="construct-outline"
-                            size={14}
-                            color={theme.color.warning}
-                        />
-                        <Text
+                {/* Loyalty bonus banner — shown only for paid plans */}
+                {hasBonusPlan && (
+                    <View style={{
+                        marginBottom: 20,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        borderWidth: 1,
+                        borderColor: "rgba(123,179,138,0.35)",
+                    }}>
+                        <LinearGradient
+                            colors={["rgba(123,179,138,0.12)", "rgba(123,179,138,0.05)"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={{
-                                flex: 1,
-                                fontFamily: "Inter",
-                                fontSize: 11,
-                                lineHeight: 15,
-                                color: theme.color.warning,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 12,
+                                padding: 16,
                             }}
                         >
-                            Dev build · RevenueCat not configured. Dummy purchases are active
-                            and credits will be granted without payment.
+                            <View style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: "rgba(123,179,138,0.18)",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}>
+                                <Ionicons name="gift-outline" size={20} color={theme.color.success} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{
+                                    fontFamily: "Inter-SemiBold",
+                                    fontSize: 13,
+                                    color: theme.color.success,
+                                    marginBottom: 2,
+                                }}>
+                                    {planName} subscriber bonus — +{creditPackBonusPct}%
+                                </Text>
+                                <Text style={{
+                                    fontFamily: "Inter",
+                                    fontSize: 12,
+                                    lineHeight: 17,
+                                    color: "rgba(208,197,184,0.65)",
+                                }}>
+                                    You earn {creditPackBonusPct}% extra credits on every pack purchase as a thank-you for subscribing.
+                                </Text>
+                            </View>
+                        </LinearGradient>
+                    </View>
+                )}
+
+                {showDevBanner ? (
+                    <View style={{
+                        padding: 12,
+                        marginBottom: 20,
+                        borderRadius: 10,
+                        backgroundColor: "rgba(229,181,103,0.08)",
+                        borderWidth: 1,
+                        borderColor: "rgba(229,181,103,0.22)",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                    }}>
+                        <Ionicons name="construct-outline" size={14} color={theme.color.warning} />
+                        <Text style={{
+                            flex: 1,
+                            fontFamily: "Inter",
+                            fontSize: 11,
+                            lineHeight: 15,
+                            color: theme.color.warning,
+                        }}>
+                            Dev build · RevenueCat not configured. Dummy purchases are active and credits will be granted without payment.
                         </Text>
                     </View>
                 ) : null}
@@ -357,56 +390,52 @@ export default function CreditPacksScreen() {
                             onPress={() => handlePurchase(pack.code)}
                             isPurchasing={purchasing === pack.code}
                             disabled={purchasing !== null}
+                            bonusPct={creditPackBonusPct}
                         />
                     ))
                 )}
 
                 {!loading && packs.length === 0 ? (
-                    <Text
-                        style={{
-                            fontFamily: "Inter",
-                            fontSize: 14,
-                            textAlign: "center",
-                            color: theme.color.onSurfaceVariant,
-                            marginTop: 48,
-                        }}
-                    >
+                    <Text style={{
+                        fontFamily: "Inter",
+                        fontSize: 14,
+                        textAlign: "center",
+                        color: theme.color.onSurfaceVariant,
+                        marginTop: 48,
+                    }}>
                         No credit packs available right now.
                     </Text>
                 ) : null}
 
-                {/* Trust signal — quiet, Apple Pay affordance */}
+                {/* Trust signal */}
                 {packs.length > 0 ? (
-                    <View
-                        style={{
-                            marginTop: 24,
-                            alignItems: "center",
-                            gap: 8,
-                        }}
-                    >
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 6,
-                            }}
-                        >
-                            <Ionicons
-                                name="lock-closed"
-                                size={12}
-                                color={theme.color.onSurfaceMuted}
-                            />
-                            <Text
-                                style={{
-                                    fontFamily: "Inter",
-                                    fontSize: 11,
-                                    color: theme.color.onSurfaceMuted,
-                                    letterSpacing: 0.3,
-                                }}
-                            >
+                    <View style={{ marginTop: 24, alignItems: "center", gap: 8 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                            <Ionicons name="lock-closed" size={12} color={theme.color.onSurfaceMuted} />
+                            <Text style={{
+                                fontFamily: "Inter",
+                                fontSize: 11,
+                                color: theme.color.onSurfaceMuted,
+                                letterSpacing: 0.3,
+                            }}>
                                 Payments secured by Apple · Taxes included
                             </Text>
                         </View>
+                        {!hasBonusPlan && (
+                            <Pressable
+                                onPress={() => router.push("/plans")}
+                                style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}
+                            >
+                                <Ionicons name="sparkles-outline" size={11} color={theme.color.goldMidday} />
+                                <Text style={{
+                                    fontFamily: "Inter-Medium",
+                                    fontSize: 11,
+                                    color: theme.color.goldMidday,
+                                }}>
+                                    Subscribe to get up to +40% bonus credits
+                                </Text>
+                            </Pressable>
+                        )}
                     </View>
                 ) : null}
             </ScrollView>

@@ -15,7 +15,7 @@ import { theme } from "@/config/theme";
  *
  * Audit fixes applied:
  *   - Hardcoded Google avatar URL replaced with <UserAvatar/>
- *   - Hardcoded "THE ARCHITECTURAL LENS" replaced via <TopBar/> + brand
+ *   - Hardcoded "ROOMFRAME AI" replaced via <TopBar/> + brand
  *     mark
  *   - Hand-rolled LinearGradient button replaced with <Button variant="primary">
  *   - Debug-looking "ERROR LOG REF: 0X8A4_CURATOR" removed — that was

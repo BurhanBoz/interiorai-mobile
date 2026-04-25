@@ -74,10 +74,16 @@ export default function RegisterScreen() {
     try {
       await register(email.trim(), password, fullName.trim() || undefined);
     } catch (e: any) {
-      Alert.alert(
-        t("auth.register_failed_title"),
-        e?.message ?? t("auth.register_failed_description"),
-      );
+      const status = e?.response?.status;
+      const msg =
+        status === 429
+          ? t("errors.rate_limit")
+          : status === 409
+            ? t("auth.register_failed_description")
+            : status >= 500
+              ? t("errors.generic")
+              : t("auth.register_failed_description");
+      Alert.alert(t("auth.register_failed_title"), msg);
     } finally {
       setLoading(false);
     }
@@ -233,7 +239,7 @@ export default function RegisterScreen() {
           </View>
 
           {/* Social */}
-          <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
             <SocialButton
               onPress={signInWithGoogle}
               loading={socialLoading === "google"}
@@ -310,7 +316,7 @@ function SocialButton({
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => ({
-        flex: 1,
+        minWidth: 155,
         opacity: disabled ? 0.5 : 1,
         transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
       })}
@@ -325,7 +331,7 @@ function SocialButton({
           justifyContent: "center",
           gap: 10,
           minHeight: 56,
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
           borderRadius: 14,
           borderWidth: 1,
           borderColor: "rgba(63,45,17,0.18)",

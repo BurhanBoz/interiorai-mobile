@@ -114,7 +114,11 @@ export default function PlanConfirmScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : t("plans.confirm_activation_failed");
+            const status = (e as any)?.response?.status;
+            const message =
+                status >= 500
+                    ? t("errors.generic")
+                    : t("plans.confirm_activation_failed");
             Alert.alert(t("plans.confirm_activation_failed"), message);
         } finally {
             setSubmitting(false);

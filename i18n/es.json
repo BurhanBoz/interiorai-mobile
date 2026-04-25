@@ -697,7 +697,8 @@
   "errors": {
     "network": "Error de red. Verifica tu conexión.",
     "generic": "Algo salió mal. Intenta de nuevo.",
-    "unauthorized": "Tu sesión expiró. Inicia sesión de nuevo."
+    "unauthorized": "Tu sesión expiró. Inicia sesión de nuevo.",
+    "rate_limit": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
   },
   "upscale": {
     "upscaling_to_hd": "Escalando a HD…",

@@ -3,6 +3,7 @@ import { Alert, Platform } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Google from "expo-auth-session/providers/google";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import env from "@/config/environment";
 
@@ -16,6 +17,7 @@ import env from "@/config/environment";
  * so callers don't need to navigate manually.
  */
 export function useSocialAuth() {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState<null | "apple" | "google">(null);
     const [appleAvailable, setAppleAvailable] = useState(false);
 
@@ -40,13 +42,13 @@ export function useSocialAuth() {
         if (googleResponse.type === "success") {
             const idToken = googleResponse.params?.id_token;
             if (idToken) {
-                handleGoogleToken(idToken).catch((e) =>
-                    Alert.alert("Google Sign-In Failed", e?.message ?? "Unable to verify your Google account.")
+                handleGoogleToken(idToken).catch(() =>
+                    Alert.alert(t("auth.google_failed_title"), t("auth.social_retry"))
                 );
             }
         } else if (googleResponse.type === "error") {
             setLoading(null);
-            Alert.alert("Google Sign-In Failed", googleResponse.error?.message ?? "Please try again.");
+            Alert.alert(t("auth.google_failed_title"), t("auth.social_retry"));
         } else if (googleResponse.type === "dismiss" || googleResponse.type === "cancel") {
             setLoading(null);
         }
@@ -67,7 +69,7 @@ export function useSocialAuth() {
 
     const signInWithApple = useCallback(async () => {
         if (Platform.OS !== "ios" || !appleAvailable) {
-            Alert.alert("Not Available", "Sign in with Apple is only available on iOS.");
+            Alert.alert(t("auth.apple_not_available_title"), t("auth.apple_not_available_description"));
             return;
         }
         setLoading("apple");
@@ -92,29 +94,26 @@ export function useSocialAuth() {
             router.replace("/(tabs)/gallery");
         } catch (e: any) {
             if (e?.code !== "ERR_REQUEST_CANCELED") {
-                Alert.alert("Apple Sign-In Failed", e?.message ?? "Please try again.");
+                Alert.alert(t("auth.apple_failed_title"), t("auth.social_retry"));
             }
         } finally {
             setLoading(null);
         }
-    }, [appleAvailable, loginWithAppleStore]);
+    }, [appleAvailable, loginWithAppleStore, t]);
 
     const signInWithGoogle = useCallback(async () => {
         if (!env.google.iosClientId && !env.google.webClientId) {
-            Alert.alert(
-                "Not Configured",
-                "Google Sign-In client IDs are missing. Set EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID and EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env."
-            );
+            Alert.alert(t("auth.social_not_configured_title"), t("auth.social_not_configured_description"));
             return;
         }
         setLoading("google");
         try {
             await promptGoogle();
-        } catch (e: any) {
+        } catch {
             setLoading(null);
-            Alert.alert("Google Sign-In Failed", e?.message ?? "Please try again.");
+            Alert.alert(t("auth.google_failed_title"), t("auth.social_retry"));
         }
-    }, [promptGoogle]);
+    }, [promptGoogle, t]);
 
     return {
         appleAvailable,

@@ -697,7 +697,8 @@
   "errors": {
     "network": "Errore di rete. Controlla la connessione.",
     "generic": "Qualcosa è andato storto. Riprova.",
-    "unauthorized": "La tua sessione è scaduta. Accedi di nuovo."
+    "unauthorized": "La tua sessione è scaduta. Accedi di nuovo.",
+    "rate_limit": "Troppi tentativi. Attendi un momento e riprova."
   },
   "upscale": {
     "upscaling_to_hd": "Upscaling a HD…",

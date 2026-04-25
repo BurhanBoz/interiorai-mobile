@@ -697,7 +697,8 @@
   "errors": {
     "network": "Network error. Please check your connection.",
     "generic": "Something went wrong. Please try again.",
-    "unauthorized": "Your session has expired. Please sign in again."
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "rate_limit": "Too many attempts. Please wait a moment and try again."
   },
   "upscale": {
     "upscaling_to_hd": "Upscaling to HD…",
