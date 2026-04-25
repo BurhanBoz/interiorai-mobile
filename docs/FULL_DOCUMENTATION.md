@@ -1,4 +1,4 @@
-# The Architectural Lens — Full Project Documentation
+# Roomframe AI — Full Project Documentation
 
 > **Version:** 1.0.0  
 > **Platform:** iOS / Android (React Native + Expo)  
@@ -28,7 +28,7 @@
 
 ## 1. Project Overview
 
-**The Architectural Lens** is an AI-powered interior design mobile application. Users upload photos of their rooms and the app generates redesigned versions using AI models. The app follows a 4-step studio workflow: Upload → Room/Style Selection → Design Specifications → Review & Generate.
+**Roomframe AI** is an AI-powered interior design mobile application. Users upload photos of their rooms and the app generates redesigned versions using AI models. The app follows a 4-step studio workflow: Upload → Room/Style Selection → Design Specifications → Review & Generate.
 
 ### Core Features
 
@@ -48,9 +48,9 @@
 
 ### App Identity
 
-- **App Name:** The Architectural Lens
-- **Bundle ID:** `com.thearchitecturallens.mobile`
-- **URL Scheme:** `thearchitecturallens`
+- **App Name:** Roomframe AI
+- **Bundle ID:** `com.roomframeai.mobile`
+- **URL Scheme:** `roomframeai`
 - **Orientation:** Portrait only
 - **UI Style:** Dark mode only
 
@@ -229,7 +229,7 @@ interiorai-mobile/
 ```env
 EXPO_PUBLIC_API_URL=http://192.168.0.29:8080
 EXPO_PUBLIC_ENV=development
-EXPO_PUBLIC_APP_NAME=The Architectural Lens (Dev)
+EXPO_PUBLIC_APP_NAME=Roomframe AI (Dev)
 EXPO_PUBLIC_ENABLE_LOGGING=true
 ```
 

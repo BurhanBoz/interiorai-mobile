@@ -10,7 +10,6 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Brand } from "@/components/brand/Brand";
-import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 import type { ComponentProps } from "react";
 
@@ -164,68 +163,139 @@ export default function StudioScreen() {
           {t("studio.step1_title")}
         </Text>
 
-        {/* Primary upload zone */}
-        <Pressable
-          onPress={handleUpload}
-          disabled={isUploading}
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            height: 208,
-            borderWidth: 1.5,
-            borderStyle: "dashed",
-            borderColor: "rgba(225,195,155,0.35)",
-            borderRadius: 18,
-            backgroundColor: "rgba(225,195,155,0.03)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 16,
-            opacity: isUploading ? 0.7 : 1,
-            ...theme.elevation.goldGlowSoft,
-          })}
-        >
-          <Animated.View style={{ opacity: uploadPulse, marginBottom: 14 }}>
-            <Ionicons
-              name="cloud-upload-outline"
-              size={38}
-              color={theme.color.goldMidday}
-            />
-          </Animated.View>
-          <Text
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 11,
-              letterSpacing: 2.4,
-              textTransform: "uppercase",
-              color: theme.color.onSurface,
-            }}
-          >
-            {isUploading ? t("studio.uploading") : t("studio.tap_to_upload")}
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Inter",
-              fontSize: 12,
-              color: theme.color.onSurfaceMuted,
-              marginTop: 6,
-              letterSpacing: 0.2,
-            }}
-          >
-            JPG · PNG · HEIC
-          </Text>
-        </Pressable>
+        {/* Two bordered action cards separated by an "OR" divider.
+            Upload = primary (dashed, taller, centered column).
+            Camera = secondary (solid, row layout). Layout lives in
+            inner Views so Pressable callbacks only handle interaction
+            styles (scale / opacity / background). */}
+        <View style={{ width: "100%", marginBottom: 40 }}>
 
-        {/* Camera — quiet text link under the primary zone (no competing CTA) */}
-        <View style={{ alignItems: "center", marginBottom: 40 }}>
-          <Button
-            title={t("studio.take_a_photo")}
-            variant="tertiary"
-            size="sm"
+          {/* ── Primary: gallery upload ── */}
+          <Pressable
+            onPress={handleUpload}
+            disabled={isUploading}
+            accessibilityRole="button"
+            accessibilityLabel={t("studio.tap_to_upload")}
+            style={({ pressed }) => ({
+              opacity: isUploading ? 0.55 : pressed ? 0.82 : 1,
+              transform: [{ scale: pressed ? 0.975 : 1 }],
+            })}
+          >
+            <View
+              style={{
+                width: "100%",
+                paddingVertical: 36,
+                paddingHorizontal: 24,
+                borderWidth: 1.5,
+                borderStyle: "dashed",
+                borderColor: "rgba(225,195,155,0.72)",
+                borderRadius: 20,
+                backgroundColor: "rgba(225,195,155,0.05)",
+                alignItems: "center",
+                ...theme.elevation.goldGlowSoft,
+              }}
+            >
+              <Animated.View style={{ opacity: uploadPulse, marginBottom: 16 }}>
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={40}
+                  color={theme.color.goldMidday}
+                />
+              </Animated.View>
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 15,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: theme.color.onSurface,
+                  marginBottom: 6,
+                }}
+              >
+                {isUploading ? t("studio.uploading") : t("studio.tap_to_upload")}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 13,
+                  color: theme.color.onSurfaceMuted,
+                  letterSpacing: 0.2,
+                }}
+              >
+                JPEG · HEIC · PNG
+              </Text>
+            </View>
+          </Pressable>
+
+          {/* ── OR divider ── */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
+              marginVertical: 16,
+              paddingHorizontal: 4,
+            }}
+          >
+            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(77,70,60,0.35)" }} />
+            <Text
+              style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 10,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: theme.color.onSurfaceMuted,
+              }}
+            >
+              {t("common.or")}
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(77,70,60,0.35)" }} />
+          </View>
+
+          {/* ── Secondary: camera ── */}
+          <Pressable
             onPress={handleCamera}
             disabled={isUploading}
-            icon="camera-outline"
-            iconLeft
-            fullWidth={false}
-          />
+            accessibilityRole="button"
+            accessibilityLabel={t("studio.take_a_photo")}
+            style={({ pressed }) => ({
+              opacity: isUploading ? 0.35 : pressed ? 0.72 : 1,
+              transform: [{ scale: pressed ? 0.975 : 1 }],
+            })}
+          >
+            <View
+              style={{
+                width: "100%",
+                paddingVertical: 22,
+                paddingHorizontal: 24,
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.45)",
+                borderRadius: 20,
+                backgroundColor: "rgba(225,195,155,0.03)",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+              }}
+            >
+              <Ionicons
+                name="camera-outline"
+                size={24}
+                color={theme.color.goldMidday}
+              />
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 15,
+                  letterSpacing: 0.3,
+                  color: theme.color.onSurface,
+                }}
+              >
+                {t("studio.take_a_photo")}
+              </Text>
+            </View>
+          </Pressable>
+
         </View>
 
         {/* Professional tips — sentence-case section title, warm icon tiles */}

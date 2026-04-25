@@ -186,7 +186,7 @@ export default function UpscaleScreen() {
               color: "#E1C39B",
             }}
           >
-            Architectural Lens
+            Roomframe AI
           </Text>
         </View>
       </View>

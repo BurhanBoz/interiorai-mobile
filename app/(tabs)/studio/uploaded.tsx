@@ -161,17 +161,50 @@ export default function UploadedScreen() {
           </View>
         </View>
 
-        {/* Change photo — 44pt tap target */}
-        <View style={{ alignItems: "center", marginBottom: 28 }}>
-          <Button
-            title={t("studio.change_photo")}
-            variant="tertiary"
-            size="sm"
+        {/* Change photo — bordered action card, icon + label on one row.
+            Wrapper View owns the bottom margin so layout is not inside
+            the Pressable callback (which can drop layout props in RN). */}
+        <View style={{ marginBottom: 20 }}>
+          <Pressable
             onPress={handleChangePhoto}
-            icon="refresh"
-            iconLeft
-            fullWidth={false}
-          />
+            accessibilityRole="button"
+            accessibilityLabel={t("studio.change_photo")}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+              transform: [{ scale: pressed ? 0.975 : 1 }],
+            })}
+          >
+            <View
+              style={{
+                paddingVertical: 18,
+                paddingHorizontal: 20,
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.55)",
+                borderRadius: 18,
+                backgroundColor: "rgba(225,195,155,0.04)",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
+            >
+              <Ionicons
+                name="images-outline"
+                size={20}
+                color={theme.color.goldMidday}
+              />
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 15,
+                  letterSpacing: 0.2,
+                  color: theme.color.onSurface,
+                }}
+              >
+                {t("studio.change_photo")}
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Info hint — sentence-case, warm card */}

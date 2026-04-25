@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "The Architectural Lens",
-    "slug": "interiorai-mobile",
+    "name": "Roomframe AI",
+    "slug": "roomframeai-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "scheme": "thearchitecturallens",
+    "scheme": "roomframeai",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -14,10 +14,15 @@
       "backgroundColor": "#131313"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.thearchitecturallens.mobile",
+      "supportsTablet": false,
+      "bundleIdentifier": "com.roomframeai.mobile",
+      "buildNumber": "1",
       "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "We save your generated designs to your Photos library so you can keep them or share them elsewhere.",
         "NSPhotoLibraryAddUsageDescription": "We save your generated designs to your Photos library so you can keep them or share them elsewhere.",
         "NSCameraUsageDescription": "We use the camera so you can photograph the room you want to redesign.",
@@ -39,7 +44,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.thearchitecturallens.mobile"
+      "package": "com.roomframeai.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png",

@@ -12,15 +12,135 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 
-const SUPPORT_EMAIL = "support@thearchitecturallens.com";
+const SUPPORT_EMAIL = "boz.burhan8@gmail.com";
 
 // Single source of truth for which FAQs render. Question/answer strings
 // come from i18n — never hardcode English here (8 locales must stay in sync).
 const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6"] as const;
+
+// Generation parameters documented for the user. Rendered as a compact
+// reference list below the FAQ so power-users can discover what each knob
+// in Studio actually does. Each entry is a translation-key pair; English
+// defaults (and a Turkish draft) live in i18n/*.json alongside the FAQ.
+// Plan gate lives in copy — we don't cross-reference usePlanPermission here
+// because this doc is a reference, not a live UI gate.
+const GENERATION_PARAMS = [
+  { icon: "sparkles-outline", key: "design_mode" },
+  { icon: "diamond-outline", key: "quality_tier" },
+  { icon: "speedometer-outline", key: "speed_mode" },
+  { icon: "copy-outline", key: "variants" },
+  { icon: "contrast-outline", key: "strength" },
+  { icon: "layers-outline", key: "preserve_layout" },
+  { icon: "create-outline", key: "custom_prompt" },
+  { icon: "close-circle-outline", key: "negative_prompt" },
+  { icon: "dice-outline", key: "seed" },
+  { icon: "color-palette-outline", key: "color_palette" },
+  { icon: "image-outline", key: "reference_image" },
+] as const;
+
+/**
+ * Parameter reference row — icon · title · one-line description · plan-gate
+ * badge. Collapsed by default; tap to expand the description. Matches the
+ * visual rhythm of the FAQ accordion above it so the two sections feel like
+ * a single reference document.
+ */
+function ParameterRow({
+  icon,
+  titleKey,
+  descKey,
+  gateKey,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  titleKey: string;
+  descKey: string;
+  gateKey: string;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const gate = t(gateKey, { defaultValue: "" });
+
+  return (
+    <Pressable
+      onPress={() => setOpen(!open)}
+      className="bg-surface-container-high rounded-xl"
+      style={{
+        paddingVertical: 16,
+        paddingHorizontal: 18,
+        borderWidth: 1,
+        borderColor: open ? "rgba(225,195,155,0.2)" : "rgba(77,70,60,0.18)",
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            backgroundColor: "rgba(225,195,155,0.08)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons
+            name={icon}
+            size={18}
+            color={open ? "#E1C39B" : "#C4A882"}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: "Inter-SemiBold",
+              fontSize: 14,
+              letterSpacing: 0.2,
+              color: open ? "#E1C39B" : "#E5E2E1",
+            }}
+          >
+            {t(titleKey)}
+          </Text>
+          {gate ? (
+            <Text
+              style={{
+                marginTop: 3,
+                fontFamily: "Inter-SemiBold",
+                fontSize: 10,
+                letterSpacing: 1.4,
+                textTransform: "uppercase",
+                color: "rgba(225,195,155,0.55)",
+              }}
+            >
+              {gate}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons
+          name={open ? "chevron-up" : "chevron-down"}
+          size={16}
+          color={open ? "#E1C39B" : "#998F84"}
+        />
+      </View>
+      {open ? (
+        <Text
+          style={{
+            marginTop: 14,
+            paddingLeft: 50,
+            fontFamily: "Inter",
+            fontSize: 13,
+            lineHeight: 20,
+            color: "#D0C5B8",
+          }}
+        >
+          {t(descKey)}
+        </Text>
+      ) : null}
+    </Pressable>
+  );
+}
 
 function AccordionItem({
   questionKey,
@@ -228,6 +348,36 @@ export default function HelpScreen() {
                 {t("settings.help_no_results", { query: search })}
               </Text>
             )}
+          </View>
+        </View>
+
+        {/* Generation Parameters — a reference guide for every knob the user
+            sees in Studio. Not live-gated against the current plan (the
+            Studio screens enforce that); this is documentation a curious
+            user can read once and understand the whole system. */}
+        <View className="mb-16">
+          <Text
+            className="font-headline text-on-background mb-3"
+            style={{ fontSize: 20 }}
+          >
+            {t("settings.help_params_title")}
+          </Text>
+          <Text
+            className="font-body text-on-surface-variant mb-8"
+            style={{ fontSize: 13, lineHeight: 20 }}
+          >
+            {t("settings.help_params_intro")}
+          </Text>
+          <View style={{ gap: 12 }}>
+            {GENERATION_PARAMS.map((p) => (
+              <ParameterRow
+                key={p.key}
+                icon={p.icon as ComponentProps<typeof Ionicons>["name"]}
+                titleKey={`settings.help_param_${p.key}_title`}
+                descKey={`settings.help_param_${p.key}_desc`}
+                gateKey={`settings.help_param_${p.key}_gate`}
+              />
+            ))}
           </View>
         </View>
 

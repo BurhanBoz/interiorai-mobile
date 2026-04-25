@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
   Alert,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { useRef, useEffect, useCallback } from "react";
 import { router, usePathname } from "expo-router";
@@ -81,8 +82,8 @@ const MENU_ITEMS: MenuItem[] = [
 
 const SETTINGS_ITEMS: Array<{ icon: IconName; labelKey: string; route: string }> = [
   {
-    icon: "language-outline",
-    labelKey: "drawer.language",
+    icon: "settings-outline",
+    labelKey: "drawer.settings",
     route: "/settings/language",
   },
   {
@@ -118,42 +119,24 @@ function DrawerItem({
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        // Explicit row direction at the Pressable level AND on the inner
-        // view so neither NativeWind nor a parent flex layout can collapse
-        // the content into a column on any screen size.
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 14,
-        paddingVertical: 18,
         borderRadius: 12,
         backgroundColor: active
-          ? "rgba(225,195,155,0.10)"
+          ? "rgba(225,195,155,0.12)"
           : pressed
             ? "rgba(42,42,42,0.45)"
             : "transparent",
-        marginBottom: 10,
-        position: "relative",
+        borderWidth: active ? 1 : 0,
+        borderColor: "rgba(225,195,155,0.28)",
+        overflow: "hidden",
       })}
     >
-      {active ? (
-        <View
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 14,
-            bottom: 14,
-            width: 3,
-            borderRadius: 2,
-            backgroundColor: theme.color.goldMidday,
-          }}
-        />
-      ) : null}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          gap: 16,
-          flex: 1,
+          gap: 14,
+          paddingHorizontal: 16,
+          paddingVertical: 13,
         }}
       >
         <Ionicons
@@ -164,8 +147,8 @@ function DrawerItem({
         <Text
           style={{
             fontFamily: active ? "Inter-SemiBold" : "Inter-Medium",
-            fontSize: 15,
-            letterSpacing: 0.2,
+            fontSize: 16,
+            letterSpacing: 0.1,
             color: active ? theme.color.goldMidday : theme.color.onSurface,
           }}
         >
@@ -178,20 +161,17 @@ function DrawerItem({
 
 /* ───────── SectionLabel: quiet eyebrow above each group ───────── */
 
-function SectionLabel({ children, compact = false }: { children: string; compact?: boolean }) {
+function SectionLabel({ children }: { children: string }) {
   return (
     <Text
       style={{
         fontFamily: "Inter-SemiBold",
-        fontSize: compact ? 10 : 11,
+        fontSize: 11,
         letterSpacing: 2,
         textTransform: "uppercase",
-        color: "rgba(225,195,155,0.45)",
-        paddingHorizontal: 14,
-        marginBottom: 14,
-        // Settings section sits a comfortable gap below the nav group so
-        // the break between "Navigate" and "Settings" reads as deliberate.
-        marginTop: compact ? 24 : 0,
+        color: "rgba(225,195,155,0.55)",
+        paddingHorizontal: 4,
+        marginBottom: 10,
       }}
     >
       {children}
@@ -339,90 +319,87 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
           <Brand variant="inline" size="xs" tone="muted" />
         </View>
 
-        {/* User identity — compact horizontal layout */}
+        {/* User identity — premium hero treatment: large circle avatar with
+            tier badge overlay at bottom-left corner, name + plan label
+            below. Email omitted to keep the block clean and scannable. */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 14,
+            gap: 16,
             paddingHorizontal: 24,
-            paddingBottom: 22,
+            paddingBottom: 24,
             marginBottom: 8,
             borderBottomWidth: 1,
             borderBottomColor: "rgba(77,70,60,0.18)",
           }}
         >
-          <UserAvatar size="md" />
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "NotoSerif",
-                  fontSize: 17,
-                  color: theme.color.onSurface,
-                  letterSpacing: -0.1,
-                  flexShrink: 1,
-                }}
-                numberOfLines={1}
-              >
-                {displayName}
-              </Text>
+          <View>
+            <UserAvatar size="hero" />
+            <View style={{ position: "absolute", bottom: -4, left: -4 }}>
               <TierBadge tier={planCode} size="xs" />
             </View>
-            {user?.email ? (
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 12,
-                  color: theme.color.onSurfaceMuted,
-                  marginTop: 3,
-                }}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {user.email}
-              </Text>
-            ) : null}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: "NotoSerif",
+                fontSize: 20,
+                color: theme.color.onSurface,
+                letterSpacing: -0.2,
+              }}
+              numberOfLines={1}
+            >
+              {displayName}
+            </Text>
+            <View style={{ marginTop: 8 }}>
+              <TierBadge
+                tier={planCode}
+                size="xs"
+                label={planCode !== "FREE" ? t("drawer.premium_member") : undefined}
+              />
+            </View>
           </View>
         </View>
 
-        {/* Navigate */}
-        <View
-          style={{
-            paddingHorizontal: 14,
-            marginTop: 18,
-            flex: 1,
-          }}
-        >
-          <SectionLabel>{t("drawer.navigate")}</SectionLabel>
-          {MENU_ITEMS.map((item) => (
-            <DrawerItem
-              key={item.labelKey}
-              icon={item.icon}
-              iconOutline={item.iconOutline}
-              label={t(item.labelKey)}
-              active={pathname.includes(item.match)}
-              onPress={() => navigate(item.route)}
-            />
-          ))}
+        {/* Navigate + Settings — each group wrapped in a View with gap so
+            items have explicit breathing room between them. marginBottom
+            on the nav group creates the section separator without needing
+            a visual divider. */}
+        <View style={{ flex: 1, marginTop: 20 }}>
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: 12,
+              paddingBottom: 8,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            <SectionLabel>{t("drawer.navigate")}</SectionLabel>
+            <View style={{ gap: 12, marginBottom: 28 }}>
+              {MENU_ITEMS.map((item) => (
+                <DrawerItem
+                  key={item.labelKey}
+                  icon={item.icon}
+                  iconOutline={item.iconOutline}
+                  label={t(item.labelKey)}
+                  active={pathname.includes(item.match)}
+                  onPress={() => navigate(item.route)}
+                />
+              ))}
+            </View>
 
-          {/* Settings — smaller break, not 56px dead space */}
-          <SectionLabel compact>{t("drawer.settings")}</SectionLabel>
-          {SETTINGS_ITEMS.map((item) => (
-            <DrawerItem
-              key={item.labelKey}
-              icon={item.icon}
-              label={t(item.labelKey)}
-              onPress={() => navigate(item.route)}
-            />
-          ))}
+            <SectionLabel>{t("drawer.settings")}</SectionLabel>
+            <View style={{ gap: 6 }}>
+              {SETTINGS_ITEMS.map((item) => (
+                <DrawerItem
+                  key={item.labelKey}
+                  icon={item.icon}
+                  label={t(item.labelKey)}
+                  onPress={() => navigate(item.route)}
+                />
+              ))}
+            </View>
+          </ScrollView>
         </View>
 
         {/* Footer — quiet destructive row, visually separated by the divider.
@@ -441,11 +418,11 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
           <Pressable
             onPress={handleSignOut}
             style={({ pressed }) => ({
-              paddingHorizontal: 14,
+              paddingHorizontal: 16,
               paddingVertical: 14,
               borderRadius: 10,
               backgroundColor: pressed
-                ? "rgba(153,143,132,0.08)"
+                ? "rgba(217,138,123,0.10)"
                 : "transparent",
             })}
           >
@@ -453,20 +430,20 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 14,
+                gap: 18,
               }}
             >
               <Ionicons
                 name="log-out-outline"
-                size={18}
-                color={theme.color.onSurfaceMuted}
+                size={22}
+                color={theme.color.danger}
               />
               <Text
                 style={{
-                  fontFamily: "Inter-Medium",
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                  color: theme.color.onSurfaceMuted,
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 16,
+                  letterSpacing: 0.2,
+                  color: theme.color.danger,
                 }}
               >
                 {t("drawer.sign_out")}

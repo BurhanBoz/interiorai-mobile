@@ -3,13 +3,10 @@ import Svg, { Line, Path } from "react-native-svg";
 import { theme } from "@/config/theme";
 
 /**
- * The canonical brand mark for Interior AI — Architectural Lens.
+ * The canonical brand mark for Roomframe AI.
  *
- * Renders the wordmark together with a tiny editorial lens glyph so every
- * header reads as the same product. Before this component existed, the
- * Studio header had {"ARCHITECTURAL\nLENS"} hardcoded while every other
- * screen wrote "ARCHITECTURAL LENS" as a single line — brand inconsistency
- * that whispered "this is a prototype" to every careful viewer.
+ * Renders the wordmark together with a tiny editorial geometric glyph so
+ * every header reads as the same product.
  *
  * Variants:
  *   - "inline"  — wordmark on one line, glyph left (default header use)
@@ -72,8 +69,8 @@ function LensGlyph({ size, color }: { size: number; color: string }) {
 }
 
 const WORDMARK = {
-  primary: "ARCHITECTURAL",
-  secondary: "LENS",
+  primary: "ROOMFRAME",
+  secondary: "AI",
 } as const;
 
 const SIZE_MAP = {

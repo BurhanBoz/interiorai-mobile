@@ -16,7 +16,7 @@ const env: EnvironmentConfig = {
     apiUrl:
         process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080",
     appName:
-        process.env.EXPO_PUBLIC_APP_NAME ?? "The Architectural Lens",
+        process.env.EXPO_PUBLIC_APP_NAME ?? "Roomframe AI",
     enableLogging: process.env.EXPO_PUBLIC_ENABLE_LOGGING === "true",
     google: {
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "",

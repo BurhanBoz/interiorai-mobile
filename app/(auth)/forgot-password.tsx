@@ -91,34 +91,49 @@ export default function ForgotPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={{ flex: 1, paddingHorizontal: 28, paddingTop: 8 }}>
-          {/* Hero glyph tile */}
-          <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
+          {/* Hero glyph tile — icon shrunk further to 26 (≈23% of the 112
+              tile) so the shackle of lock-closed-outline has unmistakable
+              air on every side. marginBottom 32→48 gives "LOST YOUR KEY"
+              breathing room below the circle instead of hugging it. */}
+          {/* Hero glyph: explicit 148px container height so the halo circle
+              (absolute, 148px) and the tile (88px) share the same vertical
+              space. justifyContent centers the tile inside the halo. */}
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 148,
+              marginTop: 24,
+              marginBottom: 48,
+            }}
+          >
             <View
               pointerEvents="none"
               style={{
                 position: "absolute",
-                width: 140,
-                height: 140,
-                borderRadius: 70,
+                width: 148,
+                height: 148,
+                borderRadius: 74,
                 backgroundColor: "rgba(225,195,155,0.08)",
               }}
             />
             <View
               style={{
-                width: 104,
-                height: 104,
-                borderRadius: 28,
+                width: 88,
+                height: 88,
+                borderRadius: 24,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: "rgba(225,195,155,0.06)",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.24)",
+                overflow: "hidden",
                 ...theme.elevation.md,
               }}
             >
               <Ionicons
                 name={stage === "success" ? "mail-open-outline" : "lock-closed-outline"}
-                size={40}
+                size={18}
                 color={theme.color.goldMidday}
               />
             </View>

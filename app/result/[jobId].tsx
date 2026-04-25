@@ -26,6 +26,7 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useStudioStore } from "@/stores/studioStore";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
@@ -85,6 +86,7 @@ export default function ResultDetailScreen() {
   // avoids confusing 403 responses after they tap.
   const creditRules = useSubscriptionStore(s => s.creditRules);
   const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
+  const resetStudio = useStudioStore(s => s.reset);
   const canUpscale =
     isFeatureEnabled("ULTRA_HD_UPSCALE") &&
     creditRules.some(r => r.featureCode === "ULTRA_HD_UPSCALE");
@@ -499,30 +501,17 @@ export default function ResultDetailScreen() {
                 backgroundColor: "rgba(225,195,155,0.06)",
               }}
             >
-              <View>
-                <Text
-                  className="font-label font-bold"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                    color: "#E0C29A",
-                  }}
-                >
-                  {t("result.upscale_locked")}
-                </Text>
-                <Text
-                  className="font-label"
-                  style={{
-                    fontSize: 9,
-                    letterSpacing: 0.5,
-                    textTransform: "uppercase",
-                    color: "rgba(224,194,154,0.65)",
-                  }}
-                >
-                  {t("result.upscale_locked_hint")}
-                </Text>
-              </View>
+              <Text
+                className="font-label font-bold"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: "#E0C29A",
+                }}
+              >
+                {t("result.upscale_locked")}
+              </Text>
               <Ionicons name="lock-closed" size={16} color="#E0C29A" />
             </Pressable>
           )}
@@ -651,7 +640,7 @@ export default function ResultDetailScreen() {
           <PrimaryButton
             label={t("result.new_design")}
             icon="refresh"
-            onPress={() => router.push("/(tabs)/studio")}
+            onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
           />
         </View>
       </ScrollView>

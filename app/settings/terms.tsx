@@ -117,7 +117,7 @@ export default function TermsScreen() {
               className="font-body text-on-surface-variant"
               style={{ fontSize: 14, lineHeight: 26 }}
             >
-              Access to The Architectural Lens is provided as a premium service
+              Access to Roomframe AI is provided as a premium service
               for design professionals. We reserve the right to curate the
               membership based on professional alignment and creative intent.
             </Text>
@@ -190,7 +190,7 @@ export default function TermsScreen() {
               className="font-body text-on-surface font-medium"
               style={{ fontSize: 14, lineHeight: 22 }}
             >
-              The Architectural Lens acts as a conceptual catalyst. We are not
+              Roomframe AI acts as a conceptual catalyst. We are not
               liable for structural engineering failures or technical
               inaccuracies arising from the application of AI-generated
               conceptual visualizations in real-world construction.

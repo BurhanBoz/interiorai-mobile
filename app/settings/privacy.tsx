@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { TopBar } from "@/components/layout/TopBar";
+import { useBackHandler } from "@/utils/navigation";
 import { theme } from "@/config/theme";
 
 /**
@@ -48,12 +49,13 @@ const SECTION_KEYS = [
 
 export default function PrivacyScreen() {
   const { t } = useTranslation();
+  const handleBack = useBackHandler("/(tabs)/profile");
   return (
     <SafeAreaView
       edges={["top"]}
       style={{ flex: 1, backgroundColor: theme.color.surface }}
     >
-      <TopBar title={t("settings.privacy_title")} showBack />
+      <TopBar title={t("settings.privacy_title")} showBack onBack={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}

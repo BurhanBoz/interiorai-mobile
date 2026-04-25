@@ -98,7 +98,7 @@ export default function StyleTransferScreen() {
               textTransform: "uppercase",
             }}
           >
-            Architectural Lens
+            Roomframe AI
           </Text>
         </View>
         <UserAvatar size="sm" onPress />
@@ -235,27 +235,52 @@ export default function StyleTransferScreen() {
               </Text>
             </View>
             {referencePhoto?.uri ? (
-              <Pressable onPress={handlePickReference}>
-                <View
-                  className="rounded-xl overflow-hidden"
-                  style={{ aspectRatio: 4 / 5 }}
+              <View style={{ position: "relative" }}>
+                <Pressable onPress={handlePickReference}>
+                  <View
+                    className="rounded-xl overflow-hidden"
+                    style={{ aspectRatio: 4 / 5 }}
+                  >
+                    <Image
+                      source={{ uri: referencePhoto.uri }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={300}
+                    />
+                  </View>
+                </Pressable>
+                {/* Remove reference photo */}
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setReferencePhoto(null);
+                  }}
+                  hitSlop={8}
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: "rgba(19,19,19,0.80)",
+                    borderWidth: 1,
+                    borderColor: "rgba(225,195,155,0.30)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <Image
-                    source={{ uri: referencePhoto.uri }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    transition={300}
-                  />
-                </View>
-              </Pressable>
+                  <Ionicons name="close" size={15} color="#F5F0EB" />
+                </Pressable>
+              </View>
             ) : (
               <Pressable onPress={handlePickReference}>
                 <View
                   className="rounded-xl items-center justify-center bg-surface-container-low"
                   style={{
                     aspectRatio: 4 / 5,
-                    borderWidth: 2,
-                    borderColor: "#353534",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(225,195,155,0.55)",
                     borderStyle: "dashed",
                   }}
                 >

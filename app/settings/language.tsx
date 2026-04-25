@@ -28,7 +28,7 @@ export default function LanguageScreen() {
             textTransform: "uppercase",
           }}
         >
-          Architectural Lens
+          Roomframe AI
         </Text>
         <View style={{ width: 24 }} />
       </View>

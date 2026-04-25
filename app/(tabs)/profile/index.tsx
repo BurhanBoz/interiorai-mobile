@@ -1,4 +1,6 @@
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,7 +15,6 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { ListItem } from "@/components/ui/ListItem";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { Button } from "@/components/ui/Button";
 import { Brand } from "@/components/brand/Brand";
 import { useState, useEffect, useMemo } from "react";
 import type { ComponentProps } from "react";
@@ -44,6 +45,17 @@ function CreditRing({
   const hasMax = !!max && max > 0;
   const progress = hasMax ? Math.min(value / max, 1) : 0;
   const dashOffset = circumference * (1 - progress);
+
+  // Generic fit: the inner diameter must hold the full number. Pick the
+  // font size so the label width stays inside the ring regardless of how
+  // many digits the balance has (1 → bold, 9999 → still clean).
+  const label = value >= 10000 ? `${Math.floor(value / 1000)}k` : String(value);
+  const innerDiameter = size - strokeWidth * 2 - 4;
+  const baseFont = size * 0.46;
+  // Each digit is ≈ 0.58× the font size in tabular-nums; cap the width.
+  const digitWidth = 0.58;
+  const widthBudget = innerDiameter / (label.length * digitWidth);
+  const fontSize = Math.min(baseFont, widthBudget);
 
   return (
     <View
@@ -85,16 +97,83 @@ function CreditRing({
         ) : null}
       </Svg>
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.5}
         style={{
           fontFamily: "NotoSerif",
-          fontSize: 22,
+          fontSize,
+          lineHeight: fontSize * 1.1,
           color: theme.color.onSurface,
           fontVariant: ["tabular-nums"],
+          maxWidth: innerDiameter,
+          textAlign: "center",
         }}
       >
-        {value}
+        {label}
       </Text>
     </View>
+  );
+}
+
+/* ─────────────────── Gold Action Button ─────────────────── */
+/**
+ * Compact gold-gradient CTA used inside the balance card. Both buttons on
+ * that row share this component so they match exactly and split the row
+ * cleanly (flex:1, no width:"100%"). Label auto-shrinks for longer copy so
+ * "UPGRADE NOW" doesn't push the card edge off-screen.
+ */
+function GoldActionButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        flex: 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
+      <LinearGradient
+        colors={theme.gradient.primary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          height: 42,
+          borderRadius: 12,
+          paddingHorizontal: 14,
+          alignItems: "center",
+          justifyContent: "center",
+          borderWidth: 1,
+          borderColor: "rgba(63,45,17,0.18)",
+        }}
+      >
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          style={{
+            fontFamily: "Inter-SemiBold",
+            fontSize: 12,
+            letterSpacing: 1.2,
+            textTransform: "uppercase",
+            color: theme.color.onGold,
+            textAlign: "center",
+          }}
+        >
+          {label}
+        </Text>
+      </LinearGradient>
+    </Pressable>
   );
 }
 
@@ -105,7 +184,6 @@ interface MenuItemConfig {
   descriptionKey?: string;
   icon: IconName;
   route?: string;
-  hasBadge?: boolean;
   extraParams?: Record<string, string>;
 }
 
@@ -118,12 +196,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
     icon: "heart-outline",
     route: "/(tabs)/gallery",
     extraParams: { filter: "favorites" },
-  },
-  {
-    labelKey: "profile.notifications",
-    icon: "notifications-outline",
-    route: "/settings/notifications",
-    hasBadge: true,
   },
   {
     labelKey: "profile.credit_packs",
@@ -160,6 +232,8 @@ export default function ProfileScreen() {
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
   const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
+  // Real unread-notification count, sourced from the same hook the
+  // Notifications screen uses. 0 → no dot; > 0 → the gold pill shows.
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -239,20 +313,6 @@ export default function ProfileScreen() {
       ],
     );
   };
-
-  const handleSignOut = () =>
-    Alert.alert(
-      t("drawer.sign_out_confirm_title"),
-      t("drawer.sign_out_confirm_description"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("drawer.sign_out"),
-          style: "destructive",
-          onPress: logout,
-        },
-      ],
-    );
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
@@ -400,6 +460,11 @@ export default function ProfileScreen() {
                   })}
             </Text>
 
+            {/* Two gold CTAs, flex:1 each — no fullWidth prop because the
+                Button primitive's width:100% fights with the flex share and
+                pushes the right button outside the card. Custom Pressable +
+                LinearGradient guarantees they split the row evenly and sit
+                inside the card bounds. */}
             <View
               style={{
                 flexDirection: "row",
@@ -407,33 +472,18 @@ export default function ProfileScreen() {
                 marginTop: 20,
               }}
             >
-              <Button
-                title={t("profile.buy_credits") ?? "Buy Credits"}
-                variant="secondary"
-                size="sm"
+              <GoldActionButton
+                label={t("profile.buy_credits") ?? "Buy Credits"}
                 onPress={() => router.push("/credits/packs")}
-                fullWidth
-                style={{ flex: 1 }}
               />
-              {isFree ? (
-                <Button
-                  title={t("profile.upgrade") ?? "Upgrade"}
-                  variant="primary"
-                  size="sm"
-                  onPress={() => router.push("/plans")}
-                  fullWidth
-                  style={{ flex: 1 }}
-                />
-              ) : (
-                <Button
-                  title={t("profile.manage") ?? "Manage"}
-                  variant="primary"
-                  size="sm"
-                  onPress={() => router.push("/plans")}
-                  fullWidth
-                  style={{ flex: 1 }}
-                />
-              )}
+              <GoldActionButton
+                label={
+                  isFree
+                    ? (t("profile.upgrade") ?? "Upgrade")
+                    : (t("profile.manage") ?? "Manage")
+                }
+                onPress={() => router.push("/plans")}
+              />
             </View>
           </View>
         </View>
@@ -465,63 +515,33 @@ export default function ProfileScreen() {
                     pushWithReturn(item.route, "profile", item.extraParams);
                 }}
                 last={idx === MENU_ITEMS.length - 1}
-                trailing={
-                  item.hasBadge ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: 4,
-                          backgroundColor: theme.color.goldMidday,
-                        }}
-                      />
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color="rgba(153,143,132,0.55)"
-                      />
-                    </View>
-                  ) : undefined
-                }
               />
             ))}
           </View>
 
-          {/* Sign Out — quiet destructive, separated from the settings group */}
-          <View style={{ marginTop: 20 }}>
-            <Button
-              title={t("drawer.sign_out")}
-              variant="destructive"
-              size="md"
-              onPress={handleSignOut}
-              iconLeft
-              icon="log-out-outline"
-            />
-          </View>
-
-          {/* Delete account — the quietest possible CTA */}
+          {/* Sign Out — red, icon + label side-by-side. Reimplemented as a
+              Pressable to guarantee a single horizontal row (the shared
+              destructive Button variant was rendering inconsistently across
+              devices). */}
+          {/* Sign Out intentionally lives only in the side drawer now —
+              Profile already has the identity + plan + settings surface, and
+              a second sign-out affordance duplicated the drawer's. Delete
+              account stays here because it's profile-lifecycle, not session. */}
           <Pressable
             onPress={handleDeleteAccount}
             disabled={deleting}
             hitSlop={10}
             style={({ pressed }) => ({
               alignSelf: "center",
-              marginTop: 16,
-              opacity: pressed ? 0.6 : 0.7,
+              marginTop: 28,
+              opacity: pressed ? 0.6 : 0.85,
             })}
           >
             <Text
               style={{
                 fontFamily: "Inter",
                 fontSize: 12,
-                color: theme.color.onSurfaceMuted,
+                color: theme.color.danger,
                 textDecorationLine: "underline",
                 letterSpacing: 0.3,
               }}

@@ -105,10 +105,14 @@ export default function RootLayout() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    // Password reset is reachable even for authed users — a reset email
+    // tapped from the same device while still logged in should open the
+    // form, not bounce to Gallery.
+    const isPasswordReset = (segments as string[])[1] === "reset-password";
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/onboarding");
-    } else if (isAuthenticated && inAuthGroup) {
+    } else if (isAuthenticated && inAuthGroup && !isPasswordReset) {
       router.replace("/(tabs)/gallery");
     }
   }, [isAuthenticated, isLoading, segments, fontsLoaded, fontError]);

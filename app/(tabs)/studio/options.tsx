@@ -27,6 +27,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import { theme } from "@/config/theme";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   REDESIGN: "INTERIOR_REDESIGN",
@@ -58,7 +59,6 @@ const PALETTE_COLORS = [
 const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
   { key: "STANDARD", labelKey: "studio.quality_standard" },
   { key: "HD", labelKey: "studio.quality_hd" },
-  { key: "ULTRA_HD", labelKey: "studio.quality_ultra_hd" },
 ];
 
 export default function OptionsScreen() {
@@ -97,6 +97,15 @@ export default function OptionsScreen() {
     const next = current.length === 0 ? text : `${current}, ${text}`;
     setPrompt(next);
   };
+
+  const removeSuggestion = (text: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    let next = prompt;
+    if (next.includes(`, ${text}`)) next = next.replace(`, ${text}`, "");
+    else if (next.includes(`${text}, `)) next = next.replace(`${text}, `, "");
+    else next = next.replace(text, "");
+    setPrompt(next.trim().replace(/^,\s*|,\s*$/g, "").replace(/,\s*,/g, ", "));
+  };
   // Plan-level permission checks — these reflect the current plan's
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
@@ -104,7 +113,7 @@ export default function OptionsScreen() {
   const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
   const { cost } = useCreditCost();
   const creditRules = useSubscriptionStore(s => s.creditRules);
-  const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
+  const features = useSubscriptionStore(s => s.features);
 
   // Determine which quality tiers are available for the current mode.
   // Each tier can map to a different feature_code (HD/ULTRA_HD of REDESIGN
@@ -139,7 +148,7 @@ export default function OptionsScreen() {
   // via entitlement validation.
   const isModeAvailable = (modeKey: DesignMode) => {
     const fc = FEATURE_CODE_MAP[modeKey];
-    if (!fc || !isFeatureEnabled(fc)) return false;
+    if (!fc || !(features.find(f => f.featureCode === fc)?.enabled ?? false)) return false;
     if (modeKey === "STYLE_TRANSFER" && !referenceImageAllowed) return false;
     if (modeKey === "INPAINT" && !maskEditingAllowed) return false;
     return true;
@@ -159,6 +168,7 @@ export default function OptionsScreen() {
 
   const [promptFocused, setPromptFocused] = useState(false);
   const [seedExpanded, setSeedExpanded] = useState(false);
+  const [hintChipId, setHintChipId] = useState<string | null>(null);
 
   // Auto-downgrade if current selection is locked
   useEffect(() => {
@@ -261,40 +271,52 @@ export default function OptionsScreen() {
                     }
                   }}
                   style={({ pressed }) => ({
-                    paddingHorizontal: 24,
-                    paddingVertical: 12,
                     borderRadius: 12,
                     backgroundColor: isActive
                       ? "#E1C39B"
                       : locked
                         ? "rgba(28,27,27,0.6)"
                         : "#2A2A2A",
-                    borderWidth: locked ? 1 : 0,
-                    borderColor: locked ? "rgba(153,143,132,0.3)" : "transparent",
+                    borderWidth: 1,
+                    borderColor: isActive
+                      ? "rgba(225,195,155,0.85)"
+                      : locked
+                        ? "rgba(153,143,132,0.3)"
+                        : "rgba(225,195,155,0.35)",
                     borderStyle: locked ? "dashed" : "solid",
+                    overflow: "hidden",
                     transform: [{ scale: pressed ? 0.96 : 1 }],
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
                   })}
                 >
-                  {locked && (
-                    <Ionicons name="lock-closed" size={12} color="#998F84" />
-                  )}
-                  <Text
-                    className="font-body"
+                  <View
                     style={{
-                      fontSize: 14,
-                      fontWeight: "500",
-                      color: isActive
-                        ? "#3F2D11"
-                        : locked
-                          ? "#998F84"
-                          : "#E0C29A",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      paddingHorizontal: 20,
+                      paddingVertical: 12,
                     }}
                   >
-                    {t(m.labelKey)}
-                  </Text>
+                    <Ionicons
+                      name={locked ? "lock-closed" : (m.icon as any)}
+                      size={locked ? 12 : 14}
+                      color={isActive ? "#3F2D11" : locked ? "#998F84" : "#E0C29A"}
+                    />
+                    <Text
+                      className="font-body"
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "500",
+                        color: isActive
+                          ? "#3F2D11"
+                          : locked
+                            ? "#998F84"
+                            : "#E0C29A",
+                      }}
+                    >
+                      {t(m.labelKey)}
+                    </Text>
+                  </View>
                 </Pressable>
               );
             })}
@@ -396,7 +418,7 @@ export default function OptionsScreen() {
                             color: "#E0C29A",
                           }}
                         >
-                          PRO
+                          {tier.key === "ULTRA_HD" ? "MAX" : "PRO"}
                         </Text>
                       </View>
                     )}
@@ -757,146 +779,263 @@ export default function OptionsScreen() {
         </View>
 
         {/* Material Narrative (Prompt) */}
-        <View style={{ marginTop: 48, paddingHorizontal: 24 }}>
+        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
           <Text
-            className="font-label text-on-surface-variant"
+            className="font-label"
             style={{
-              fontSize: 11,
+              fontSize: 10,
               letterSpacing: 2,
               textTransform: "uppercase",
-              marginBottom: 16,
+              color: theme.color.goldMidday,
+              marginBottom: 14,
             }}
           >
             {t("studio.custom_prompt")}
           </Text>
 
-          {/* Suggestion chips — 2-col grid of card-style pills with a
-              category icon. Replaces the earlier horizontal strip that
-              stretched awkwardly off-screen; a grid wraps naturally and
-              surfaces every chip without forcing a scroll gesture.
-              Already-added chips show a checkmark (auto-detect from the
-              current prompt text) so users don't re-add duplicates. */}
-          {promptSuggestions.length > 0 && (
-            <View style={{ marginBottom: 16 }}>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  color: "#998F84",
-                  marginBottom: 12,
-                }}
-              >
-                {t("studio.prompt_suggestions_label")}
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  gap: 8,
-                }}
-              >
-                {promptSuggestions.map(chip => {
-                  const alreadyAdded = prompt
-                    .toLowerCase()
-                    .includes(chip.text.toLowerCase());
-                  // Category → icon map. Keeps the card content visually
-                  // anchored and gives the grid a subtle rhythm.
-                  const iconMap: Record<string, string> = {
-                    MATERIAL: "layers-outline",
-                    LIGHT: "sunny-outline",
-                    MOOD: "leaf-outline",
-                    OBJECT: "bulb-outline",
-                    COLOR: "color-palette-outline",
-                    STYLE_DETAIL: "sparkles-outline",
-                    ERA: "time-outline",
-                  };
-                  const iconName = iconMap[chip.category] ?? "add-outline";
-                  return (
-                    <Pressable
-                      key={chip.id}
-                      onPress={() => {
-                        if (!alreadyAdded) appendSuggestion(chip.text);
-                      }}
-                      disabled={alreadyAdded}
-                      style={({ pressed }) => ({
-                        width: "48.5%",
-                        minHeight: 58,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        borderRadius: 12,
-                        backgroundColor: alreadyAdded
-                          ? "rgba(143,227,161,0.06)"
-                          : "rgba(225,195,155,0.08)",
-                        borderWidth: 1,
-                        borderColor: alreadyAdded
-                          ? "rgba(143,227,161,0.30)"
-                          : "rgba(225,195,155,0.22)",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                        transform: [{ scale: pressed && !alreadyAdded ? 0.97 : 1 }],
-                      })}
-                    >
-                      <View
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 14,
-                          backgroundColor: alreadyAdded
-                            ? "rgba(143,227,161,0.12)"
-                            : "rgba(225,195,155,0.16)",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Ionicons
-                          name={alreadyAdded ? "checkmark" : (iconName as any)}
-                          size={14}
-                          color={alreadyAdded ? "#8FE3A1" : "#E0C29A"}
-                        />
-                      </View>
-                      <Text
-                        style={{
-                          flex: 1,
-                          fontSize: 12,
-                          fontWeight: "500",
-                          color: alreadyAdded
-                            ? "rgba(229,226,225,0.55)"
-                            : "#E5E2E1",
-                          letterSpacing: 0.2,
-                          lineHeight: 16,
-                        }}
-                        numberOfLines={2}
-                      >
-                        {chip.text}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
-          <TextInput
-            className="font-body text-on-surface"
+          {/* Premium card container wrapping chips + text input */}
+          <View
             style={{
-              backgroundColor: promptFocused ? "#2A2A2A" : "#1C1B1B",
-              borderRadius: 12,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: "rgba(225,195,155,0.22)",
+              backgroundColor: "rgba(225,195,155,0.025)",
               padding: 16,
-              fontSize: 14,
-              minHeight: 100,
-              textAlignVertical: "top",
             }}
-            placeholder={t("studio.custom_prompt")}
-            placeholderTextColor="#998F84"
-            value={prompt}
-            onChangeText={setPrompt}
-            onFocus={() => setPromptFocused(true)}
-            onBlur={() => setPromptFocused(false)}
-            multiline
-          />
+          >
+            {promptSuggestions.length > 0 && (() => {
+              const iconMap: Record<string, string> = {
+                MATERIAL: "layers-outline",
+                LIGHT: "sunny-outline",
+                MOOD: "leaf-outline",
+                OBJECT: "bulb-outline",
+                COLOR: "color-palette-outline",
+                STYLE_DETAIL: "sparkles-outline",
+                ERA: "time-outline",
+              };
+              const selectedChips = promptSuggestions.filter(c =>
+                prompt.toLowerCase().includes(c.text.toLowerCase()),
+              );
+              const availableChips = promptSuggestions.filter(c =>
+                !prompt.toLowerCase().includes(c.text.toLowerCase()),
+              );
+              return (
+                <View
+                  style={{
+                    marginBottom: 14,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: selectedChips.length > 0
+                      ? "rgba(143,227,161,0.30)"
+                      : "rgba(225,195,155,0.22)",
+                    backgroundColor: "rgba(225,195,155,0.02)",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Header row */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingHorizontal: 12,
+                      paddingTop: 10,
+                      paddingBottom: selectedChips.length > 0 ? 8 : 10,
+                    }}
+                  >
+                    <Text
+                      className="font-label"
+                      style={{
+                        fontSize: 9,
+                        letterSpacing: 1.5,
+                        textTransform: "uppercase",
+                        color: selectedChips.length > 0
+                          ? "rgba(143,227,161,0.70)"
+                          : "rgba(225,195,155,0.50)",
+                      }}
+                    >
+                      {t("studio.prompt_suggestions_label")}
+                    </Text>
+                    {selectedChips.length > 0 && (
+                      <Pressable
+                        onPress={() => {
+                          selectedChips.forEach(c => removeSuggestion(c.text));
+                        }}
+                        hitSlop={8}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 9,
+                            letterSpacing: 1,
+                            fontFamily: "Inter-Medium",
+                            color: "rgba(229,226,225,0.35)",
+                            textDecorationLine: "underline",
+                          }}
+                        >
+                          {t("studio.prompt_clear_all")}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  {/* Selected tags row */}
+                  {selectedChips.length > 0 && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 6,
+                        paddingHorizontal: 12,
+                        paddingBottom: 10,
+                      }}
+                    >
+                      {selectedChips.map(chip => (
+                        <View
+                          key={chip.id}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                            paddingLeft: 8,
+                            paddingRight: 6,
+                            paddingVertical: 5,
+                            borderRadius: 20,
+                            backgroundColor: "rgba(143,227,161,0.09)",
+                            borderWidth: 1,
+                            borderColor: "rgba(143,227,161,0.38)",
+                          }}
+                        >
+                          <Ionicons name="checkmark" size={11} color="#8FE3A1" />
+                          <Text
+                            style={{
+                              fontFamily: "Inter-Medium",
+                              fontSize: 11,
+                              color: "#8FE3A1",
+                              maxWidth: 120,
+                            }}
+                            numberOfLines={1}
+                          >
+                            {chip.text}
+                          </Text>
+                          <Pressable
+                            onPress={() => removeSuggestion(chip.text)}
+                            hitSlop={6}
+                          >
+                            <Ionicons
+                              name="close-circle"
+                              size={14}
+                              color="rgba(143,227,161,0.55)"
+                            />
+                          </Pressable>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Divider */}
+                  {selectedChips.length > 0 && availableChips.length > 0 && (
+                    <View
+                      style={{
+                        height: 1,
+                        marginHorizontal: 12,
+                        backgroundColor: "rgba(225,195,155,0.10)",
+                        marginBottom: 10,
+                      }}
+                    />
+                  )}
+
+                  {/* Available chips grid */}
+                  {availableChips.length > 0 && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 6,
+                        paddingHorizontal: 12,
+                        paddingBottom: 12,
+                      }}
+                    >
+                      {availableChips.map(chip => {
+                        const iconName = iconMap[chip.category] ?? "add-outline";
+                        return (
+                          <Pressable
+                            key={chip.id}
+                            onPress={() => appendSuggestion(chip.text)}
+                            style={({ pressed }) => ({
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 5,
+                              paddingLeft: 7,
+                              paddingRight: 9,
+                              paddingVertical: 5,
+                              borderRadius: 20,
+                              backgroundColor: pressed
+                                ? "rgba(225,195,155,0.10)"
+                                : "rgba(225,195,155,0.05)",
+                              borderWidth: 1,
+                              borderColor: "rgba(225,195,155,0.28)",
+                              transform: [{ scale: pressed ? 0.96 : 1 }],
+                            })}
+                          >
+                            <View
+                              style={{
+                                width: 18,
+                                height: 18,
+                                borderRadius: 5,
+                                backgroundColor: "rgba(225,195,155,0.12)",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Ionicons
+                                name={iconName as any}
+                                size={11}
+                                color={theme.color.goldMidday}
+                              />
+                            </View>
+                            <Text
+                              style={{
+                                fontFamily: "Inter-Medium",
+                                fontSize: 11,
+                                color: "rgba(229,226,225,0.70)",
+                                maxWidth: 100,
+                              }}
+                              numberOfLines={1}
+                            >
+                              {chip.text}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
+
+            <TextInput
+              className="font-body text-on-surface"
+              style={{
+                backgroundColor: promptFocused ? "#232120" : "#1A1918",
+                borderRadius: 12,
+                padding: 16,
+                fontSize: 14,
+                minHeight: 110,
+                textAlignVertical: "top",
+                borderWidth: 1.5,
+                borderColor: promptFocused
+                  ? "rgba(225,195,155,0.55)"
+                  : "rgba(225,195,155,0.20)",
+              }}
+              placeholder={t("studio.custom_prompt")}
+              placeholderTextColor="#998F84"
+              value={prompt}
+              onChangeText={setPrompt}
+              onFocus={() => setPromptFocused(true)}
+              onBlur={() => setPromptFocused(false)}
+              multiline
+            />
+          </View>
         </View>
 
         {/* Advanced Seed Controls — gated by plan.allow_seed */}

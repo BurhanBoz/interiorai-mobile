@@ -72,13 +72,18 @@ function BeforeAfterSlider({
     }),
   ).current;
 
+  // The BEFORE image is served through the authenticated backend proxy
+  // (`/api/files/:id/download`) — so it needs the Bearer token in headers.
+  // The AFTER image is a pre-signed S3 URL (`output.url`) — attaching an
+  // Authorization header makes S3 reject the request with 403 (mixed auth
+  // mechanisms). Keep the two sources separated: only BEFORE gets headers.
   const beforeSource = useMemo(
     () => (beforeUri ? { uri: beforeUri, headers: authHeaders } : undefined),
     [beforeUri, authHeaders],
   );
   const afterSource = useMemo(
-    () => (afterUri ? { uri: afterUri, headers: authHeaders } : undefined),
-    [afterUri, authHeaders],
+    () => (afterUri ? { uri: afterUri } : undefined),
+    [afterUri],
   );
 
   return (

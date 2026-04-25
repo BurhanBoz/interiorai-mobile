@@ -103,6 +103,7 @@ export default function PlanConfirmScreen() {
             } else {
                 throw new Error(t("plans.confirm_rc_not_wired"));
             }
+            await fetchPlans();
             await Promise.all([fetchSubscription(), fetchBalance()]);
             Alert.alert(
                 t("plans.confirm_activated_title"),

@@ -15,29 +15,61 @@ import type { PlanResponse } from "@/types/api";
 /*  Feature comparison matrix — real backend features & permissions   */
 /* ------------------------------------------------------------------ */
 
-type FeatureRowType = "credits" | "tier" | "feature" | "permission" | "watermark" | "outputs";
+type FeatureRowType =
+    | "credits"
+    | "tier"
+    | "feature"
+    | "permission"
+    | "watermark"
+    | "outputs"
+    | "queue"
+    | "combo";
 
 interface FeatureRow {
     labelKey: string;
     key: string;
     type: FeatureRowType;
+    /** Permission keys checked for `combo` rows — row shows ✓ if ALL are true. */
+    comboKeys?: string[];
+    /** True on the first row of a visual group so we render a subtle divider. */
+    groupStart?: boolean;
+    /** Optional translation key for the group eyebrow shown above this row. */
+    groupLabelKey?: string;
 }
 
+// Rows ordered by *buyer intent*: core value (credits, variants) first, then
+// the visible output quality (model, watermark, priority), then capabilities,
+// then expert controls. The old order put permissions mixed with features
+// which made skimming the matrix for "what do I get more of?" hard.
 const FEATURE_ROWS: FeatureRow[] = [
-    { labelKey: "plans.row_monthly_credits",  key: "monthlyCredits",          type: "credits" },
-    { labelKey: "plans.row_model_quality",    key: "modelTier",               type: "tier" },
+    // ── Group 1: Core allowance ──
+    { labelKey: "plans.row_monthly_credits",  key: "monthlyCredits",          type: "credits",
+      groupStart: true, groupLabelKey: "plans.group_allowance" },
     { labelKey: "plans.row_variants",         key: "max_outputs",             type: "outputs" },
-    { labelKey: "plans.row_hd",               key: "HD_REDESIGN",             type: "feature" },
+
+    // ── Group 2: Output quality ──
+    { labelKey: "plans.row_model_quality",    key: "modelTier",               type: "tier",
+      groupStart: true, groupLabelKey: "plans.group_quality" },
+    { labelKey: "plans.row_no_watermark",     key: "watermark",               type: "watermark" },
+    { labelKey: "plans.row_queue_priority",   key: "queuePriority",           type: "queue" },
+
+    // ── Group 3: Capabilities ──
+    { labelKey: "plans.row_hd",               key: "HD_REDESIGN",             type: "feature",
+      groupStart: true, groupLabelKey: "plans.group_capabilities" },
+    { labelKey: "plans.row_upscale",          key: "ULTRA_HD_UPSCALE",        type: "feature" },
     { labelKey: "plans.row_inpaint",          key: "INPAINT",                 type: "feature" },
     { labelKey: "plans.row_style_transfer",   key: "STYLE_TRANSFER",          type: "feature" },
     { labelKey: "plans.row_empty_room",       key: "EMPTY_ROOM",              type: "feature" },
-    { labelKey: "plans.row_upscale",          key: "ULTRA_HD_UPSCALE",        type: "feature" },
-    { labelKey: "plans.row_custom_prompt",    key: "allow_custom_prompt",     type: "permission" },
+
+    // ── Group 4: Controls & licensing ──
+    { labelKey: "plans.row_custom_prompt",    key: "allow_custom_prompt",     type: "permission",
+      groupStart: true, groupLabelKey: "plans.group_controls" },
     { labelKey: "plans.row_commercial",       key: "allow_commercial_spaces", type: "permission" },
-    { labelKey: "plans.row_strength",         key: "allow_strength",          type: "permission" },
-    { labelKey: "plans.row_seed",             key: "allow_seed",              type: "permission" },
-    { labelKey: "plans.row_negative",         key: "allow_negative_prompt",   type: "permission" },
-    { labelKey: "plans.row_no_watermark",     key: "watermark",               type: "watermark" },
+    // Merged: strength + seed + negative prompt all unlock as one "expert
+    // controls" bundle on PRO+. Three separate rows were noise — nobody
+    // upgrades for "seed control" alone.
+    { labelKey: "plans.row_advanced_controls", key: "advanced_controls",     type: "combo",
+      comboKeys: ["allow_strength", "allow_seed", "allow_negative_prompt"] },
 ];
 
 function resolveCell(plan: PlanResponse, row: FeatureRow): string {
@@ -59,12 +91,23 @@ function resolveCell(plan: PlanResponse, row: FeatureRow): string {
                 return "1";
             }
         }
+        case "queue":
+            // Binary ✓/—: anything above FREE's 0 gets priority queueing.
+            // Longer copy ("Priority"/"Instant") overflows the 56px cell on
+            // small phones. The tier-specific nuance is already in the plan
+            // cards above the table.
+            return (plan.queuePriority ?? 0) > 0 ? "✓" : "—";
         case "feature": {
             const feat = plan.features?.find((f) => f.featureCode === row.key);
             return feat?.enabled ? "✓" : "—";
         }
         case "permission": {
             return plan.permissions?.[row.key] === true ? "✓" : "—";
+        }
+        case "combo": {
+            const keys = row.comboKeys ?? [];
+            const allOn = keys.every((k) => plan.permissions?.[k] === true);
+            return allOn ? "✓" : "—";
         }
         case "watermark":
             return plan.watermark ? "—" : "✓";
@@ -317,57 +360,87 @@ function FeatureTable({ plans, currentCode }: { plans: PlanResponse[]; currentCo
                 ))}
             </View>
 
-            {/* Feature rows */}
-            {FEATURE_ROWS.map((row, idx) => (
-                <View
-                    key={row.key + idx}
-                    className="flex-row items-center"
-                    style={{
-                        paddingVertical: 14,
-                        paddingHorizontal: 16,
-                        borderTopWidth: 1,
-                        borderTopColor: "rgba(77,70,60,0.1)",
-                    }}
-                >
-                    <Text
-                        className="flex-1 font-body text-on-surface"
-                        style={{ fontSize: 13, fontWeight: "500" }}
-                    >
-                        {t(row.labelKey)}
-                    </Text>
-                    {plans.map((plan) => {
-                        const val = resolveCell(plan, row);
-                        const isCheck = val === "✓";
-                        const isDash = val === "—";
-                        const highlight = plan.code === currentCode;
-                        return (
-                            <View key={plan.code} style={{ width: 56, alignItems: "center" }}>
-                                {isCheck ? (
-                                    <Ionicons
-                                        name="checkmark"
-                                        size={20}
-                                        color={highlight ? "#E0C29A" : "#C4A882"}
-                                    />
-                                ) : isDash ? (
-                                    <Ionicons name="remove" size={18} color="#998F84" />
-                                ) : (
-                                    <Text
-                                        className="font-body"
-                                        style={{
-                                            fontSize: 12,
-                                            textAlign: "center",
-                                            color: highlight ? "#E0C29A" : "#998F84",
-                                            fontWeight: highlight ? "600" : "400",
-                                        }}
-                                    >
-                                        {val}
-                                    </Text>
-                                )}
+            {/* Feature rows — grouped with subtle eyebrow labels so the
+                matrix reads as four coherent sections (allowance / quality /
+                capabilities / controls) instead of a 13-row wall. */}
+            {FEATURE_ROWS.map((row, idx) => {
+                const showGroup = row.groupStart && row.groupLabelKey && idx > 0;
+                return (
+                    <View key={row.key + idx}>
+                        {showGroup ? (
+                            <View
+                                style={{
+                                    paddingTop: 14,
+                                    paddingBottom: 6,
+                                    paddingHorizontal: 16,
+                                    backgroundColor: "rgba(32,31,31,0.55)",
+                                    borderTopWidth: 1,
+                                    borderTopColor: "rgba(77,70,60,0.18)",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontFamily: "Inter-SemiBold",
+                                        fontSize: 10,
+                                        letterSpacing: 1.8,
+                                        textTransform: "uppercase",
+                                        color: "rgba(225,195,155,0.55)",
+                                    }}
+                                >
+                                    {t(row.groupLabelKey!)}
+                                </Text>
                             </View>
-                        );
-                    })}
-                </View>
-            ))}
+                        ) : null}
+                        <View
+                            className="flex-row items-center"
+                            style={{
+                                paddingVertical: 14,
+                                paddingHorizontal: 16,
+                                borderTopWidth: showGroup ? 0 : 1,
+                                borderTopColor: "rgba(77,70,60,0.1)",
+                            }}
+                        >
+                            <Text
+                                className="flex-1 font-body text-on-surface"
+                                style={{ fontSize: 13, fontWeight: "500" }}
+                            >
+                                {t(row.labelKey)}
+                            </Text>
+                            {plans.map((plan) => {
+                                const val = resolveCell(plan, row);
+                                const isCheck = val === "✓";
+                                const isDash = val === "—";
+                                const highlight = plan.code === currentCode;
+                                return (
+                                    <View key={plan.code} style={{ width: 56, alignItems: "center" }}>
+                                        {isCheck ? (
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={20}
+                                                color={highlight ? "#E0C29A" : "#C4A882"}
+                                            />
+                                        ) : isDash ? (
+                                            <Ionicons name="remove" size={18} color="#998F84" />
+                                        ) : (
+                                            <Text
+                                                className="font-body"
+                                                style={{
+                                                    fontSize: 12,
+                                                    textAlign: "center",
+                                                    color: highlight ? "#E0C29A" : "#998F84",
+                                                    fontWeight: highlight ? "600" : "400",
+                                                }}
+                                            >
+                                                {val}
+                                            </Text>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                );
+            })}
         </View>
     );
 }

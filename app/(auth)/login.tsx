@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@/components/brand/Brand";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "@/config/theme";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -325,47 +326,60 @@ function SocialButton({
   icon: "logo-google" | "logo-apple";
   label: string;
 }) {
+  // Gold gradient — same tone as the primary "Sign In" CTA so social login
+  // reads as a first-class path, not a dimmer alternative. Icon + text use
+  // the dark onGold color so contrast stays WCAG-safe on the warm fill.
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => ({
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        minHeight: 56,
-        paddingHorizontal: 16,
-        borderRadius: 14,
-        backgroundColor: pressed
-          ? "rgba(225,195,155,0.06)"
-          : "transparent",
-        borderWidth: 1,
-        borderColor: pressed
-          ? "rgba(225,195,155,0.35)"
-          : "rgba(225,195,155,0.2)",
         opacity: disabled ? 0.5 : 1,
+        transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
       })}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={theme.color.onSurface} />
-      ) : (
-        <>
-          <Ionicons name={icon} size={20} color={theme.color.onSurface} />
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 14,
-              letterSpacing: 0.3,
-              color: theme.color.onSurface,
-            }}
-          >
-            {label}
-          </Text>
-        </>
-      )}
+      <LinearGradient
+        colors={theme.gradient.primary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          minHeight: 56,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: "rgba(63,45,17,0.18)",
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            paddingHorizontal: 16,
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color={theme.color.onGold} />
+          ) : (
+            <>
+              <Ionicons name={icon} size={20} color={theme.color.onGold} />
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 14,
+                  letterSpacing: 0.3,
+                  color: theme.color.onGold,
+                }}
+              >
+                {label}
+              </Text>
+            </>
+          )}
+        </View>
+      </LinearGradient>
     </Pressable>
   );
 }
