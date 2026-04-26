@@ -18,7 +18,10 @@ import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Brand } from "@/components/brand/Brand";
-import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import {
+  BottomBar,
+  BOTTOM_BAR_SCROLL_PADDING,
+} from "@/components/layout/BottomBar";
 import type { CatalogItemResponse } from "@/types/api";
 import type { ImageSource } from "expo-image";
 
@@ -154,6 +157,7 @@ const STYLE_IMAGES: Record<string, ImageSource> = {
   RETRO: require("@/assets/styles/retro.png"),
   MAXIMALIST: require("@/assets/styles/maximalist.png"),
   SOUTHWESTERN: require("@/assets/styles/southwestern.png"),
+  LUXURY: require("@/assets/styles/luxury_glam.png"),
 };
 
 function getStyleImage(code: string): ImageSource | null {
@@ -438,18 +442,16 @@ export default function StyleScreen() {
         >
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
-        <Text
-          style={{ display: "none" }}
-        >
-          {""}
-        </Text>
+        <Text style={{ display: "none" }}>{""}</Text>
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true) }}
+        contentContainerStyle={{
+          paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Step Indicator & Headline */}
