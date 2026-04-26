@@ -166,6 +166,7 @@
     "number_of_outputs": "Anzahl der Ergebnisse",
     "preserve_layout": "Layout beibehalten",
     "custom_prompt": "Benutzerdefinierter Prompt",
+    "custom_prompt_hint": "Gib deinen eigenen Architektur-Prompt ein...",
     "negative_prompt": "Negativer Prompt",
     "color_palette": "Farbpalette",
     "seed": "Seed",

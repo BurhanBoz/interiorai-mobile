@@ -166,6 +166,7 @@
     "number_of_outputs": "Numero di Risultati",
     "preserve_layout": "Mantieni Layout",
     "custom_prompt": "Prompt Personalizzato",
+    "custom_prompt_hint": "Inserisci il tuo prompt architettonico personalizzato...",
     "negative_prompt": "Prompt Negativo",
     "color_palette": "Palette Colori",
     "seed": "Seed",

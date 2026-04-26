@@ -166,6 +166,7 @@
     "number_of_outputs": "Çıktı Sayısı",
     "preserve_layout": "Düzeni Koru",
     "custom_prompt": "Özel Prompt",
+    "custom_prompt_hint": "Kendi mimari prompt'ınızı girin...",
     "negative_prompt": "Negatif Prompt",
     "color_palette": "Renk Paleti",
     "seed": "Tohum",

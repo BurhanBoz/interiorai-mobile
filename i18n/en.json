@@ -166,6 +166,7 @@
     "number_of_outputs": "Number of Outputs",
     "preserve_layout": "Preserve Layout",
     "custom_prompt": "Custom Prompt",
+    "custom_prompt_hint": "Enter your custom architectural prompt...",
     "negative_prompt": "Negative Prompt",
     "color_palette": "Color Palette",
     "seed": "Seed",

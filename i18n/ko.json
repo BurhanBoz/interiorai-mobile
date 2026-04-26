@@ -166,6 +166,7 @@
     "number_of_outputs": "출력 수",
     "preserve_layout": "레이아웃 유지",
     "custom_prompt": "사용자 지정 프롬프트",
+    "custom_prompt_hint": "맞춤 건축 프롬프트를 입력하세요...",
     "negative_prompt": "네거티브 프롬프트",
     "color_palette": "색상 팔레트",
     "seed": "시드",

@@ -166,6 +166,7 @@
     "number_of_outputs": "Número de Salidas",
     "preserve_layout": "Preservar Distribución",
     "custom_prompt": "Prompt Personalizado",
+    "custom_prompt_hint": "Introduce tu prompt arquitectónico personalizado...",
     "negative_prompt": "Prompt Negativo",
     "color_palette": "Paleta de Colores",
     "seed": "Semilla",

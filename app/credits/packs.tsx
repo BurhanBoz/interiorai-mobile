@@ -32,25 +32,19 @@ function formatPrice(cents: number, currency: string): string {
 const AVG_CREDITS_PER_STANDARD = 5;
 const AVG_CREDITS_PER_HD = 6;
 
-const PLAN_BONUS_LABEL: Record<string, string> = {
-    FREE: "",
-    BASIC: "+5% bonus",
-    PRO: "+20% bonus",
-    MAX: "+40% bonus",
-};
 
 function PackCard({
     pack,
     onPress,
     isPurchasing,
     disabled,
-    bonusPct,
+    planName,
 }: {
     pack: CreditPackResponse;
     onPress: () => void;
     isPurchasing: boolean;
     disabled: boolean;
-    bonusPct: number;
+    planName: string;
 }) {
     const { t } = useTranslation();
     const isFeatured = pack.badgeLabel != null;
@@ -63,7 +57,6 @@ function PackCard({
         <View
             style={{
                 marginBottom: 16,
-                padding: 20,
                 borderRadius: 18,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
@@ -87,8 +80,9 @@ function PackCard({
                 />
             ) : null}
 
+            {/* Floating badge — sits above the card top edge */}
             {pack.badgeLabel ? (
-                <View style={{ position: "absolute", top: -10, left: 20 }}>
+                <View style={{ position: "absolute", top: -11, left: 20, zIndex: 1 }}>
                     <LinearGradient
                         colors={theme.gradient.primary}
                         start={{ x: 0, y: 0 }}
@@ -114,107 +108,132 @@ function PackCard({
                 </View>
             ) : null}
 
-            <Text style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 1.8,
-                textTransform: "uppercase",
-                color: "rgba(208,197,184,0.7)",
-                marginBottom: 8,
-                marginTop: pack.badgeLabel ? 8 : 0,
-            }}>
-                {pack.name}
-            </Text>
-
-            {/* Credits row — base + bonus breakdown */}
-            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            {/* Card body */}
+            <View style={{ padding: 20, paddingTop: pack.badgeLabel ? 26 : 20 }}>
+                {/* Pack name */}
                 <Text style={{
-                    fontFamily: "NotoSerif",
-                    fontSize: 36,
-                    lineHeight: 40,
-                    letterSpacing: -0.6,
-                    color: theme.color.onSurface,
-                    fontVariant: ["tabular-nums"],
+                    fontFamily: "Inter-SemiBold",
+                    fontSize: 10,
+                    letterSpacing: 1.8,
+                    textTransform: "uppercase",
+                    color: "rgba(208,197,184,0.55)",
+                    marginBottom: 10,
                 }}>
-                    {pack.totalCredits}
-                </Text>
-                <Text style={{
-                    fontFamily: "Inter",
-                    fontSize: 13,
-                    color: theme.color.onSurfaceVariant,
-                }}>
-                    {t("credit_packs.credits_suffix")}
+                    {pack.name}
                 </Text>
 
+                {/* ── Credits — main headline number ── */}
+                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 7, marginBottom: hasBonus ? 9 : 4 }}>
+                    <Text style={{
+                        fontFamily: "NotoSerif",
+                        fontSize: 42,
+                        lineHeight: 46,
+                        letterSpacing: -1,
+                        color: theme.color.onSurface,
+                        fontVariant: ["tabular-nums"],
+                    }}>
+                        {pack.totalCredits}
+                    </Text>
+                    <Text style={{
+                        fontFamily: "Inter",
+                        fontSize: 13,
+                        color: theme.color.onSurfaceVariant,
+                        marginBottom: 5,
+                    }}>
+                        {t("credit_packs.credits_suffix")}
+                    </Text>
+                </View>
+
+                {/* ── Bonus breakdown ── */}
                 {hasBonus && (
                     <View style={{
-                        marginLeft: 4,
-                        paddingHorizontal: 8,
-                        paddingVertical: 2,
-                        borderRadius: 6,
-                        backgroundColor: "rgba(123,179,138,0.14)",
-                        borderWidth: 1,
-                        borderColor: "rgba(123,179,138,0.35)",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 12,
                     }}>
                         <Text style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 10,
-                            color: theme.color.success,
-                            letterSpacing: 1.2,
-                            textTransform: "uppercase",
+                            fontFamily: "Inter",
+                            fontSize: 11,
+                            color: "rgba(208,197,184,0.38)",
                         }}>
-                            {t("credit_packs.bonus_suffix", { count: pack.bonusCredits })}
+                            {pack.credits} base
                         </Text>
+                        <View style={{
+                            width: 1,
+                            height: 10,
+                            backgroundColor: "rgba(208,197,184,0.14)",
+                        }} />
+                        {/* Bonus pill: green for loyalty plans, warm amber for pack-level promos */}
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                            paddingHorizontal: 9,
+                            paddingVertical: 4,
+                            borderRadius: 7,
+                            backgroundColor: planName !== "Free"
+                                ? "rgba(123,179,138,0.11)"
+                                : "rgba(225,195,155,0.10)",
+                            borderWidth: 0.5,
+                            borderColor: planName !== "Free"
+                                ? "rgba(123,179,138,0.28)"
+                                : "rgba(225,195,155,0.28)",
+                        }}>
+                            <Ionicons
+                                name="gift-outline"
+                                size={11}
+                                color={planName !== "Free" ? theme.color.success : theme.color.goldMidday}
+                            />
+                            <Text style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 11,
+                                color: planName !== "Free" ? theme.color.success : theme.color.goldMidday,
+                                letterSpacing: 0.2,
+                            }}>
+                                {planName !== "Free"
+                                    ? `+${pack.bonusCredits} ${planName}`
+                                    : `+${pack.bonusCredits} included`}
+                            </Text>
+                        </View>
                     </View>
                 )}
-            </View>
 
-            {/* Base vs bonus breakdown when bonus applies */}
-            {hasBonus && (
-                <Text style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    color: "rgba(123,179,138,0.75)",
-                    marginBottom: 4,
-                }}>
-                    {pack.credits} base + {pack.bonusCredits} loyalty bonus
-                </Text>
-            )}
-
-            {/* Relatable calculation */}
-            <Text style={{
-                fontFamily: "Inter",
-                fontSize: 12,
-                lineHeight: 16,
-                color: theme.color.onSurfaceMuted,
-                marginBottom: pack.description ? 6 : 18,
-            }}>
-                ≈ {standardDesigns} standard · {hdDesigns} HD designs
-            </Text>
-
-            {pack.description ? (
+                {/* ── Relatable usage hint ── */}
                 <Text style={{
                     fontFamily: "Inter",
                     fontSize: 12,
-                    lineHeight: 16,
+                    lineHeight: 17,
                     color: theme.color.onSurfaceMuted,
-                    marginBottom: 18,
-                }} numberOfLines={2}>
-                    {pack.description}
+                    marginBottom: pack.description ? 6 : 16,
+                }}>
+                    ≈ {standardDesigns} standard · {hdDesigns} HD designs
                 </Text>
-            ) : null}
 
-            <Button
-                title={t("credit_packs.buy_for", {
-                    price: formatPrice(pack.priceCents, pack.currency),
-                })}
-                variant={isFeatured ? "primary" : "secondary"}
-                size="sm"
-                onPress={onPress}
-                disabled={disabled}
-                loading={isPurchasing}
-                fullWidth
-            />
+                {pack.description ? (
+                    <Text style={{
+                        fontFamily: "Inter",
+                        fontSize: 12,
+                        lineHeight: 17,
+                        color: theme.color.onSurfaceMuted,
+                        marginBottom: 16,
+                    }} numberOfLines={2}>
+                        {pack.description}
+                    </Text>
+                ) : null}
+
+                <Button
+                    title={t("credit_packs.buy_for", {
+                        price: formatPrice(pack.priceCents, pack.currency),
+                    })}
+                    variant={isFeatured ? "primary" : "secondary"}
+                    size="sm"
+                    onPress={onPress}
+                    disabled={disabled}
+                    loading={isPurchasing}
+                    fullWidth
+                />
+            </View>
         </View>
     );
 }
@@ -390,7 +409,7 @@ export default function CreditPacksScreen() {
                             onPress={() => handlePurchase(pack.code)}
                             isPurchasing={purchasing === pack.code}
                             disabled={purchasing !== null}
-                            bonusPct={creditPackBonusPct}
+                            planName={planName}
                         />
                     ))
                 )}

@@ -166,6 +166,7 @@
     "number_of_outputs": "出力数",
     "preserve_layout": "レイアウトを保持",
     "custom_prompt": "カスタムプロンプト",
+    "custom_prompt_hint": "カスタム建築プロンプトを入力してください...",
     "negative_prompt": "ネガティブプロンプト",
     "color_palette": "カラーパレット",
     "seed": "シード",

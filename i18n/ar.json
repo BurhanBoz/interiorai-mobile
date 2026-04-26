@@ -166,6 +166,7 @@
     "number_of_outputs": "عدد المخرجات",
     "preserve_layout": "الحفاظ على التخطيط",
     "custom_prompt": "طلب مخصص",
+    "custom_prompt_hint": "أدخل موجهك المعماري المخصص...",
     "negative_prompt": "طلب سلبي",
     "color_palette": "لوحة الألوان",
     "seed": "البذرة",
