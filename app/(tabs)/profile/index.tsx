@@ -534,7 +534,12 @@ export default function ProfileScreen() {
             style={({ pressed }) => ({
               alignSelf: "center",
               marginTop: 28,
-              opacity: pressed ? 0.6 : 0.85,
+              paddingHorizontal: 18,
+              paddingVertical: 10,
+              borderWidth: 1,
+              borderColor: theme.color.danger,
+              borderRadius: 10,
+              opacity: pressed ? 0.6 : 0.9,
             })}
           >
             <Text
@@ -542,7 +547,6 @@ export default function ProfileScreen() {
                 fontFamily: "Inter",
                 fontSize: 12,
                 color: theme.color.danger,
-                textDecorationLine: "underline",
                 letterSpacing: 0.3,
               }}
             >

@@ -169,33 +169,6 @@ export default function PrivacyScreen() {
           ))}
         </View>
 
-        {/* Footer */}
-        <View
-          style={{
-            alignItems: "center",
-            marginTop: 48,
-            gap: 8,
-          }}
-        >
-          <View
-            style={{
-              width: 32,
-              height: 1,
-              backgroundColor: "rgba(225,195,155,0.25)",
-            }}
-          />
-          <Text
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
-              color: theme.color.onSurfaceMuted,
-            }}
-          >
-            {t("settings.privacy_last_updated")}
-          </Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );

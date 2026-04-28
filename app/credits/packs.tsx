@@ -39,19 +39,34 @@ function PackCard({
     isPurchasing,
     disabled,
     planName,
+    loyaltyBonusPct,
 }: {
     pack: CreditPackResponse;
     onPress: () => void;
     isPurchasing: boolean;
     disabled: boolean;
     planName: string;
+    loyaltyBonusPct: number;
 }) {
     const { t } = useTranslation();
     const isFeatured = pack.badgeLabel != null;
-    const hasBonus = pack.bonusCredits > 0;
 
-    const standardDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_STANDARD);
-    const hdDesigns = Math.floor(pack.totalCredits / AVG_CREDITS_PER_HD);
+    // Loyalty bonus is computed on the frontend from the subscriber tier's
+    // bonus percentage (FREE 0% / BASIC 5% / PRO 20% / MAX 40%). Backend grants
+    // it at purchase time but does not surface it in the listPacks payload, so
+    // we reproduce the math here to show the same total the user will receive.
+    const loyaltyBonus = loyaltyBonusPct > 0
+        ? Math.floor((pack.credits * loyaltyBonusPct) / 100)
+        : 0;
+    // Only the loyalty bonus is surfaced in the card. Static `pack.bonusCredits`
+    // baked into the SKU is intentionally hidden on FREE so the card stays a
+    // clean 30 / 100 / 250 — no yellow "+N" pill on a tier with no real bonus.
+    const displayTotal = pack.credits + loyaltyBonus;
+    const hasBonus = loyaltyBonus > 0;
+    const isPaidPlan = loyaltyBonusPct > 0;
+
+    const standardDesigns = Math.floor(displayTotal / AVG_CREDITS_PER_STANDARD);
+    const hdDesigns = Math.floor(displayTotal / AVG_CREDITS_PER_HD);
 
     return (
         <View
@@ -132,7 +147,7 @@ function PackCard({
                         color: theme.color.onSurface,
                         fontVariant: ["tabular-nums"],
                     }}>
-                        {pack.totalCredits}
+                        {displayTotal}
                     </Text>
                     <Text style={{
                         fontFamily: "Inter",
@@ -157,14 +172,14 @@ function PackCard({
                             fontSize: 11,
                             color: "rgba(208,197,184,0.38)",
                         }}>
-                            {pack.credits} base
+                            {t("credit_packs.base_count", { count: pack.credits })}
                         </Text>
                         <View style={{
                             width: 1,
                             height: 10,
                             backgroundColor: "rgba(208,197,184,0.14)",
                         }} />
-                        {/* Bonus pill: green for loyalty plans, warm amber for pack-level promos */}
+                        {/* Bonus pill: green for paid-tier loyalty bonus, amber for static pack-level promos */}
                         <View style={{
                             flexDirection: "row",
                             alignItems: "center",
@@ -172,28 +187,26 @@ function PackCard({
                             paddingHorizontal: 9,
                             paddingVertical: 4,
                             borderRadius: 7,
-                            backgroundColor: planName !== "Free"
+                            backgroundColor: isPaidPlan
                                 ? "rgba(123,179,138,0.11)"
                                 : "rgba(225,195,155,0.10)",
                             borderWidth: 0.5,
-                            borderColor: planName !== "Free"
+                            borderColor: isPaidPlan
                                 ? "rgba(123,179,138,0.28)"
                                 : "rgba(225,195,155,0.28)",
                         }}>
                             <Ionicons
                                 name="gift-outline"
                                 size={11}
-                                color={planName !== "Free" ? theme.color.success : theme.color.goldMidday}
+                                color={isPaidPlan ? theme.color.success : theme.color.goldMidday}
                             />
                             <Text style={{
                                 fontFamily: "Inter-SemiBold",
                                 fontSize: 11,
-                                color: planName !== "Free" ? theme.color.success : theme.color.goldMidday,
+                                color: isPaidPlan ? theme.color.success : theme.color.goldMidday,
                                 letterSpacing: 0.2,
                             }}>
-                                {planName !== "Free"
-                                    ? `+${pack.bonusCredits} ${planName}`
-                                    : `+${pack.bonusCredits} included`}
+                                {t("credit_packs.bonus_included", { count: loyaltyBonus })}
                             </Text>
                         </View>
                     </View>
@@ -207,7 +220,7 @@ function PackCard({
                     color: theme.color.onSurfaceMuted,
                     marginBottom: pack.description ? 6 : 16,
                 }}>
-                    ≈ {standardDesigns} standard · {hdDesigns} HD designs
+                    {t("credit_packs.usage_hint", { standard: standardDesigns, hd: hdDesigns })}
                 </Text>
 
                 {pack.description ? (
@@ -356,7 +369,7 @@ export default function CreditPacksScreen() {
                                     color: theme.color.success,
                                     marginBottom: 2,
                                 }}>
-                                    {planName} subscriber bonus — +{creditPackBonusPct}%
+                                    {t("credit_packs.subscriber_bonus_title", { plan: planName, pct: creditPackBonusPct })}
                                 </Text>
                                 <Text style={{
                                     fontFamily: "Inter",
@@ -364,7 +377,7 @@ export default function CreditPacksScreen() {
                                     lineHeight: 17,
                                     color: "rgba(208,197,184,0.65)",
                                 }}>
-                                    You earn {creditPackBonusPct}% extra credits on every pack purchase as a thank-you for subscribing.
+                                    {t("credit_packs.subscriber_bonus_body", { pct: creditPackBonusPct })}
                                 </Text>
                             </View>
                         </LinearGradient>
@@ -391,7 +404,7 @@ export default function CreditPacksScreen() {
                             lineHeight: 15,
                             color: theme.color.warning,
                         }}>
-                            Dev build · RevenueCat not configured. Dummy purchases are active and credits will be granted without payment.
+                            {t("credit_packs.dev_mode_notice")}
                         </Text>
                     </View>
                 ) : null}
@@ -410,6 +423,7 @@ export default function CreditPacksScreen() {
                             isPurchasing={purchasing === pack.code}
                             disabled={purchasing !== null}
                             planName={planName}
+                            loyaltyBonusPct={creditPackBonusPct}
                         />
                     ))
                 )}
@@ -422,7 +436,7 @@ export default function CreditPacksScreen() {
                         color: theme.color.onSurfaceVariant,
                         marginTop: 48,
                     }}>
-                        No credit packs available right now.
+                        {t("credit_packs.none_available")}
                     </Text>
                 ) : null}
 
@@ -437,7 +451,7 @@ export default function CreditPacksScreen() {
                                 color: theme.color.onSurfaceMuted,
                                 letterSpacing: 0.3,
                             }}>
-                                Payments secured by Apple · Taxes included
+                                {t("credit_packs.payments_secured")}
                             </Text>
                         </View>
                         {!hasBonusPlan && (
@@ -451,7 +465,7 @@ export default function CreditPacksScreen() {
                                     fontSize: 11,
                                     color: theme.color.goldMidday,
                                 }}>
-                                    Subscribe to get up to +40% bonus credits
+                                    {t("credit_packs.upsell_subscribe")}
                                 </Text>
                             </Pressable>
                         )}
