@@ -19,6 +19,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { DisclaimerBanner } from "@/components/ui/DisclaimerBanner";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
@@ -494,6 +495,13 @@ export default function ReviewScreen() {
               {t("studio.cost_credits", { count: balance })}
             </Text>
           </View>
+        </View>
+
+        {/* App Store 1.1.6 — AI-content disclaimer must be visible before
+            the user taps Generate. Sits above the floating CTA so it's
+            always in view at the decision point. */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <DisclaimerBanner text={t("studio.ai_disclaimer")} />
         </View>
 
       </ScrollView>

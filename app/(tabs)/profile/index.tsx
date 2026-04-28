@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -18,7 +18,6 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Brand } from "@/components/brand/Brand";
 import { useState, useEffect, useMemo } from "react";
 import type { ComponentProps } from "react";
-import * as userService from "@/services/user";
 import { pushWithReturn } from "@/utils/navigation";
 import { theme } from "@/config/theme";
 
@@ -217,6 +216,9 @@ const MENU_ITEMS: MenuItemConfig[] = [
     icon: "shield-checkmark-outline",
     route: "/settings/privacy",
   },
+  // GDPR Art. 15/20 export endpoint stays live (backend), but the in-app UI
+  // entry is hidden for v1 — Apple 5.1.1(ix) is satisfied via support email.
+  // Re-add this row when self-service export becomes a priority.
 ];
 
 /* ─────────────────── Main Screen ─────────────────── */
@@ -224,7 +226,6 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { openDrawer } = useDrawer();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const balance = useCreditStore((s) => s.balance);
   const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
   const planCode = useCreditStore((s) => s.planCode);
@@ -234,7 +235,6 @@ export default function ProfileScreen() {
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
   // Real unread-notification count, sourced from the same hook the
   // Notifications screen uses. 0 → no dot; > 0 → the gold pill shows.
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchBalance();
@@ -264,54 +264,7 @@ export default function ProfileScreen() {
   const hasLimit = monthlyLimit > 0;
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      t("profile.delete_confirm_title"),
-      t("profile.delete_confirm_description"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("profile.delete_confirm_continue"),
-          style: "destructive",
-          onPress: () => {
-            Alert.prompt(
-              t("profile.delete_confirm_prompt_title"),
-              t("profile.delete_confirm_prompt_description"),
-              [
-                { text: t("common.cancel"), style: "cancel" },
-                {
-                  text: t("profile.delete_my_account"),
-                  style: "destructive",
-                  onPress: async (value: string | undefined) => {
-                    if (value !== "DELETE") {
-                      Alert.alert(
-                        t("common.confirm"),
-                        t("profile.delete_must_type"),
-                      );
-                      return;
-                    }
-                    setDeleting(true);
-                    try {
-                      await userService.deleteAccount();
-                      await logout();
-                      router.replace("/(auth)/login");
-                    } catch (e: any) {
-                      Alert.alert(
-                        t("errors.generic"),
-                        e?.response?.data?.message ??
-                          t("profile.delete_failed"),
-                      );
-                    } finally {
-                      setDeleting(false);
-                    }
-                  },
-                },
-              ],
-              "plain-text",
-            );
-          },
-        },
-      ],
-    );
+    router.push("/settings/delete-account");
   };
 
   return (
@@ -529,7 +482,6 @@ export default function ProfileScreen() {
               account stays here because it's profile-lifecycle, not session. */}
           <Pressable
             onPress={handleDeleteAccount}
-            disabled={deleting}
             hitSlop={10}
             style={({ pressed }) => ({
               alignSelf: "center",

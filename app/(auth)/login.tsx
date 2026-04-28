@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@/components/brand/Brand";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { LegalFooter } from "@/components/ui/LegalFooter";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "@/config/theme";
 
@@ -306,6 +307,8 @@ export default function LoginScreen() {
               </Text>
             </Pressable>
           </View>
+
+          <LegalFooter />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

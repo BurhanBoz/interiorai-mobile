@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@/components/brand/Brand";
 import { Button } from "@/components/ui/Button";
+import { LegalFooter } from "@/components/ui/LegalFooter";
 import { theme } from "@/config/theme";
 
 /**
@@ -248,6 +249,15 @@ export default function OnboardingScreen() {
             />
             <View style={{ alignItems: "center" }}>
               <Button
+                title={t("auth.trial_entry_cta")}
+                variant="tertiary"
+                size="sm"
+                onPress={() => router.push("/anonymous-trial")}
+                fullWidth={false}
+              />
+            </View>
+            <View style={{ alignItems: "center" }}>
+              <Button
                 title={`${t("auth.already_have_account")} ${t("auth.sign_in_link")}`}
                 variant="tertiary"
                 size="sm"
@@ -255,6 +265,7 @@ export default function OnboardingScreen() {
                 fullWidth={false}
               />
             </View>
+            <LegalFooter />
           </View>
         </View>
       </SafeAreaView>
