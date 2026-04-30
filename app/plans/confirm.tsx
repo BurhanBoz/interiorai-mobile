@@ -11,6 +11,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { isDummyMode } from "@/config/revenuecat";
 import * as plansService from "@/services/plans";
 import type { PlanResponse } from "@/types/api";
+import { SubscriptionDisclosure } from "@/components/ui/SubscriptionDisclosure";
 
 interface PlanHighlight {
     icon: keyof typeof Ionicons.glyphMap;
@@ -324,6 +325,15 @@ export default function PlanConfirmScreen() {
                         )}
                     </LinearGradient>
                 </Pressable>
+
+                {/* Apple App Store guideline 3.1.2 — required disclosure block.
+                    Sits between primary CTA and secondary Return so it's in
+                    the user's eye line at decision time, not buried below.
+                    Reviewer rejects builds that omit any of these elements. */}
+                <SubscriptionDisclosure
+                    planName={plan.name}
+                    pricePerPeriod={`$${((plan.priceCents ?? 0) / 100).toFixed(2)}${t("plans.per_month")}`}
+                />
 
                 <Pressable
                     onPress={() => router.back()}

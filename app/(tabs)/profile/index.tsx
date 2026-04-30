@@ -216,6 +216,11 @@ const MENU_ITEMS: MenuItemConfig[] = [
     icon: "shield-checkmark-outline",
     route: "/settings/privacy",
   },
+  {
+    labelKey: "profile.terms",
+    icon: "document-text-outline",
+    route: "/settings/terms",
+  },
   // GDPR Art. 15/20 export endpoint stays live (backend), but the in-app UI
   // entry is hidden for v1 — Apple 5.1.1(ix) is satisfied via support email.
   // Re-add this row when self-service export becomes a priority.

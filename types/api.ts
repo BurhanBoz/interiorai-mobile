@@ -157,6 +157,18 @@ export interface PlanResponse {
     creditRules: PlanCreditRuleResponse[];
     /** Bonus % on every credit-pack purchase for this plan. 0 = no bonus. */
     creditPackBonusPct: number;
+    /**
+     * Apple App Store Connect product ID for this auto-renewable subscription
+     * (e.g. `com.roomframeai.subscription.basic`). Null on FREE plan and any
+     * tier not yet wired into App Store Connect. Mobile uses this to look up
+     * the StoreKit/RevenueCat product before initiating purchase. Backend
+     * source of truth: `plans.apple_product_id` column (V19).
+     */
+    appleProductId?: string | null;
+    /** Google Play product ID — populated when Android billing is wired up. */
+    googleProductId?: string | null;
+    /** Stripe price ID — populated when web billing is added. */
+    stripePriceId?: string | null;
 }
 
 // ── Subscriptions ──────────────────────────────
