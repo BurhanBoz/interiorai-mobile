@@ -33,9 +33,12 @@ yarn-error.*
 .vscode/mcp.json
 *.pem
 
-# local env files
-.env*.local
-.env.production
+# Environment / Secrets — NEVER commit these.
+# Pattern matches .env, .env.local, .env.production, .env.development, etc.
+# Whitelist .env.example so the template stays in repo as documentation.
+.env
+*.env
+!.env.example
 
 # typescript
 *.tsbuildinfo
