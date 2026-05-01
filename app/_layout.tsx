@@ -109,8 +109,17 @@ export default function RootLayout() {
     // tapped from the same device while still logged in should open the
     // form, not bounce to Gallery.
     const isPasswordReset = (segments as string[])[1] === "reset-password";
+    // Public legal screens — Terms of Service and Privacy Policy are
+    // reachable BEFORE login (Apple §5.1.1(ix), GDPR Art. 13). The
+    // LegalFooter on onboarding/login/register routes here, so the
+    // pre-login user must be allowed to read them without being
+    // bounced back to onboarding by the auth guard.
+    const inPublicLegal =
+      segments[0] === "settings" &&
+      ((segments as string[])[1] === "terms" ||
+        (segments as string[])[1] === "privacy");
 
-    if (!isAuthenticated && !inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup && !inPublicLegal) {
       router.replace("/(auth)/onboarding");
     } else if (isAuthenticated && inAuthGroup && !isPasswordReset) {
       router.replace("/(tabs)/gallery");
