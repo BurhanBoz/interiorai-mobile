@@ -9,6 +9,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
 import { Brand } from "@/components/brand/Brand";
 import { theme } from "@/config/theme";
 import type { ComponentProps } from "react";
@@ -126,7 +127,10 @@ export default function StudioScreen() {
           <Ionicons name="menu" size={22} color={theme.color.onSurface} />
         </Pressable>
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <TrialCountdownBadge />
+          <UserAvatar size="sm" onPress />
+        </View>
       </View>
 
       <ScrollView
@@ -134,6 +138,18 @@ export default function StudioScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}
       >
+        {/*
+          Welcome trial banner (V20) — only renders when the user is
+          inside their 7-day MAX trial. Sits above the step indicator
+          so it's the first thing post-header content; absent when
+          the trial is inactive (no empty-state shell). Negative
+          horizontal margin breaks out of the parent's 24px padding
+          since the banner has its own breathing room baked in.
+        */}
+        <View style={{ marginHorizontal: -24 }}>
+          <WelcomeTrialBanner />
+        </View>
+
         {/* Step indicator — the ONE uppercase eyebrow allowed on this screen */}
         <View style={{ marginTop: 12, marginBottom: 10 }}>
           <Text

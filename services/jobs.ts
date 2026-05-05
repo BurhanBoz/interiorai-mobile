@@ -2,11 +2,54 @@ import api from "./api";
 import * as Crypto from "expo-crypto";
 import type { JobResponse, CreateJobRequest, PageResponse } from "@/types/api";
 
-export async function createJob(request: CreateJobRequest): Promise<JobResponse> {
+/**
+ * Create a generation job.
+ *
+ * The backend dedupes on `idempotencyKey` (UNIQUE constraint on
+ * {@code jobs.idempotency_key}). Callers SHOULD persist the key for the
+ * lifetime of one logical "generate intent" — i.e. the user pressed
+ * Generate once. Network retries, double-tap races, and React re-render
+ * effects then resolve to the same Job entity instead of creating
+ * duplicate rows that each reserve credits.
+ *
+ * If the caller does not supply a key (legacy callers, ad-hoc scripts),
+ * we still mint one here so the backend contract is never violated.
+ * New code should always pass a stable key — see
+ * {@code app/(tabs)/studio/review.tsx} for the canonical pattern.
+ */
+export async function createJob(
+    request: CreateJobRequest,
+    idempotencyKey?: string,
+): Promise<JobResponse> {
     const { data } = await api.post<JobResponse>("/api/jobs", {
         ...request,
-        idempotencyKey: Crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? Crypto.randomUUID(),
     });
+    return data;
+}
+
+/**
+ * Generate a variation of a completed job (V20 / Pricing Strategy V2).
+ * Inherits source job's room/style/palette/mode — server only nudges
+ * seed and prompt_strength per the chosen Subtle/Bold/Wild preset.
+ * Costs 1 credit. Idempotent on (sourceJobId, strength) by default;
+ * client may pass an explicit key for stricter retry semantics
+ * (mint with {@link Crypto.randomUUID}).
+ */
+export type VariationStrength = "SUBTLE" | "BOLD" | "WILD";
+
+export async function createVariation(
+    sourceJobId: string,
+    strength: VariationStrength,
+    idempotencyKey?: string,
+): Promise<JobResponse> {
+    const { data } = await api.post<JobResponse>(
+        `/api/jobs/${sourceJobId}/variation`,
+        {
+            strength,
+            idempotencyKey: idempotencyKey ?? Crypto.randomUUID(),
+        },
+    );
     return data;
 }
 

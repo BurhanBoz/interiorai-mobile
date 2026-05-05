@@ -10,13 +10,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import * as Crypto from "expo-crypto";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
+import { aspectRatioFor } from "@/hooks/useImagePicker";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { DisclaimerBanner } from "@/components/ui/DisclaimerBanner";
@@ -71,6 +73,14 @@ export default function ReviewScreen() {
   const { cost, featureCode } = useCreditCost();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Stable idempotency key for one logical "generate intent". Minted lazily
+  // on first submit, reused on retry (network blip, double-tap race, error
+  // dialog → user-tap-again), and cleared on success so the next generate
+  // gets a fresh key. Backend `jobs.idempotency_key` UNIQUE constraint
+  // dedupes against this — without persistence each retry created a new
+  // job that reserved credits independently. See services/jobs.ts.
+  const idempotencyKeyRef = useRef<string | null>(null);
+
   const handleGenerate = async () => {
     if (!photo?.fileId || !roomType?.id || !designStyle?.id) {
       Alert.alert(
@@ -97,8 +107,20 @@ export default function ReviewScreen() {
       return;
     }
 
+    // Mint the idempotency key on first attempt; reuse on retry. Cleared
+    // in the success path below so a *new* generate intent gets its own key.
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = Crypto.randomUUID();
+    }
+
     setIsSubmitting(true);
     try {
+      // Snap the source photo's dimensions to a canonical Replicate
+      // aspect ratio. When provided this takes priority over the backend's
+      // room-type default (`TemplateInputResolverImpl.resolveAspectRatio`),
+      // which is what we want — the photo the user just shot is the
+      // ground truth for proportions, not the average bathroom.
+      const computedAspectRatio = aspectRatioFor(photo.width, photo.height);
       const job = await createJob({
         inputFileId: photo.fileId,
         roomTypeId: roomType.id,
@@ -114,8 +136,15 @@ export default function ReviewScreen() {
         seed,
         strength,
         guidanceScale,
+        aspectRatio: computedAspectRatio,
         referenceFileId: referencePhoto?.fileId || undefined,
-      });
+      }, idempotencyKeyRef.current);
+
+      // Success — release the key so the next generate intent gets a fresh
+      // one. Note: we deliberately do NOT clear in catch/finally — if the
+      // user retaps after a transient error, the same key replays and the
+      // backend returns the existing (or already-failed) job idempotently.
+      idempotencyKeyRef.current = null;
 
       // Refresh balance after credits are deducted
       fetchBalance();

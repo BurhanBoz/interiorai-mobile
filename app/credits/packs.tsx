@@ -18,7 +18,6 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
-import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 import type { CreditPackResponse } from "@/types/api";
 
@@ -27,26 +26,34 @@ function formatPrice(cents: number, currency: string): string {
     return currency === "USD" ? `$${amount}` : `${amount} ${currency}`;
 }
 
-// Average credits consumed per design — used to translate "30 credits" into
-// "~5 HD redesigns" so users don't have to do mental math before purchasing.
-const AVG_CREDITS_PER_STANDARD = 5;
-const AVG_CREDITS_PER_HD = 6;
-
 
 function PackCard({
     pack,
     onPress,
     isPurchasing,
     disabled,
-    planName,
     loyaltyBonusPct,
+    standardCost,
+    hdCost,
 }: {
     pack: CreditPackResponse;
     onPress: () => void;
     isPurchasing: boolean;
     disabled: boolean;
-    planName: string;
     loyaltyBonusPct: number;
+    /**
+     * Plan-aware credit cost for a single STANDARD render
+     * (`INTERIOR_REDESIGN` × `STANDARD` × 1 variant). 1 for FREE/BASIC, 2 for PRO,
+     * 3 for MAX. Source: `plan_credit_rules` (V2 seed). Defaults to 1 when the
+     * plan rules haven't loaded yet — prevents division-by-zero.
+     */
+    standardCost: number;
+    /**
+     * Plan-aware credit cost for a single HD render
+     * (`HD_REDESIGN` × `HD` × 1 variant). 0 means HD is gated on this plan
+     * (FREE has no HD rule); the HD line is hidden in that case.
+     */
+    hdCost: number;
 }) {
     const { t } = useTranslation();
     const isFeatured = pack.badgeLabel != null;
@@ -65,31 +72,49 @@ function PackCard({
     const hasBonus = loyaltyBonus > 0;
     const isPaidPlan = loyaltyBonusPct > 0;
 
-    const standardDesigns = Math.floor(displayTotal / AVG_CREDITS_PER_STANDARD);
-    const hdDesigns = Math.floor(displayTotal / AVG_CREDITS_PER_HD);
+    // Plan-aware "what can I do with this pack" math. STANDARD always
+    // available; HD only on paid tiers (FREE has no HD_REDESIGN rule, so
+    // hdCost lands as 0 and the HD line is suppressed below).
+    const standardDesigns = Math.floor(displayTotal / Math.max(1, standardCost));
+    const hasHd = hdCost > 0;
+    const hdDesigns = hasHd ? Math.floor(displayTotal / hdCost) : 0;
 
+    // Pack-card press wrapper — the whole card is now a single tap target
+    // (mirrors the pattern we use on the plans screen). Previously the
+    // non-featured "secondary" Button used onSurface-white text on a faint
+    // outline, which read as decorative copy rather than a button. Making
+    // the card itself the pressable element fixes both the affordance and
+    // the hit-area issue at once.
     return (
-        <View
-            style={{
-                marginBottom: 16,
-                borderRadius: 18,
+        <Pressable
+            onPress={disabled ? undefined : onPress}
+            disabled={disabled}
+            style={({ pressed }) => ({
+                marginBottom: 12,
+                borderRadius: 14,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
                 borderColor: isFeatured
-                    ? "rgba(225,195,155,0.45)"
-                    : "rgba(77,70,60,0.22)",
+                    ? pressed
+                        ? "rgba(225,195,155,0.65)"
+                        : "rgba(225,195,155,0.45)"
+                    : pressed
+                        ? "rgba(225,195,155,0.55)"
+                        : "rgba(225,195,155,0.26)",
+                opacity: disabled && !isPurchasing ? 0.55 : 1,
+                transform: [{ scale: pressed && !disabled ? 0.99 : 1 }],
                 ...(isFeatured ? theme.elevation.goldGlowSoft : theme.elevation.sm),
-            }}
+            })}
         >
             {isFeatured ? (
                 <LinearGradient
-                    colors={["rgba(225,195,155,0.08)", "rgba(225,195,155,0)"]}
+                    colors={["rgba(225,195,155,0.07)", "rgba(225,195,155,0)"]}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
                     style={{
                         position: "absolute",
                         top: 0, left: 0, right: 0, bottom: 0,
-                        borderRadius: 18,
+                        borderRadius: 14,
                     }}
                     pointerEvents="none"
                 />
@@ -97,24 +122,24 @@ function PackCard({
 
             {/* Floating badge — sits above the card top edge */}
             {pack.badgeLabel ? (
-                <View style={{ position: "absolute", top: -11, left: 20, zIndex: 1 }}>
+                <View style={{ position: "absolute", top: -10, left: 16, zIndex: 1 }}>
                     <LinearGradient
                         colors={theme.gradient.primary}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
                             borderRadius: 999,
-                            paddingHorizontal: 12,
-                            paddingVertical: 4,
+                            paddingHorizontal: 10,
+                            paddingVertical: 3,
                             borderWidth: 0.5,
                             borderColor: "rgba(63,45,17,0.2)",
                         }}
                     >
                         <Text style={{
                             fontFamily: "Inter-SemiBold",
-                            fontSize: 10,
+                            fontSize: 9.5,
                             color: theme.color.onGold,
-                            letterSpacing: 1.8,
+                            letterSpacing: 1.6,
                             textTransform: "uppercase",
                         }}>
                             {pack.badgeLabel}
@@ -123,131 +148,189 @@ function PackCard({
                 </View>
             ) : null}
 
-            {/* Card body */}
-            <View style={{ padding: 20, paddingTop: pack.badgeLabel ? 26 : 20 }}>
-                {/* Pack name */}
-                <Text style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 10,
-                    letterSpacing: 1.8,
-                    textTransform: "uppercase",
-                    color: "rgba(208,197,184,0.55)",
-                    marginBottom: 10,
-                }}>
-                    {pack.name}
-                </Text>
-
-                {/* ── Credits — main headline number ── */}
-                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 7, marginBottom: hasBonus ? 9 : 4 }}>
-                    <Text style={{
-                        fontFamily: "NotoSerif",
-                        fontSize: 42,
-                        lineHeight: 46,
-                        letterSpacing: -1,
-                        color: theme.color.onSurface,
-                        fontVariant: ["tabular-nums"],
-                    }}>
-                        {displayTotal}
+            {/* Card body — single horizontal flex row puts the headline
+                number and the price/CTA on the same baseline so the card
+                reads in one glance instead of three stacked sections. */}
+            <View
+                style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    paddingTop: pack.badgeLabel ? 18 : 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                }}
+            >
+                {/* Left: pack name + credit headline + bonus chip stacked */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text
+                        style={{
+                            fontFamily: "Inter-SemiBold",
+                            fontSize: 9.5,
+                            letterSpacing: 1.6,
+                            textTransform: "uppercase",
+                            color: "rgba(208,197,184,0.55)",
+                            marginBottom: 4,
+                        }}
+                        numberOfLines={1}
+                    >
+                        {pack.name}
                     </Text>
-                    <Text style={{
-                        fontFamily: "Inter",
-                        fontSize: 13,
-                        color: theme.color.onSurfaceVariant,
-                        marginBottom: 5,
-                    }}>
-                        {t("credit_packs.credits_suffix")}
-                    </Text>
-                </View>
-
-                {/* ── Bonus breakdown ── */}
-                {hasBonus && (
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 12,
-                    }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 6 : 2 }}>
+                        <Text style={{
+                            fontFamily: "NotoSerif",
+                            fontSize: 28,
+                            lineHeight: 32,
+                            letterSpacing: -0.5,
+                            color: theme.color.onSurface,
+                            fontVariant: ["tabular-nums"],
+                        }}>
+                            {displayTotal}
+                        </Text>
                         <Text style={{
                             fontFamily: "Inter",
-                            fontSize: 11,
-                            color: "rgba(208,197,184,0.38)",
+                            fontSize: 11.5,
+                            color: theme.color.onSurfaceVariant,
                         }}>
-                            {t("credit_packs.base_count", { count: pack.credits })}
+                            {t("credit_packs.credits_suffix")}
                         </Text>
-                        <View style={{
-                            width: 1,
-                            height: 10,
-                            backgroundColor: "rgba(208,197,184,0.14)",
-                        }} />
-                        {/* Bonus pill: green for paid-tier loyalty bonus, amber for static pack-level promos */}
-                        <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 5,
-                            paddingHorizontal: 9,
-                            paddingVertical: 4,
-                            borderRadius: 7,
-                            backgroundColor: isPaidPlan
-                                ? "rgba(123,179,138,0.11)"
-                                : "rgba(225,195,155,0.10)",
-                            borderWidth: 0.5,
-                            borderColor: isPaidPlan
-                                ? "rgba(123,179,138,0.28)"
-                                : "rgba(225,195,155,0.28)",
-                        }}>
+                    </View>
+                    {hasBonus ? (
+                        <View
+                            style={{
+                                alignSelf: "flex-start",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                                paddingHorizontal: 7,
+                                paddingVertical: 2.5,
+                                borderRadius: 6,
+                                backgroundColor: isPaidPlan
+                                    ? "rgba(123,179,138,0.10)"
+                                    : "rgba(225,195,155,0.10)",
+                                borderWidth: 0.5,
+                                borderColor: isPaidPlan
+                                    ? "rgba(123,179,138,0.28)"
+                                    : "rgba(225,195,155,0.28)",
+                                marginBottom: 6,
+                            }}
+                        >
                             <Ionicons
                                 name="gift-outline"
-                                size={11}
+                                size={10}
                                 color={isPaidPlan ? theme.color.success : theme.color.goldMidday}
                             />
-                            <Text style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 11,
-                                color: isPaidPlan ? theme.color.success : theme.color.goldMidday,
-                                letterSpacing: 0.2,
-                            }}>
+                            <Text
+                                style={{
+                                    fontFamily: "Inter-SemiBold",
+                                    fontSize: 10,
+                                    color: isPaidPlan ? theme.color.success : theme.color.goldMidday,
+                                    letterSpacing: 0.2,
+                                }}
+                            >
                                 {t("credit_packs.bonus_included", { count: loyaltyBonus })}
                             </Text>
                         </View>
+                    ) : null}
+                    <Text
+                        style={{
+                            fontFamily: "Inter",
+                            fontSize: 11,
+                            lineHeight: 15,
+                            color: theme.color.onSurfaceMuted,
+                        }}
+                        numberOfLines={1}
+                    >
+                        {hasHd
+                            ? t("credit_packs.usage_hint", {
+                                  standard: standardDesigns,
+                                  hd: hdDesigns,
+                              })
+                            : t("credit_packs.usage_hint_standard_only", {
+                                  standard: standardDesigns,
+                              })}
+                    </Text>
+                </View>
+
+                {/* Right: CTA pill — gradient gold for the featured pack,
+                    gold-bordered ghost for the rest. Both styles read
+                    unambiguously as buttons because each carries the gold
+                    accent + chevron. The wrapper Pressable handles taps,
+                    so this is purely a visual affordance. */}
+                {isPurchasing ? (
+                    <View
+                        style={{
+                            minWidth: 88,
+                            paddingHorizontal: 14,
+                            paddingVertical: 12,
+                            borderRadius: 10,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderWidth: 1,
+                            borderColor: "rgba(225,195,155,0.4)",
+                            backgroundColor: "rgba(225,195,155,0.08)",
+                        }}
+                    >
+                        <ActivityIndicator
+                            size="small"
+                            color={theme.color.goldMidday}
+                        />
+                    </View>
+                ) : isFeatured ? (
+                    <LinearGradient
+                        colors={theme.gradient.primary}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                            paddingHorizontal: 14,
+                            paddingVertical: 11,
+                            borderRadius: 10,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 13,
+                                color: theme.color.onGold,
+                                letterSpacing: 0.2,
+                            }}
+                        >
+                            {formatPrice(pack.priceCents, pack.currency)}
+                        </Text>
+                        <Ionicons name="arrow-forward" size={14} color={theme.color.onGold} />
+                    </LinearGradient>
+                ) : (
+                    <View
+                        style={{
+                            paddingHorizontal: 14,
+                            paddingVertical: 11,
+                            borderRadius: 10,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
+                            borderWidth: 1,
+                            borderColor: "rgba(225,195,155,0.4)",
+                            backgroundColor: "rgba(225,195,155,0.06)",
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 13,
+                                color: "#E0C29A",
+                                letterSpacing: 0.2,
+                            }}
+                        >
+                            {formatPrice(pack.priceCents, pack.currency)}
+                        </Text>
+                        <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
                     </View>
                 )}
-
-                {/* ── Relatable usage hint ── */}
-                <Text style={{
-                    fontFamily: "Inter",
-                    fontSize: 12,
-                    lineHeight: 17,
-                    color: theme.color.onSurfaceMuted,
-                    marginBottom: pack.description ? 6 : 16,
-                }}>
-                    {t("credit_packs.usage_hint", { standard: standardDesigns, hd: hdDesigns })}
-                </Text>
-
-                {pack.description ? (
-                    <Text style={{
-                        fontFamily: "Inter",
-                        fontSize: 12,
-                        lineHeight: 17,
-                        color: theme.color.onSurfaceMuted,
-                        marginBottom: 16,
-                    }} numberOfLines={2}>
-                        {pack.description}
-                    </Text>
-                ) : null}
-
-                <Button
-                    title={t("credit_packs.buy_for", {
-                        price: formatPrice(pack.priceCents, pack.currency),
-                    })}
-                    variant={isFeatured ? "primary" : "secondary"}
-                    size="sm"
-                    onPress={onPress}
-                    disabled={disabled}
-                    loading={isPurchasing}
-                    fullWidth
-                />
             </View>
-        </View>
+        </Pressable>
     );
 }
 
@@ -261,6 +344,12 @@ export default function CreditPacksScreen() {
     const balance = useCreditStore((s) => s.balance);
     const subscription = useSubscriptionStore((s) => s.subscription);
     const creditPackBonusPct = useSubscriptionStore((s) => s.creditPackBonusPct);
+    const getCreditCost = useSubscriptionStore((s) => s.getCreditCost);
+    // Plan-aware credit costs for the pack usage hint. Read once at
+    // render time; resolved against the active plan's `plan_credit_rules`.
+    // FREE has no HD rule → hdCost = 0 → HD line is hidden in PackCard.
+    const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
+    const hdCost = getCreditCost("HD_REDESIGN", "HD", 1);
     const handleBack = useBackHandler("/(tabs)/profile");
 
     useEffect(() => {
@@ -422,8 +511,9 @@ export default function CreditPacksScreen() {
                             onPress={() => handlePurchase(pack.code)}
                             isPurchasing={purchasing === pack.code}
                             disabled={purchasing !== null}
-                            planName={planName}
                             loyaltyBonusPct={creditPackBonusPct}
+                            standardCost={standardCost}
+                            hdCost={hdCost}
                         />
                     ))
                 )}

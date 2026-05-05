@@ -233,14 +233,27 @@ export default function CreditsScreen() {
 
   // Filter the ledger for the ALL/EARNED/SPENT tabs. Positive = earned
   // (grants/topups/refunds/release), negative = spent (reserve/consume).
+  //
+  // Zero-amount rows are *always* hidden — they correspond to the second
+  // half of a reservation lifecycle (RESERVE writes the −N row, CONSUME
+  // writes a 0 row that just changes status). Surfacing both confused
+  // users into thinking each job appeared twice; the spend is already
+  // captured in the RESERVE row, so dropping CONSUME rows leaves a
+  // clean "one job = one row" reading.
   const filteredLedger = useMemo(() => {
-    if (activityFilter === "ALL") return ledger;
-    if (activityFilter === "EARNED") return ledger.filter(l => l.amount > 0);
-    return ledger.filter(l => l.amount < 0);
+    const meaningful = ledger.filter(l => l.amount !== 0);
+    if (activityFilter === "ALL") return meaningful;
+    if (activityFilter === "EARNED") return meaningful.filter(l => l.amount > 0);
+    return meaningful.filter(l => l.amount < 0);
   }, [ledger, activityFilter]);
 
   // "Spent this month" — sum of negative entries within the active period.
   // Gives the user a quick sense of burn rate without scrolling the list.
+  // Mirrors the filteredLedger rule (`amount !== 0`): RESERVE rows carry
+  // the actual spend, CONSUME rows write 0 and would have been excluded
+  // by the strict `< 0` filter anyway, but the explicit symmetry keeps
+  // future changes (e.g. paired CONSUME rows with negative deltas) from
+  // double-counting.
   const spentThisMonth = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
@@ -570,36 +583,60 @@ export default function CreditsScreen() {
               </View>
             )}
 
-            {/* ── Monthly Usage Header + Filter Chips ── */}
+            {/* ── Monthly Usage Header + Filter Chips ──
+                Premium polish: hairline gold rule above the section
+                anchors the eyebrow label, and the "spent this month"
+                figure renders as a soft gold chip instead of greyed-out
+                helper text — it's the most important number on this
+                screen for a returning subscriber. */}
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "rgba(225,195,155,0.14)",
+                marginBottom: 18,
+              }}
+            />
             <View
               className="flex-row items-center justify-between"
               style={{ marginBottom: 16 }}
             >
               <Text
-                className="font-label text-secondary"
+                className="font-label"
                 style={{
                   fontSize: 11,
                   fontWeight: "700",
                   letterSpacing: 3,
                   textTransform: "uppercase",
+                  color: "#E0C29A",
                 }}
               >
                 {t("credits.monthly_usage")}
               </Text>
               {spentThisMonth > 0 && (
-                <Text
-                  className="font-label"
+                <View
                   style={{
-                    fontSize: 11,
-                    fontWeight: "500",
-                    letterSpacing: 1.5,
-                    color: "#998F84",
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(225,195,155,0.10)",
+                    borderWidth: 0.5,
+                    borderColor: "rgba(225,195,155,0.25)",
                   }}
                 >
-                  {t("credits.billing_spent_this_month", {
-                    amount: spentThisMonth,
-                  })}
-                </Text>
+                  <Text
+                    className="font-label"
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: "600",
+                      letterSpacing: 1,
+                      color: "#E0C29A",
+                    }}
+                  >
+                    {t("credits.billing_spent_this_month", {
+                      amount: spentThisMonth,
+                    })}
+                  </Text>
+                </View>
               )}
             </View>
 

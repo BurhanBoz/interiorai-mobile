@@ -194,6 +194,14 @@ export interface CreditBalanceResponse {
     monthlyLimit: number;
     planCode: string;
     planName: string;
+    /**
+     * V20 / Pricing Strategy V2 — welcome bonus expiry (signup +7 days).
+     * ISO-8601 string. Non-null + future = trial active (banner + countdown
+     * shown). See {@link welcomeBonusActive} for the server-evaluated flag.
+     */
+    welcomeBonusExpiresAt?: string | null;
+    /** Server-evaluated flag — true while trial expiry is in the future. */
+    welcomeBonusActive?: boolean;
 }
 
 // ── Pagination ─────────────────────────────────
@@ -292,13 +300,20 @@ export interface GalleryItem {
 }
 
 // ── Notification Preferences ───────────────────
+// V20 / Pricing Strategy V2 — replaces the legacy 5-flag shape
+// (push/email/renderComplete/promotions/weeklySummary). Backend ALTERed
+// the table to add the granular 5-category matrix; legacy columns
+// dropped. CRITICAL is implicit always-on, not a flag here.
 export interface NotificationPreferences {
     userId: string;
-    pushEnabled: boolean;
-    emailEnabled: boolean;
-    renderComplete: boolean;
-    promotions: boolean;
-    weeklySummary: boolean;
+    transactional: boolean;
+    engagement: boolean;
+    engagementVariations: boolean;
+    marketing: boolean;
+    marketingOffers: boolean;
+    reengagement: boolean;
+    timezone: string;
+    apnsTokenRegistered: boolean;
 }
 
 // ── Request Shapes ─────────────────────────────
@@ -321,9 +336,11 @@ export interface RedeemPromoRequest {
 }
 
 export interface UpdateNotificationPreferencesRequest {
-    pushEnabled?: boolean;
-    emailEnabled?: boolean;
-    renderComplete?: boolean;
-    promotions?: boolean;
-    weeklySummary?: boolean;
+    transactional?: boolean;
+    engagement?: boolean;
+    engagementVariations?: boolean;
+    marketing?: boolean;
+    marketingOffers?: boolean;
+    reengagement?: boolean;
+    timezone?: string;
 }

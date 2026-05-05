@@ -28,6 +28,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
+import { VariationSheet } from "@/components/result/VariationSheet";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -80,6 +81,8 @@ export default function ResultDetailScreen() {
   const [seedCopied, setSeedCopied] = useState(false);
   // Tap on a generated image → fullscreen modal. Null = closed.
   const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
+  // V20 / Pricing Strategy V2 — variation picker sheet.
+  const [variationSheetOpen, setVariationSheetOpen] = useState(false);
 
   // Gate the upscale button by plan: only show when the active plan has at
   // least one ULTRA_HD_UPSCALE credit rule. Free users don't — hiding it
@@ -87,7 +90,19 @@ export default function ResultDetailScreen() {
   const creditRules = useSubscriptionStore(s => s.creditRules);
   const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
   const resetStudio = useStudioStore(s => s.reset);
+  // An "already upscaled" job is one where the feature_code itself is the
+  // upscale chain (jobType="UPSCALE" on the backend → featureCode
+  // "ULTRA_HD_UPSCALE"). Allowing a second upscale on top of that produces
+  // diminishing visual returns + double-charges credits, and the underlying
+  // model (`fermatresearch/high-resolution-controlnet-tile`) refuses 4K
+  // input gracefully but slowly — the right product answer is to lock the
+  // CTA so the user can't re-trigger the chain. We leave the button
+  // visible as a "you already enhanced this" affordance rather than
+  // hiding it (hiding would confuse users into thinking they lost
+  // access). Pressed while disabled is a no-op.
+  const isAlreadyUpscaled = job?.featureCode === "ULTRA_HD_UPSCALE";
   const canUpscale =
+    !isAlreadyUpscaled &&
     isFeatureEnabled("ULTRA_HD_UPSCALE") &&
     creditRules.some(r => r.featureCode === "ULTRA_HD_UPSCALE");
 
@@ -387,135 +402,437 @@ export default function ResultDetailScreen() {
           )}
         </View>
 
-        {/* Action Row */}
-        <View className="flex-row items-start mb-10" style={{ gap: 16 }}>
-          {/* Compare */}
-          <View className="items-center" style={{ gap: 8 }}>
-            <Pressable
-              onPress={handleCompare}
-              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-            >
-              <Ionicons name="git-compare-outline" size={22} color="#D1C5B8" />
-            </Pressable>
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                fontSize: 9,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("result.compare")}
-            </Text>
+        {/* ────────── Action area ──────────
+            Two-row layout fixes the "5 buttons in one row" overflow
+            (UPSCALE was getting clipped to "U P S(") and elevates
+            Upscale to a deliberate "Pro action" tier:
+              • Top row — 4 utility actions (Compare/Download/Share/
+                Variation) as evenly-spaced icon-circles
+              • Bottom row — Upscale as a full-width premium pill,
+                gold-bordered with sparkles + arrow affordance
+            Premium tone is intentional — Upscale costs extra credits
+            and is plan-gated, so visually separating it from the free
+            utility actions matches the credit semantics. */}
+        <View style={{ marginBottom: 24 }}>
+          {/* Top row — 4 utility actions, justified for even spacing
+              regardless of screen width (small phones get 60px gaps,
+              Plus models get 90px without code branching). */}
+          <View
+            className="flex-row items-start"
+            style={{ justifyContent: "space-around", marginBottom: 18 }}
+          >
+            {/* Compare */}
+            <View className="items-center" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleCompare}
+                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+              >
+                <Ionicons name="git-compare-outline" size={22} color="#D1C5B8" />
+              </Pressable>
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("result.compare")}
+              </Text>
+            </View>
+
+            {/* Download — saves to Photos */}
+            <View className="items-center" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleDownload}
+                disabled={isDownloading}
+                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+                style={{ opacity: isDownloading ? 0.5 : 1 }}
+              >
+                {isDownloading ? (
+                  <ActivityIndicator size="small" color="#D1C5B8" />
+                ) : (
+                  <Ionicons name="download-outline" size={22} color="#D1C5B8" />
+                )}
+              </Pressable>
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("result.download")}
+              </Text>
+            </View>
+
+            {/* Share */}
+            <View className="items-center" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleShare}
+                disabled={isSharing}
+                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+                style={{ opacity: isSharing ? 0.5 : 1 }}
+              >
+                {isSharing ? (
+                  <ActivityIndicator size="small" color="#D1C5B8" />
+                ) : (
+                  <Ionicons name="share-social-outline" size={22} color="#D1C5B8" />
+                )}
+              </Pressable>
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("result.share")}
+              </Text>
+            </View>
+
+            {/* Variation — V20 / Pricing Strategy V2 §4. Opens the
+                Subtle/Bold/Wild picker sheet; tap on a preset spawns a
+                new variation job (1 credit) and routes to the progress
+                screen. Disabled if the job isn't COMPLETED so retry/
+                cancel paths don't lead here. */}
+            <View className="items-center" style={{ gap: 8 }}>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setVariationSheetOpen(true);
+                }}
+                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+              >
+                <Ionicons name="refresh-outline" size={22} color="#D1C5B8" />
+              </Pressable>
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("result.variation_button")}
+              </Text>
+            </View>
           </View>
 
-          {/* Download — saves to Photos */}
-          <View className="items-center" style={{ gap: 8 }}>
-            <Pressable
-              onPress={handleDownload}
-              disabled={isDownloading}
-              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-              style={{ opacity: isDownloading ? 0.5 : 1 }}
-            >
-              {isDownloading ? (
-                <ActivityIndicator size="small" color="#D1C5B8" />
-              ) : (
-                <Ionicons name="download-outline" size={22} color="#D1C5B8" />
-              )}
-            </Pressable>
-            <Text
-              className="font-label text-on-surface-variant"
+          {/* Bottom row — Upscale full-width premium pill.
+              Free/Basic plan has no ULTRA_HD_UPSCALE credit rule so
+              the locked variant routes to /plans for upgrade.
+              Visual treatment uses a soft gold gradient wash + thin
+              gold border + sparkles icon left, arrow right — reads as
+              a premium action without screaming. Hairline divider
+              above subtly separates the two tiers of actions. */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "rgba(225,195,155,0.10)",
+              marginBottom: 14,
+            }}
+          />
+          {isAlreadyUpscaled ? (
+            // Already-upscaled state — flat, non-interactive affordance.
+            // Communicates "this job has been enhanced" so the user
+            // doesn't think the action is missing or broken. We do NOT
+            // render a Pressable here because there's nothing to do; a
+            // disabled Pressable still takes hit area + ripples on
+            // Android and would suggest tappability.
+            <View
               style={{
-                fontSize: 9,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: "rgba(143,227,161,0.22)",
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 18,
+                paddingVertical: 14,
+                gap: 12,
+                backgroundColor: "rgba(143,227,161,0.05)",
               }}
             >
-              {t("result.download")}
-            </Text>
-          </View>
-
-          {/* Share */}
-          <View className="items-center" style={{ gap: 8 }}>
-            <Pressable
-              onPress={handleShare}
-              disabled={isSharing}
-              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-              style={{ opacity: isSharing ? 0.5 : 1 }}
-            >
-              {isSharing ? (
-                <ActivityIndicator size="small" color="#D1C5B8" />
-              ) : (
-                <Ionicons name="share-social-outline" size={22} color="#D1C5B8" />
-              )}
-            </Pressable>
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                fontSize: 9,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("result.share")}
-            </Text>
-          </View>
-
-          {/* Upscale Button — gated by plan entitlement. Free plan has no
-              ULTRA_HD_UPSCALE credit rule so the button disappears; Basic+
-              see it and land on /generation/upscale where target tier is
-              resolved by the backend. */}
-          {canUpscale ? (
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: "rgba(143,227,161,0.12)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="checkmark" size={16} color="#8FE3A1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "Inter-SemiBold",
+                    fontSize: 13,
+                    color: "#8FE3A1",
+                    letterSpacing: 0.4,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("result.already_upscaled", {
+                    defaultValue: "Already upscaled",
+                  })}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 11,
+                    color: "rgba(143,227,161,0.65)",
+                    marginTop: 2,
+                    letterSpacing: 0.2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {t("result.already_upscaled_subtitle", {
+                    defaultValue: "This render has been enhanced",
+                  })}
+                </Text>
+              </View>
+            </View>
+          ) : canUpscale ? (
             <Pressable
               onPress={() => {
                 if (!currentOutput?.id) return;
+                Haptics.selectionAsync();
                 router.push(
                   `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
                 );
               }}
-              className="flex-1 flex-row items-center justify-between bg-surface-container-high rounded-xl"
-              style={{ height: 48, marginLeft: 8, paddingHorizontal: 20 }}
+              style={({ pressed }) => ({
+                borderRadius: 14,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: pressed
+                  ? "rgba(225,195,155,0.55)"
+                  : "rgba(225,195,155,0.32)",
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+              })}
             >
-              <Text
-                className="font-label text-on-surface font-bold"
+              <LinearGradient
+                colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.04)"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 18,
+                  paddingVertical: 14,
+                  gap: 12,
                 }}
               >
-                {t("result.upscale")}
-              </Text>
-              <Ionicons name="sparkles" size={20} color="#FEDFB5" />
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: "rgba(253,222,181,0.14)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="sparkles" size={16} color="#FEDFB5" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter-SemiBold",
+                      fontSize: 13,
+                      color: "#F4DDB6",
+                      letterSpacing: 0.4,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("result.upscale")}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter",
+                      fontSize: 11,
+                      color: "rgba(225,195,155,0.65)",
+                      marginTop: 2,
+                      letterSpacing: 0.2,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("result.upscale_subtitle", {
+                      defaultValue: "Enhance to 2K · Pro action",
+                    })}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
+              </LinearGradient>
             </Pressable>
           ) : (
             <Pressable
               onPress={() => router.push("/plans")}
-              className="flex-1 flex-row items-center justify-between rounded-xl"
-              style={{
-                height: 48,
-                marginLeft: 8,
-                paddingHorizontal: 20,
+              style={({ pressed }) => ({
+                borderRadius: 14,
+                overflow: "hidden",
                 borderWidth: 1,
-                borderColor: "rgba(225,195,155,0.3)",
-                backgroundColor: "rgba(225,195,155,0.06)",
-              }}
+                borderColor: pressed
+                  ? "rgba(225,195,155,0.45)"
+                  : "rgba(225,195,155,0.22)",
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 18,
+                paddingVertical: 14,
+                gap: 12,
+                backgroundColor: "rgba(225,195,155,0.04)",
+              })}
             >
-              <Text
-                className="font-label font-bold"
+              <View
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#E0C29A",
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: "rgba(225,195,155,0.10)",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {t("result.upscale_locked")}
-              </Text>
-              <Ionicons name="lock-closed" size={16} color="#E0C29A" />
+                <Ionicons name="lock-closed" size={14} color="#E0C29A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "Inter-SemiBold",
+                    fontSize: 13,
+                    color: "#E0C29A",
+                    letterSpacing: 0.4,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("result.upscale_locked")}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 11,
+                    color: "rgba(225,195,155,0.55)",
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {t("result.upscale_locked_subtitle", {
+                    defaultValue: "Upgrade to unlock 2K upscaling",
+                  })}
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
             </Pressable>
           )}
         </View>
+
+        {/* Auto-saved reassurance + History quick-jump.
+            Every generation/upscale/variation is persisted to S3 and
+            indexed in History — but users don't know that, so a chain
+            like "render → upscale → variation" without intermediate
+            downloads triggers the "did I lose my work?" anxiety. This
+            pill is the explicit guarantee: nothing's lost, and there's
+            a single tap to find every render in your library. Subtle
+            visual weight (12px font, faint divider above) keeps it out
+            of the action hierarchy. */}
+        <Pressable
+          onPress={() => router.push("/(tabs)/history" as never)}
+          style={({ pressed }) => ({
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: pressed
+              ? "rgba(143,227,161,0.3)"
+              : "rgba(143,227,161,0.14)",
+            backgroundColor: pressed
+              ? "rgba(143,227,161,0.06)"
+              : "rgba(143,227,161,0.03)",
+            marginBottom: 24,
+            transform: [{ scale: pressed ? 0.99 : 1 }],
+          })}
+        >
+          {/* Inner row — explicit View so flexDirection never depends
+              on the Pressable style function resolving correctly. */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              gap: 10,
+            }}
+          >
+            {/* Cloud icon badge — left anchor */}
+            <View
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: "rgba(143,227,161,0.12)",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Ionicons name="cloud-done-outline" size={14} color="#8FE3A1" />
+            </View>
+
+            {/* Text block — flex:1 fills remaining space */}
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter-SemiBold",
+                  fontSize: 12,
+                  color: "#E5E2E1",
+                  letterSpacing: 0.4,
+                }}
+                numberOfLines={1}
+              >
+                {t("result.auto_saved_label", {
+                  defaultValue: "Auto-saved to your history",
+                })}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 10.5,
+                  color: "rgba(208,197,184,0.55)",
+                  marginTop: 1,
+                  letterSpacing: 0.2,
+                }}
+                numberOfLines={1}
+              >
+                {t("result.auto_saved_subtitle", {
+                  defaultValue: "Every render is kept — view all designs",
+                })}
+              </Text>
+            </View>
+
+            {/* Chevron badge — far right, vertically centered via
+                alignItems:"center" on parent. flexShrink:0 prevents
+                it from collapsing when subtitle text is long. */}
+            <View
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: "rgba(143,227,161,0.35)",
+                backgroundColor: "rgba(143,227,161,0.1)",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Ionicons name="chevron-forward" size={13} color="#8FE3A1" />
+            </View>
+          </View>
+        </Pressable>
 
         {/* Metadata Card */}
         <View className="bg-surface-container-low rounded-xl p-6 mb-8">
@@ -690,6 +1007,15 @@ export default function ResultDetailScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* V20 / Pricing Strategy V2 — Variation picker. Lives at the
+          screen root so the full pageSheet can slide over the result
+          UI without inheriting any padding from the scroll container. */}
+      <VariationSheet
+        visible={variationSheetOpen}
+        onClose={() => setVariationSheetOpen(false)}
+        sourceJobId={job.id}
+      />
     </SafeAreaView>
   );
 }

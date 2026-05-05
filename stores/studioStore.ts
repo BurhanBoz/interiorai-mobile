@@ -3,7 +3,7 @@ import type { CatalogItemResponse, DesignMode, QualityTier, SpeedMode } from "@/
 
 interface StudioState {
     step: 1 | 2 | 3 | 4;
-    photo: { uri: string; fileId: string } | null;
+    photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null;
     roomType: CatalogItemResponse | null;
     designStyle: CatalogItemResponse | null;
     mode: DesignMode;
@@ -23,10 +23,10 @@ interface StudioState {
      * default here would short-circuit that and force 7.5 for everything.
      */
     guidanceScale: number | undefined;
-    referencePhoto: { uri: string; fileId: string } | null;
+    referencePhoto: { uri: string; fileId: string; width?: number | null; height?: number | null } | null;
     maskData: string | null;
     setStep: (step: 1 | 2 | 3 | 4) => void;
-    setPhoto: (photo: { uri: string; fileId: string } | null) => void;
+    setPhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
     setRoomType: (roomType: CatalogItemResponse | null) => void;
     setDesignStyle: (style: CatalogItemResponse | null) => void;
     setMode: (mode: DesignMode) => void;
@@ -40,10 +40,25 @@ interface StudioState {
     setSeed: (v: number | undefined) => void;
     setStrength: (v: number) => void;
     setGuidanceScale: (v: number | undefined) => void;
-    setReferencePhoto: (photo: { uri: string; fileId: string } | null) => void;
+    setReferencePhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
     setMaskData: (data: string | null) => void;
     reset: () => void;
 }
+
+/**
+ * Default color palette — Pantone 2025 "Mocha Mousse" warm-neutral set.
+ *
+ * Hex order matches PALETTE_THEMES[0] in studio/options.tsx ("warm-mocha")
+ * and the encoding convention `colors.join(";")` from encodePalette().
+ *
+ * Rationale: an empty palette ("") had been the default, which surfaced
+ * "No palette selected" to first-time users — the studio felt unfinished
+ * and the prompt pipeline lost the warm-neutral anchor that lifts most
+ * generations. A safe, designer-approved baseline is a better starting
+ * point; users who want neutral output can still tap "None" inside the
+ * palette sheet to go back to the empty-string state.
+ */
+const DEFAULT_COLOR_PALETTE = "#A48359;#EADEC8;#F5F1E8";
 
 const initialState = {
     step: 1 as const,
@@ -57,7 +72,7 @@ const initialState = {
     preserveLayout: true,
     prompt: "",
     negativePrompt: "",
-    colorPalette: "",
+    colorPalette: DEFAULT_COLOR_PALETTE,
     seed: undefined,
     strength: 0.7,
     guidanceScale: undefined,

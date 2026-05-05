@@ -319,7 +319,7 @@ export default function StyleTransferScreen() {
                 textTransform: "uppercase",
               }}
             >
-              {t("studio.strength")}
+              {t("studio.reference_influence")}
             </Text>
             <Text
               className="font-headline text-primary"
@@ -333,15 +333,19 @@ export default function StyleTransferScreen() {
             </Text>
           </View>
 
-          {/* Native slider — matches options.tsx pattern (0.1–1.0 range,
-              0.05 step). Previous dual-layer custom slider dropped taps
-              because the invisible overlay was offset from the visible
-              track; a single native slider both draws and captures. */}
+          {/* Native slider — matches options.tsx pattern (0.1–1.0 range).
+              Style transfer is a MAX-only entry point in the studio flow,
+              so we always run the fine-grained 0.025 step here — the
+              0.05 default would skip 18 of the 36 useful values for the
+              very tier most likely to want them. The previous dual-layer
+              custom slider dropped taps because the invisible overlay
+              was offset from the visible track; a single native slider
+              both draws and captures. */}
           <Slider
             style={{ width: "100%", height: 36 }}
             minimumValue={0.1}
             maximumValue={1.0}
-            step={0.05}
+            step={0.025}
             value={strength}
             onValueChange={setStrength}
             onSlidingStart={() => Haptics.selectionAsync()}
@@ -361,7 +365,7 @@ export default function StyleTransferScreen() {
               marginTop: 8,
             }}
           >
-            {t("studio.style_transfer_strength_hint")}
+            {t("studio.reference_influence_hint")}
           </Text>
         </View>
 

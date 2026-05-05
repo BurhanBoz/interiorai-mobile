@@ -400,12 +400,18 @@ export default function NotificationsSettingsScreen() {
         setLoading(false);
       })
       .catch(() => {
+        // V20 / Pricing Strategy V2 default fallback — transactional /
+        // engagement / reengagement ON, marketing OFF (Apple ATT-friendly).
+        // Mirrors NotificationPreferenceServiceImpl.findOrCreateDefault.
         setPrefs({
-          pushEnabled: false,
-          emailEnabled: false,
-          renderComplete: true,
-          weeklySummary: false,
-          promotions: false,
+          transactional: true,
+          engagement: true,
+          engagementVariations: true,
+          marketing: false,
+          marketingOffers: false,
+          reengagement: true,
+          timezone: "UTC",
+          apnsTokenRegistered: false,
         });
         setLoading(false);
       });
@@ -730,24 +736,27 @@ export default function NotificationsSettingsScreen() {
                   overflow: "hidden",
                 }}
               >
+                {/* V20 / Pricing Strategy V2 — 5-kategori opt-in matrix
+                    (push notifications strategy doc §1.1). CRITICAL is
+                    implicit always-on (security/billing) — not a toggle. */}
                 <ToggleRow
-                  label={t("settings.notifications_pref_render_title")}
-                  description={t("settings.notifications_pref_render_desc")}
-                  value={prefs.renderComplete}
-                  onToggle={() => toggle("renderComplete")}
+                  label={t("notifications.settings_transactional_label")}
+                  description={t("notifications.settings_critical_hint")}
+                  value={prefs.transactional}
+                  onToggle={() => toggle("transactional")}
                   first
                 />
                 <ToggleRow
-                  label={t("settings.notifications_pref_push_title")}
-                  description={t("settings.notifications_pref_push_desc")}
-                  value={prefs.pushEnabled}
-                  onToggle={() => toggle("pushEnabled")}
+                  label={t("notifications.settings_engagement_label")}
+                  description={t("notifications.settings_engagement_variations_label")}
+                  value={prefs.engagement}
+                  onToggle={() => toggle("engagement")}
                 />
                 <ToggleRow
-                  label={t("settings.notifications_pref_promo_title")}
-                  description={t("settings.notifications_pref_promo_desc")}
-                  value={prefs.promotions}
-                  onToggle={() => toggle("promotions")}
+                  label={t("notifications.settings_marketing_label")}
+                  description={t("notifications.settings_marketing_offers_label")}
+                  value={prefs.marketing}
+                  onToggle={() => toggle("marketing")}
                   last
                 />
               </View>
@@ -773,18 +782,22 @@ export default function NotificationsSettingsScreen() {
                   overflow: "hidden",
                 }}
               >
+                {/* Sub-channel toggles — Variation suggestions (engagement
+                    sub-bucket) + Reengagement reminders. Quiet hours
+                    explanatory copy lives in the description, not as its
+                    own toggle (server-side fixed at 22-08 user-local). */}
                 <ToggleRow
-                  label={t("settings.notifications_pref_email_title")}
-                  description={t("settings.notifications_pref_email_desc")}
-                  value={prefs.emailEnabled}
-                  onToggle={() => toggle("emailEnabled")}
+                  label={t("notifications.settings_engagement_variations_label")}
+                  description={t("notifications.settings_engagement_label")}
+                  value={prefs.engagementVariations}
+                  onToggle={() => toggle("engagementVariations")}
                   first
                 />
                 <ToggleRow
-                  label={t("settings.notifications_pref_weekly_title")}
-                  description={t("settings.notifications_pref_weekly_desc")}
-                  value={prefs.weeklySummary}
-                  onToggle={() => toggle("weeklySummary")}
+                  label={t("notifications.settings_reengagement_label")}
+                  description={t("notifications.settings_quiet_hours_value")}
+                  value={prefs.reengagement}
+                  onToggle={() => toggle("reengagement")}
                   last
                 />
               </View>

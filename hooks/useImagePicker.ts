@@ -33,13 +33,63 @@ export function useImagePicker() {
         setIsUploading(true);
         try {
             const file = await uploadImage(resizedUri);
-            return { uri: resizedUri, fileId: file.id };
+            // Capture original dimensions so the studio can compute a
+            // model-friendly aspect ratio (`16:9`, `4:5`, `1:1`, …) and
+            // pass it to the backend. Without this the backend falls back
+            // to a per-room default that may not match the user's photo
+            // — visible as letterboxing or stretched output on PRO/MAX
+            // tiers where the model honors `aspect_ratio` strictly.
+            return {
+                uri: resizedUri,
+                fileId: file.id,
+                width: asset.width ?? null,
+                height: asset.height ?? null,
+            };
         } finally {
             setIsUploading(false);
         }
     };
 
     return { pickImage, isUploading };
+}
+
+/**
+ * Reduce a width×height pair to the closest aspect-ratio string that
+ * Replicate's FLUX models accept ("1:1", "16:9", "4:5", "3:4", "9:16").
+ *
+ * We snap to a small set of canonical ratios rather than emit the raw
+ * `Math.round(w/h)` because:
+ *   1. FLUX's `aspect_ratio` parameter is an enum on most versions —
+ *      arbitrary values are silently coerced to "1:1".
+ *   2. Trim/letterbox artifacts only show when the chosen ratio diverges
+ *      from the source by more than ~5%. Snapping to the nearest of 5
+ *      canonical bands keeps the output proportional to the input
+ *      without leaking decimals into the request body.
+ */
+export function aspectRatioFor(
+    width: number | null | undefined,
+    height: number | null | undefined,
+): string | undefined {
+    if (!width || !height || width <= 0 || height <= 0) return undefined;
+    const r = width / height;
+    const candidates: Array<[number, string]> = [
+        [1.0, "1:1"],
+        [16 / 9, "16:9"],
+        [9 / 16, "9:16"],
+        [4 / 5, "4:5"],
+        [3 / 4, "3:4"],
+        [4 / 3, "4:3"],
+    ];
+    let best = candidates[0];
+    let bestDelta = Math.abs(r - best[0]);
+    for (let i = 1; i < candidates.length; i++) {
+        const d = Math.abs(r - candidates[i][0]);
+        if (d < bestDelta) {
+            best = candidates[i];
+            bestDelta = d;
+        }
+    }
+    return best[1];
 }
 
 /**

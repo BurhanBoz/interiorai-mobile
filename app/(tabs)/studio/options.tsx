@@ -6,6 +6,8 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Modal,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -48,14 +50,59 @@ const MODES: {
   { key: "STYLE_TRANSFER", labelKey: "studio.mode_style_transfer", icon: "color-palette-outline", planBadge: "MAX" },
 ];
 
-const PALETTE_COLORS = [
-  { color: "#E1C39B", gradientEnd: "#584325" },
-  { color: "#1C1B1B", gradientEnd: "#4D463C" },
-  { color: "#D1C6B9", gradientEnd: "#E5E2E1" },
-  { color: "#281801", gradientEnd: "#FDDEB4" },
-  { color: "#3F2D10", gradientEnd: "#E1C39B" },
-  { color: "#93000A", gradientEnd: "#FFB4AB" },
+/**
+ * Curated three-color interior palette themes — 2025-2026 trend-aligned.
+ *
+ * Each theme is a {primary, secondary, accent} triplet that the backend
+ * concatenates with `;` separators and feeds to ColorNameMapper.humanize()
+ * (max 6 colors, comma OR semicolon split). Three colors per theme is the
+ * sweet spot: enough nuance for the model to grasp atmosphere, few enough
+ * to stay under token budget after humanization.
+ *
+ * Hex values intentionally chosen to land exactly on existing anchor
+ * phrases in ColorNameMapper.ANCHORS — so humanize() resolves to the
+ * crisp design vocabulary ("warm beige, deep charcoal, brass gold") that
+ * the prompt pipeline expects, not improvised approximations.
+ *
+ * Ordering reflects designer adoption frequency (Pantone + Houzz +
+ * Architectural Digest 2025 trend reports): Mocha Mousse (Pantone 2025
+ * Color of the Year) leads, followed by the year-over-year top staples.
+ */
+type PaletteTheme = {
+  /** Stable id used for selection state (string match against studioStore.colorPalette). */
+  id: string;
+  /** i18n key for the theme name (under `studio.palette_*`). */
+  labelKey: string;
+  /** Three hex colors — primary, secondary, accent. Backend joins with `;`. */
+  colors: readonly [string, string, string];
+};
+
+// Curated to 8 high-adoption themes (was 12). The dropped four
+// (Forest Lodge, Burgundy Velvet, Dusty Rose, Olive & Ochre) overlapped
+// adjacent themes (Sage covers biophilic, Charcoal & Brass covers
+// dramatic warm) and pushed the grid past the visual-density ceiling.
+// Eight items in a 2-column grid means four rows — comfortable to scan
+// without scrolling, premium-feeling because each card breathes. Their
+// i18n keys are kept in the bundle for graceful fallback if the list
+// is re-expanded later.
+const PALETTE_THEMES: readonly PaletteTheme[] = [
+  // ── Warm neutrals (top adoption) ──────────────────────────────────
+  { id: "warm-mocha",      labelKey: "studio.palette_warm_mocha",      colors: ["#A48359", "#EADEC8", "#F5F1E8"] }, // Pantone 2025
+  { id: "soft-neutrals",   labelKey: "studio.palette_soft_neutrals",   colors: ["#E1C39B", "#F7F7F7", "#8A8A8A"] },
+  // ── Cool / biophilic ──────────────────────────────────────────────
+  { id: "sage-sanctuary",  labelKey: "studio.palette_sage_sanctuary",  colors: ["#A8B599", "#D8DFC8", "#F5F1E8"] },
+  { id: "coastal-calm",    labelKey: "studio.palette_coastal_calm",    colors: ["#9AB7CF", "#F5F1E8", "#A48359"] },
+  // ── Earthy / grounding ────────────────────────────────────────────
+  { id: "terracotta-earth",labelKey: "studio.palette_terracotta_earth",colors: ["#C87B5D", "#E1C39B", "#5D432C"] },
+  // ── Dramatic / luxury ─────────────────────────────────────────────
+  { id: "charcoal-brass",  labelKey: "studio.palette_charcoal_brass",  colors: ["#2A2A2A", "#B79561", "#A48359"] },
+  { id: "navy-heritage",   labelKey: "studio.palette_navy_heritage",   colors: ["#264B70", "#B79561", "#EADEC8"] },
+  // ── Minimalist ────────────────────────────────────────────────────
+  { id: "japandi-pure",    labelKey: "studio.palette_japandi_pure",    colors: ["#FFFFFF", "#E5E5E5", "#2A2A2A"] },
 ];
+
+/** Encode a palette theme to the wire format the backend expects. */
+const encodePalette = (colors: readonly string[]) => colors.join(";");
 
 const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
   { key: "STANDARD", labelKey: "studio.quality_standard" },
@@ -192,6 +239,14 @@ export default function OptionsScreen() {
   const [promptChipsExpanded, setPromptChipsExpanded] = useState(false);
   const [seedExpanded, setSeedExpanded] = useState(false);
   const [hintChipId, setHintChipId] = useState<string | null>(null);
+  const [paletteSheetOpen, setPaletteSheetOpen] = useState(false);
+
+  // Resolve the currently-selected palette theme from its encoded value.
+  // Used by the trigger row to render the swatch + label without keeping
+  // a duplicate piece of state around.
+  const selectedPaletteTheme = PALETTE_THEMES.find(
+    (theme) => encodePalette(theme.colors) === colorPalette,
+  );
 
   // Auto-downgrade if current selection is locked
   useEffect(() => {
@@ -527,7 +582,14 @@ export default function OptionsScreen() {
               }}
               minimumValue={0.1}
               maximumValue={1.0}
-              step={0.05}
+              // Granularity is plan-tier aware. Paid tiers (PRO/MAX) get
+              // 0.025 increments — 36 effective stops across 0.1–1.0 —
+              // so the user can dial in subtle differences a designer
+              // would catch (a 0.65→0.675 nudge changes a render's mood
+              // noticeably on flux-1.1-pro-ultra). FREE/BASIC stay on
+              // 0.05 (18 stops): the slider is gated `disabled` for
+              // them anyway, so step value only matters defensively.
+              step={strengthAllowed ? 0.025 : 0.05}
               minimumTrackTintColor="#E1C39B"
               maximumTrackTintColor="#353534"
               thumbTintColor={strengthAllowed ? "#FDDEB4" : "#998F84"}
@@ -577,62 +639,143 @@ export default function OptionsScreen() {
           </Pressable>
         </View>
 
-        {/* Color Palette */}
-        <View style={{ marginTop: 48 }}>
-          <Text
-            className="font-label text-on-surface-variant"
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              paddingHorizontal: 24,
-              marginBottom: 24,
+        {/* Color Palette — Strength-card sibling.
+            Re-housed inside the same panel chrome that wraps Transformation
+            (#1C1B1B / radius 12 / padding 24) so the two adjacent controls
+            read as one design language: header row (label + resolved value),
+            primary affordance row (swatch / slider), helper paragraph.
+            Tapping anywhere in the panel opens the palette picker sheet —
+            larger touch target than the previous narrow trigger button. */}
+        <View
+          style={{
+            marginTop: 48,
+            marginHorizontal: 24,
+          }}
+        >
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              setPaletteSheetOpen(true);
             }}
-          >
-            {t("studio.color_palette")}
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}
-          >
-            {PALETTE_COLORS.map((pal, idx) => {
-              const isSelected = colorPalette === pal.color;
-              return (
-                <Pressable
-                  key={idx}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setColorPalette(pal.color);
-                  }}
-                  style={({ pressed }) => ({
-                    transform: [{ scale: pressed ? 0.92 : 1 }],
-                  })}
-                >
-                  <LinearGradient
-                    colors={[pal.color, pal.gradientEnd]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 32,
-                      borderWidth: isSelected ? 2 : 0,
-                      borderColor: "#FDDEB4",
-                      // ring-offset effect
-                      ...(isSelected && {
-                        shadowColor: "#FDDEB4",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.6,
-                        shadowRadius: 6,
-                        elevation: 6,
-                      }),
-                    }}
-                  />
-                </Pressable>
-              );
+            style={({ pressed }) => ({
+              padding: 24,
+              borderRadius: 12,
+              backgroundColor: "#1C1B1B",
+              transform: [{ scale: pressed ? 0.995 : 1 }],
+              // Subtle gold halo when a palette is active — mirrors the
+              // selection idiom from the modal sheet rows without
+              // overshooting into a "hero card".
+              ...(selectedPaletteTheme && {
+                shadowColor: "#E1C39B",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.18,
+                shadowRadius: 6,
+                elevation: 3,
+              }),
             })}
-          </ScrollView>
+          >
+            {/* Header row — label left, resolved value right. Same shape
+                as the Transformation card's "STRENGTH … 70%" header. */}
+            <View
+              className="flex-row items-center justify-between"
+              style={{ marginBottom: 16 }}
+            >
+              <Text
+                className="font-label text-on-surface-variant"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("studio.color_palette")}
+              </Text>
+              <View
+                className="flex-row items-center"
+                style={{ gap: 6, maxWidth: "60%" }}
+              >
+                <Text
+                  numberOfLines={1}
+                  className="font-headline"
+                  style={{
+                    fontSize: 16,
+                    color: selectedPaletteTheme ? "#E0C29A" : "#998F84",
+                  }}
+                >
+                  {selectedPaletteTheme
+                    ? t(selectedPaletteTheme.labelKey)
+                    : t("studio.palette_none")}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={16}
+                  color={selectedPaletteTheme ? "#E0C29A" : "#998F84"}
+                />
+              </View>
+            </View>
+
+            {/* Full-width gradient swatch — visual analogue of the
+                Transformation slider track. Three-stop linear blend
+                (0/50/100) reads the chosen mood from a glance; the
+                dashed empty state mirrors how an unselected slider
+                track would feel: present but inert. */}
+            {selectedPaletteTheme ? (
+              <LinearGradient
+                colors={selectedPaletteTheme.colors as unknown as [string, string, string]}
+                locations={[0, 0.5, 1]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={{
+                  height: 36,
+                  width: "100%",
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "rgba(225,195,155,0.35)",
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  height: 36,
+                  width: "100%",
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "rgba(77,70,60,0.4)",
+                  borderStyle: "dashed",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="color-palette-outline" size={14} color="#998F84" />
+                <Text
+                  className="font-label"
+                  style={{ fontSize: 11, color: "#998F84", letterSpacing: 1.2 }}
+                >
+                  {t("studio.palette_placeholder")}
+                </Text>
+              </View>
+            )}
+
+            {/* Helper paragraph — same italic, same muted hue as the
+                Transformation helper. Tells the user what the choice
+                actually does so the empty state doesn't feel like a
+                missing setting. */}
+            <Text
+              className="font-label"
+              style={{
+                fontSize: 11,
+                letterSpacing: 0.8,
+                fontStyle: "italic",
+                lineHeight: 18,
+                color: "#998F84",
+                marginTop: 12,
+              }}
+            >
+              {t("studio.palette_helper")}
+            </Text>
+          </Pressable>
         </View>
 
         {/* Variants & Preserve Layout */}
@@ -1337,6 +1480,217 @@ export default function OptionsScreen() {
           }}
         />
       </BottomBar>
+
+      {/* ─── Palette Picker Sheet ─────────────────────────────────────
+          iOS pageSheet — same convention as the room-type / style
+          pickers. Renders the curated 8 themes as a vertical list with
+          larger swatches than the trigger row, plus a "None" option for
+          users who want the model to pick its own palette. */}
+      <Modal
+        visible={paletteSheetOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setPaletteSheetOpen(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "#131313" }}>
+          {/* Sheet header — X left, title centered */}
+          <View
+            style={{
+              height: 64,
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              borderBottomWidth: 1,
+              borderBottomColor: "rgba(77,70,60,0.15)",
+            }}
+          >
+            <Pressable
+              onPress={() => setPaletteSheetOpen(false)}
+              hitSlop={12}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: "rgba(255,255,255,0.08)",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1,
+              }}
+            >
+              <Ionicons name="close" size={18} color="#E5E2E1" />
+            </Pressable>
+            <Text
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                textAlign: "center",
+                fontSize: 22,
+                fontWeight: "700",
+                color: "#E5E2E1",
+                fontFamily: "NotoSerif",
+              }}
+            >
+              {t("studio.choose_palette")}
+            </Text>
+          </View>
+
+          {/*
+            Sheet rows are visual siblings of the trigger panel on the
+            studio screen — same `#1C1B1B` chrome, header (label + check),
+            full-width gradient swatch, and gold border on selection.
+            That way the moment a user taps a row in the sheet, the
+            trigger they came from updates with a swatch that's already
+            been "previewed" at the same proportions. Premium continuity.
+            "None" leads the list as an explicit escape hatch from a
+            stale selection. */}
+
+          {/* "None" / clear option */}
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              setColorPalette("");
+              setPaletteSheetOpen(false);
+            }}
+            style={({ pressed }) => ({
+              marginTop: 16,
+              marginHorizontal: 20,
+              padding: 18,
+              borderRadius: 14,
+              backgroundColor: "#1C1B1B",
+              borderWidth: colorPalette === "" ? 1.5 : 1,
+              borderColor:
+                colorPalette === ""
+                  ? "#E1C39B"
+                  : "rgba(77,70,60,0.22)",
+              transform: [{ scale: pressed ? 0.995 : 1 }],
+              ...(colorPalette === "" && {
+                shadowColor: "#E1C39B",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.22,
+                shadowRadius: 7,
+                elevation: 4,
+              }),
+            })}
+          >
+            <View
+              className="flex-row items-center justify-between"
+              style={{ marginBottom: 12 }}
+            >
+              <Text
+                className="font-headline"
+                style={{
+                  fontSize: 16,
+                  color: colorPalette === "" ? "#E0C29A" : "#D0C5B8",
+                }}
+              >
+                {t("studio.palette_none")}
+              </Text>
+              {colorPalette === "" ? (
+                <Ionicons name="checkmark-circle" size={20} color="#E0C29A" />
+              ) : null}
+            </View>
+            <View
+              style={{
+                height: 36,
+                width: "100%",
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: "rgba(77,70,60,0.4)",
+                borderStyle: "dashed",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 8,
+              }}
+            >
+              <Ionicons name="color-palette-outline" size={14} color="#998F84" />
+              <Text
+                className="font-label"
+                style={{ fontSize: 11, color: "#998F84", letterSpacing: 1.2 }}
+              >
+                {t("studio.palette_placeholder")}
+              </Text>
+            </View>
+          </Pressable>
+
+          <FlatList
+            data={PALETTE_THEMES}
+            keyExtractor={(theme) => theme.id}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: 60,
+              gap: 12,
+            }}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item: theme }) => {
+              const encoded = encodePalette(theme.colors);
+              const isSelected = colorPalette === encoded;
+              return (
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setColorPalette(encoded);
+                    setPaletteSheetOpen(false);
+                  }}
+                  style={({ pressed }) => ({
+                    padding: 18,
+                    borderRadius: 14,
+                    backgroundColor: "#1C1B1B",
+                    borderWidth: isSelected ? 1.5 : 1,
+                    borderColor: isSelected
+                      ? "#E1C39B"
+                      : "rgba(77,70,60,0.22)",
+                    transform: [{ scale: pressed ? 0.995 : 1 }],
+                    ...(isSelected && {
+                      shadowColor: "#E1C39B",
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.22,
+                      shadowRadius: 7,
+                      elevation: 4,
+                    }),
+                  })}
+                >
+                  <View
+                    className="flex-row items-center justify-between"
+                    style={{ marginBottom: 12 }}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      className="font-headline"
+                      style={{
+                        flex: 1,
+                        fontSize: 16,
+                        color: isSelected ? "#E0C29A" : "#D0C5B8",
+                        marginRight: 12,
+                      }}
+                    >
+                      {t(theme.labelKey)}
+                    </Text>
+                    {isSelected ? (
+                      <Ionicons name="checkmark-circle" size={20} color="#E0C29A" />
+                    ) : null}
+                  </View>
+                  <LinearGradient
+                    colors={theme.colors as unknown as [string, string, string]}
+                    locations={[0, 0.5, 1]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{
+                      height: 36,
+                      width: "100%",
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: "rgba(225,195,155,0.35)",
+                    }}
+                  />
+                </Pressable>
+              );
+            }}
+          />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

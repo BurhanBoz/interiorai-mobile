@@ -300,33 +300,37 @@ export default function UpscaleScreen() {
             <LogEntry error label={error} time="just now" />
           ) : (
             <View
-              className="flex-row items-center justify-between rounded-xl"
-              style={{ padding: 20, backgroundColor: "#1C1B1B" }}
+              className="flex-row items-center rounded-xl"
+              style={{ padding: 20, backgroundColor: "#1C1B1B", gap: 16 }}
             >
-              <View className="flex-row items-center" style={{ gap: 16 }}>
-                <Animated.View style={{ opacity: pulseAnim }}>
-                  <Animated.View style={spinStyle}>
-                    <Ionicons name="sync" size={20} color="#FEDFB5" />
-                  </Animated.View>
+              {/* Animated sync icon — the spinner here already conveys
+                  "in progress" so the small uppercase status badge that
+                  used to sit on the right was redundant noise next to
+                  the big "ULTRA HD UPSCALING IN PROGRESS" label. The
+                  removed badge restated the same state in a noisier
+                  voice (raw enum values like SUBMITTED/PROCESSING
+                  leaked the backend lifecycle to the user). */}
+              <Animated.View style={{ opacity: pulseAnim }}>
+                <Animated.View style={spinStyle}>
+                  <Ionicons name="sync" size={20} color="#FEDFB5" />
                 </Animated.View>
-                <Text
-                  className="font-label text-primary"
-                  style={{ fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase" }}
-                >
-                  {status === "COMPLETED"
-                    ? targetTier === "HD"
-                      ? t("upscale.hd_complete")
-                      : t("upscale.ultra_hd_complete")
-                    : targetTier === "HD"
-                    ? t("upscale.hd_in_progress")
-                    : t("upscale.ultra_hd_in_progress")}
-                </Text>
-              </View>
+              </Animated.View>
               <Text
-                className="font-label"
-                style={{ fontSize: 10, color: "rgba(209,197,184,0.5)" }}
+                className="font-label text-primary"
+                style={{
+                  flex: 1,
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
               >
-                {status ?? "Starting"}
+                {status === "COMPLETED"
+                  ? targetTier === "HD"
+                    ? t("upscale.hd_complete")
+                    : t("upscale.ultra_hd_complete")
+                  : targetTier === "HD"
+                  ? t("upscale.hd_in_progress")
+                  : t("upscale.ultra_hd_in_progress")}
               </Text>
             </View>
           )}
