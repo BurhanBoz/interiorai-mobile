@@ -78,6 +78,57 @@ export default function LoginScreen() {
       await login(email.trim(), password);
     } catch (error: any) {
       const status = error?.response?.status;
+      const errorCode = error?.response?.data?.errorCode;
+
+      // Backend tells us the account is soft-deleted but still inside the
+      // 14-day grace window — offer the restore flow. We pass the typed
+      // email forward so the user doesn't have to re-enter it.
+      if (errorCode === "ACCOUNT_DELETED") {
+        Alert.alert(
+          t("auth.account_deleted_title", { defaultValue: "Account scheduled for deletion" }),
+          t("auth.account_deleted_description", {
+            defaultValue:
+              "This account is queued for deletion. You can restore it by signing in again within the 14-day grace window.",
+          }),
+          [
+            { text: t("common.cancel", { defaultValue: "Cancel" }), style: "cancel" },
+            {
+              text: t("auth.restore_account_cta", { defaultValue: "Restore" }),
+              onPress: () =>
+                router.push({
+                  pathname: "/(auth)/restore-account",
+                  params: { email: email.trim() },
+                }),
+            },
+          ],
+        );
+        return;
+      }
+
+      // Lockout due to too many failed attempts.
+      if (errorCode === "ACCOUNT_LOCKED") {
+        Alert.alert(
+          t("auth.account_locked_title", { defaultValue: "Account temporarily locked" }),
+          t("auth.account_locked_description", {
+            defaultValue:
+              "Too many failed sign-in attempts. Please try again in 15 minutes or reset your password.",
+          }),
+        );
+        return;
+      }
+
+      // User signed up with Apple/Google — point them at the right button.
+      if (errorCode === "SOCIAL_PROVIDER_MISMATCH") {
+        Alert.alert(
+          t("auth.social_provider_mismatch_title", { defaultValue: "Wrong sign-in method" }),
+          error?.response?.data?.message ??
+            t("auth.social_provider_mismatch_description", {
+              defaultValue: "This account was created with a social sign-in. Use Apple or Google to continue.",
+            }),
+        );
+        return;
+      }
+
       const msg =
         status === 429
           ? t("errors.rate_limit")

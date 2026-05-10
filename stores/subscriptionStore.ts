@@ -31,15 +31,31 @@ interface SubscriptionState {
     isFeatureEnabled: (featureCode: string) => boolean;
     hasPermission: (key: PlanPermissionKey) => boolean;
     getCreditCost: (featureCode: string, qualityTier: string, numOutputs: number) => number;
+    /**
+     * Wipe in-memory subscription state. Called by {@code authStore.logout}
+     * so the next user signing in on the same device doesn't see the previous
+     * user's plan + permissions in the UI before the API roundtrip lands.
+     */
+    reset: () => void;
 }
 
-export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
+// NOTE: not `as const` — Zustand's setState wants mutable arrays/objects to
+// match SubscriptionState's mutable types. Using a getter-style factory keeps
+// each reset call isolated (no shared array reference across resets).
+const initialSubscriptionState = (): Pick<
+    SubscriptionState,
+    "subscription" | "plans" | "features" | "creditRules" | "permissions" | "creditPackBonusPct"
+> => ({
     subscription: null,
     plans: null,
     features: [],
     creditRules: [],
     permissions: {},
     creditPackBonusPct: 0,
+});
+
+export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
+    ...initialSubscriptionState(),
 
     fetchSubscription: async () => {
         const subscription = await plansService.getActiveSubscription();
@@ -86,4 +102,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         );
         return rule?.creditCost ?? 0;
     },
+
+    reset: () => set(initialSubscriptionState()),
 }));

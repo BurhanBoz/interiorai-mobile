@@ -35,6 +35,21 @@ export async function refreshToken(): Promise<AuthResponse> {
 }
 
 /**
+ * Restore a soft-deleted account within the 14-day grace window (V12 / F1).
+ * Backend looks up {@code pending_deletion} by sha256(email), verifies the
+ * snapshotted password hash (with V11 lockout protection), then re-activates
+ * the user record and auto-issues a fresh login token.
+ *
+ * <p>The wallet stays zeroed — restored users start over on the credit
+ * front. Pack credits purchased before deletion are NOT refunded
+ * automatically; users with pack-credit refund claims should email support.
+ */
+export async function restoreAccount(email: string, password: string): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/restore-account", { email, password });
+    return data;
+}
+
+/**
  * Sign in with Apple — the mobile app passes the signed `identityToken` it
  * received from expo-apple-authentication. The backend verifies it against
  * Apple's JWKS and either logs the user in or registers a new account.

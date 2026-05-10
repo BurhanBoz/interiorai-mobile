@@ -4,6 +4,10 @@ import { jwtDecode } from "jwt-decode";
 import type { UserResponse, AuthResponse } from "@/types/api";
 import * as authService from "@/services/auth";
 import * as userService from "@/services/user";
+import { useCreditStore } from "@/stores/creditStore";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStudioStore } from "@/stores/studioStore";
+import { useFavoritesStore } from "@/stores/favoritesStore";
 
 interface AuthState {
     token: string | null;
@@ -95,6 +99,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     logout: async () => {
         await clearAuth();
+        // Wipe other in-memory stores so the next user signing in on the
+        // same device doesn't briefly see the previous user's credit balance,
+        // active plan, draft studio job, or favorites list. Each store's reset
+        // is synchronous + side-effect-free; we run them all even if one
+        // throws (defensive — favoritesStore is the most likely to evolve).
+        try { useCreditStore.getState().reset(); } catch (e) { console.warn("creditStore reset failed", e); }
+        try { useSubscriptionStore.getState().reset(); } catch (e) { console.warn("subscriptionStore reset failed", e); }
+        try { useStudioStore.getState().reset(); } catch (e) { console.warn("studioStore reset failed", e); }
+        try { useFavoritesStore.getState().clear(); } catch (e) { console.warn("favoritesStore clear failed", e); }
         set({
             token: null,
             user: null,
