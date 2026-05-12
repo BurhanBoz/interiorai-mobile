@@ -23,3 +23,40 @@ export async function activateDummySubscription(planCode: string): Promise<Subsc
     );
     return data;
 }
+
+/**
+ * Verify an Apple IAP subscription receipt with the backend and activate
+ * the subscription. Called by the mobile app after a successful
+ * RevenueCat/StoreKit purchase.
+ *
+ * <p>Backend endpoint: {@code POST /api/iap/verify-receipt}. Backend:
+ * <ol>
+ *   <li>Looks up the plan by {@code productId} (V19/V20 migration mappings).</li>
+ *   <li>Calls Apple's verifyReceipt API to validate the receipt.</li>
+ *   <li>Deactivates the current sub (if any), creates a new one.</li>
+ *   <li>Applies the new plan's monthly credit allocation (preserves unused
+ *       credits from previous plan per founder spec 2026-05-06).</li>
+ * </ol>
+ *
+ * <p>Apple S2S Notifications (Version 2) also reach the backend independently
+ * via the webhook endpoint. The {@code idempotencyKey} on SubscriptionEntity
+ * ensures the same transaction doesn't activate twice if both paths fire.
+ */
+export interface VerifyReceiptRequest {
+    /** Apple product ID (e.g. com.roomframeai.subscription.basic). */
+    productId: string;
+    /** Apple original transaction ID (from StoreKit 2). */
+    transactionId: string;
+    /** Base64 receipt data — may be empty when RC handles verification. */
+    receiptData: string;
+}
+
+export async function verifySubscriptionReceipt(
+    request: VerifyReceiptRequest,
+): Promise<SubscriptionResponse> {
+    const { data } = await api.post<SubscriptionResponse>(
+        "/api/iap/verify-receipt",
+        request,
+    );
+    return data;
+}

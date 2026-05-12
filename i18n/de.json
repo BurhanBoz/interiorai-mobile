@@ -345,7 +345,12 @@
         "delete_must_type": "Bitte geben Sie genau \"LÖSCHEN\" ein, um zu bestätigen.",
         "delete_failed": "Konto konnte nicht gelöscht werden.",
         "upgrade": "Jetzt upgraden",
-        "version": "Version {{version}}"
+        "version": "Version {{version}}",
+        "max_trial": "MAX-TESTPHASE",
+        "trial_ends_today": "Testphase endet heute",
+        "trial_ends_tomorrow": "Testphase endet morgen",
+        "trial_ends_in_days": "Testphase endet in {{days}} Tagen",
+        "free_drip_caption": "1 Credit/Tag + 3 jeden Montag"
     },
     "plans": {
         "title": "Tarif wählen",

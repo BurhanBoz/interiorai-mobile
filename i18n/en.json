@@ -345,7 +345,12 @@
         "delete_must_type": "Please type exactly \"DELETE\" to confirm.",
         "delete_failed": "Failed to delete account.",
         "upgrade": "Upgrade Now",
-        "version": "Version {{version}}"
+        "version": "Version {{version}}",
+        "max_trial": "MAX TRIAL",
+        "trial_ends_today": "Trial ends today",
+        "trial_ends_tomorrow": "Trial ends tomorrow",
+        "trial_ends_in_days": "Trial ends in {{days}} days",
+        "free_drip_caption": "1 credit/day + 3 every Monday"
     },
     "plans": {
         "title": "Choose Your Plan",

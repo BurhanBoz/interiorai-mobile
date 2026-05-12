@@ -26,6 +26,7 @@ import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
 import { useDrawer } from "@/components/layout/DrawerProvider";
+import { useEffectiveWatermark } from "@/hooks/useEntitlement";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -94,10 +95,10 @@ export default function GalleryScreen() {
   const favoriteIds = useFavoritesStore(s => s.ids);
   const toggleFavorite = useFavoritesStore(s => s.toggle);
   const isFavorite = useFavoritesStore(s => s.isFavorite);
-  // Free plan users see a tiny corner mark on each gallery tile; Basic+
-  // plans don't (watermark=false in plan row).
-  const planCode = useCreditStore(s => s.planCode);
-  const showWatermark = !planCode || planCode === "FREE";
+  // Free plan tiles show a corner mark; paid plans AND welcome bonus
+  // trial users don't. useEffectiveWatermark applies the same logic
+  // the result screen + backend use — single source of truth.
+  const showWatermark = useEffectiveWatermark();
 
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(0);

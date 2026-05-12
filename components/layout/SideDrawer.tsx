@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { TierBadge } from "@/components/ui/TierBadge";
@@ -193,8 +194,15 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const subscription = useSubscriptionStore((s) => s.subscription);
+  const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
 
-  const planCode = subscription?.planCode ?? "FREE";
+  // Effective tier — welcome bonus grants 7-day MAX-tier access on top of
+  // the FREE plan record. The drawer should reflect what the user FEELS
+  // like (MAX), not what the subscription row says (FREE). Source of
+  // truth: creditStore.welcomeBonusActive (server-evaluated).
+  const rawPlanCode = subscription?.planCode ?? "FREE";
+  const planCode = welcomeBonusActive ? "MAX" : rawPlanCode;
+  const isOnTrial = welcomeBonusActive === true;
   const displayName = user?.displayName || t("drawer.architect");
 
   useEffect(() => {
@@ -356,7 +364,13 @@ export function SideDrawer({ visible, onClose }: SideDrawerProps) {
               <TierBadge
                 tier={planCode}
                 size="xs"
-                label={planCode !== "FREE" ? t("drawer.premium_member") : undefined}
+                label={
+                  isOnTrial
+                    ? t("profile.max_trial", { defaultValue: "MAX TRIAL" })
+                    : planCode !== "FREE"
+                      ? t("drawer.premium_member")
+                      : undefined
+                }
               />
             </View>
           </View>

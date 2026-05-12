@@ -19,7 +19,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useEntitlement, usePlanPermission } from "@/hooks/useEntitlement";
+import {
+  useEntitlement,
+  usePlanPermission,
+  useEffectivePlanCode,
+  useEffectiveCreditRules,
+  useEffectiveFeatures,
+} from "@/hooks/useEntitlement";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { usePromptSuggestions } from "@/hooks/usePromptSuggestions";
 import { resolveFeatureCode } from "@/utils/featureCode";
@@ -176,10 +182,13 @@ export default function OptionsScreen() {
   const { allowed: seedControlEnabled } = usePlanPermission("allow_seed");
   const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
   const { cost } = useCreditCost();
-  const creditRules = useSubscriptionStore(s => s.creditRules);
-  const features = useSubscriptionStore(s => s.features);
+  // EFFECTIVE values — welcome bonus trial users get MAX plan's rules + features
+  // + plan code. Without this override, trial users see STYLE_TRANSFER + INPAINT
+  // + HD-tier as locked even though the backend would happily accept the job.
+  const creditRules = useEffectiveCreditRules();
+  const features = useEffectiveFeatures();
   const subscription = useSubscriptionStore(s => s.subscription);
-  const planCode = subscription?.planCode ?? "FREE";
+  const planCode = useEffectivePlanCode();
 
   // Quality tier availability: each (mode, tier) pair maps to a distinct
   // feature_code (V25 rename: REDESIGN HD/ULTRA_HD → "HD_REDESIGN").

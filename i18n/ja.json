@@ -345,7 +345,12 @@
         "delete_must_type": "確認するために「削除」と正確に入力してください。",
         "delete_failed": "アカウントの削除に失敗しました。",
         "upgrade": "今すぐアップグレード",
-        "version": "バージョン {{version}}"
+        "version": "バージョン {{version}}",
+        "max_trial": "MAX トライアル",
+        "trial_ends_today": "トライアル本日終了",
+        "trial_ends_tomorrow": "トライアル明日終了",
+        "trial_ends_in_days": "トライアル{{days}}日後終了",
+        "free_drip_caption": "1日1クレジット+月曜+3"
     },
     "plans": {
         "title": "プランを選択",

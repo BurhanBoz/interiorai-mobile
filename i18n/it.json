@@ -345,7 +345,12 @@
         "delete_must_type": "Digita esattamente \"ELIMINA\" per confermare.",
         "delete_failed": "Impossibile eliminare l'account.",
         "upgrade": "Aggiorna Ora",
-        "version": "Versione {{version}}"
+        "version": "Versione {{version}}",
+        "max_trial": "PROVA MAX",
+        "trial_ends_today": "La prova termina oggi",
+        "trial_ends_tomorrow": "La prova termina domani",
+        "trial_ends_in_days": "La prova termina tra {{days}} giorni",
+        "free_drip_caption": "1 credito/giorno + 3 ogni lunedì"
     },
     "plans": {
         "title": "Scegli il Tuo Piano",

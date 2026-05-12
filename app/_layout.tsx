@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { initializeIAP } from "@/services/iap";
 import { DrawerProvider } from "@/components/layout/DrawerProvider";
 import { AppSplash } from "@/components/ui/AppSplash";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -54,7 +55,7 @@ export default function RootLayout() {
     "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"),
   });
 
-  const { isAuthenticated, isLoading, hydrate } = useAuthStore();
+  const { isAuthenticated, isLoading, hydrate, user } = useAuthStore();
   const storedLanguage = useSettingsStore((s) => s.language);
   const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
@@ -86,6 +87,22 @@ export default function RootLayout() {
       .catch(() => {});
     fetchBalance().catch(() => {});
   }, [isAuthenticated, isLoading]);
+
+  // Initialize RevenueCat SDK once user identity is known. Linking RC's
+  // customer record to our backend user UUID ensures purchases attribute
+  // to the right wallet and that entitlements survive cross-device login.
+  //
+  // Dummy mode (no RC API key) is a no-op — initializeIAP returns early
+  // and the rest of the app continues to use the backend's dummy
+  // activation endpoint.
+  useEffect(() => {
+    if (isLoading) return;
+    // Pass null for anonymous mode; RC creates an anonymous customer that
+    // gets aliased to the real userId on the next initializeIAP call.
+    initializeIAP(user?.id ?? null).catch((e) => {
+      console.warn("[ROOT] initializeIAP failed:", e);
+    });
+  }, [user?.id, isLoading]);
 
   // Sync i18next with the persisted language store on mount and on change.
   // The persist middleware rehydrates async after i18n.init runs, so

@@ -44,7 +44,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.roomframeai.mobile"
+      "package": "com.roomframeai.mobile",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -57,6 +60,12 @@
       "expo-secure-store",
       "expo-image-picker",
       "expo-apple-authentication"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2dc9b11d-0498-4241-9fb6-d49ae99bfbe9"
+      }
+    }
   }
 }

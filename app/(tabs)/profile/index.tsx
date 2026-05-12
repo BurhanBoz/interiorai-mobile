@@ -234,6 +234,8 @@ export default function ProfileScreen() {
   const balance = useCreditStore((s) => s.balance);
   const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
   const planCode = useCreditStore((s) => s.planCode);
+  const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
+  const welcomeBonusExpiresAt = useCreditStore((s) => s.welcomeBonusExpiresAt);
   const subscription = useSubscriptionStore((s) => s.subscription);
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
   const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
@@ -250,11 +252,45 @@ export default function ProfileScreen() {
 
   const displayName = user?.displayName ?? null;
   const email = user?.email || "";
-  const isFree = !planCode || planCode === "FREE";
-  const planLabel = subscription?.planName ?? (isFree ? t("profile.free") : planCode);
 
-  // Renewal copy — "renews in 30 days" / "renews tomorrow" / "renews today"
+  // Effective tier — what the user FEELS like, not what the backend record
+  // says. Welcome bonus grants 7-day MAX-tier access on top of the FREE plan,
+  // so the badge + label should read "MAX" during the trial window even
+  // though `planCode === "FREE"` server-side.
+  const isOnTrial = welcomeBonusActive === true;
+  const effectiveTier: "FREE" | "BASIC" | "PRO" | "MAX" = isOnTrial
+    ? "MAX"
+    : (planCode === "BASIC" || planCode === "PRO" || planCode === "MAX")
+      ? planCode
+      : "FREE";
+  const isFree = effectiveTier === "FREE";
+  const planLabel = isOnTrial
+    ? t("profile.max_trial", { defaultValue: "MAX TRIAL" })
+    : (subscription?.planName ?? (isFree ? t("profile.free") : planCode));
+
+  // Trial countdown — "7d left", "1d left", "ends today". Replaces the
+  // misleading "renews in 30 days" copy during the welcome bonus window
+  // (FREE plan doesn't renew, drip resumes after trial expires).
+  const trialDaysLeft = useMemo(() => {
+    if (!isOnTrial || !welcomeBonusExpiresAt) return null;
+    const end = new Date(welcomeBonusExpiresAt);
+    const now = new Date();
+    const diffMs = end.getTime() - now.getTime();
+    if (diffMs <= 0) return 0;
+    return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }, [isOnTrial, welcomeBonusExpiresAt]);
+
+  // Renewal copy — paid plans only. FREE uses daily drip (no renewal cycle).
+  // Trial uses the dedicated trial countdown above.
   const renewalText = useMemo(() => {
+    if (isOnTrial) {
+      if (trialDaysLeft == null) return null;
+      if (trialDaysLeft === 0) return t("profile.trial_ends_today", { defaultValue: "Trial ends today" });
+      if (trialDaysLeft === 1) return t("profile.trial_ends_tomorrow", { defaultValue: "Trial ends tomorrow" });
+      return t("profile.trial_ends_in_days", { days: trialDaysLeft, defaultValue: `Trial ends in ${trialDaysLeft} days` });
+    }
+    // Hide renewal copy for FREE — FREE replenishes via daily drip, no monthly renewal.
+    if (isFree) return null;
     if (!subscription?.currentPeriodEnd) return null;
     const end = new Date(subscription.currentPeriodEnd);
     const now = new Date();
@@ -263,10 +299,14 @@ export default function ProfileScreen() {
     if (diffDays === 0) return t("profile.renews_today");
     if (diffDays === 1) return t("profile.renews_tomorrow");
     return t("profile.renews_in_days", { days: diffDays });
-  }, [subscription?.currentPeriodEnd, t]);
+  }, [isOnTrial, trialDaysLeft, isFree, subscription?.currentPeriodEnd, t]);
 
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
-  const hasLimit = monthlyLimit > 0;
+  // The "X / Y" divisor only makes sense for paid plans where Y is the
+  // monthly allocation. FREE uses daily drip (cap=7/10) — showing "X / 10"
+  // implies a monthly ceiling that doesn't match the actual mechanic, so we
+  // suppress the divisor for FREE + trial. Paid users still see "150 / 150".
+  const showCreditDivisor = !isFree && !isOnTrial && monthlyLimit > 0;
 
   const handleDeleteAccount = () => {
     router.push("/settings/delete-account");
@@ -339,7 +379,7 @@ export default function ProfileScreen() {
               </Text>
             ) : null}
             <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <TierBadge tier={planCode ?? "FREE"} size="sm" label={planLabel?.toUpperCase()} />
+              <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
             </View>
           </View>
         </View>
@@ -375,7 +415,7 @@ export default function ProfileScreen() {
               >
                 {t("profile.available_balance") ?? "Available Balance"}
               </Text>
-              <CreditRing value={balance} max={hasLimit ? monthlyLimit : null} size={44} />
+              <CreditRing value={balance} max={showCreditDivisor ? monthlyLimit : null} size={44} />
             </View>
 
             <Text
@@ -389,7 +429,7 @@ export default function ProfileScreen() {
               }}
             >
               {balance}
-              {hasLimit ? (
+              {showCreditDivisor ? (
                 <Text
                   style={{
                     fontFamily: "Inter",
@@ -411,11 +451,17 @@ export default function ProfileScreen() {
                 marginTop: 6,
               }}
             >
-              {hasLimit
-                ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
-                : t("plans.credits_never_expire", {
-                    defaultValue: "Credits never expire",
-                  })}
+              {isOnTrial
+                ? renewalText /* "Trial ends in 7 days" */
+                : isFree
+                  ? t("profile.free_drip_caption", {
+                      defaultValue: "1 credit/day + 3 every Monday",
+                    })
+                  : showCreditDivisor
+                    ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
+                    : t("plans.credits_never_expire", {
+                        defaultValue: "Credits never expire",
+                      })}
             </Text>
 
             {/* Two gold CTAs, flex:1 each — no fullWidth prop because the

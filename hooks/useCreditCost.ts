@@ -1,5 +1,5 @@
-import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStudioStore } from "@/stores/studioStore";
+import { useEffectiveCreditRules } from "@/hooks/useEntitlement";
 import { resolveFeatureCode } from "@/utils/featureCode";
 
 /**
@@ -8,13 +8,23 @@ import { resolveFeatureCode } from "@/utils/featureCode";
  * the V25 schema split rationale). A previous version hardcoded the mode
  * mapping and returned the wrong cost for HD jobs because the credit rule
  * lives under a different feature_code than the one being queried.
+ *
+ * <p><b>Welcome bonus override:</b> uses {@link useEffectiveCreditRules}
+ * so during the 7-day trial the cost is calculated against MAX plan's
+ * {@code plan_credit_rules}, matching what the backend actually charges.
+ * Without this, trial users would see FREE plan's pricing (1cr/render)
+ * while backend bills against the MAX tier rule (3-4cr).
  */
 export function useCreditCost() {
-    const getCreditCost = useSubscriptionStore((s) => s.getCreditCost);
+    const rules = useEffectiveCreditRules();
     const { mode, qualityTier, numOutputs } = useStudioStore();
 
     const featureCode = resolveFeatureCode(mode, qualityTier);
-    const cost = getCreditCost(featureCode, qualityTier, numOutputs);
-
-    return { cost, featureCode };
+    const rule = rules.find(
+        (r) =>
+            r.featureCode === featureCode &&
+            r.qualityTier === qualityTier &&
+            r.numOutputs === numOutputs,
+    );
+    return { cost: rule?.creditCost ?? 0, featureCode };
 }

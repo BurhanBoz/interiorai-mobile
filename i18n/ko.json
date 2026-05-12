@@ -345,7 +345,12 @@
         "delete_must_type": "확인하려면 정확히 '삭제'를 입력해 주세요.",
         "delete_failed": "계정 삭제에 실패했습니다.",
         "upgrade": "지금 업그레이드",
-        "version": "버전 {{version}}"
+        "version": "버전 {{version}}",
+        "max_trial": "MAX 체험",
+        "trial_ends_today": "체험 오늘 종료",
+        "trial_ends_tomorrow": "체험 내일 종료",
+        "trial_ends_in_days": "체험 {{days}}일 후 종료",
+        "free_drip_caption": "하루 1 크레딧 + 월요일 +3"
     },
     "plans": {
         "title": "플랜 선택",

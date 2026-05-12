@@ -345,7 +345,12 @@
         "delete_must_type": "الرجاء كتابة «حذف» بالضبط للتأكيد.",
         "delete_failed": "فشل حذف الحساب.",
         "upgrade": "ترقية الآن",
-        "version": "الإصدار {{version}}"
+        "version": "الإصدار {{version}}",
+        "max_trial": "تجربة MAX",
+        "trial_ends_today": "تنتهي التجربة اليوم",
+        "trial_ends_tomorrow": "تنتهي التجربة غدًا",
+        "trial_ends_in_days": "تنتهي التجربة بعد {{days}} أيام",
+        "free_drip_caption": "رصيد واحد/يوم + 3 كل اثنين"
     },
     "plans": {
         "title": "اختر خطتك",

@@ -27,7 +27,9 @@ import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
+import { useEntitlement, useEffectiveWatermark } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
+import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import { VariationSheet } from "@/components/result/VariationSheet";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
@@ -88,7 +90,11 @@ export default function ResultDetailScreen() {
   // least one ULTRA_HD_UPSCALE credit rule. Free users don't — hiding it
   // avoids confusing 403 responses after they tap.
   const creditRules = useSubscriptionStore(s => s.creditRules);
-  const isFeatureEnabled = useSubscriptionStore(s => s.isFeatureEnabled);
+  // Welcome-bonus-aware feature gating. useEntitlement returns
+  // {enabled: true} during the 7-day MAX trial so trial users can use
+  // ULTRA_HD_UPSCALE just like a MAX subscriber. Backend honours the same
+  // override in ModelRoutingServiceImpl + JobServiceImpl.validateEntitlement.
+  const { enabled: upscaleFeatureEnabled } = useEntitlement("ULTRA_HD_UPSCALE");
   const resetStudio = useStudioStore(s => s.reset);
   // An "already upscaled" job is one where the feature_code itself is the
   // upscale chain (jobType="UPSCALE" on the backend → featureCode
@@ -103,13 +109,13 @@ export default function ResultDetailScreen() {
   const isAlreadyUpscaled = job?.featureCode === "ULTRA_HD_UPSCALE";
   const canUpscale =
     !isAlreadyUpscaled &&
-    isFeatureEnabled("ULTRA_HD_UPSCALE") &&
+    upscaleFeatureEnabled &&
     creditRules.some(r => r.featureCode === "ULTRA_HD_UPSCALE");
 
-  // Free plan gets a small corner watermark over the image. Basic+ plans
-  // have `watermark=false` in the plan row → no overlay rendered.
-  const planCode = useCreditStore(s => s.planCode);
-  const showWatermark = !planCode || planCode === "FREE";
+  // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
+  // bonus trial users do not. useEffectiveWatermark mirrors the backend's
+  // WatermarkServiceImpl.applyWatermarkIfNeeded welcome-bonus bypass.
+  const showWatermark = useEffectiveWatermark();
   const flatListRef = useRef<FlatList>(null);
   const authHeaders = useAuthHeaders();
 
@@ -962,7 +968,11 @@ export default function ResultDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Fullscreen image viewer — tap anywhere to close */}
+      {/* Fullscreen image viewer with pinch-to-zoom + pan + double-tap.
+          The ZoomableImage absorbs all gestures so a single tap can't
+          accidentally dismiss the modal while the user is mid-zoom. The
+          close button stays absolute-positioned and tappable above the
+          gesture surface. To dismiss without zooming, tap the X. */}
       <Modal
         visible={fullscreenUrl !== null}
         transparent={false}
@@ -971,8 +981,7 @@ export default function ResultDetailScreen() {
         statusBarTranslucent
       >
         <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <Pressable
-          onPress={() => setFullscreenUrl(null)}
+        <View
           style={{
             flex: 1,
             backgroundColor: "#000",
@@ -981,31 +990,30 @@ export default function ResultDetailScreen() {
           }}
         >
           {fullscreenUrl ? (
-            <Image
-              // fullscreenUrl comes from getOutputImageUrl → pre-signed S3.
-              // No auth header (supplying one → S3 403, see getOutputImageUrl).
-              source={{ uri: fullscreenUrl }}
+            <ZoomableImage
+              uri={fullscreenUrl}
               style={{ width: "100%", height: "100%" }}
-              contentFit="contain"
             />
           ) : null}
           <Pressable
             onPress={() => setFullscreenUrl(null)}
+            hitSlop={12}
             style={{
               position: "absolute",
               top: 48,
               right: 20,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(0,0,0,0.5)",
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: "rgba(0,0,0,0.55)",
               justifyContent: "center",
               alignItems: "center",
+              zIndex: 10,
             }}
           >
-            <Ionicons name="close" size={24} color="#fff" />
+            <Ionicons name="close" size={26} color="#fff" />
           </Pressable>
-        </Pressable>
+        </View>
       </Modal>
 
       {/* V20 / Pricing Strategy V2 — Variation picker. Lives at the

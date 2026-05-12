@@ -17,6 +17,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditCost } from "@/hooks/useCreditCost";
+import { usePlanPermission } from "@/hooks/useEntitlement";
 import { createJob } from "@/services/jobs";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
 import { useTranslation } from "react-i18next";
@@ -68,8 +69,11 @@ export default function ReviewScreen() {
   } = useStudioStore();
   const balance = useCreditStore(s => s.balance);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
-  const hasPermission = useSubscriptionStore(s => s.hasPermission);
-  const canUseQualityMode = hasPermission("allow_quality_mode");
+  // Welcome-bonus-aware permission check. usePlanPermission returns
+  // {allowed: true} during the 7-day MAX trial regardless of the underlying
+  // FREE plan's permission map, mirroring the backend's
+  // PlanEntitlementServiceImpl welcome-bonus bypass.
+  const { allowed: canUseQualityMode } = usePlanPermission("allow_quality_mode");
   const { cost, featureCode } = useCreditCost();
   const [isSubmitting, setIsSubmitting] = useState(false);
 

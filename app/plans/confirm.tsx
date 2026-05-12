@@ -9,7 +9,7 @@ import type { TFunction } from "i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { isDummyMode } from "@/config/revenuecat";
-import * as plansService from "@/services/plans";
+import * as iap from "@/services/iap";
 import type { PlanResponse } from "@/types/api";
 import { SubscriptionDisclosure } from "@/components/ui/SubscriptionDisclosure";
 
@@ -100,13 +100,18 @@ export default function PlanConfirmScreen() {
         if (!plan) return;
         setSubmitting(true);
         try {
-            if (isDummyMode) {
-                await plansService.activateDummySubscription(plan.code);
-            } else {
-                throw new Error(t("plans.confirm_rc_not_wired"));
-            }
+            // iap.purchaseSubscription handles both dummy mode and real RC
+            // flow under the hood — caller doesn't need to branch on mode.
+            // In dummy mode: backend's activate-dummy endpoint.
+            // In RC mode: Apple StoreKit payment sheet → backend verify-receipt.
+            await iap.purchaseSubscription(plan.code);
+
+            // Refresh client state — plans list, active sub, credit balance.
+            // Backend's verifyAndActivate already applied the new plan's
+            // monthly credit allocation server-side; we just need to pull.
             await fetchPlans();
             await Promise.all([fetchSubscription(), fetchBalance()]);
+
             Alert.alert(
                 t("plans.confirm_activated_title"),
                 t("plans.confirm_activated_description", {
@@ -116,6 +121,11 @@ export default function PlanConfirmScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
+            // User tapped Cancel in the Apple payment sheet — quiet dismiss,
+            // no error alert needed (Apple already showed the cancel UI).
+            if (iap.isUserCancelled(e)) {
+                return;
+            }
             const status = (e as any)?.response?.status;
             const message =
                 status >= 500

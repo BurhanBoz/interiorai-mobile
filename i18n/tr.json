@@ -345,7 +345,12 @@
         "delete_must_type": "Onaylamak için tam olarak \"DELETE\" yazmalısın.",
         "delete_failed": "Hesap silinemedi.",
         "upgrade": "Yükselt",
-        "version": "Sürüm {{version}}"
+        "version": "Sürüm {{version}}",
+        "max_trial": "MAX DENEME",
+        "trial_ends_today": "Deneme bugün bitiyor",
+        "trial_ends_tomorrow": "Deneme yarın bitiyor",
+        "trial_ends_in_days": "Deneme {{days}} gün içinde bitiyor",
+        "free_drip_caption": "Günde 1 kredi + Pazartesi 3 bonus"
     },
     "plans": {
         "title": "Planını Seç",

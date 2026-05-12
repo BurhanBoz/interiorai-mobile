@@ -8,6 +8,7 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStudioStore } from "@/stores/studioStore";
 import { useFavoritesStore } from "@/stores/favoritesStore";
+import { logoutIAP } from "@/services/iap";
 
 interface AuthState {
     token: string | null;
@@ -108,6 +109,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         try { useSubscriptionStore.getState().reset(); } catch (e) { console.warn("subscriptionStore reset failed", e); }
         try { useStudioStore.getState().reset(); } catch (e) { console.warn("studioStore reset failed", e); }
         try { useFavoritesStore.getState().clear(); } catch (e) { console.warn("favoritesStore clear failed", e); }
+        // RevenueCat logout — switches RC back to anonymous customer so
+        // the next user signing in on this device doesn't inherit the
+        // previous user's entitlements. No-op in dummy mode.
+        try { await logoutIAP(); } catch (e) { console.warn("logoutIAP failed", e); }
         set({
             token: null,
             user: null,
