@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Alert, Linking } from "react-native";
+import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { uploadImage } from "@/services/files";
@@ -11,9 +13,77 @@ const MAX_EDGE_PX = 2048;
 const JPEG_QUALITY = 0.85;
 
 export function useImagePicker() {
+    const { t } = useTranslation();
     const [isUploading, setIsUploading] = useState(false);
 
+    /**
+     * Ensure the OS permission for the chosen source is granted BEFORE
+     * launching the picker.
+     *
+     * <p>expo-image-picker does NOT auto-prompt for the camera on iOS —
+     * calling {@link ImagePicker.launchCameraAsync} without an explicit
+     * grant throws "Missing camera or camera roll permission". We request
+     * explicitly so the first tap shows the native prompt; on a hard
+     * denial (OS will not ask again) we deep-link the user into Settings.
+     *
+     * <p>States handled:
+     * <ul>
+     *   <li><b>granted</b> → proceed.</li>
+     *   <li><b>undetermined / canAskAgain</b> → fire the native prompt;
+     *       if the user declines this moment, stay silent (no nag modal).</li>
+     *   <li><b>denied + !canAskAgain</b> → in-app Alert with an
+     *       "Open Settings" deep link (only path back to a grant on iOS).</li>
+     * </ul>
+     *
+     * @returns true if the picker may proceed, false if it must abort.
+     */
+    const ensurePermission = async (
+        source: "camera" | "gallery",
+    ): Promise<boolean> => {
+        const isCamera = source === "camera";
+
+        const current = isCamera
+            ? await ImagePicker.getCameraPermissionsAsync()
+            : await ImagePicker.getMediaLibraryPermissionsAsync();
+
+        if (current.granted) return true;
+
+        if (
+            current.status === ImagePicker.PermissionStatus.UNDETERMINED ||
+            current.canAskAgain
+        ) {
+            const requested = isCamera
+                ? await ImagePicker.requestCameraPermissionsAsync()
+                : await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (requested.granted) return true;
+            // User just tapped "Don't Allow" — that's an explicit choice
+            // made this instant; don't pile an extra modal on top of it.
+            if (requested.canAskAgain) return false;
+        }
+
+        // Hard denial: iOS won't surface the system prompt again, so the
+        // only route back to a grant is the app's Settings page.
+        Alert.alert(
+            isCamera
+                ? t("permissions.camera_title")
+                : t("permissions.library_title"),
+            isCamera
+                ? t("permissions.camera_body")
+                : t("permissions.library_body"),
+            [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                    text: t("permissions.open_settings"),
+                    onPress: () => Linking.openSettings(),
+                },
+            ],
+        );
+        return false;
+    };
+
     const pickImage = async (source: "camera" | "gallery" = "gallery") => {
+        if (!(await ensurePermission(source))) return null;
+
         const options: ImagePicker.ImagePickerOptions = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,

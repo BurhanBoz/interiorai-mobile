@@ -350,7 +350,11 @@
         "trial_ends_today": "Testphase endet heute",
         "trial_ends_tomorrow": "Testphase endet morgen",
         "trial_ends_in_days": "Testphase endet in {{days}} Tagen",
-        "free_drip_caption": "1 Credit/Tag + 3 jeden Montag"
+        "free_drip_caption": "1 Credit/Tag + 3 jeden Montag",
+        "annual_plan_tag": "Jahresabo",
+        "credits_refresh_today": "Nächste Credits heute",
+        "credits_refresh_tomorrow": "Nächste Credits morgen",
+        "credits_refresh_in_days": "Nächste Credits in {{days}} Tagen"
     },
     "plans": {
         "title": "Tarif wählen",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "30% SPAREN",
         "toggle_annual_hint": "Bester Wert — jährlich zahlen, bis zu 30% sparen",
         "per_year": "/ Jahr",
-        "plan_subtitle_yearly": "{{credits}} Credits/Jahr · {{tier}} Modell",
+        "plan_subtitle_yearly": "{{credits}} Credits/Monat · jährliche Abrechnung · {{tier}}-Modell",
         "plan_subtitle_daily": "1 Credit/Tag · {{tier}} Modell",
         "annual_savings_basic": "27% sparen vs monatlich",
         "annual_savings_pro": "29% sparen vs monatlich",
-        "annual_savings_max": "30% sparen vs monatlich"
+        "annual_savings_max": "30% sparen vs monatlich",
+        "confirm_activating_title": "Kauf erhalten",
+        "confirm_activating_description": "Dein Kauf war erfolgreich. Dein Plan wird gleich aktualisiert — zum Aktualisieren ziehen, falls er nicht erscheint.",
+        "best_value": "Bestes Angebot"
     },
     "credits": {
         "title": "Credits",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "Komm-zurück-Erinnerungen",
         "settings_quiet_hours_label": "Ruhezeiten",
         "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+    },
+    "permissions": {
+        "camera_title": "Kamerazugriff erforderlich",
+        "camera_body": "Roomframe benötigt Kamerazugriff, um den Raum zu fotografieren, den du neu gestalten möchtest. Aktiviere ihn in den Einstellungen.",
+        "library_title": "Fotozugriff erforderlich",
+        "library_body": "Roomframe benötigt Zugriff auf deine Fotos, um den Raum auszuwählen, den du neu gestalten möchtest. Aktiviere ihn in den Einstellungen.",
+        "open_settings": "Einstellungen öffnen"
     }
 }

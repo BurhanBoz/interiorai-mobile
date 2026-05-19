@@ -350,7 +350,11 @@
         "trial_ends_today": "La prueba termina hoy",
         "trial_ends_tomorrow": "La prueba termina mañana",
         "trial_ends_in_days": "La prueba termina en {{days}} días",
-        "free_drip_caption": "1 crédito/día + 3 cada lunes"
+        "free_drip_caption": "1 crédito/día + 3 cada lunes",
+        "annual_plan_tag": "Plan anual",
+        "credits_refresh_today": "Próximos créditos hoy",
+        "credits_refresh_tomorrow": "Próximos créditos mañana",
+        "credits_refresh_in_days": "Próximos créditos en {{days}} días"
     },
     "plans": {
         "title": "Elige Tu Plan",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "AHORRA 30%",
         "toggle_annual_hint": "Mejor valor — paga al año, ahorra hasta 30%",
         "per_year": "/ año",
-        "plan_subtitle_yearly": "{{credits}} créditos/año · Modelo {{tier}}",
+        "plan_subtitle_yearly": "{{credits}} créditos/mes · facturación anual · modelo {{tier}}",
         "plan_subtitle_daily": "1 crédito/día · Modelo {{tier}}",
         "annual_savings_basic": "Ahorra 27% vs mensual",
         "annual_savings_pro": "Ahorra 29% vs mensual",
-        "annual_savings_max": "Ahorra 30% vs mensual"
+        "annual_savings_max": "Ahorra 30% vs mensual",
+        "confirm_activating_title": "Compra recibida",
+        "confirm_activating_description": "Tu compra se realizó. Tu plan se actualizará en un momento — desliza para actualizar si no aparece pronto.",
+        "best_value": "Mejor Valor"
     },
     "credits": {
         "title": "Créditos",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "Recordatorios de regreso",
         "settings_quiet_hours_label": "Horas silenciosas",
         "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+    },
+    "permissions": {
+        "camera_title": "Se necesita acceso a la cámara",
+        "camera_body": "Roomframe necesita acceso a la cámara para fotografiar la habitación que quieres rediseñar. Actívalo en Ajustes.",
+        "library_title": "Se necesita acceso a las fotos",
+        "library_body": "Roomframe necesita acceso a tus fotos para elegir la habitación que quieres rediseñar. Actívalo en Ajustes.",
+        "open_settings": "Abrir Ajustes"
     }
 }

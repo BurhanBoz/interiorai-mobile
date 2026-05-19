@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useState } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useBackHandler } from "@/utils/navigation";
+import { planTier } from "@/utils/planTier";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { PlanResponse } from "@/types/api";
@@ -408,44 +409,52 @@ function PlanCard({
     onExpand: () => void;
 }) {
     const { t } = useTranslation();
-    const isMaxTier = plan.code.replace("_ANNUAL", "") === "MAX";
 
     const tier = plan.modelTier ?? "ENTRY";
+    // Annual plans grant the SAME monthly allocation every month for the
+    // year (Pricing V2 — 150/mo, not a 1,800 lump). Show "150 credits/month
+    // · billed yearly" rather than a misleading "1,800 credits/year".
     const subtitle =
         plan.code === "FREE"
             ? t("plans.plan_subtitle_daily", { tier })
             : plan.billingPeriod === "YEARLY"
-            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits * 12, tier })
+            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits, tier })
             : t("plans.plan_subtitle", { credits: plan.monthlyCredits, tier });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
-    const isSelectable = !isCurrent && !isPopular;
-    const CardWrapper: any = isSelectable ? Pressable : View;
+    const isMaxTier = planTier(plan.code) === "MAX";
+
+    // ONE wrapper for every card: a single Pressable with a PLAIN OBJECT
+    // style. The previous View-vs-Pressable + function-returning-array
+    // split was exactly why only the PRO card (View + plain object)
+    // rendered the gold border while the others (Pressable + fn→array)
+    // did not. A plain object style on the same wrapper type for all cards
+    // matches that working path everywhere. The active plan is conveyed by
+    // the disabled "Current Plan" button — not by the frame.
     const baseStyle = {
         paddingVertical: 20,
         paddingHorizontal: 24,
         borderRadius: 18,
         backgroundColor: theme.color.surfaceContainerLow,
-        borderWidth: 1,
+        borderWidth: 1.5,
+        borderColor: theme.color.goldDusk,
     };
-    const wrapperProps = isSelectable
-        ? {
-            onPress,
-            style: ({ pressed }: { pressed: boolean }) => [
-                { ...baseStyle, borderColor: pressed ? "rgba(225,195,155,0.6)" : "rgba(225,195,155,0.28)", transform: [{ scale: pressed ? 0.99 : 1 }] },
-                isMaxTier && theme.elevation.goldGlowSoft,
-            ],
-        }
-        : {
-            style: [
-                { ...baseStyle, borderColor: "rgba(77,70,60,0.22)" },
-                isPopular && { borderColor: "rgba(225,195,155,0.45)", ...theme.elevation.md },
-                isCurrent && !isPopular && { borderColor: "rgba(225,195,155,0.55)", backgroundColor: "rgba(225,195,155,0.04)" },
-            ],
-        };
+
+    // Corner badge ONLY for PRO (Most Popular) and MAX (Best Value).
+    // BASIC / FREE get no badge at all (no empty pill).
+    const badge =
+        planTier(plan.code) === "PRO"
+            ? t("plans.most_popular")
+            : planTier(plan.code) === "MAX"
+                ? t("plans.best_value", { defaultValue: "Best Value" })
+                : null;
 
     return (
-        <CardWrapper {...wrapperProps}>
+        <Pressable
+            onPress={isCurrent ? undefined : onPress}
+            disabled={isCurrent}
+            style={baseStyle}
+        >
             {isMaxTier ? (
                 <LinearGradient
                     colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.02)", "rgba(253,222,181,0.08)"]}
@@ -455,15 +464,15 @@ function PlanCard({
                 />
             ) : null}
 
-            {(isPopular || isCurrent) ? (
-                <View style={{ position: "absolute", top: -9, right: 18 }}>
+            {badge ? (
+                <View style={{ position: "absolute", top: -9, left: 18 }}>
                     <LinearGradient
-                        colors={isCurrent ? [theme.color.goldDawn, theme.color.goldMidday] : [theme.color.goldMidday, theme.color.goldDusk]}
+                        colors={[theme.color.goldMidday, theme.color.goldDusk]}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                         style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 0.5, borderColor: "rgba(63,45,17,0.2)" }}
                     >
                         <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: theme.color.onGold, textTransform: "uppercase", letterSpacing: 1.6 }}>
-                            {isCurrent ? t("plans.your_plan", { defaultValue: "Your Plan" }) : t("plans.most_popular")}
+                            {badge}
                         </Text>
                     </LinearGradient>
                 </View>
@@ -508,23 +517,22 @@ function PlanCard({
                     <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#998F84", letterSpacing: 0.3 }}>{cta}</Text>
                 </View>
             ) : isPopular ? (
-                <Pressable onPress={onPress} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>
-                    <LinearGradient
-                        colors={["#C4A882", "#A68A62"]}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={{ height: 50, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
-                    >
-                        <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#3F2D11", letterSpacing: 0.2 }}>{cta}</Text>
-                        <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
-                    </LinearGradient>
-                </Pressable>
+                // Visual only — the whole card Pressable handles navigation.
+                <LinearGradient
+                    colors={["#C4A882", "#A68A62"]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    style={{ height: 50, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
+                >
+                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#3F2D11", letterSpacing: 0.2 }}>{cta}</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
+                </LinearGradient>
             ) : (
                 <View style={{ height: 50, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
                     <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#E0C29A", letterSpacing: 0.3 }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
                 </View>
             )}
-        </CardWrapper>
+        </Pressable>
     );
 }
 
@@ -650,7 +658,10 @@ export default function PlansScreen() {
                             <PlanCard
                                 plan={plan}
                                 isCurrent={plan.code === currentCode}
-                                isPopular={plan.code === "PRO" && currentCode !== "PRO"}
+                                // PRO (monthly & annual) always gets the
+                                // premium gradient CTA — unless it's the
+                                // user's current plan (then it's disabled).
+                                isPopular={planTier(plan.code) === "PRO" && plan.code !== currentCode}
                                 onPress={() => router.push({ pathname: "/plans/confirm", params: { planCode: plan.code } })}
                                 onExpand={() => setSheetPlan(plan)}
                             />

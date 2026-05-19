@@ -350,7 +350,11 @@
         "trial_ends_today": "체험 오늘 종료",
         "trial_ends_tomorrow": "체험 내일 종료",
         "trial_ends_in_days": "체험 {{days}}일 후 종료",
-        "free_drip_caption": "하루 1 크레딧 + 월요일 +3"
+        "free_drip_caption": "하루 1 크레딧 + 월요일 +3",
+        "annual_plan_tag": "연간 플랜",
+        "credits_refresh_today": "다음 크레딧 오늘",
+        "credits_refresh_tomorrow": "다음 크레딧 내일",
+        "credits_refresh_in_days": "다음 크레딧 {{days}}일 후"
     },
     "plans": {
         "title": "플랜 선택",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "30% 절약",
         "toggle_annual_hint": "최고의 가치 — 연간 결제로 최대 30% 절약",
         "per_year": "/ 년",
-        "plan_subtitle_yearly": "연 {{credits}} 크레딧 · {{tier}} 모델",
+        "plan_subtitle_yearly": "월 {{credits}} 크레딧 · 연간 결제 · {{tier}} 모델",
         "plan_subtitle_daily": "하루 1 크레딧 · {{tier}} 모델",
         "annual_savings_basic": "월간 대비 27% 절약",
         "annual_savings_pro": "월간 대비 29% 절약",
-        "annual_savings_max": "월간 대비 30% 절약"
+        "annual_savings_max": "월간 대비 30% 절약",
+        "confirm_activating_title": "구매 접수됨",
+        "confirm_activating_description": "구매가 완료되었습니다. 플랜이 곧 업데이트됩니다 — 표시되지 않으면 당겨서 새로고침하세요.",
+        "best_value": "최고의 가치"
     },
     "credits": {
         "title": "크레딧",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "복귀 알림",
         "settings_quiet_hours_label": "조용한 시간",
         "settings_quiet_hours_value": "22:00 – 08:00 (자동)"
+    },
+    "permissions": {
+        "camera_title": "카메라 접근 권한 필요",
+        "camera_body": "새로 디자인할 방을 촬영하려면 Roomframe에 카메라 접근 권한이 필요합니다. 설정에서 허용해 주세요.",
+        "library_title": "사진 접근 권한 필요",
+        "library_body": "새로 디자인할 방을 선택하려면 Roomframe에 사진 접근 권한이 필요합니다. 설정에서 허용해 주세요.",
+        "open_settings": "설정 열기"
     }
 }

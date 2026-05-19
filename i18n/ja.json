@@ -350,7 +350,11 @@
         "trial_ends_today": "トライアル本日終了",
         "trial_ends_tomorrow": "トライアル明日終了",
         "trial_ends_in_days": "トライアル{{days}}日後終了",
-        "free_drip_caption": "1日1クレジット+月曜+3"
+        "free_drip_caption": "1日1クレジット+月曜+3",
+        "annual_plan_tag": "年間プラン",
+        "credits_refresh_today": "次のクレジットは本日",
+        "credits_refresh_tomorrow": "次のクレジットは明日",
+        "credits_refresh_in_days": "次のクレジットは{{days}}日後"
     },
     "plans": {
         "title": "プランを選択",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "30% お得",
         "toggle_annual_hint": "最もお得 — 年払いで最大30%節約",
         "per_year": "/ 年",
-        "plan_subtitle_yearly": "年{{credits}}クレジット · {{tier}}モデル",
+        "plan_subtitle_yearly": "月{{credits}}クレジット・年額請求・{{tier}}モデル",
         "plan_subtitle_daily": "1日1クレジット · {{tier}}モデル",
         "annual_savings_basic": "月額より27%お得",
         "annual_savings_pro": "月額より29%お得",
-        "annual_savings_max": "月額より30%お得"
+        "annual_savings_max": "月額より30%お得",
+        "confirm_activating_title": "購入を受け付けました",
+        "confirm_activating_description": "購入が完了しました。プランはまもなく更新されます。表示されない場合は引っ張って更新してください。",
+        "best_value": "お得"
     },
     "credits": {
         "title": "クレジット",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "復帰リマインダー",
         "settings_quiet_hours_label": "サイレント時間",
         "settings_quiet_hours_value": "22:00 – 08:00 (自動)"
+    },
+    "permissions": {
+        "camera_title": "カメラへのアクセスが必要です",
+        "camera_body": "模様替えしたい部屋を撮影するために、Roomframe はカメラへのアクセスを必要とします。設定で有効にしてください。",
+        "library_title": "写真へのアクセスが必要です",
+        "library_body": "模様替えしたい部屋を選ぶために、Roomframe は写真へのアクセスを必要とします。設定で有効にしてください。",
+        "open_settings": "設定を開く"
     }
 }

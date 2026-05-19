@@ -4,6 +4,7 @@ import type { Ionicons } from "@expo/vector-icons";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useAuthStore } from "@/stores/authStore";
+import { planTier } from "@/utils/planTier";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -45,6 +46,9 @@ export function useComputedInbox(): InboxItem[] {
 
   return useMemo(() => {
     const items: InboxItem[] = [];
+    // Base tier — annual SKUs (PRO_ANNUAL → PRO) must nudge like their
+    // monthly tier, not fall through to the FREE/MAX branches.
+    const tier = planTier(planCode);
     const now = Date.now();
     const HOUR = 60 * 60 * 1000;
     const DAY = 24 * HOUR;
@@ -53,7 +57,7 @@ export function useComputedInbox(): InboxItem[] {
     if (
       subscription?.currentPeriodStart &&
       subscription.monthlyCredits &&
-      planCode !== "FREE"
+      tier !== "FREE"
     ) {
       const startMs = new Date(subscription.currentPeriodStart).getTime();
       if (!Number.isNaN(startMs) && now - startMs < 7 * DAY) {
@@ -72,7 +76,7 @@ export function useComputedInbox(): InboxItem[] {
     }
 
     // 2. Low-credit nudge — non-FREE users with less than 5 credits left.
-    if (planCode && planCode !== "FREE" && balance > 0 && balance < 5) {
+    if (tier !== "FREE" && balance > 0 && balance < 5) {
       items.push({
         id: `low-credit-${balance}`,
         type: "credit",
@@ -87,7 +91,7 @@ export function useComputedInbox(): InboxItem[] {
     }
 
     // 3. Plan upgrade nudge — one per tier, never on MAX.
-    if (planCode === "FREE") {
+    if (tier === "FREE") {
       items.push({
         id: "plan-upgrade-basic",
         type: "plan",
@@ -98,7 +102,7 @@ export function useComputedInbox(): InboxItem[] {
         read: false,
         route: "/plans",
       });
-    } else if (planCode === "BASIC") {
+    } else if (tier === "BASIC") {
       items.push({
         id: "plan-upgrade-pro",
         type: "plan",
@@ -109,7 +113,7 @@ export function useComputedInbox(): InboxItem[] {
         read: false,
         route: "/plans",
       });
-    } else if (planCode === "PRO") {
+    } else if (tier === "PRO") {
       items.push({
         id: "plan-upgrade-max",
         type: "plan",

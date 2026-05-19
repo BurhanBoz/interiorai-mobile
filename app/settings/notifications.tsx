@@ -17,6 +17,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { TopBar } from "@/components/layout/TopBar";
 import { useBackHandler } from "@/utils/navigation";
+import { planTier } from "@/utils/planTier";
 import { Toggle } from "@/components/ui/Toggle";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { type InboxItem } from "@/hooks/useInbox";
@@ -417,7 +418,9 @@ export default function NotificationsSettingsScreen() {
       });
   }, [fetchSubscription]);
 
-  const activePlan = subscription?.planCode ?? planCode ?? "FREE";
+  // Normalize to base tier so annual SKUs (MAX_ANNUAL → MAX) gate upsell
+  // cards the same as their monthly counterpart.
+  const activePlan = planTier(subscription?.planCode ?? planCode);
   const isMaxUser = activePlan === "MAX";
 
   const visibleCards = useMemo(() => {

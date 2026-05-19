@@ -350,7 +350,11 @@
         "trial_ends_today": "Trial ends today",
         "trial_ends_tomorrow": "Trial ends tomorrow",
         "trial_ends_in_days": "Trial ends in {{days}} days",
-        "free_drip_caption": "1 credit/day + 3 every Monday"
+        "free_drip_caption": "1 credit/day + 3 every Monday",
+        "annual_plan_tag": "Annual plan",
+        "credits_refresh_today": "Next credits today",
+        "credits_refresh_tomorrow": "Next credits tomorrow",
+        "credits_refresh_in_days": "Next credits in {{days}} days"
     },
     "plans": {
         "title": "Choose Your Plan",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "SAVE 30%",
         "toggle_annual_hint": "Best value — pay yearly, save up to 30%",
         "per_year": "/ year",
-        "plan_subtitle_yearly": "{{credits}} credits/year · {{tier}} model",
+        "plan_subtitle_yearly": "{{credits}} credits/month · billed yearly · {{tier}} model",
         "plan_subtitle_daily": "1 credit/day · {{tier}} model",
         "annual_savings_basic": "Save 27% vs monthly",
         "annual_savings_pro": "Save 29% vs monthly",
-        "annual_savings_max": "Save 30% vs monthly"
+        "annual_savings_max": "Save 30% vs monthly",
+        "confirm_activating_title": "Purchase received",
+        "confirm_activating_description": "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
+        "best_value": "Best Value"
     },
     "credits_bridge": {
         "or_buy_credits": "Or buy credits one-time"
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "Come back reminders",
         "settings_quiet_hours_label": "Quiet hours",
         "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+    },
+    "permissions": {
+        "camera_title": "Camera Access Needed",
+        "camera_body": "Roomframe needs camera access to photograph the room you want to redesign. Enable it in Settings.",
+        "library_title": "Photo Access Needed",
+        "library_body": "Roomframe needs photo library access to pick the room you want to redesign. Enable it in Settings.",
+        "open_settings": "Open Settings"
     }
 }

@@ -1,6 +1,7 @@
 import { View, Text, type ViewStyle, type TextStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "@/config/theme";
+import { planTier } from "@/utils/planTier";
 
 /**
  * The single source of truth for tier badges across the app.
@@ -35,13 +36,9 @@ const SIZE_MAP: Record<TierSize, { px: number; py: number; font: number; gap: nu
   md: { px: 12, py: 4, font: 11, gap: 6, tracking: 2 },
 };
 
-function normalise(tier: string): TierCode {
-  const upper = tier.toUpperCase();
-  if (upper === "FREE" || upper === "BASIC" || upper === "PRO" || upper === "MAX") {
-    return upper;
-  }
-  return "FREE";
-}
+// Shared normalization — maps annual SKUs (e.g. PRO_ANNUAL) to their base
+// tier so the badge shows "PRO", not a degraded "FREE".
+const normalise = (tier: string): TierCode => planTier(tier);
 
 export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
   const code = normalise(tier);

@@ -190,7 +190,7 @@ export default function OnboardingScreen() {
             flex: 1,
             paddingHorizontal: 32,
             paddingTop: 20,
-            paddingBottom: 20,
+            paddingBottom: 12,
           }}
         >
           {/* Pagination dots */}
@@ -237,7 +237,7 @@ export default function OnboardingScreen() {
           <View
             style={{
               marginTop: "auto",
-              gap: 8,
+              gap: 6,
             }}
           >
             <Button

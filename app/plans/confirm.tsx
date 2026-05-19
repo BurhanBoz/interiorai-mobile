@@ -100,25 +100,59 @@ export default function PlanConfirmScreen() {
         if (!plan) return;
         setSubmitting(true);
         try {
-            // iap.purchaseSubscription handles both dummy mode and real RC
-            // flow under the hood — caller doesn't need to branch on mode.
-            // In dummy mode: backend's activate-dummy endpoint.
-            // In RC mode: Apple StoreKit payment sheet → backend verify-receipt.
+            // iap.purchaseSubscription: dummy mode → backend activate-dummy;
+            // RC mode → Apple StoreKit payment sheet. The authoritative
+            // activation happens server-side via the RevenueCat webhook
+            // (INITIAL_PURCHASE → AppleIapService), which lands ~1-3s after
+            // the payment sheet closes — NOT synchronously here.
             await iap.purchaseSubscription(plan.code);
 
-            // Refresh client state — plans list, active sub, credit balance.
-            // Backend's verifyAndActivate already applied the new plan's
-            // monthly credit allocation server-side; we just need to pull.
             await fetchPlans();
-            await Promise.all([fetchSubscription(), fetchBalance()]);
+
+            // Poll for the RC webhook to reconcile. The purchase succeeded
+            // on Apple's side; the backend subscription flips once RC
+            // delivers the webhook. Without this poll we'd read stale
+            // (pre-purchase) state and tell the user nothing changed.
+            // 6 tries × 1.5s = 9s ceiling — comfortably covers RC's typical
+            // 1-3s delivery while staying under the user's patience window.
+            // Dummy mode reconciles instantly so the first poll exits.
+            const targetPlan = plan.code;
+            let reconciled = false;
+            for (let attempt = 0; attempt < 6; attempt++) {
+                await Promise.all([fetchSubscription(), fetchBalance()]);
+                const active = useSubscriptionStore.getState().subscription?.planCode;
+                if (active === targetPlan) {
+                    reconciled = true;
+                    break;
+                }
+                await new Promise((r) => setTimeout(r, 1500));
+            }
 
             Alert.alert(
-                t("plans.confirm_activated_title"),
-                t("plans.confirm_activated_description", {
-                    plan: plan.name,
-                    credits: plan.monthlyCredits,
-                }),
-                [{ text: "OK", onPress: () => router.back() }],
+                reconciled
+                    ? t("plans.confirm_activated_title")
+                    : t("plans.confirm_activating_title", {
+                        defaultValue: "Purchase received",
+                    }),
+                reconciled
+                    ? t("plans.confirm_activated_description", {
+                        plan: plan.name,
+                        credits: plan.monthlyCredits,
+                    })
+                    : t("plans.confirm_activating_description", {
+                        defaultValue:
+                            "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
+                    }),
+                [
+                    {
+                        text: "OK",
+                        // Land the user on Profile so they immediately see the
+                        // new plan badge + refreshed balance, instead of back
+                        // on the (now stale) plans list. replace() drops the
+                        // confirm screen from the stack.
+                        onPress: () => router.replace("/(tabs)/profile"),
+                    },
+                ],
             );
         } catch (e: unknown) {
             // User tapped Cancel in the Apple payment sheet — quiet dismiss,

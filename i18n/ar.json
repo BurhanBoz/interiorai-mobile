@@ -350,7 +350,11 @@
         "trial_ends_today": "تنتهي التجربة اليوم",
         "trial_ends_tomorrow": "تنتهي التجربة غدًا",
         "trial_ends_in_days": "تنتهي التجربة بعد {{days}} أيام",
-        "free_drip_caption": "رصيد واحد/يوم + 3 كل اثنين"
+        "free_drip_caption": "رصيد واحد/يوم + 3 كل اثنين",
+        "annual_plan_tag": "خطة سنوية",
+        "credits_refresh_today": "الأرصدة التالية اليوم",
+        "credits_refresh_tomorrow": "الأرصدة التالية غدًا",
+        "credits_refresh_in_days": "الأرصدة التالية خلال {{days}} يوم"
     },
     "plans": {
         "title": "اختر خطتك",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "وفّر 30%",
         "toggle_annual_hint": "أفضل قيمة — ادفع سنويًا ووفّر حتى 30%",
         "per_year": "/ سنة",
-        "plan_subtitle_yearly": "{{credits}} رصيد/سنة · نموذج {{tier}}",
+        "plan_subtitle_yearly": "{{credits}} رصيد/شهر · فوترة سنوية · نموذج {{tier}}",
         "plan_subtitle_daily": "رصيد واحد/يوم · نموذج {{tier}}",
         "annual_savings_basic": "وفّر 27% مقابل الشهري",
         "annual_savings_pro": "وفّر 29% مقابل الشهري",
-        "annual_savings_max": "وفّر 30% مقابل الشهري"
+        "annual_savings_max": "وفّر 30% مقابل الشهري",
+        "confirm_activating_title": "تم استلام الشراء",
+        "confirm_activating_description": "تم الشراء بنجاح. ستتحدث خطتك بعد لحظات — اسحب للتحديث إذا لم تظهر قريبًا.",
+        "best_value": "أفضل قيمة"
     },
     "credits": {
         "title": "الرصيد",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "تذكيرات العودة",
         "settings_quiet_hours_label": "ساعات الهدوء",
         "settings_quiet_hours_value": "22:00 – 08:00 (تلقائي)"
+    },
+    "permissions": {
+        "camera_title": "يلزم الوصول إلى الكاميرا",
+        "camera_body": "يحتاج Roomframe إلى الوصول إلى الكاميرا لتصوير الغرفة التي تريد إعادة تصميمها. فعّله من الإعدادات.",
+        "library_title": "يلزم الوصول إلى الصور",
+        "library_body": "يحتاج Roomframe إلى الوصول إلى الصور لاختيار الغرفة التي تريد إعادة تصميمها. فعّله من الإعدادات.",
+        "open_settings": "فتح الإعدادات"
     }
 }

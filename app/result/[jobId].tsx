@@ -27,7 +27,7 @@ import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
-import { useEntitlement, useEffectiveWatermark } from "@/hooks/useEntitlement";
+import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import { VariationSheet } from "@/components/result/VariationSheet";
@@ -86,10 +86,13 @@ export default function ResultDetailScreen() {
   // V20 / Pricing Strategy V2 — variation picker sheet.
   const [variationSheetOpen, setVariationSheetOpen] = useState(false);
 
-  // Gate the upscale button by plan: only show when the active plan has at
-  // least one ULTRA_HD_UPSCALE credit rule. Free users don't — hiding it
-  // avoids confusing 403 responses after they tap.
-  const creditRules = useSubscriptionStore(s => s.creditRules);
+  // Gate the upscale button by plan. CRITICAL: must use the EFFECTIVE
+  // credit rules — during the 7-day welcome bonus the user is MAX-tier
+  // server-side, so the FREE plan's rule table (which has NO
+  // ULTRA_HD_UPSCALE rule) would wrongly lock the button and route the
+  // user to /plans. useEffectiveCreditRules returns MAX plan's rules
+  // during the trial, matching useEntitlement's feature override below.
+  const creditRules = useEffectiveCreditRules();
   // Welcome-bonus-aware feature gating. useEntitlement returns
   // {enabled: true} during the 7-day MAX trial so trial users can use
   // ULTRA_HD_UPSCALE just like a MAX subscriber. Backend honours the same

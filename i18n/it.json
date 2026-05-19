@@ -350,7 +350,11 @@
         "trial_ends_today": "La prova termina oggi",
         "trial_ends_tomorrow": "La prova termina domani",
         "trial_ends_in_days": "La prova termina tra {{days}} giorni",
-        "free_drip_caption": "1 credito/giorno + 3 ogni lunedì"
+        "free_drip_caption": "1 credito/giorno + 3 ogni lunedì",
+        "annual_plan_tag": "Piano annuale",
+        "credits_refresh_today": "Prossimi crediti oggi",
+        "credits_refresh_tomorrow": "Prossimi crediti domani",
+        "credits_refresh_in_days": "Prossimi crediti tra {{days}} giorni"
     },
     "plans": {
         "title": "Scegli il Tuo Piano",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "RISPARMIA 30%",
         "toggle_annual_hint": "Miglior valore — paga all'anno, risparmia fino al 30%",
         "per_year": "/ anno",
-        "plan_subtitle_yearly": "{{credits}} crediti/anno · Modello {{tier}}",
+        "plan_subtitle_yearly": "{{credits}} crediti/mese · fatturazione annuale · modello {{tier}}",
         "plan_subtitle_daily": "1 credito/giorno · Modello {{tier}}",
         "annual_savings_basic": "Risparmi 27% vs mensile",
         "annual_savings_pro": "Risparmi 29% vs mensile",
-        "annual_savings_max": "Risparmi 30% vs mensile"
+        "annual_savings_max": "Risparmi 30% vs mensile",
+        "confirm_activating_title": "Acquisto ricevuto",
+        "confirm_activating_description": "Acquisto completato. Il piano si aggiornerà a breve — trascina per aggiornare se non appare subito.",
+        "best_value": "Miglior Valore"
     },
     "credits": {
         "title": "Crediti",
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "Promemoria di ritorno",
         "settings_quiet_hours_label": "Ore silenziose",
         "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+    },
+    "permissions": {
+        "camera_title": "Accesso alla fotocamera richiesto",
+        "camera_body": "Roomframe ha bisogno della fotocamera per fotografare la stanza che vuoi riprogettare. Attivalo nelle Impostazioni.",
+        "library_title": "Accesso alle foto richiesto",
+        "library_body": "Roomframe ha bisogno dell'accesso alle foto per scegliere la stanza che vuoi riprogettare. Attivalo nelle Impostazioni.",
+        "open_settings": "Apri Impostazioni"
     }
 }

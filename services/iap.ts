@@ -154,25 +154,39 @@ export async function purchaseSubscription(planCode: string): Promise<Subscripti
     // sandbox tester credentials in dev, real Apple ID in prod.
     const { customerInfo, productIdentifier } = await Purchases.purchasePackage(targetPackage);
 
-    // Pull the latest transaction for this product from RC's customer info.
-    // RC keeps `entitlements.active` and `nonSubscriptionTransactions` separate;
-    // for subscriptions we want `entitlements.active.premium.productIdentifier`
-    // (or fall back to the productIdentifier from the purchase return).
     const premium = customerInfo.entitlements.active["premium"];
     const productId = premium?.productIdentifier ?? productIdentifier;
 
-    // Apple receipt URL (StoreKit 2 receipt is fetched via
-    // appReceipt or originalAppUserId). RC abstracts this — backend
-    // doesn't strictly need the raw receipt because RC's webhook will
-    // deliver the same data signed by RC. We pass the productId and
-    // transactionId so backend can grant credits immediately.
-    return verifySubscriptionReceipt({
-        productId,
-        transactionId: customerInfo.originalAppUserId,
-        // Receipt data is optional with RC — backend has RC webhook as
-        // source of truth. Pass empty string; ProdConfigValidator allows it.
-        receiptData: "",
-    });
+    // SOURCE OF TRUTH = RevenueCat webhook. RC validates the Apple receipt
+    // server-side and POSTs INITIAL_PURCHASE to our backend, which
+    // activates the subscription + grants credits
+    // (RevenueCatWebhookController → AppleIapService.handleRevenueCatSubscriptionEvent).
+    //
+    // verify-receipt here is BEST-EFFORT for immediate feedback only. The
+    // backend can't re-verify a raw StoreKit receipt we don't have (RC
+    // abstracts it), so this call may 4xx — that's expected and harmless.
+    // We swallow the error; the caller (confirm.tsx) polls
+    // fetchSubscription which reconciles once the webhook lands (~1-3s).
+    try {
+        return await verifySubscriptionReceipt({
+            productId,
+            transactionId: customerInfo.originalAppUserId,
+            receiptData: "",
+        });
+    } catch (e) {
+        console.warn(
+            "[IAP] verify-receipt best-effort failed — RC webhook will reconcile:",
+            (e as { response?: { status?: number } })?.response?.status ?? e,
+        );
+        // Return RC's customerInfo-derived view so the caller has SOMETHING
+        // to render immediately; the subsequent fetchSubscription() poll
+        // replaces it with the authoritative server state.
+        return {
+            planCode,
+            status: "ACTIVE",
+            provider: "REVENUECAT",
+        } as unknown as SubscriptionResponse;
+    }
 }
 
 /**

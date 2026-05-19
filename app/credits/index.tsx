@@ -16,6 +16,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
@@ -190,8 +191,11 @@ export default function CreditsScreen() {
   const balance = useCreditStore(s => s.balance);
   const planCode = useCreditStore(s => s.planCode);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
-  const creditRules = useSubscriptionStore(s => s.creditRules);
-  const features = useSubscriptionStore(s => s.features);
+  // EFFECTIVE rules/features — welcome bonus trial users see MAX-tier
+  // capabilities (what credits unlock) so the "what you can do" math
+  // matches the actual server-side entitlement during the trial.
+  const creditRules = useEffectiveCreditRules();
+  const features = useEffectiveFeatures();
   const subscription = useSubscriptionStore(s => s.subscription);
   const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
   const fetchPlans = useSubscriptionStore(s => s.fetchPlans);

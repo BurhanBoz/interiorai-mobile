@@ -16,9 +16,12 @@ export function LegalFooter() {
     return (
         <View
             style={{
-                paddingHorizontal: 24,
+                // No own horizontal padding — the host screen already pads
+                // (onboarding = 32pt). Double-padding shrank the text box so
+                // the agreement wrapped to 3-4 lines and overran the safe
+                // area on small devices. Full width → 1-2 lines, always fits.
                 paddingTop: 8,
-                paddingBottom: 4,
+                paddingBottom: 2,
                 alignItems: "center",
             }}
         >

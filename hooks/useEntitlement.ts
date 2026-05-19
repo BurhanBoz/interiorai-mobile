@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore, type PlanPermissionKey } from "@/stores/subscriptionStore";
 import type { PlanFeatureResponse, PlanCreditRuleResponse } from "@/types/api";
+import { planTier, type PlanTier } from "@/utils/planTier";
 
 /**
  * Welcome-bonus-aware entitlement helpers.
@@ -28,9 +29,8 @@ import type { PlanFeatureResponse, PlanCreditRuleResponse } from "@/types/api";
  */
 
 const MAX_PLAN_CODE = "MAX" as const;
-const FREE_PLAN_CODE = "FREE" as const;
 
-type EffectiveTier = "FREE" | "BASIC" | "PRO" | "MAX";
+type EffectiveTier = PlanTier;
 
 /**
  * Effective plan code — what the user FEELS like, accounting for trial.
@@ -44,8 +44,9 @@ export function useEffectivePlanCode(): EffectiveTier {
     const planCode = useSubscriptionStore((s) => s.subscription?.planCode);
     const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
     if (welcomeBonusActive) return MAX_PLAN_CODE;
-    const code = (planCode ?? FREE_PLAN_CODE).toUpperCase();
-    return code === "BASIC" || code === "PRO" || code === "MAX" ? (code as EffectiveTier) : FREE_PLAN_CODE;
+    // Normalize through planTier so annual SKUs (PRO_ANNUAL → PRO) keep
+    // their tier's entitlements instead of silently degrading to FREE.
+    return planTier(planCode);
 }
 
 /**

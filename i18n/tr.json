@@ -350,7 +350,11 @@
         "trial_ends_today": "Deneme bugün bitiyor",
         "trial_ends_tomorrow": "Deneme yarın bitiyor",
         "trial_ends_in_days": "Deneme {{days}} gün içinde bitiyor",
-        "free_drip_caption": "Günde 1 kredi + Pazartesi 3 bonus"
+        "free_drip_caption": "Günde 1 kredi + Pazartesi 3 bonus",
+        "annual_plan_tag": "Yıllık plan",
+        "credits_refresh_today": "Sonraki krediler bugün",
+        "credits_refresh_tomorrow": "Sonraki krediler yarın",
+        "credits_refresh_in_days": "Sonraki krediler {{days}} gün içinde"
     },
     "plans": {
         "title": "Planını Seç",
@@ -432,11 +436,14 @@
         "toggle_save_badge": "%30 TASARRUF",
         "toggle_annual_hint": "En iyi değer — yıllık öde, %30'a varan tasarruf",
         "per_year": "/ yıl",
-        "plan_subtitle_yearly": "{{credits}} kredi/yıl · {{tier}} model",
+        "plan_subtitle_yearly": "Aylık {{credits}} kredi · yıllık faturalandırma · {{tier}} model",
         "plan_subtitle_daily": "Günde 1 kredi · {{tier}} model",
         "annual_savings_basic": "Aylığa göre %27 tasarruf",
         "annual_savings_pro": "Aylığa göre %29 tasarruf",
-        "annual_savings_max": "Aylığa göre %30 tasarruf"
+        "annual_savings_max": "Aylığa göre %30 tasarruf",
+        "confirm_activating_title": "Satın alma alındı",
+        "confirm_activating_description": "Satın alman tamamlandı. Paketin birazdan güncellenecek — kısa sürede görünmezse aşağı çekip yenile.",
+        "best_value": "En Avantajlı"
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"
@@ -875,5 +882,12 @@
         "settings_reengagement_label": "Geri dönüş hatırlatıcıları",
         "settings_quiet_hours_label": "Sessiz saatler",
         "settings_quiet_hours_value": "22:00 – 08:00 (otomatik)"
+    },
+    "permissions": {
+        "camera_title": "Kamera İzni Gerekli",
+        "camera_body": "Roomframe, yeniden tasarlamak istediğin odanın fotoğrafını çekmek için kamera erişimine ihtiyaç duyar. Ayarlar'dan etkinleştir.",
+        "library_title": "Fotoğraf İzni Gerekli",
+        "library_body": "Roomframe, yeniden tasarlamak istediğin odayı seçmek için fotoğraf erişimine ihtiyaç duyar. Ayarlar'dan etkinleştir.",
+        "open_settings": "Ayarları Aç"
     }
 }

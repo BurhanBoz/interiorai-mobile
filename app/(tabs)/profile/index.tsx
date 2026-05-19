@@ -18,6 +18,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Brand } from "@/components/brand/Brand";
 import { useState, useEffect, useMemo } from "react";
 import type { ComponentProps } from "react";
+import { planTier, isAnnualPlan, type PlanTier } from "@/utils/planTier";
 import { pushWithReturn } from "@/utils/navigation";
 import { theme } from "@/config/theme";
 
@@ -258,11 +259,9 @@ export default function ProfileScreen() {
   // so the badge + label should read "MAX" during the trial window even
   // though `planCode === "FREE"` server-side.
   const isOnTrial = welcomeBonusActive === true;
-  const effectiveTier: "FREE" | "BASIC" | "PRO" | "MAX" = isOnTrial
-    ? "MAX"
-    : (planCode === "BASIC" || planCode === "PRO" || planCode === "MAX")
-      ? planCode
-      : "FREE";
+  // planTier normalizes annual SKUs (PRO_ANNUAL → PRO) so annual subscribers
+  // get their real tier's balance UI instead of the FREE drip caption.
+  const effectiveTier: PlanTier = isOnTrial ? "MAX" : planTier(planCode);
   const isFree = effectiveTier === "FREE";
   const planLabel = isOnTrial
     ? t("profile.max_trial", { defaultValue: "MAX TRIAL" })
@@ -296,10 +295,23 @@ export default function ProfileScreen() {
     const now = new Date();
     const diffMs = end.getTime() - now.getTime();
     const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    // Annual plans bill once a year but the CREDIT cycle is still 30 days
+    // (Pricing V2: 150 credits land every month for the full year). Saying
+    // "Renews in 12 days" on an annual plan reads like the subscription is
+    // about to lapse. For annual we phrase it as the next monthly credit
+    // top-up instead, so the yearly commitment stays clear.
+    const annual = isAnnualPlan(subscription?.planCode);
+    if (annual) {
+      if (diffDays === 0) return t("profile.credits_refresh_today", { defaultValue: "Next credits today" });
+      if (diffDays === 1) return t("profile.credits_refresh_tomorrow", { defaultValue: "Next credits tomorrow" });
+      return t("profile.credits_refresh_in_days", { days: diffDays, defaultValue: `Next credits in ${diffDays} days` });
+    }
     if (diffDays === 0) return t("profile.renews_today");
     if (diffDays === 1) return t("profile.renews_tomorrow");
     return t("profile.renews_in_days", { days: diffDays });
-  }, [isOnTrial, trialDaysLeft, isFree, subscription?.currentPeriodEnd, t]);
+  }, [isOnTrial, trialDaysLeft, isFree, subscription?.currentPeriodEnd, subscription?.planCode, t]);
+
+  const isAnnual = isAnnualPlan(subscription?.planCode);
 
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
   // The "X / Y" divisor only makes sense for paid plans where Y is the
@@ -458,7 +470,7 @@ export default function ProfileScreen() {
                       defaultValue: "1 credit/day + 3 every Monday",
                     })
                   : showCreditDivisor
-                    ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
+                    ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${isAnnual ? ` · ${t("profile.annual_plan_tag", { defaultValue: "Annual plan" })}` : ""}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
                     : t("plans.credits_never_expire", {
                         defaultValue: "Credits never expire",
                       })}
