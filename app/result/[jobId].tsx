@@ -8,6 +8,7 @@ import {
   Dimensions,
   Modal,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -110,10 +111,13 @@ export default function ResultDetailScreen() {
   // hiding it (hiding would confuse users into thinking they lost
   // access). Pressed while disabled is a no-op.
   const isAlreadyUpscaled = job?.featureCode === "ULTRA_HD_UPSCALE";
+  // Effective upscale cost (FLUX MAX rules → 7 cr, PRO → 5 cr, etc.). Shown
+  // on the button subtitle and in the pre-flight confirmation so the user
+  // never gets debited without knowing the amount up front.
+  const upscaleCost =
+    creditRules.find(r => r.featureCode === "ULTRA_HD_UPSCALE")?.creditCost ?? null;
   const canUpscale =
-    !isAlreadyUpscaled &&
-    upscaleFeatureEnabled &&
-    creditRules.some(r => r.featureCode === "ULTRA_HD_UPSCALE");
+    !isAlreadyUpscaled && upscaleFeatureEnabled && upscaleCost != null;
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -611,8 +615,24 @@ export default function ResultDetailScreen() {
               onPress={() => {
                 if (!currentOutput?.id) return;
                 Haptics.selectionAsync();
-                router.push(
-                  `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
+                // Pre-flight cost confirmation — the upscale starts a paid
+                // job, so we never debit without an explicit user OK.
+                Alert.alert(
+                  t("result.upscale_confirm_title", { defaultValue: "Upscale to Ultra HD?" }),
+                  t("result.upscale_confirm_body", {
+                    defaultValue: "{{cost}} credits will be used to enhance this image to 2K.",
+                    cost: upscaleCost,
+                  }),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    {
+                      text: t("result.upscale", { defaultValue: "Upscale" }),
+                      onPress: () =>
+                        router.push(
+                          `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
+                        ),
+                    },
+                  ],
                 );
               }}
               style={({ pressed }) => ({
@@ -671,8 +691,9 @@ export default function ResultDetailScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    {t("result.upscale_subtitle", {
-                      defaultValue: "Enhance to 2K · Pro action",
+                    {t("result.upscale_subtitle_cost", {
+                      defaultValue: "Enhance to 2K · {{cost}} credits",
+                      cost: upscaleCost,
                     })}
                   </Text>
                 </View>
@@ -1026,6 +1047,9 @@ export default function ResultDetailScreen() {
         visible={variationSheetOpen}
         onClose={() => setVariationSheetOpen(false)}
         sourceJobId={job.id}
+        // Pass the carousel-active output so the backend mints a fresh
+        // variation per-image when the source produced multiple outputs.
+        activeOutputId={currentOutput?.id}
       />
     </SafeAreaView>
   );

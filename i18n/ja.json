@@ -443,7 +443,8 @@
         "annual_savings_max": "月額より30%お得",
         "confirm_activating_title": "購入を受け付けました",
         "confirm_activating_description": "購入が完了しました。プランはまもなく更新されます。表示されない場合は引っ張って更新してください。",
-        "best_value": "お得"
+        "best_value": "お得",
+        "manage_subscription": "サブスクリプションの管理・解約"
     },
     "credits": {
         "title": "クレジット",
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}分",
         "minutes_seconds": "{{mins}}分{{secs}}秒",
         "about_this_style": "このスタイルについて",
-        "style_hint_generic": "Roomframe AIが生み出すキュレートされた美学。光、比率、素材は個人的でありながら時代を超えた感覚で構成されています。"
+        "style_hint_generic": "Roomframe AIが生み出すキュレートされた美学。光、比率、素材は個人的でありながら時代を超えた感覚で構成されています。",
+        "timeout_generic": "予期しないエラーが発生しました。もう一度お試しください。"
     },
     "styles": {
         "scandinavian": "スカンジナビアデザインは温かいミニマリズムを称えます — 淡い木材、柔らかなニュートラルトーン、そして豊かな自然光。すべてのオブジェクトが実用性と誠実な職人技を通じてその場所を得ます。",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "驚かせて",
         "variation_wild_hint": "新鮮な解釈、予想外の方向",
         "variation_cost": "1クレジット",
-        "variation_cta": "バリエーション生成"
+        "variation_cta": "バリエーション生成",
+        "upscale_confirm_title": "Ultra HD にアップスケールしますか？",
+        "upscale_confirm_body": "この画像を 2K に拡張するために {{cost}} クレジットを使用します。",
+        "upscale_subtitle_cost": "2K にアップスケール · {{cost}} クレジット"
     },
     "settings": {
         "notifications_title": "通知",

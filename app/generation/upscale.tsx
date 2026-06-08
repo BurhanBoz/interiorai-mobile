@@ -98,7 +98,17 @@ export default function UpscaleScreen() {
     } else if (job.status === "CANCELLED") {
       setError("Upscale was cancelled.");
     }
-  }, 3000);
+  }, 3000, {
+    // 3-min hard cap — backend timeout releases credits in lockstep.
+    onTimeout: () => {
+      fetchBalance().catch(() => {});
+      setError(
+        t("generation.timeout_generic", {
+          defaultValue: "Unexpected error. Please try again.",
+        }),
+      );
+    },
+  });
 
   // ─── Spinner animation ─────────────────────────────────────────
   useEffect(() => {

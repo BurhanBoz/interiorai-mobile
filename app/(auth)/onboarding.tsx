@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  Pressable,
   FlatList,
   useWindowDimensions,
   ViewToken,
@@ -9,6 +10,7 @@ import {
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -115,10 +117,11 @@ export default function OnboardingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.color.surface }}>
-      {/* Hero carousel (top ~58%) */}
+      {/* Hero carousel (top ~50% — leaves room for the full footer + legal
+          line to fit a 390×844 iPhone 13, even with a 2-line headline). */}
       <View
         style={{
-          height: "58%",
+          height: "50%",
           position: "relative",
           width: "100%",
           overflow: "hidden",
@@ -137,7 +140,7 @@ export default function OnboardingScreen() {
               />
             </View>
           )}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -189,8 +192,8 @@ export default function OnboardingScreen() {
           style={{
             flex: 1,
             paddingHorizontal: 32,
-            paddingTop: 20,
-            paddingBottom: 12,
+            paddingTop: 16,
+            paddingBottom: 8,
           }}
         >
           {/* Pagination dots */}
@@ -199,7 +202,7 @@ export default function OnboardingScreen() {
               flexDirection: "row",
               alignItems: "center",
               gap: 6,
-              marginBottom: 26,
+              marginBottom: 16,
             }}
           >
             {SLIDES.map((_, i) => (
@@ -212,8 +215,8 @@ export default function OnboardingScreen() {
             <Text
               style={{
                 fontFamily: "NotoSerif",
-                fontSize: 32,
-                lineHeight: 38,
+                fontSize: 28,
+                lineHeight: 34,
                 letterSpacing: -0.3,
                 color: theme.color.onSurface,
               }}
@@ -223,23 +226,31 @@ export default function OnboardingScreen() {
             <Text
               style={{
                 fontFamily: "Inter",
-                fontSize: 15,
-                lineHeight: 22,
+                fontSize: 14,
+                lineHeight: 20,
                 color: theme.color.onSurfaceVariant,
-                marginTop: 14,
+                marginTop: 10,
               }}
             >
               {t(slide.descriptionKey)}
             </Text>
           </View>
 
-          {/* Footer Actions */}
-          <View
-            style={{
-              marginTop: "auto",
-              gap: 6,
-            }}
-          >
+          {/* Footer Actions — three CLEARLY SEPARATED, well-spaced tap
+              targets in a deliberate hierarchy so they never crowd / mis-tap:
+                1. Get Started   → filled gold button   (primary conversion)
+                2. See examples  → gold OUTLINE button  (explore path)
+                3. Sign in       → muted text + gold     (returning users)
+              "See examples" uses the shared Button (secondary + iconLeft) so
+              the gallery glyph is laid out by the proven primitive — it can't
+              ride above the label like a hand-rolled icon row did. */}
+          {/* Every gap lives on a plain wrapper <View> (NOT on a Button's
+              style prop), so spacing is unambiguous and independent of any
+              component's internal style merge. Three distinct weights:
+                1. Get Started   → filled gold (primary)
+                2. See examples  → gold outline + icon (explore)
+                3. Sign in       → muted text + gold (returning) */}
+          <View style={{ marginTop: "auto" }}>
             <Button
               title={t("onboarding.get_started")}
               variant="primary"
@@ -247,25 +258,65 @@ export default function OnboardingScreen() {
               onPress={() => router.push("/register")}
               icon="arrow-forward"
             />
-            <View style={{ alignItems: "center" }}>
+
+            {/* NO alignItems:center here — the Button is fullWidth
+                (width:"100%"); a center-aligned parent makes that percentage
+                resolve against an indeterminate width, collapsing the button
+                so its row content (icon + label) overflows and the icon wraps
+                ABOVE the text. A plain block wrapper lets the button take full
+                width and lay the icon inline-left, exactly like GET STARTED. */}
+            <View
+              style={{
+                marginTop: 18,
+                alignItems: "center",
+              }}
+            >
               <Button
                 title={t("auth.trial_entry_cta")}
-                variant="tertiary"
+                variant="secondary"
                 size="sm"
                 onPress={() => router.push("/anonymous-trial")}
-                fullWidth={false}
               />
             </View>
-            <View style={{ alignItems: "center" }}>
-              <Button
-                title={`${t("auth.already_have_account")} ${t("auth.sign_in_link")}`}
-                variant="tertiary"
-                size="sm"
-                onPress={() => router.push("/login")}
-                fullWidth={false}
-              />
+
+            <View style={{ marginTop: 14, alignItems: "center" }}>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  router.push("/login");
+                }}
+                hitSlop={12}
+                style={({ pressed }) => ({
+                  paddingVertical: 6,
+                  opacity: pressed ? 0.55 : 1,
+                })}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 12.5,
+                    lineHeight: 16,
+                    letterSpacing: 0.1,
+                    color: theme.color.onSurfaceMuted,
+                  }}
+                >
+                  {t("auth.already_have_account")}{" "}
+                  <Text
+                    style={{
+                      fontFamily: "Inter-SemiBold",
+                      color: theme.color.goldMidday,
+                    }}
+                  >
+                    {t("auth.sign_in_link")}
+                  </Text>
+                </Text>
+              </Pressable>
             </View>
-            <LegalFooter />
+
+            <View style={{ marginTop: 10 }}>
+              <LegalFooter />
+            </View>
           </View>
         </View>
       </SafeAreaView>

@@ -443,7 +443,8 @@
         "annual_savings_max": "월간 대비 30% 절약",
         "confirm_activating_title": "구매 접수됨",
         "confirm_activating_description": "구매가 완료되었습니다. 플랜이 곧 업데이트됩니다 — 표시되지 않으면 당겨서 새로고침하세요.",
-        "best_value": "최고의 가치"
+        "best_value": "최고의 가치",
+        "manage_subscription": "구독 관리 또는 해지"
     },
     "credits": {
         "title": "크레딧",
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}분",
         "minutes_seconds": "{{mins}}분 {{secs}}초",
         "about_this_style": "이 스타일에 대해",
-        "style_hint_generic": "Roomframe AI가 구현한 큐레이션된 미학. 빛, 비례, 소재가 개인적이면서도 시대를 초월한 느낌으로 구성되었습니다."
+        "style_hint_generic": "Roomframe AI가 구현한 큐레이션된 미학. 빛, 비례, 소재가 개인적이면서도 시대를 초월한 느낌으로 구성되었습니다.",
+        "timeout_generic": "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요."
     },
     "styles": {
         "scandinavian": "스칸디나비아 디자인은 따뜻한 미니멀리즘을 기념합니다 — 밝은 나무, 부드러운 중성 톤, 풍부한 자연광. 모든 물건은 실용성과 정직한 장인 정신을 통해 그 자리를 차지합니다.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "놀라게 해줘",
         "variation_wild_hint": "신선한 해석, 예상치 못한 방향",
         "variation_cost": "1 크레딧",
-        "variation_cta": "변형 생성"
+        "variation_cta": "변형 생성",
+        "upscale_confirm_title": "Ultra HD로 업스케일하시겠습니까?",
+        "upscale_confirm_body": "이 이미지를 2K로 향상시키는 데 {{cost}} 크레딧이 사용됩니다.",
+        "upscale_subtitle_cost": "2K로 업스케일 · {{cost}} 크레딧"
     },
     "settings": {
         "notifications_title": "알림",

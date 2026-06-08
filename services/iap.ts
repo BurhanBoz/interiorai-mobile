@@ -275,3 +275,44 @@ export function isUserCancelled(error: unknown): boolean {
     const purchasesError = error as PurchasesError;
     return purchasesError?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR;
 }
+
+/**
+ * Open Apple's native "Manage Subscriptions" sheet.
+ *
+ * <p>Apple does NOT permit cancelling a subscription from inside the app —
+ * cancellation must happen in Apple's own UI (App Store Guideline 3.1.1).
+ * The correct, compliant pattern is to deep-link the user straight to that
+ * sheet so they don't have to hunt through Settings.
+ * {@link Purchases.showManageSubscriptions} presents the StoreKit-native
+ * manage sheet (works for sandbox subscriptions too — which also makes our
+ * cancel/downgrade test flow one tap).
+ *
+ * <p>Falls back to the universal App Store subscriptions URL if the SDK call
+ * throws (older iOS, missing entitlement) so the button never dead-ends.
+ *
+ * @returns true if a management surface was presented, false on hard failure.
+ */
+export async function openManageSubscriptions(): Promise<boolean> {
+    const fallback = async (): Promise<boolean> => {
+        try {
+            const { Linking } = await import("react-native");
+            await Linking.openURL("https://apps.apple.com/account/subscriptions");
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    if (isDummyMode) {
+        // Dev build — no StoreKit. Open the App Store subscriptions URL so the
+        // button is still demonstrable.
+        return fallback();
+    }
+    try {
+        await Purchases.showManageSubscriptions();
+        return true;
+    } catch (e) {
+        console.warn("[IAP] showManageSubscriptions failed, falling back to deep-link:", e);
+        return fallback();
+    }
+}

@@ -443,7 +443,8 @@
         "annual_savings_max": "Aylığa göre %30 tasarruf",
         "confirm_activating_title": "Satın alma alındı",
         "confirm_activating_description": "Satın alman tamamlandı. Paketin birazdan güncellenecek — kısa sürede görünmezse aşağı çekip yenile.",
-        "best_value": "En Avantajlı"
+        "best_value": "En Avantajlı",
+        "manage_subscription": "Aboneliği yönet veya iptal et"
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}dk",
         "minutes_seconds": "{{mins}}dk {{secs}}sn",
         "about_this_style": "Bu stil hakkında",
-        "style_hint_generic": "Roomframe AI tarafından özenle kürate edilmiş bir estetik. Işık, oran ve malzeme; hem kişisel hem zamansız bir atmosfer yaratmak için bir araya getirildi."
+        "style_hint_generic": "Roomframe AI tarafından özenle kürate edilmiş bir estetik. Işık, oran ve malzeme; hem kişisel hem zamansız bir atmosfer yaratmak için bir araya getirildi.",
+        "timeout_generic": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."
     },
     "styles": {
         "scandinavian": "İskandinav tasarımı sıcak minimalizmi kutlar — açık ahşaplar, yumuşak nötr tonlar ve bol doğal ışık. Her nesne, işlevi ve dürüst zanaatı sayesinde yerini kazanır.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "Beni şaşırt",
         "variation_wild_hint": "Taze yorum, beklenmedik yön",
         "variation_cost": "1 kredi",
-        "variation_cta": "Varyasyon üret"
+        "variation_cta": "Varyasyon üret",
+        "upscale_confirm_title": "Ultra HD'ye yükseltilsin mi?",
+        "upscale_confirm_body": "Bu görüntüyü 2K'ya yükseltmek için {{cost}} kredi kullanılacak.",
+        "upscale_subtitle_cost": "2K'ya yükselt · {{cost}} kredi"
     },
     "settings": {
         "notifications_title": "Bildirimler",

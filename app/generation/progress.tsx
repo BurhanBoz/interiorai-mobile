@@ -108,6 +108,20 @@ export default function GenerationProgressScreen() {
       }
     },
     3000,
+    {
+      // 3-min hard cap: if the backend still hasn't terminated, surface the
+      // generic recoverable error so the user isn't stranded. The backend's
+      // own JobPollingService releases the reserved credits when its
+      // matching timeout trips, so wallet stays correct.
+      onTimeout: () => {
+        fetchBalance();
+        setErrorMessage(
+          t("generation.timeout_generic", {
+            defaultValue: "Unexpected error. Please try again.",
+          }),
+        );
+      },
+    },
   );
 
   const phase: Phase = useMemo(() => {

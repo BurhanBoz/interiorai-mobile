@@ -20,6 +20,13 @@ interface VariationSheetProps {
     visible: boolean;
     onClose: () => void;
     sourceJobId: string;
+    /**
+     * Carousel-active output the user was looking at when they opened the
+     * sheet. The backend scopes its idempotency key by this id so the
+     * SAME preset can mint distinct variations per source output. Optional
+     * for legacy single-output callers.
+     */
+    activeOutputId?: string;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -53,7 +60,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
  * copy do the explaining: each preset's hint is a single short line
  * that resolves "what does this actually do?" in one read.
  */
-export function VariationSheet({ visible, onClose, sourceJobId }: VariationSheetProps) {
+export function VariationSheet({ visible, onClose, sourceJobId, activeOutputId }: VariationSheetProps) {
     const { t } = useTranslation();
     const balance = useCreditStore((s) => s.balance);
     const [selected, setSelected] = useState<VariationStrength>("BOLD");
@@ -111,7 +118,9 @@ export function VariationSheet({ visible, onClose, sourceJobId }: VariationSheet
         setSubmitting(true);
         try {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            const job = await createVariation(sourceJobId, selected);
+            const job = await createVariation(sourceJobId, selected, {
+                fromOutputId: activeOutputId,
+            });
             handleClose();
             setSelected("BOLD");
             setTimeout(() => {

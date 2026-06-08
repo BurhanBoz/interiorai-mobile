@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useBackHandler } from "@/utils/navigation";
 import { planTier } from "@/utils/planTier";
+import { openManageSubscriptions } from "@/services/iap";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { PlanResponse } from "@/types/api";
@@ -687,6 +688,44 @@ export default function PlansScreen() {
                         <Ionicons name="chevron-forward" size={18} color="#998F84" />
                     </View>
                 </Pressable>
+
+                {/* Manage / cancel — only for active paid subscribers. Apple
+                    forbids in-app cancellation, so this deep-links to the
+                    native StoreKit manage sheet (Guideline 3.1.1 compliant).
+                    Hidden for FREE/trial users who have nothing to manage. */}
+                {planTier(currentCode) !== "FREE" ? (
+                    <Pressable
+                        onPress={() => openManageSubscriptions()}
+                        style={({ pressed }) => ({
+                            marginBottom: 16,
+                            opacity: pressed ? 0.6 : 1,
+                        })}
+                    >
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 8,
+                                paddingVertical: 14,
+                            }}
+                        >
+                            <Ionicons name="settings-outline" size={15} color="#998F84" />
+                            <Text
+                                style={{
+                                    fontFamily: "Inter-Medium",
+                                    fontSize: 13,
+                                    letterSpacing: 0.2,
+                                    color: "#998F84",
+                                }}
+                            >
+                                {t("plans.manage_subscription", {
+                                    defaultValue: "Manage or cancel subscription",
+                                })}
+                            </Text>
+                        </View>
+                    </Pressable>
+                ) : null}
             </ScrollView>
 
             {/* Per-plan feature sheet */}

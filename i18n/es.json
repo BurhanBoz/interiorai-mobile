@@ -443,7 +443,8 @@
         "annual_savings_max": "Ahorra 30% vs mensual",
         "confirm_activating_title": "Compra recibida",
         "confirm_activating_description": "Tu compra se realizó. Tu plan se actualizará en un momento — desliza para actualizar si no aparece pronto.",
-        "best_value": "Mejor Valor"
+        "best_value": "Mejor Valor",
+        "manage_subscription": "Gestionar o cancelar suscripción"
     },
     "credits": {
         "title": "Créditos",
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}m",
         "minutes_seconds": "{{mins}}m {{secs}}s",
         "about_this_style": "Sobre este estilo",
-        "style_hint_generic": "Una estética curada que cobra vida gracias a Roomframe AI. Luz, proporción y material se componen para sentirse personales y atemporales al mismo tiempo."
+        "style_hint_generic": "Una estética curada que cobra vida gracias a Roomframe AI. Luz, proporción y material se componen para sentirse personales y atemporales al mismo tiempo.",
+        "timeout_generic": "Error inesperado. Por favor, inténtalo de nuevo."
     },
     "styles": {
         "scandinavian": "El diseño escandinavo celebra un minimalismo cálido: maderas claras, tonos neutros suaves y abundante luz natural. Cada objeto gana su lugar por su utilidad y una artesanía honesta.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "Sorpréndeme",
         "variation_wild_hint": "Interpretación fresca, dirección inesperada",
         "variation_cost": "1 crédito",
-        "variation_cta": "Generar variación"
+        "variation_cta": "Generar variación",
+        "upscale_confirm_title": "¿Mejorar a Ultra HD?",
+        "upscale_confirm_body": "Se usarán {{cost}} créditos para mejorar esta imagen a 2K.",
+        "upscale_subtitle_cost": "Mejorar a 2K · {{cost}} créditos"
     },
     "settings": {
         "notifications_title": "Notificaciones",

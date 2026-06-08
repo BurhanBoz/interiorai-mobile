@@ -41,13 +41,18 @@ export type VariationStrength = "SUBTLE" | "BOLD" | "WILD";
 export async function createVariation(
     sourceJobId: string,
     strength: VariationStrength,
-    idempotencyKey?: string,
+    options?: { fromOutputId?: string; idempotencyKey?: string },
 ): Promise<JobResponse> {
     const { data } = await api.post<JobResponse>(
         `/api/jobs/${sourceJobId}/variation`,
         {
             strength,
-            idempotencyKey: idempotencyKey ?? Crypto.randomUUID(),
+            // The backend scopes its auto-generated idempotency key by
+            // (source, strength, fromOutputId) — so the SAME preset tapped
+            // on carousel output #2 mints a fresh variation instead of
+            // returning the one created for output #1.
+            fromOutputId: options?.fromOutputId,
+            idempotencyKey: options?.idempotencyKey ?? Crypto.randomUUID(),
         },
     );
     return data;

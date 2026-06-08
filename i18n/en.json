@@ -443,7 +443,8 @@
         "annual_savings_max": "Save 30% vs monthly",
         "confirm_activating_title": "Purchase received",
         "confirm_activating_description": "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
-        "best_value": "Best Value"
+        "best_value": "Best Value",
+        "manage_subscription": "Manage or cancel subscription"
     },
     "credits_bridge": {
         "or_buy_credits": "Or buy credits one-time"
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}m",
         "minutes_seconds": "{{mins}}m {{secs}}s",
         "about_this_style": "About this style",
-        "style_hint_generic": "A curated aesthetic brought to life by Roomframe AI. Light, proportion, and material are composed to feel both personal and timeless."
+        "style_hint_generic": "A curated aesthetic brought to life by Roomframe AI. Light, proportion, and material are composed to feel both personal and timeless.",
+        "timeout_generic": "Unexpected error. Please try again."
     },
     "styles": {
         "scandinavian": "Scandinavian design celebrates warm minimalism — pale woods, soft neutrals, and abundant natural light. Every object earns its place through utility and honest craftsmanship.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "Surprise me",
         "variation_wild_hint": "Fresh interpretation, unexpected direction",
         "variation_cost": "1 credit",
-        "variation_cta": "Generate variation"
+        "variation_cta": "Generate variation",
+        "upscale_confirm_title": "Upscale to Ultra HD?",
+        "upscale_confirm_body": "{{cost}} credits will be used to enhance this image to 2K.",
+        "upscale_subtitle_cost": "Enhance to 2K · {{cost}} credits"
     },
     "settings": {
         "notifications_title": "Notifications",

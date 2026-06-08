@@ -443,7 +443,8 @@
         "annual_savings_max": "وفّر 30% مقابل الشهري",
         "confirm_activating_title": "تم استلام الشراء",
         "confirm_activating_description": "تم الشراء بنجاح. ستتحدث خطتك بعد لحظات — اسحب للتحديث إذا لم تظهر قريبًا.",
-        "best_value": "أفضل قيمة"
+        "best_value": "أفضل قيمة",
+        "manage_subscription": "إدارة الاشتراك أو إلغاؤه"
     },
     "credits": {
         "title": "الرصيد",
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}د",
         "minutes_seconds": "{{mins}}د {{secs}}ث",
         "about_this_style": "عن هذا الأسلوب",
-        "style_hint_generic": "جمالية منسّقة تجسّدها Roomframe AI. يتشكّل الضوء والنسبة والمواد بأسلوب يبدو شخصياً وخالداً في آنٍ واحد."
+        "style_hint_generic": "جمالية منسّقة تجسّدها Roomframe AI. يتشكّل الضوء والنسبة والمواد بأسلوب يبدو شخصياً وخالداً في آنٍ واحد.",
+        "timeout_generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى."
     },
     "styles": {
         "scandinavian": "يحتفي التصميم الاسكندنافي بالحد الأدنى الدافئ — خشب فاتح، ألوان محايدة ناعمة، وضوء طبيعي وافر. كل قطعة تكسب مكانها من خلال الفائدة والحرفة الصادقة.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "أدهشني",
         "variation_wild_hint": "تفسير جديد، اتجاه غير متوقع",
         "variation_cost": "رصيد 1",
-        "variation_cta": "إنشاء التنويع"
+        "variation_cta": "إنشاء التنويع",
+        "upscale_confirm_title": "الترقية إلى Ultra HD؟",
+        "upscale_confirm_body": "سيتم استخدام {{cost}} رصيد لتحسين هذه الصورة إلى دقة 2K.",
+        "upscale_subtitle_cost": "الترقية إلى 2K · {{cost}} رصيد"
     },
     "settings": {
         "notifications_title": "الإشعارات",

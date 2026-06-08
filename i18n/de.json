@@ -443,7 +443,8 @@
         "annual_savings_max": "30% sparen vs monatlich",
         "confirm_activating_title": "Kauf erhalten",
         "confirm_activating_description": "Dein Kauf war erfolgreich. Dein Plan wird gleich aktualisiert — zum Aktualisieren ziehen, falls er nicht erscheint.",
-        "best_value": "Bestes Angebot"
+        "best_value": "Bestes Angebot",
+        "manage_subscription": "Abo verwalten oder kündigen"
     },
     "credits": {
         "title": "Credits",
@@ -569,7 +570,8 @@
         "minutes_short": "{{count}}m",
         "minutes_seconds": "{{mins}}m {{secs}}s",
         "about_this_style": "Über diesen Stil",
-        "style_hint_generic": "Eine kuratierte Ästhetik, die von Roomframe AI zum Leben erweckt wird. Licht, Proportion und Material sind so komponiert, dass sie persönlich und zeitlos wirken."
+        "style_hint_generic": "Eine kuratierte Ästhetik, die von Roomframe AI zum Leben erweckt wird. Licht, Proportion und Material sind so komponiert, dass sie persönlich und zeitlos wirken.",
+        "timeout_generic": "Unerwarteter Fehler. Bitte erneut versuchen."
     },
     "styles": {
         "scandinavian": "Skandinavisches Design feiert warmen Minimalismus — helle Hölzer, weiche Neutraltöne und reichlich natürliches Licht. Jedes Objekt verdient seinen Platz durch Nützlichkeit und ehrliches Handwerk.",
@@ -649,7 +651,10 @@
         "variation_wild_desc": "Überrasche mich",
         "variation_wild_hint": "Frische Interpretation, unerwartete Richtung",
         "variation_cost": "1 Credit",
-        "variation_cta": "Variation generieren"
+        "variation_cta": "Variation generieren",
+        "upscale_confirm_title": "Auf Ultra HD hochskalieren?",
+        "upscale_confirm_body": "Für das Hochskalieren auf 2K werden {{cost}} Credits verwendet.",
+        "upscale_subtitle_cost": "Auf 2K hochskalieren · {{cost}} Credits"
     },
     "settings": {
         "notifications_title": "Benachrichtigungen",
