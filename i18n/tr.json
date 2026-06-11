@@ -654,7 +654,10 @@
         "variation_cta": "Varyasyon üret",
         "upscale_confirm_title": "Ultra HD'ye yükseltilsin mi?",
         "upscale_confirm_body": "Bu görüntüyü 2K'ya yükseltmek için {{cost}} kredi kullanılacak.",
-        "upscale_subtitle_cost": "2K'ya yükselt · {{cost}} kredi"
+        "upscale_subtitle_cost": "2K'ya yükselt · {{cost}} kredi",
+        "upscale_confirm_title_res": "{{resolution}} çözünürlüğe yükseltilsin mi?",
+        "upscale_confirm_body_res": "Bu görüntüyü {{resolution}} çözünürlüğe yükseltmek için {{cost}} kredi kullanılacak.",
+        "upscale_subtitle_res": "{{resolution}} çözünürlüğe yükselt · {{cost}} kredi"
     },
     "settings": {
         "notifications_title": "Bildirimler",

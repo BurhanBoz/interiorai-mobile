@@ -654,7 +654,10 @@
         "variation_cta": "변형 생성",
         "upscale_confirm_title": "Ultra HD로 업스케일하시겠습니까?",
         "upscale_confirm_body": "이 이미지를 2K로 향상시키는 데 {{cost}} 크레딧이 사용됩니다.",
-        "upscale_subtitle_cost": "2K로 업스케일 · {{cost}} 크레딧"
+        "upscale_subtitle_cost": "2K로 업스케일 · {{cost}} 크레딧",
+        "upscale_confirm_title_res": "{{resolution}}로 업스케일하시겠습니까?",
+        "upscale_confirm_body_res": "이 이미지를 {{resolution}}로 향상시키는 데 {{cost}} 크레딧이 사용됩니다.",
+        "upscale_subtitle_res": "{{resolution}}로 업스케일 · {{cost}} 크레딧"
     },
     "settings": {
         "notifications_title": "알림",

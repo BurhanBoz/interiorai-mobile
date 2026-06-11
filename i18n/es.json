@@ -654,7 +654,10 @@
         "variation_cta": "Generar variación",
         "upscale_confirm_title": "¿Mejorar a Ultra HD?",
         "upscale_confirm_body": "Se usarán {{cost}} créditos para mejorar esta imagen a 2K.",
-        "upscale_subtitle_cost": "Mejorar a 2K · {{cost}} créditos"
+        "upscale_subtitle_cost": "Mejorar a 2K · {{cost}} créditos",
+        "upscale_confirm_title_res": "¿Mejorar a {{resolution}}?",
+        "upscale_confirm_body_res": "Se usarán {{cost}} créditos para mejorar esta imagen a {{resolution}}.",
+        "upscale_subtitle_res": "Mejorar a {{resolution}} · {{cost}} créditos"
     },
     "settings": {
         "notifications_title": "Notificaciones",

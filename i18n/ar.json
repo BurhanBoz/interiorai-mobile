@@ -654,7 +654,10 @@
         "variation_cta": "إنشاء التنويع",
         "upscale_confirm_title": "الترقية إلى Ultra HD؟",
         "upscale_confirm_body": "سيتم استخدام {{cost}} رصيد لتحسين هذه الصورة إلى دقة 2K.",
-        "upscale_subtitle_cost": "الترقية إلى 2K · {{cost}} رصيد"
+        "upscale_subtitle_cost": "الترقية إلى 2K · {{cost}} رصيد",
+        "upscale_confirm_title_res": "الترقية إلى {{resolution}}؟",
+        "upscale_confirm_body_res": "سيتم استخدام {{cost}} رصيد لتحسين هذه الصورة إلى {{resolution}}.",
+        "upscale_subtitle_res": "الترقية إلى {{resolution}} · {{cost}} رصيد"
     },
     "settings": {
         "notifications_title": "الإشعارات",

@@ -654,7 +654,10 @@
         "variation_cta": "Generate variation",
         "upscale_confirm_title": "Upscale to Ultra HD?",
         "upscale_confirm_body": "{{cost}} credits will be used to enhance this image to 2K.",
-        "upscale_subtitle_cost": "Enhance to 2K · {{cost}} credits"
+        "upscale_subtitle_cost": "Enhance to 2K · {{cost}} credits",
+        "upscale_confirm_title_res": "Upscale to {{resolution}}?",
+        "upscale_confirm_body_res": "{{cost}} credits will be used to enhance this image to {{resolution}}.",
+        "upscale_subtitle_res": "Enhance to {{resolution}} · {{cost}} credits"
     },
     "settings": {
         "notifications_title": "Notifications",

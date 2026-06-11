@@ -654,7 +654,10 @@
         "variation_cta": "Variation generieren",
         "upscale_confirm_title": "Auf Ultra HD hochskalieren?",
         "upscale_confirm_body": "Für das Hochskalieren auf 2K werden {{cost}} Credits verwendet.",
-        "upscale_subtitle_cost": "Auf 2K hochskalieren · {{cost}} Credits"
+        "upscale_subtitle_cost": "Auf 2K hochskalieren · {{cost}} Credits",
+        "upscale_confirm_title_res": "Auf {{resolution}} hochskalieren?",
+        "upscale_confirm_body_res": "Für das Hochskalieren auf {{resolution}} werden {{cost}} Credits verwendet.",
+        "upscale_subtitle_res": "Auf {{resolution}} hochskalieren · {{cost}} Credits"
     },
     "settings": {
         "notifications_title": "Benachrichtigungen",

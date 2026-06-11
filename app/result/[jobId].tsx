@@ -28,7 +28,7 @@ import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
-import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules } from "@/hooks/useEntitlement";
+import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import { VariationSheet } from "@/components/result/VariationSheet";
@@ -118,6 +118,11 @@ export default function ResultDetailScreen() {
     creditRules.find(r => r.featureCode === "ULTRA_HD_UPSCALE")?.creditCost ?? null;
   const canUpscale =
     !isAlreadyUpscaled && upscaleFeatureEnabled && upscaleCost != null;
+  // Resolution the upscale delivers, by tier: MAX = 4K (Topaz 4x), others = 2K
+  // (Clarity ~2x). Surfaced in the confirm dialog + button so the user sees
+  // the real target before spending credits.
+  const effectiveTier = useEffectivePlanCode();
+  const upscaleResolution = effectiveTier === "MAX" ? "4K" : "2K";
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -618,9 +623,13 @@ export default function ResultDetailScreen() {
                 // Pre-flight cost confirmation — the upscale starts a paid
                 // job, so we never debit without an explicit user OK.
                 Alert.alert(
-                  t("result.upscale_confirm_title", { defaultValue: "Upscale to Ultra HD?" }),
-                  t("result.upscale_confirm_body", {
-                    defaultValue: "{{cost}} credits will be used to enhance this image to 2K.",
+                  t("result.upscale_confirm_title_res", {
+                    defaultValue: "Upscale to {{resolution}}?",
+                    resolution: upscaleResolution,
+                  }),
+                  t("result.upscale_confirm_body_res", {
+                    defaultValue: "{{cost}} credits will be used to enhance this image to {{resolution}}.",
+                    resolution: upscaleResolution,
                     cost: upscaleCost,
                   }),
                   [
@@ -691,8 +700,9 @@ export default function ResultDetailScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    {t("result.upscale_subtitle_cost", {
-                      defaultValue: "Enhance to 2K · {{cost}} credits",
+                    {t("result.upscale_subtitle_res", {
+                      defaultValue: "Enhance to {{resolution}} · {{cost}} credits",
+                      resolution: upscaleResolution,
                       cost: upscaleCost,
                     })}
                   </Text>

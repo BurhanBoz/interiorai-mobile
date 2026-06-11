@@ -654,7 +654,10 @@
         "variation_cta": "バリエーション生成",
         "upscale_confirm_title": "Ultra HD にアップスケールしますか？",
         "upscale_confirm_body": "この画像を 2K に拡張するために {{cost}} クレジットを使用します。",
-        "upscale_subtitle_cost": "2K にアップスケール · {{cost}} クレジット"
+        "upscale_subtitle_cost": "2K にアップスケール · {{cost}} クレジット",
+        "upscale_confirm_title_res": "{{resolution}} にアップスケールしますか？",
+        "upscale_confirm_body_res": "この画像を {{resolution}} に拡張するために {{cost}} クレジットを使用します。",
+        "upscale_subtitle_res": "{{resolution}} にアップスケール · {{cost}} クレジット"
     },
     "settings": {
         "notifications_title": "通知",
