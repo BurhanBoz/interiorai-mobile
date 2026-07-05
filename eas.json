@@ -12,7 +12,16 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.roomframeai.com",
+        "EXPO_PUBLIC_APP_NAME": "Roomframe AI",
+        "EXPO_PUBLIC_ENABLE_LOGGING": "false",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY_IOS": "appl_gJXtGkCfspiRUQDVkRRdALNTLRO",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "21314937170-kkccfujdhofi8k1c20eoct10f7l9g4c2.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "21314937170-lu8vdvfs8n7pcq6nolf454aaqsnhde05.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {
