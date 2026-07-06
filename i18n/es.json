@@ -274,7 +274,20 @@
         "trial_countdown_hours": "{{hours}}h restantes",
         "trial_expired_title": "Tu prueba MAX terminó",
         "trial_expired_body": "¿Te gustó? Mantén MAX — o continúa con FREE (1 crédito/día).",
-        "trial_expired_continue_free": "Continuar con FREE"
+        "trial_expired_continue_free": "Continuar con FREE",
+        "smart_edit_title": "Edición Inteligente",
+        "smart_edit_hint": "Pinta las zonas que quieres que la IA cambie. Las zonas sin pintar se mantienen exactamente igual.",
+        "smart_edit_undo": "Deshacer",
+        "smart_edit_clear": "Borrar",
+        "smart_edit_save": "Guardar máscara y continuar",
+        "smart_edit_saving": "Guardando máscara…",
+        "smart_edit_no_photo": "Sube primero una foto de tu habitación y vuelve aquí para marcar la zona a editar.",
+        "smart_edit_min_stroke": "Pinta al menos una zona para editar.",
+        "smart_edit_error": "No se pudo guardar la máscara. Inténtalo de nuevo.",
+        "smart_edit_mask_required": "Marca la zona a editar antes de generar.",
+        "smart_edit_mode_change": "Lo pintado cambia",
+        "smart_edit_mode_protect": "Lo pintado se conserva",
+        "smart_edit_hint_protect": "Pinta las zonas que quieres CONSERVAR. Todo lo demás se rediseñará."
     },
     "gallery": {
         "title": "Galería",

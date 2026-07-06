@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CatalogItemResponse, DesignMode, QualityTier, SpeedMode } from "@/types/api";
+import type { CatalogItemResponse, DesignMode, MaskMode, MaskStroke, QualityTier, SpeedMode } from "@/types/api";
 
 interface StudioState {
     step: 1 | 2 | 3 | 4;
@@ -24,7 +24,21 @@ interface StudioState {
      */
     guidanceScale: number | undefined;
     referencePhoto: { uri: string; fileId: string; width?: number | null; height?: number | null } | null;
-    maskData: string | null;
+    /**
+     * Backend MASK file id produced by the Smart Edit drawing screen
+     * (POST /api/files/{inputFileId}/mask). Belongs to the CURRENT photo —
+     * setPhoto() clears it so a stale mask can never ride along with a
+     * freshly uploaded image.
+     */
+    maskFileId: string | null;
+    /**
+     * The normalized strokes behind maskFileId — kept so the Review screen
+     * can re-render the painted overlay on the photo preview without
+     * fetching the server-rendered mask PNG. Lifecycle mirrors maskFileId.
+     */
+    maskStrokes: MaskStroke[] | null;
+    /** CHANGE = painted area changes; PROTECT = painted area is preserved. */
+    maskMode: MaskMode | null;
     setStep: (step: 1 | 2 | 3 | 4) => void;
     setPhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
     setRoomType: (roomType: CatalogItemResponse | null) => void;
@@ -41,7 +55,8 @@ interface StudioState {
     setStrength: (v: number) => void;
     setGuidanceScale: (v: number | undefined) => void;
     setReferencePhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
-    setMaskData: (data: string | null) => void;
+    /** Atomically set (or clear with nulls) the mask file id + its strokes. */
+    setMask: (fileId: string | null, strokes: MaskStroke[] | null, mode: MaskMode | null) => void;
     reset: () => void;
 }
 
@@ -77,13 +92,17 @@ const initialState = {
     strength: 0.7,
     guidanceScale: undefined,
     referencePhoto: null,
-    maskData: null,
+    maskFileId: null,
+    maskStrokes: null,
+    maskMode: null,
 };
 
 export const useStudioStore = create<StudioState>((set) => ({
     ...initialState,
     setStep: (step) => set({ step }),
-    setPhoto: (photo) => set({ photo }),
+    // A mask is drawn against ONE specific photo — changing (or clearing)
+    // the photo invalidates it.
+    setPhoto: (photo) => set({ photo, maskFileId: null, maskStrokes: null, maskMode: null }),
     setRoomType: (roomType) => set({ roomType }),
     setDesignStyle: (designStyle) => set({ designStyle }),
     setMode: (mode) =>
@@ -106,6 +125,6 @@ export const useStudioStore = create<StudioState>((set) => ({
     setStrength: (strength) => set({ strength }),
     setGuidanceScale: (guidanceScale) => set({ guidanceScale }),
     setReferencePhoto: (referencePhoto) => set({ referencePhoto }),
-    setMaskData: (maskData) => set({ maskData }),
+    setMask: (maskFileId, maskStrokes, maskMode) => set({ maskFileId, maskStrokes, maskMode }),
     reset: () => set(initialState),
 }));

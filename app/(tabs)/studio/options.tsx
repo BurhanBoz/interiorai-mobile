@@ -349,6 +349,15 @@ export default function OptionsScreen() {
                       router.push("/plans");
                       return;
                     }
+                    // Smart Edit's mask-drawing canvas hasn't shipped yet —
+                    // selecting it as a generation mode would submit a
+                    // mask-less INPAINT job that the backend rejects (V37).
+                    // Route to the branded Coming Soon screen instead and
+                    // keep the previous mode selected.
+                    if (m.key === "INPAINT") {
+                      router.push("/studio/smart-edit");
+                      return;
+                    }
                     setMode(m.key);
                     // Style Transfer needs a reference image; kick the user
                     // into the dedicated capture screen. They return to

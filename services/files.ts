@@ -1,6 +1,8 @@
 import api from "./api";
 import env from "@/config/environment";
-import type { FileResponse } from "@/types/api";
+import type { FileResponse, MaskMode, MaskStroke } from "@/types/api";
+
+export type { MaskMode, MaskStroke } from "@/types/api";
 
 /**
  * Build the backend-proxied download URL for a file.
@@ -37,5 +39,17 @@ export async function uploadImage(uri: string): Promise<FileResponse> {
 
 export async function getFile(fileId: string): Promise<FileResponse> {
     const { data } = await api.get<FileResponse>(`/api/files/${fileId}`);
+    return data;
+}
+
+export async function createMask(
+    inputFileId: string,
+    strokes: MaskStroke[],
+    mode: MaskMode = "CHANGE",
+): Promise<FileResponse> {
+    const { data } = await api.post<FileResponse>(
+        `/api/files/${inputFileId}/mask`,
+        { strokes, mode },
+    );
     return data;
 }

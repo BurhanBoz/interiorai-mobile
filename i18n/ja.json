@@ -274,7 +274,20 @@
         "trial_countdown_hours": "残り{{hours}}時間",
         "trial_expired_title": "MAX試用期間が終了しました",
         "trial_expired_body": "気に入った?MAX機能を続ける — またはFREEで継続(1クレジット/日)。",
-        "trial_expired_continue_free": "FREEで続ける"
+        "trial_expired_continue_free": "FREEで続ける",
+        "smart_edit_title": "スマート編集",
+        "smart_edit_hint": "AIに変更してほしい部分を塗ってください。塗っていない部分はそのまま残ります。",
+        "smart_edit_undo": "元に戻す",
+        "smart_edit_clear": "クリア",
+        "smart_edit_save": "マスクを保存して続行",
+        "smart_edit_saving": "マスクを保存中…",
+        "smart_edit_no_photo": "まず部屋の写真をアップロードし、その後ここに戻って編集する範囲を指定してください。",
+        "smart_edit_min_stroke": "編集する範囲を1か所以上塗ってください。",
+        "smart_edit_error": "マスクを保存できませんでした。もう一度お試しください。",
+        "smart_edit_mask_required": "生成する前に編集する範囲を指定してください。",
+        "smart_edit_mode_change": "塗った部分を変更",
+        "smart_edit_mode_protect": "塗った部分を保持",
+        "smart_edit_hint_protect": "残したい部分を塗ってください。それ以外はすべて再デザインされます。"
     },
     "gallery": {
         "title": "ギャラリー",

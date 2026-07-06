@@ -274,7 +274,20 @@
         "trial_countdown_hours": "{{hours}}시간 남음",
         "trial_expired_title": "MAX 체험이 종료되었습니다",
         "trial_expired_body": "마음에 드셨나요? MAX 유지 — 또는 FREE로 계속 (하루 1크레딧).",
-        "trial_expired_continue_free": "FREE로 계속하기"
+        "trial_expired_continue_free": "FREE로 계속하기",
+        "smart_edit_title": "스마트 편집",
+        "smart_edit_hint": "AI가 바꾸길 원하는 영역을 칠하세요. 칠하지 않은 영역은 그대로 유지됩니다.",
+        "smart_edit_undo": "실행 취소",
+        "smart_edit_clear": "지우기",
+        "smart_edit_save": "마스크 저장 후 계속",
+        "smart_edit_saving": "마스크 저장 중…",
+        "smart_edit_no_photo": "먼저 방 사진을 업로드한 다음 여기로 돌아와 편집할 영역을 표시하세요.",
+        "smart_edit_min_stroke": "편집할 영역을 최소 한 곳 칠하세요.",
+        "smart_edit_error": "마스크를 저장하지 못했습니다. 다시 시도해 주세요.",
+        "smart_edit_mask_required": "생성하기 전에 편집할 영역을 표시하세요.",
+        "smart_edit_mode_change": "칠한 부분 변경",
+        "smart_edit_mode_protect": "칠한 부분 유지",
+        "smart_edit_hint_protect": "유지하고 싶은 영역을 칠하세요. 나머지는 모두 다시 디자인됩니다."
     },
     "gallery": {
         "title": "갤러리",

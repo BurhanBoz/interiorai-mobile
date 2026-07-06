@@ -3,14 +3,21 @@ import {
   Text,
   ScrollView,
   Pressable,
-  PanResponder,
   LayoutChangeEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -21,11 +28,15 @@ import { useTranslation } from "react-i18next";
  *
  * Layout model:
  *   AFTER image:  absolute-fill (always visible behind)
- *   BEFORE image: positioned on the left, clipped to `revealPx` width
- *   Handle:       vertical divider + circular knob at x = revealPx
+ *   BEFORE image: positioned on the left, clipped to the reveal width
+ *   Handle:       vertical divider + circular knob at the reveal edge
  *
- * Dragging anywhere on the container (not just the handle) updates the slider
- * position — PanResponder captures touches across the whole image.
+ * Fluidity: the reveal position lives in a Reanimated shared value and every
+ * frame-rate concern (clip width, handle transform, label fades) is an
+ * animated style on the UI thread — dragging causes ZERO React re-renders.
+ * The previous PanResponder + setState-per-move version re-rendered the
+ * whole tree on every touch event, which is exactly the stutter testers felt.
+ * Drag anywhere to scrub; a quick tap eases the divider to that point.
  */
 function BeforeAfterSlider({
   beforeUri,
@@ -38,39 +49,54 @@ function BeforeAfterSlider({
 }) {
   const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = useState(1);
-  const [revealPx, setRevealPx] = useState(0);
-  const containerWidthRef = useRef(1);
+  const revealX = useSharedValue(0);
+  const trackW = useSharedValue(1);
 
-  // Initialize to 50/50 on first layout.
+  // Initialize to 50/50 on first layout (layout happens once; drags never
+  // touch React state again).
   const onLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
-    containerWidthRef.current = w;
     setContainerWidth(w);
-    if (revealPx === 0) setRevealPx(w / 2);
+    trackW.value = w;
+    if (revealX.value === 0) revealX.value = withTiming(w / 2, { duration: 350 });
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
-      onPanResponderGrant: e => {
-        const x = Math.max(
-          0,
-          Math.min(containerWidthRef.current, e.nativeEvent.locationX),
-        );
-        setRevealPx(x);
-      },
-      onPanResponderMove: e => {
-        const x = Math.max(
-          0,
-          Math.min(containerWidthRef.current, e.nativeEvent.locationX),
-        );
-        setRevealPx(x);
-      },
-    }),
-  ).current;
+  const pan = Gesture.Pan()
+    // Claim clearly-horizontal drags; hand vertical intent back to the
+    // surrounding ScrollView instead of fighting it (another jank source).
+    .activeOffsetX([-4, 4])
+    .failOffsetY([-16, 16])
+    .onStart(e => {
+      revealX.value = Math.min(Math.max(e.x, 0), trackW.value);
+    })
+    .onUpdate(e => {
+      revealX.value = Math.min(Math.max(e.x, 0), trackW.value);
+    });
+
+  const tap = Gesture.Tap().onEnd(e => {
+    revealX.value = withTiming(Math.min(Math.max(e.x, 0), trackW.value), {
+      duration: 180,
+    });
+  });
+
+  const gesture = Gesture.Race(pan, tap);
+
+  const beforeClipStyle = useAnimatedStyle(() => ({ width: revealX.value }));
+  const handleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: revealX.value - 24 }],
+  }));
+  // Labels fade with position instead of popping at a hard threshold.
+  const beforeLabelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(revealX.value, [28, 64], [0, 1], Extrapolation.CLAMP),
+  }));
+  const afterLabelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      trackW.value - revealX.value,
+      [28, 64],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
   // The BEFORE image is served through the authenticated backend proxy
   // (`/api/files/:id/download`) — so it needs the Bearer token in headers.
@@ -87,9 +113,9 @@ function BeforeAfterSlider({
   );
 
   return (
+    <GestureDetector gesture={gesture}>
     <View
       onLayout={onLayout}
-      {...panResponder.panHandlers}
       className="rounded-xl overflow-hidden bg-surface-container-low"
       style={{ aspectRatio: 4 / 5, width: "100%" }}
     >
@@ -115,16 +141,17 @@ function BeforeAfterSlider({
       )}
 
       {/* BEFORE — clipped to the reveal width on the left */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: "100%",
-          width: revealPx,
-          overflow: "hidden",
-          borderRightWidth: 0,
-        }}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            height: "100%",
+            overflow: "hidden",
+          },
+          beforeClipStyle,
+        ]}
       >
         {beforeSource ? (
           <Image
@@ -144,19 +171,21 @@ function BeforeAfterSlider({
             <Ionicons name="image-outline" size={32} color="#998F84" />
           </View>
         )}
-      </View>
+      </Animated.View>
 
       {/* Labels — BEFORE on left (visible while revealed), AFTER on right */}
-      <View
+      <Animated.View
         className="absolute rounded-full"
-        style={{
-          top: 16,
-          left: 16,
-          backgroundColor: "rgba(19,19,19,0.8)",
-          paddingHorizontal: 12,
-          paddingVertical: 4,
-          opacity: revealPx > 50 ? 1 : 0,
-        }}
+        style={[
+          {
+            top: 16,
+            left: 16,
+            backgroundColor: "rgba(19,19,19,0.8)",
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+          },
+          beforeLabelStyle,
+        ]}
       >
         <Text
           className="font-label text-on-surface-variant"
@@ -164,17 +193,19 @@ function BeforeAfterSlider({
         >
           {t("result.before")}
         </Text>
-      </View>
-      <View
+      </Animated.View>
+      <Animated.View
         className="absolute rounded-full"
-        style={{
-          top: 16,
-          right: 16,
-          backgroundColor: "rgba(254,223,181,0.9)",
-          paddingHorizontal: 12,
-          paddingVertical: 4,
-          opacity: containerWidth - revealPx > 50 ? 1 : 0,
-        }}
+        style={[
+          {
+            top: 16,
+            right: 16,
+            backgroundColor: "rgba(254,223,181,0.9)",
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+          },
+          afterLabelStyle,
+        ]}
       >
         <Text
           className="font-label font-semibold"
@@ -187,17 +218,20 @@ function BeforeAfterSlider({
         >
           {t("result.after")}
         </Text>
-      </View>
+      </Animated.View>
 
-      {/* Slider handle — divider line + circular knob at revealPx */}
-      <View
+      {/* Slider handle — divider line + circular knob, driven on the UI thread */}
+      <Animated.View
         className="absolute items-center justify-center"
-        style={{
-          top: 0,
-          bottom: 0,
-          left: revealPx - 24,
-          width: 48,
-        }}
+        style={[
+          {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 48,
+          },
+          handleStyle,
+        ]}
         pointerEvents="none"
       >
         <View
@@ -229,8 +263,9 @@ function BeforeAfterSlider({
         >
           <Ionicons name="swap-horizontal" size={20} color="#FEDFB5" />
         </View>
-      </View>
+      </Animated.View>
     </View>
+    </GestureDetector>
   );
 }
 

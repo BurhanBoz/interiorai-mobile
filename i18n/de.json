@@ -274,7 +274,20 @@
         "trial_countdown_hours": "{{hours}}h übrig",
         "trial_expired_title": "Dein MAX-Test ist abgelaufen",
         "trial_expired_body": "Gefiel es dir? Behalte MAX — oder mit FREE weitermachen (1 Credit/Tag).",
-        "trial_expired_continue_free": "Mit FREE weitermachen"
+        "trial_expired_continue_free": "Mit FREE weitermachen",
+        "smart_edit_title": "Smart Edit",
+        "smart_edit_hint": "Male die Bereiche aus, die die KI ändern soll. Unbemalte Bereiche bleiben exakt gleich.",
+        "smart_edit_undo": "Rückgängig",
+        "smart_edit_clear": "Löschen",
+        "smart_edit_save": "Maske speichern & weiter",
+        "smart_edit_saving": "Maske wird gespeichert…",
+        "smart_edit_no_photo": "Lade zuerst ein Raumfoto hoch — und kehre dann hierher zurück, um den Bereich zu markieren.",
+        "smart_edit_min_stroke": "Male mindestens einen Bereich aus.",
+        "smart_edit_error": "Die Maske konnte nicht gespeichert werden. Bitte versuche es erneut.",
+        "smart_edit_mask_required": "Markiere vor dem Generieren den zu bearbeitenden Bereich.",
+        "smart_edit_mode_change": "Bemaltes ändern",
+        "smart_edit_mode_protect": "Bemaltes behalten",
+        "smart_edit_hint_protect": "Male die Bereiche aus, die BLEIBEN sollen. Alles andere wird neu gestaltet."
     },
     "gallery": {
         "title": "Galerie",

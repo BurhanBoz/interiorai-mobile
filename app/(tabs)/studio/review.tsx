@@ -23,6 +23,7 @@ import { aspectRatioFor } from "@/hooks/useImagePicker";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { DisclaimerBanner } from "@/components/ui/DisclaimerBanner";
+import { MaskOverlay } from "@/components/ui/MaskOverlay";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
@@ -65,6 +66,9 @@ export default function ReviewScreen() {
     strength,
     guidanceScale,
     referencePhoto,
+    maskFileId,
+    maskStrokes,
+    maskMode,
     setSpeedMode,
   } = useStudioStore();
   const balance = useCreditStore(s => s.balance);
@@ -106,6 +110,17 @@ export default function ReviewScreen() {
       return;
     }
 
+    // INPAINT gate — same fail-fast rationale (backend V37 rejects mask-less
+    // INPAINT). Send the user to the drawing screen instead of a generic 400.
+    if (mode === "INPAINT" && !maskFileId) {
+      Alert.alert(
+        t("studio.mode_inpaint"),
+        t("studio.smart_edit_mask_required"),
+      );
+      router.push("/studio/smart-edit");
+      return;
+    }
+
     if (balance < cost) {
       router.push("/credits-exhausted");
       return;
@@ -142,6 +157,7 @@ export default function ReviewScreen() {
         guidanceScale,
         aspectRatio: computedAspectRatio,
         referenceFileId: referencePhoto?.fileId || undefined,
+        maskFileId: mode === "INPAINT" ? maskFileId || undefined : undefined,
       }, idempotencyKeyRef.current);
 
       // Success — release the key so the next generate intent gets a fresh
@@ -263,11 +279,27 @@ export default function ReviewScreen() {
           }}
         >
           {photo?.uri ? (
-            <Image
-              source={{ uri: photo.uri }}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
-            />
+            <>
+              <Image
+                source={{ uri: photo.uri }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+              />
+              {/* Smart Edit: show WHAT will change — the painted mask regions
+                  re-rendered over the preview (cover-crop aware). */}
+              {mode === "INPAINT" &&
+                maskStrokes &&
+                maskStrokes.length > 0 &&
+                photo.width != null &&
+                photo.height != null && (
+                  <MaskOverlay
+                    strokes={maskStrokes}
+                    imageWidth={photo.width}
+                    imageHeight={photo.height}
+                    color={maskMode === "PROTECT" ? "#9CC5B0" : "#E1C39B"}
+                  />
+                )}
+            </>
           ) : (
             <View
               className="flex-1 items-center justify-center"

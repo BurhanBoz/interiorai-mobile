@@ -47,6 +47,23 @@ export interface FileResponse {
 /** Inference speed / quality tradeoff. QUALITY is gated to the MAX plan. */
 export type SpeedMode = "FAST" | "BALANCED" | "QUALITY";
 
+/**
+ * One finger stroke of the Smart Edit mask, in resolution-independent
+ * coordinates: x/y normalized to [0,1] over the image, brush as a fraction
+ * of image WIDTH. Rasterized server-side at the photo's original dimensions.
+ */
+export interface MaskStroke {
+    brush: number;
+    points: { x: number; y: number }[];
+}
+
+/**
+ * Smart Edit mask semantics: CHANGE = painted area is repainted (rest
+ * preserved); PROTECT = painted area is preserved (rest repainted — the
+ * backend inverts the mask).
+ */
+export type MaskMode = "CHANGE" | "PROTECT";
+
 export interface CreateJobRequest {
     inputFileId: string;
     roomTypeId: string;
@@ -66,6 +83,7 @@ export interface CreateJobRequest {
     qualityTier?: QualityTier;
     speedMode?: SpeedMode;
     referenceFileId?: string;
+    maskFileId?: string;
 }
 
 export interface JobOutputResponse {

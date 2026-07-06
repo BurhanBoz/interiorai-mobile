@@ -274,7 +274,20 @@
         "trial_countdown_hours": "{{hours}}h rimaste",
         "trial_expired_title": "La tua prova MAX è terminata",
         "trial_expired_body": "Ti è piaciuta? Mantieni MAX — o continua con FREE (1 credito/giorno).",
-        "trial_expired_continue_free": "Continua con FREE"
+        "trial_expired_continue_free": "Continua con FREE",
+        "smart_edit_title": "Modifica Intelligente",
+        "smart_edit_hint": "Dipingi le aree che vuoi far cambiare all'IA. Le aree non dipinte restano identiche.",
+        "smart_edit_undo": "Annulla",
+        "smart_edit_clear": "Cancella",
+        "smart_edit_save": "Salva maschera e continua",
+        "smart_edit_saving": "Salvataggio maschera…",
+        "smart_edit_no_photo": "Carica prima una foto della stanza, poi torna qui per segnare l'area da modificare.",
+        "smart_edit_min_stroke": "Dipingi almeno un'area da modificare.",
+        "smart_edit_error": "Impossibile salvare la maschera. Riprova.",
+        "smart_edit_mask_required": "Segna l'area da modificare prima di generare.",
+        "smart_edit_mode_change": "Il dipinto cambia",
+        "smart_edit_mode_protect": "Il dipinto resta",
+        "smart_edit_hint_protect": "Dipingi le aree da MANTENERE. Tutto il resto verrà ridisegnato."
     },
     "gallery": {
         "title": "Galleria",

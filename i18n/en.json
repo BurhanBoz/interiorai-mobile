@@ -274,7 +274,20 @@
         "trial_countdown_hours": "{{hours}}h left",
         "trial_expired_title": "Your MAX trial just ended",
         "trial_expired_body": "Loved it? Keep MAX features — or continue with FREE plan (1 credit/day).",
-        "trial_expired_continue_free": "Continue with FREE"
+        "trial_expired_continue_free": "Continue with FREE",
+        "smart_edit_title": "Smart Edit",
+        "smart_edit_hint": "Paint the areas you want the AI to change. Unpainted areas stay exactly the same.",
+        "smart_edit_undo": "Undo",
+        "smart_edit_clear": "Clear",
+        "smart_edit_save": "Save Mask & Continue",
+        "smart_edit_saving": "Saving mask…",
+        "smart_edit_no_photo": "Upload a room photo first — then come back to mark the area to edit.",
+        "smart_edit_min_stroke": "Paint at least one area to edit.",
+        "smart_edit_error": "The mask could not be saved. Please try again.",
+        "smart_edit_mask_required": "Mark the area to edit before generating.",
+        "smart_edit_mode_change": "Painted area changes",
+        "smart_edit_mode_protect": "Painted area is kept",
+        "smart_edit_hint_protect": "Paint the areas you want to KEEP. Everything else will be redesigned."
     },
     "gallery": {
         "title": "Gallery",
