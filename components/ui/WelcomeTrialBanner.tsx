@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
-import { useDismissible } from "@/hooks/useDismissible";
 
 /**
  * Welcome bonus trial banner (V20 / Pricing Strategy V2).
@@ -21,16 +20,16 @@ import { useDismissible } from "@/hooks/useDismissible";
  * {@link TrialCountdownBadge}; this is the full announcement card
  * shown on studio first-render only.
  */
-export function WelcomeTrialBanner() {
+export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
     const { t } = useTranslation();
     const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
     const expiresAt = useCreditStore((s) => s.welcomeBonusExpiresAt);
-    // One-shot announcement (2026-07 first-review feedback): once the user
-    // closes it, it never returns — the compact TrialCountdownBadge in the
-    // header stays as the persistent trial reminder until expiry.
-    const [visible, dismiss] = useDismissible("dismissed_welcome_trial_banner");
+    // Visibility lifecycle is owned by the PARENT (studio first-visit intro,
+    // 2026-07 review round 2) — this card only checks trial state and
+    // forwards the X to onClose. The compact TrialCountdownBadge in the
+    // header stays as the persistent reminder until expiry.
 
-    if (!welcomeBonusActive || !expiresAt || !visible) return null;
+    if (!welcomeBonusActive || !expiresAt) return null;
 
     return (
         <View
@@ -62,8 +61,9 @@ export function WelcomeTrialBanner() {
                     >
                         {t("studio.welcome_banner_title")}
                     </Text>
+                    {onClose && (
                     <Pressable
-                        onPress={dismiss}
+                        onPress={onClose}
                         hitSlop={12}
                         accessibilityRole="button"
                         accessibilityLabel={t("common.close")}
@@ -78,6 +78,7 @@ export function WelcomeTrialBanner() {
                     >
                         <Ionicons name="close" size={16} color="#D0C5B8" />
                     </Pressable>
+                    )}
                 </View>
                 <Text
                     className="font-body"

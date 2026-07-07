@@ -1,9 +1,9 @@
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { View, Text, Pressable, ScrollView, Animated, LayoutAnimation } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
@@ -55,8 +55,53 @@ const tips: Array<{
 ];
 
 export default function StudioScreen() {
-  // First-review feedback (2026-07): tips are onboarding chrome — closable, one-shot.
-  const [tipsVisible, dismissTips] = useDismissible("dismissed_studio_tips");
+  // First-visit intro (2026-07 review round 2): the trial banner + tips form
+  // ONE spotlight moment. They enter emphasized (fade+rise), and ANY exit —
+  // either X, starting an upload, or leaving the screen — dismisses BOTH
+  // permanently. Afterwards the upload cluster re-centers vertically.
+  const [introVisible, markIntroSeen] = useDismissible("studio_intro_seen");
+  const introVisibleRef = useRef(false);
+  introVisibleRef.current = introVisible;
+
+  const introAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (introVisible) {
+      Animated.timing(introAnim, {
+        toValue: 1,
+        duration: 520,
+        easing: theme.motion.easing.standard,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [introVisible, introAnim]);
+  const introStyle = {
+    opacity: introAnim,
+    transform: [
+      {
+        translateY: introAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [14, 0],
+        }),
+      },
+    ],
+  };
+
+  /** X / explicit close: animate the reflow so the cluster glides to center. */
+  const dismissIntro = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    markIntroSeen();
+  }, [markIntroSeen]);
+
+  // Leaving the screen while the intro is up also counts as "seen" — next
+  // visit opens clean and centered.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (introVisibleRef.current) markIntroSeen();
+      };
+    }, [markIntroSeen]),
+  );
+
   const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
   const { openDrawer } = useDrawer();
@@ -64,6 +109,7 @@ export default function StudioScreen() {
 
   const handleUpload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (introVisibleRef.current) markIntroSeen(); // proceeding = intro acknowledged
     const result = await pickImage("gallery");
     if (result) {
       setPhoto(result);
@@ -73,6 +119,7 @@ export default function StudioScreen() {
 
   const handleCamera = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (introVisibleRef.current) markIntroSeen();
     const result = await pickImage("camera");
     if (result) {
       setPhoto(result);
@@ -138,9 +185,17 @@ export default function StudioScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Post-intro the upload cluster centers in the freed space —
+            first-review feedback: top-anchored content read as "empty". */}
+        <View
+          style={{
+            flex: 1,
+            justifyContent: introVisible ? "flex-start" : "center",
+          }}
+        >
         {/*
           Welcome trial banner (V20) — only renders when the user is
           inside their 7-day MAX trial. Sits above the step indicator
@@ -149,9 +204,11 @@ export default function StudioScreen() {
           horizontal margin breaks out of the parent's 24px padding
           since the banner has its own breathing room baked in.
         */}
-        <View style={{ marginHorizontal: -24 }}>
-          <WelcomeTrialBanner />
-        </View>
+        {introVisible && (
+          <Animated.View style={[{ marginHorizontal: -24 }, introStyle]}>
+            <WelcomeTrialBanner onClose={dismissIntro} />
+          </Animated.View>
+        )}
 
         {/* Step indicator — the ONE uppercase eyebrow allowed on this screen */}
         <View style={{ marginTop: 12, marginBottom: 10 }}>
@@ -319,8 +376,8 @@ export default function StudioScreen() {
 
         {/* Professional tips — sentence-case section title, warm icon tiles.
             Dismissible one-shot (first-review feedback): X hides it forever. */}
-        {tipsVisible && (
-        <View style={{ gap: 18 }}>
+        {introVisible && (
+        <Animated.View style={[{ gap: 18 }, introStyle]}>
           <View
             style={{
               flexDirection: "row",
@@ -339,7 +396,7 @@ export default function StudioScreen() {
               {t("studio.professional_tips")}
             </Text>
             <Pressable
-              onPress={dismissTips}
+              onPress={dismissIntro}
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={t("common.close")}
@@ -409,8 +466,9 @@ export default function StudioScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </Animated.View>
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
