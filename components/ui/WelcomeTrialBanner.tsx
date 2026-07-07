@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
+import { useDismissible } from "@/hooks/useDismissible";
 
 /**
  * Welcome bonus trial banner (V20 / Pricing Strategy V2).
@@ -24,8 +25,12 @@ export function WelcomeTrialBanner() {
     const { t } = useTranslation();
     const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
     const expiresAt = useCreditStore((s) => s.welcomeBonusExpiresAt);
+    // One-shot announcement (2026-07 first-review feedback): once the user
+    // closes it, it never returns — the compact TrialCountdownBadge in the
+    // header stays as the persistent trial reminder until expiry.
+    const [visible, dismiss] = useDismissible("dismissed_welcome_trial_banner");
 
-    if (!welcomeBonusActive || !expiresAt) return null;
+    if (!welcomeBonusActive || !expiresAt || !visible) return null;
 
     return (
         <View
@@ -53,10 +58,26 @@ export function WelcomeTrialBanner() {
                     <Ionicons name="sparkles" size={18} color="#E0C29A" />
                     <Text
                         className="font-headline"
-                        style={{ fontSize: 18, color: "#E5E2E1" }}
+                        style={{ fontSize: 18, color: "#E5E2E1", flex: 1 }}
                     >
                         {t("studio.welcome_banner_title")}
                     </Text>
+                    <Pressable
+                        onPress={dismiss}
+                        hitSlop={12}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("common.close")}
+                        style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(19,19,19,0.35)",
+                        }}
+                    >
+                        <Ionicons name="close" size={16} color="#D0C5B8" />
+                    </Pressable>
                 </View>
                 <Text
                     className="font-body"

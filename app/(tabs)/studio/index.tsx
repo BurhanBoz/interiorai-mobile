@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { useDismissible } from "@/hooks/useDismissible";
 import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
@@ -54,6 +55,8 @@ const tips: Array<{
 ];
 
 export default function StudioScreen() {
+  // First-review feedback (2026-07): tips are onboarding chrome — closable, one-shot.
+  const [tipsVisible, dismissTips] = useDismissible("dismissed_studio_tips");
   const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
   const { openDrawer } = useDrawer();
@@ -314,18 +317,36 @@ export default function StudioScreen() {
 
         </View>
 
-        {/* Professional tips — sentence-case section title, warm icon tiles */}
+        {/* Professional tips — sentence-case section title, warm icon tiles.
+            Dismissible one-shot (first-review feedback): X hides it forever. */}
+        {tipsVisible && (
         <View style={{ gap: 18 }}>
-          <Text
+          <View
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 14,
-              letterSpacing: 0.2,
-              color: theme.color.onSurfaceVariant,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            {t("studio.professional_tips")}
-          </Text>
+            <Text
+              style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 14,
+                letterSpacing: 0.2,
+                color: theme.color.onSurfaceVariant,
+              }}
+            >
+              {t("studio.professional_tips")}
+            </Text>
+            <Pressable
+              onPress={dismissTips}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+            >
+              <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
+            </Pressable>
+          </View>
 
           <View style={{ gap: 12 }}>
             {tips.map((tip) => (
@@ -389,6 +410,7 @@ export default function StudioScreen() {
             ))}
           </View>
         </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

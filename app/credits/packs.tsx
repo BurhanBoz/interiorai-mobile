@@ -400,7 +400,7 @@ export default function CreditPacksScreen() {
                 contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ marginTop: 12, marginBottom: 24 }}>
+                <View style={{ marginBottom: 16 }}>
                     <Text style={{
                         fontFamily: "NotoSerif",
                         fontSize: 32,

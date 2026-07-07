@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import Svg, { Polyline, Circle } from "react-native-svg";
 
 import { useStudioStore } from "@/stores/studioStore";
+import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
 import { Button } from "@/components/ui/Button";
 
@@ -35,9 +36,6 @@ const BRUSHES = [
   { key: "L", ratio: 0.12 },
 ] as const;
 
-/** Same convention as style-transfer.tsx / gallery — the (tabs) bar overlays
- *  screen bottoms, so CTAs must clear it or they render underneath, untappable. */
-const TAB_BAR_HEIGHT = 96;
 
 /** Skip move-points closer than this many view-px to the previous one. */
 const MIN_POINT_DISTANCE = 3;

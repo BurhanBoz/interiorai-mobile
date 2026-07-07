@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
+import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useCreditCost } from "@/hooks/useCreditCost";
@@ -16,7 +17,6 @@ import Slider from "@react-native-community/slider";
 
 // Height of the global GlassNavBar (icon row + label + home-indicator pad).
 // Sticky wizard footers must sit above this so the CTA stays tappable.
-const TAB_BAR_HEIGHT = 96;
 
 // Fallback hero when the user lands here without a source photo (e.g. via
 // deep link). Editorial interior shot, matches the dark-luxe aesthetic.

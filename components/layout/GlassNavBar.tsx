@@ -36,11 +36,24 @@ const TAB_CONFIG: TabConfig[] = [
  *   - Icon + indicator animate together (spring) so selection feels
  *     tactile, not abrupt.
  */
+/**
+ * Total vertical space the floating pill claims at the screen bottom
+ * (pill ~64px + 32px bottom padding). Scrollable tab screens must pad
+ * their content by at least this much — import it instead of hardcoding.
+ */
+export const TAB_BAR_HEIGHT = 96;
+
 export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
     const { t } = useTranslation();
 
     return (
         <View
+            // box-none: the wrapper spans the full width with transparent
+            // gutters (16px sides + 32px below the pill). Without this,
+            // those invisible areas swallow taps meant for content behind
+            // them — the "bottom menu overlaps clickable content" bug from
+            // the 2026-07 first review. Only the pill itself stays tappable.
+            pointerEvents="box-none"
             style={{
                 position: "absolute",
                 bottom: 0,

@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ActivityIndicator,
   FlatList,
@@ -20,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import * as jobsService from "@/services/jobs";
+import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
@@ -33,7 +33,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 
-const TAB_BAR_HEIGHT = 96;
 const FILTER_ALL = "__ALL__";
 const FILTER_FAVORITES = "__FAVORITES__";
 
@@ -108,7 +107,6 @@ export default function GalleryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [previewItem, setPreviewItem] = useState<GalleryOutput | null>(null);
   const [activeRoomFilter, setActiveRoomFilter] = useState<string>(FILTER_ALL);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Deep link: /gallery?filter=favorites pre-activates the Favorites chip
   // so Profile → Curated Favorites lands straight on the filtered list.
@@ -205,9 +203,10 @@ export default function GalleryScreen() {
       .map(([name]) => name);
   }, [allOutputs]);
 
-  // Apply room-type / favorites filter + free-text search. Favorites short-
-  // circuit any room filter (they're orthogonal categories from the user's
-  // point of view); search is always applied on top.
+  // Apply room-type / favorites filter. Favorites short-circuit any room
+  // filter (they're orthogonal categories from the user's point of view).
+  // Free-text search was removed in the 2026-07 first review (categories
+  // cover discovery at this content volume) — restore from git if needed.
   const outputs = useMemo(() => {
     let base: GalleryOutput[];
     if (activeRoomFilter === FILTER_ALL) {
@@ -218,16 +217,8 @@ export default function GalleryScreen() {
       base = allOutputs.filter(o => o.roomTypeName === activeRoomFilter);
     }
 
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      base = base.filter(
-        o =>
-          o.designStyleName?.toLowerCase().includes(q) ||
-          o.roomTypeName?.toLowerCase().includes(q),
-      );
-    }
     return base;
-  }, [allOutputs, activeRoomFilter, favoriteIds, searchQuery]);
+  }, [allOutputs, activeRoomFilter, favoriteIds]);
 
   // Tap navigates directly to the result detail page. Long-press opens a
   // fullscreen zoom preview for a quick peek without losing scroll position.
@@ -435,51 +426,6 @@ export default function GalleryScreen() {
   };
 
   /* ── Search Bar — client-side filter over style/room names ── */
-  const SearchBar = () => (
-    <View
-      style={{
-        marginHorizontal: EDGE,
-        marginBottom: 18,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        height: 48,
-        paddingHorizontal: 16,
-        borderRadius: 14,
-        backgroundColor: "rgba(28,27,27,0.85)",
-        borderWidth: 1,
-        borderColor: searchQuery
-          ? "rgba(225,195,155,0.35)"
-          : "rgba(77,70,60,0.3)",
-      }}
-    >
-      <Ionicons name="search" size={18} color="#998F84" />
-      <TextInput
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder={t("gallery.search_placeholder")}
-        placeholderTextColor="#998F84"
-        style={{
-          flex: 1,
-          fontSize: 13,
-          color: "#E5E2E1",
-          fontWeight: "400",
-          padding: 0,
-        }}
-        returnKeyType="search"
-        autoCorrect={false}
-        autoCapitalize="none"
-      />
-      {searchQuery ? (
-        <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
-          <Ionicons name="close-circle" size={18} color="#998F84" />
-        </Pressable>
-      ) : (
-        <Ionicons name="options-outline" size={18} color="#998F84" />
-      )}
-    </View>
-  );
-
   /* ── "Continue Curating" footer card — replaces editorial NEW SERIES ── */
   const NextSeriesCard = () => (
     <Pressable
@@ -702,7 +648,6 @@ export default function GalleryScreen() {
               </View>
 
               {/* Search bar */}
-              <SearchBar />
 
               {/* Filter chips — horizontally scrollable. Right-edge fade
                   gradient hints there's more content off-screen without
