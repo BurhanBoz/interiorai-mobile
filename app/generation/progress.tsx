@@ -102,8 +102,14 @@ export default function GenerationProgressScreen() {
         // Briefly show the "ready" phase before navigating so the transition feels finished.
         setTimeout(() => router.replace(`/result/${polled.id}` as any), 700);
       } else if (polled.status === "FAILED") {
+        // Backend releases the reserved credits on failure — refresh the
+        // wallet HERE too, or the header keeps showing the pre-refund
+        // balance and users read it as "it failed AND ate my credits"
+        // (2026-07-07 tester report).
+        fetchBalance();
         setErrorMessage(polled.errorMessage || t("generation.failed"));
       } else if (polled.status === "CANCELLED") {
+        fetchBalance();
         setErrorMessage(t("history.status_cancelled"));
       }
     },
