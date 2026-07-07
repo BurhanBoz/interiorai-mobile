@@ -22,7 +22,7 @@ export default function RootIndex() {
   }
 
   if (isAuthenticated) {
-    return <Redirect href="/(tabs)/gallery" />;
+    return <Redirect href="/(tabs)/studio" />;
   }
 
   return <Redirect href="/(auth)/onboarding" />;

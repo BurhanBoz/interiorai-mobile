@@ -124,7 +124,7 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === "(auth)";
     // Password reset is reachable even for authed users — a reset email
     // tapped from the same device while still logged in should open the
-    // form, not bounce to Gallery.
+    // form, not bounce to Studio.
     const isPasswordReset = (segments as string[])[1] === "reset-password";
     // Public legal screens — Terms of Service and Privacy Policy are
     // reachable BEFORE login (Apple §5.1.1(ix), GDPR Art. 13). The
@@ -139,7 +139,7 @@ export default function RootLayout() {
     if (!isAuthenticated && !inAuthGroup && !inPublicLegal) {
       router.replace("/(auth)/onboarding");
     } else if (isAuthenticated && inAuthGroup && !isPasswordReset) {
-      router.replace("/(tabs)/gallery");
+      router.replace("/(tabs)/studio");
     }
   }, [isAuthenticated, isLoading, segments, fontsLoaded, fontError]);
 

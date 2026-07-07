@@ -98,7 +98,7 @@ export default function RestoreAccountScreen() {
         [
           {
             text: t("common.ok", { defaultValue: "OK" }),
-            onPress: () => router.replace("/(tabs)/gallery"),
+            onPress: () => router.replace("/(tabs)/studio"),
           },
         ],
       );

@@ -2,6 +2,13 @@ import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { GlassNavBar } from "@/components/layout/GlassNavBar";
 
+// Anchor route for the group: without it, a bare "/(tabs)" navigation (deep
+// link, guard redirect) resolves to the alphabetically-first child — gallery.
+// Studio is the product's front door; every entry lands there first.
+export const unstable_settings = {
+  initialRouteName: "studio",
+};
+
 export default function TabLayout() {
   const { t } = useTranslation();
 

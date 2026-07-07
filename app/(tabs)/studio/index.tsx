@@ -1,5 +1,6 @@
-import { View, Text, Pressable, ScrollView, Animated, LayoutAnimation } from "react-native";
+import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -56,9 +57,9 @@ const tips: Array<{
 
 export default function StudioScreen() {
   // First-visit intro (2026-07 review round 2): the trial banner + tips form
-  // ONE spotlight moment. They enter emphasized (fade+rise), and ANY exit —
-  // either X, starting an upload, or leaving the screen — dismisses BOTH
-  // permanently. Afterwards the upload cluster re-centers vertically.
+  // ONE spotlight moment floating over a blurred, dimmed backdrop. ANY exit —
+  // either X, a tap outside the cards, or leaving the screen — dismisses BOTH
+  // permanently, revealing the always-centered upload cluster behind.
   const [introVisible, markIntroSeen] = useDismissible("studio_intro_seen");
   const introVisibleRef = useRef(false);
   introVisibleRef.current = introVisible;
@@ -74,23 +75,19 @@ export default function StudioScreen() {
       }).start();
     }
   }, [introVisible, introAnim]);
-  const introStyle = {
-    opacity: introAnim,
-    transform: [
-      {
-        translateY: introAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [14, 0],
-        }),
-      },
-    ],
-  };
-
-  /** X / explicit close: animate the reflow so the cluster glides to center. */
+  /** Any explicit exit (either X, backdrop tap): fade the spotlight out,
+      then persist "seen" so it never returns. */
+  const dismissingRef = useRef(false);
   const dismissIntro = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    markIntroSeen();
-  }, [markIntroSeen]);
+    if (dismissingRef.current) return;
+    dismissingRef.current = true;
+    Animated.timing(introAnim, {
+      toValue: 0,
+      duration: 220,
+      easing: theme.motion.easing.standard,
+      useNativeDriver: true,
+    }).start(() => markIntroSeen());
+  }, [introAnim, markIntroSeen]);
 
   // Leaving the screen while the intro is up also counts as "seen" — next
   // visit opens clean and centered.
@@ -109,7 +106,6 @@ export default function StudioScreen() {
 
   const handleUpload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (introVisibleRef.current) markIntroSeen(); // proceeding = intro acknowledged
     const result = await pickImage("gallery");
     if (result) {
       setPhoto(result);
@@ -119,7 +115,6 @@ export default function StudioScreen() {
 
   const handleCamera = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (introVisibleRef.current) markIntroSeen();
     const result = await pickImage("camera");
     if (result) {
       setPhoto(result);
@@ -188,28 +183,11 @@ export default function StudioScreen() {
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Post-intro the upload cluster centers in the freed space —
-            first-review feedback: top-anchored content read as "empty". */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: introVisible ? "flex-start" : "center",
-          }}
-        >
-        {/*
-          Welcome trial banner (V20) — only renders when the user is
-          inside their 7-day MAX trial. Sits above the step indicator
-          so it's the first thing post-header content; absent when
-          the trial is inactive (no empty-state shell). Negative
-          horizontal margin breaks out of the parent's 24px padding
-          since the banner has its own breathing room baked in.
-        */}
-        {introVisible && (
-          <Animated.View style={[{ marginHorizontal: -24 }, introStyle]}>
-            <WelcomeTrialBanner onClose={dismissIntro} />
-          </Animated.View>
-        )}
-
+        {/* The upload cluster is ALWAYS vertically centered — during the
+            first-visit spotlight it just sits blurred behind the overlay,
+            so nothing reflows when the intro fades out (review feedback:
+            top-anchored content read as "empty"). */}
+        <View style={{ flex: 1, justifyContent: "center" }}>
         {/* Step indicator — the ONE uppercase eyebrow allowed on this screen */}
         <View style={{ marginTop: 12, marginBottom: 10 }}>
           <Text
@@ -374,10 +352,64 @@ export default function StudioScreen() {
 
         </View>
 
-        {/* Professional tips — sentence-case section title, warm icon tiles.
-            Dismissible one-shot (first-review feedback): X hides it forever. */}
-        {introVisible && (
-        <Animated.View style={[{ gap: 18 }, introStyle]}>
+        </View>
+      </ScrollView>
+
+      {/* ── First-visit spotlight (2026-07 review round 2) ──────────────
+          Trial banner + tips float above a blurred, dimmed backdrop so
+          they read as THE thing on screen. The backdrop itself is a
+          dismiss target (tap anywhere outside the cards); both X buttons
+          route here too. The tab bar renders above this overlay, and
+          switching tabs also dismisses via the focus-loss hook. */}
+      {introVisible && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: introAnim,
+          }}
+        >
+          <Pressable
+            onPress={dismissIntro}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <BlurView
+              intensity={34}
+              tint="dark"
+              style={{ flex: 1, backgroundColor: "rgba(12,11,10,0.55)" }}
+            />
+          </Pressable>
+
+          {/* box-none: empty space between/around cards falls through to
+              the dismiss backdrop; the cards themselves stay inert. */}
+          <Animated.View
+            pointerEvents="box-none"
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              paddingBottom: 32,
+              transform: [
+                {
+                  translateY: introAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [24, 0],
+                  }),
+                },
+              ],
+            }}
+          >
+            <WelcomeTrialBanner onClose={dismissIntro} />
+
+            {/* Professional tips — same one-shot intro, second card group. */}
+            <View
+              pointerEvents="box-none"
+              style={{ paddingHorizontal: 24, gap: 18, marginTop: 8 }}
+            >
           <View
             style={{
               flexDirection: "row",
@@ -466,10 +498,10 @@ export default function StudioScreen() {
               </View>
             ))}
           </View>
+            </View>
+          </Animated.View>
         </Animated.View>
-        )}
-        </View>
-      </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
