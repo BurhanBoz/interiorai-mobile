@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import * as jobsService from "@/services/jobs";
 import type { JobResponse } from "@/types/api";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -512,6 +513,7 @@ export default function HistoryScreen() {
             {t("app.name")}
           </Text>
         </View>
+        <AvatarMenu />
       </View>
 
       {items.length === 0 ? (

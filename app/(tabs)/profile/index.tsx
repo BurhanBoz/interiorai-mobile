@@ -545,7 +545,7 @@ export default function ProfileScreen() {
             hitSlop={10}
             style={({ pressed }) => ({
               alignSelf: "center",
-              marginTop: 28,
+              marginTop: 12,
               paddingHorizontal: 18,
               paddingVertical: 10,
               borderWidth: 1,

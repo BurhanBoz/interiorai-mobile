@@ -10,6 +10,7 @@ import {
 import { useCallback, useRef, useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -32,7 +33,87 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
  * so every header just drops in {@code <AvatarMenu />}. Positioning is
  * fixed to the top-right of the screen (all app headers are 56px under
  * the top inset, so one anchor works everywhere the avatar appears).
+ *
+ * <p>Row layout mirrors {@link ListItem}: the Pressable only carries the
+ * press-flash background, and an inner View owns flexDirection — putting
+ * row styles on the Pressable's style-function has rendered inconsistently
+ * in this app before (see ListItem / the retired SideDrawer notes).
  */
+
+/* ───────── MenuRow — icon tile + label, ListItem visual language ───────── */
+
+function MenuRow({
+    icon,
+    label,
+    destructive = false,
+    onPress,
+}: {
+    icon: IconName;
+    label: string;
+    destructive?: boolean;
+    onPress: () => void;
+}) {
+    const tint = destructive ? theme.color.danger : theme.color.goldMidday;
+    return (
+        <Pressable
+            accessibilityRole="menuitem"
+            onPress={onPress}
+            style={({ pressed }) => ({
+                marginHorizontal: 8,
+                borderRadius: 14,
+                backgroundColor: pressed
+                    ? destructive
+                        ? "rgba(217,138,123,0.08)"
+                        : "rgba(225,195,155,0.07)"
+                    : "transparent",
+            })}
+        >
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    paddingHorizontal: 12,
+                    paddingVertical: 11,
+                }}
+            >
+                <View
+                    style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 11,
+                        backgroundColor: destructive
+                            ? "rgba(217,138,123,0.08)"
+                            : "rgba(225,195,155,0.08)",
+                        borderWidth: 1,
+                        borderColor: destructive
+                            ? "rgba(217,138,123,0.16)"
+                            : "rgba(225,195,155,0.14)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Ionicons name={icon} size={17} color={tint} />
+                </View>
+                <Text
+                    style={{
+                        fontFamily: "Inter-Medium",
+                        fontSize: 15,
+                        letterSpacing: 0.1,
+                        color: destructive
+                            ? theme.color.danger
+                            : theme.color.onSurface,
+                    }}
+                >
+                    {label}
+                </Text>
+            </View>
+        </Pressable>
+    );
+}
+
+/* ───────── AvatarMenu ───────── */
+
 export function AvatarMenu() {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
@@ -46,7 +127,7 @@ export function AvatarMenu() {
         setOpen(true);
         Animated.timing(anim, {
             toValue: 1,
-            duration: 170,
+            duration: 180,
             easing: theme.motion.easing.standard,
             useNativeDriver: true,
         }).start();
@@ -58,7 +139,7 @@ export function AvatarMenu() {
         (after?: () => void) => {
             Animated.timing(anim, {
                 toValue: 0,
-                duration: 120,
+                duration: 130,
                 easing: theme.motion.easing.standard,
                 useNativeDriver: true,
             }).start(() => {
@@ -86,30 +167,13 @@ export function AvatarMenu() {
         });
     }, [closeMenu, logout, t]);
 
-    const items: Array<{ icon: IconName; label: string; action: () => void }> = [
-        {
-            icon: "heart-outline",
-            label: t("profile.curated_favorites"),
-            action: () =>
-                router.push({
-                    pathname: "/(tabs)/gallery",
-                    params: { filter: "favorites" },
-                } as never),
-        },
-        {
-            icon: "language-outline",
-            label: t("settings.language_title"),
-            action: () => router.push("/settings/language" as never),
-        },
-    ];
-
     const cardStyle = {
         opacity: anim,
         transform: [
             {
                 translateY: anim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [-8, 0],
+                    outputRange: [-10, 0],
                 }),
             },
             {
@@ -136,7 +200,7 @@ export function AvatarMenu() {
                 <Animated.View
                     style={[
                         StyleSheet.absoluteFillObject,
-                        { backgroundColor: "rgba(0,0,0,0.35)", opacity: anim },
+                        { backgroundColor: "rgba(10,9,8,0.4)", opacity: anim },
                     ]}
                 >
                     <Pressable
@@ -153,98 +217,76 @@ export function AvatarMenu() {
                             position: "absolute",
                             top: insets.top + 54,
                             right: 16,
-                            minWidth: 228,
-                            borderRadius: 16,
+                            width: 268,
+                            borderRadius: 22,
                             overflow: "hidden",
-                            backgroundColor: "rgba(28,27,26,0.98)",
                             borderWidth: 1,
-                            borderColor: "rgba(225,195,155,0.22)",
+                            borderColor: "rgba(225,195,155,0.18)",
                             shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 10 },
-                            shadowOpacity: 0.45,
-                            shadowRadius: 28,
-                            elevation: 16,
-                            paddingVertical: 6,
+                            shadowOffset: { width: 0, height: 16 },
+                            shadowOpacity: 0.4,
+                            shadowRadius: 32,
+                            elevation: 18,
                         },
                         cardStyle,
                     ]}
                 >
-                    {items.map((item) => (
-                        <Pressable
-                            key={item.label}
-                            accessibilityRole="menuitem"
-                            onPress={() => {
-                                Haptics.selectionAsync();
-                                closeMenu(item.action);
-                            }}
-                            style={({ pressed }) => ({
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 12,
-                                paddingHorizontal: 16,
-                                paddingVertical: 13,
-                                backgroundColor: pressed
-                                    ? "rgba(225,195,155,0.08)"
-                                    : "transparent",
-                            })}
-                        >
-                            <Ionicons
-                                name={item.icon}
-                                size={18}
-                                color={theme.color.goldMidday}
-                            />
-                            <Text
-                                style={{
-                                    fontFamily: "Inter-Medium",
-                                    fontSize: 14.5,
-                                    letterSpacing: 0.1,
-                                    color: theme.color.onSurface,
-                                }}
-                            >
-                                {item.label}
-                            </Text>
-                        </Pressable>
-                    ))}
-
+                    {/* Glass body — blur + warm dark wash, same recipe as the
+                        tab bar pill so the two floating surfaces feel related */}
+                    <BlurView
+                        intensity={90}
+                        tint="dark"
+                        style={StyleSheet.absoluteFillObject}
+                    />
                     <View
-                        style={{
-                            height: StyleSheet.hairlineWidth,
-                            backgroundColor: "rgba(77,70,60,0.5)",
-                            marginVertical: 6,
-                            marginHorizontal: 12,
-                        }}
+                        style={[
+                            StyleSheet.absoluteFillObject,
+                            { backgroundColor: "rgba(24,23,22,0.9)" },
+                        ]}
                     />
 
-                    <Pressable
-                        accessibilityRole="menuitem"
-                        onPress={handleSignOut}
-                        style={({ pressed }) => ({
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 12,
-                            paddingHorizontal: 16,
-                            paddingVertical: 13,
-                            backgroundColor: pressed
-                                ? "rgba(217,138,123,0.10)"
-                                : "transparent",
-                        })}
-                    >
-                        <Ionicons
-                            name="log-out-outline"
-                            size={18}
-                            color={theme.color.danger}
-                        />
-                        <Text
-                            style={{
-                                fontFamily: "Inter-Medium",
-                                fontSize: 14.5,
-                                letterSpacing: 0.1,
-                                color: theme.color.danger,
+                    <View style={{ paddingVertical: 10 }}>
+                        <MenuRow
+                            icon="heart-outline"
+                            label={t("profile.curated_favorites")}
+                            onPress={() => {
+                                Haptics.selectionAsync();
+                                closeMenu(() =>
+                                    router.push({
+                                        pathname: "/(tabs)/gallery",
+                                        params: { filter: "favorites" },
+                                    } as never),
+                                );
                             }}
-                        >
-                            {t("drawer.sign_out")}
-                        </Text>
-                    </Pressable>
+                        />
+                        <MenuRow
+                            icon="language-outline"
+                            label={t("settings.language_title")}
+                            onPress={() => {
+                                Haptics.selectionAsync();
+                                closeMenu(() =>
+                                    router.push("/settings/language" as never),
+                                );
+                            }}
+                        />
+
+                        <View
+                            style={{
+                                height: StyleSheet.hairlineWidth,
+                                backgroundColor: "rgba(225,195,155,0.16)",
+                                marginVertical: 8,
+                                marginLeft: 70,
+                                marginRight: 20,
+                            }}
+                        />
+
+                        <MenuRow
+                            icon="log-out-outline"
+                            label={t("drawer.sign_out")}
+                            destructive
+                            onPress={handleSignOut}
+                        />
+                    </View>
                 </Animated.View>
             </Modal>
         </>
