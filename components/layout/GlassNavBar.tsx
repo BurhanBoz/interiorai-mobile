@@ -20,7 +20,10 @@ const TAB_CONFIG: TabConfig[] = [
     { name: "studio", labelKey: "tabs.studio", icon: "color-palette" },
     { name: "gallery", labelKey: "tabs.gallery", icon: "images" },
     { name: "history", labelKey: "tabs.history", icon: "time" },
-    { name: "profile", labelKey: "tabs.profile", icon: "person" },
+    // Route stays "profile" (renaming the folder would churn every deep
+    // link); the SLOT is presented as Settings — the account hub. Quick
+    // personal actions live in the top-right AvatarMenu instead.
+    { name: "profile", labelKey: "drawer.settings", icon: "settings" },
 ];
 
 /**

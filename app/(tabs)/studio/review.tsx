@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { DisclaimerBanner } from "@/components/ui/DisclaimerBanner";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import type { SpeedMode } from "@/types/api";
@@ -209,7 +209,7 @@ export default function ReviewScreen() {
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       {/* Error Banner */}

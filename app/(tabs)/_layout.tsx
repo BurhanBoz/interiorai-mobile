@@ -22,7 +22,7 @@ export default function TabLayout() {
       <Tabs.Screen name="studio" options={{ title: t("tabs.studio") }} />
       <Tabs.Screen name="gallery" options={{ title: t("tabs.gallery") }} />
       <Tabs.Screen name="history" options={{ title: t("tabs.history") }} />
-      <Tabs.Screen name="profile" options={{ title: t("tabs.profile") }} />
+      <Tabs.Screen name="profile" options={{ title: t("drawer.settings") }} />
     </Tabs>
   );
 }

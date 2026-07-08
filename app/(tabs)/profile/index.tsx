@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -189,13 +189,9 @@ interface MenuItemConfig {
 // All icons are outline-style for consistency — previously "heart" was
 // filled while everything else was outline, which read as an accidental
 // emphasis on one row.
+// Favorites, Language and Sign Out intentionally absent — they are quick
+// personal actions and live in the top-right AvatarMenu (2026-07 round 2c).
 const MENU_ITEMS: MenuItemConfig[] = [
-  {
-    labelKey: "profile.curated_favorites",
-    icon: "heart-outline",
-    route: "/(tabs)/gallery",
-    extraParams: { filter: "favorites" },
-  },
   {
     labelKey: "profile.credit_packs",
     icon: "flash-outline",
@@ -210,11 +206,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
     labelKey: "profile.manage_plan",
     icon: "ribbon-outline",
     route: "/plans",
-  },
-  {
-    labelKey: "settings.language_title",
-    icon: "language-outline",
-    route: "/settings/language",
   },
   {
     labelKey: "profile.notifications",
@@ -337,21 +328,6 @@ export default function ProfileScreen() {
     router.push("/settings/delete-account");
   };
 
-  const logout = useAuthStore((s) => s.logout);
-  const handleSignOut = () => {
-    Alert.alert(
-      t("drawer.sign_out_confirm_title"),
-      t("drawer.sign_out_confirm_description"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("drawer.sign_out"),
-          style: "destructive",
-          onPress: () => logout(),
-        },
-      ],
-    );
-  };
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
@@ -562,42 +538,8 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          {/* Sign Out — session action, moved here when the side drawer was
-              retired (2026-07 round 2): Profile is the single account surface
-              now. Quiet destructive row above the account-lifecycle Delete
-              pill so the hierarchy reads session < account. */}
-          <Pressable
-            onPress={handleSignOut}
-            accessibilityRole="button"
-            accessibilityLabel={t("drawer.sign_out")}
-            style={({ pressed }) => ({
-              marginTop: 24,
-              borderRadius: 14,
-              paddingVertical: 15,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              borderWidth: 1,
-              borderColor: "rgba(217,138,123,0.35)",
-              backgroundColor: pressed
-                ? "rgba(217,138,123,0.10)"
-                : "rgba(217,138,123,0.04)",
-            })}
-          >
-            <Ionicons name="log-out-outline" size={18} color={theme.color.danger} />
-            <Text
-              style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 14,
-                letterSpacing: 0.3,
-                color: theme.color.danger,
-              }}
-            >
-              {t("drawer.sign_out")}
-            </Text>
-          </Pressable>
-
+          {/* Delete account — the only destructive action on this hub.
+              Session sign-out lives in the top-right AvatarMenu. */}
           <Pressable
             onPress={handleDeleteAccount}
             hitSlop={10}

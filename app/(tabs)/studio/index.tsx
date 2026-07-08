@@ -9,7 +9,7 @@ import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDismissible } from "@/hooks/useDismissible";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
 import { Brand } from "@/components/brand/Brand";
 import { theme } from "@/config/theme";
@@ -163,7 +163,7 @@ export default function StudioScreen() {
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TrialCountdownBadge />
-          <UserAvatar size="sm" onPress />
+          <AvatarMenu />
         </View>
       </View>
 

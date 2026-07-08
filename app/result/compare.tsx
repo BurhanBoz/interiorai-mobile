@@ -20,7 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -311,7 +311,7 @@ export default function CompareScreen() {
             {t("result.compare")}
           </Text>
         </View>
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView

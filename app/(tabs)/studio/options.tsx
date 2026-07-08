@@ -32,7 +32,7 @@ import { resolveFeatureCode } from "@/utils/featureCode";
 import type { DesignMode, QualityTier } from "@/types/api";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import { theme } from "@/config/theme";
@@ -293,7 +293,7 @@ export default function OptionsScreen() {
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView

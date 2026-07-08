@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { TopBar } from "@/components/layout/TopBar";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 
@@ -30,7 +30,7 @@ export default function CreditsExhaustedScreen() {
     >
       <TopBar
         showBranding
-        rightElement={<UserAvatar size="sm" onPress />}
+        rightElement={<AvatarMenu />}
       />
 
       <View

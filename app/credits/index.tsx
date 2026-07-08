@@ -20,7 +20,7 @@ import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitl
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { CreditLedgerEntry } from "@/types/api";
@@ -340,7 +340,7 @@ export default function CreditsScreen() {
         showBranding
         onBack={handleBack}
         showBack
-        rightElement={<UserAvatar size="sm" onPress />}
+        rightElement={<AvatarMenu />}
       />
 
       <FlatList

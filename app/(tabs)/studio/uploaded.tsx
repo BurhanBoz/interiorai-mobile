@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
@@ -58,7 +58,7 @@ export default function UploadedScreen() {
             (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
         <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView

@@ -12,7 +12,7 @@ import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useCreditCost } from "@/hooks/useCreditCost";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import Slider from "@react-native-community/slider";
 
 // Height of the global GlassNavBar (icon row + label + home-indicator pad).
@@ -101,7 +101,7 @@ export default function StyleTransferScreen() {
             Roomframe AI
           </Text>
         </View>
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView
