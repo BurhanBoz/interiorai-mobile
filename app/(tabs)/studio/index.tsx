@@ -9,7 +9,6 @@ import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useDismissible } from "@/hooks/useDismissible";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
 import { Brand } from "@/components/brand/Brand";
@@ -101,7 +100,6 @@ export default function StudioScreen() {
 
   const { t } = useTranslation();
   const { pickImage, isUploading } = useImagePicker();
-  const { openDrawer } = useDrawer();
   const setPhoto = useStudioStore((s) => s.setPhoto);
 
   const handleUpload = async () => {
@@ -159,18 +157,9 @@ export default function StudioScreen() {
           paddingHorizontal: 20,
         }}
       >
-        <Pressable
-          onPress={openDrawer}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        {/* Spacer keeps the brand centered — the hamburger is retired
+            (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TrialCountdownBadge />

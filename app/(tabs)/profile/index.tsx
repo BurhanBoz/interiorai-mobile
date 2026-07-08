@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { ListItem } from "@/components/ui/ListItem";
@@ -213,6 +212,21 @@ const MENU_ITEMS: MenuItemConfig[] = [
     route: "/plans",
   },
   {
+    labelKey: "settings.language_title",
+    icon: "language-outline",
+    route: "/settings/language",
+  },
+  {
+    labelKey: "profile.notifications",
+    icon: "notifications-outline",
+    route: "/settings/notifications",
+  },
+  {
+    labelKey: "drawer.help",
+    icon: "help-circle-outline",
+    route: "/settings/help",
+  },
+  {
     labelKey: "profile.privacy_data",
     icon: "shield-checkmark-outline",
     route: "/settings/privacy",
@@ -230,7 +244,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
 /* ─────────────────── Main Screen ─────────────────── */
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { openDrawer } = useDrawer();
   const user = useAuthStore((s) => s.user);
   const balance = useCreditStore((s) => s.balance);
   const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
@@ -324,6 +337,22 @@ export default function ProfileScreen() {
     router.push("/settings/delete-account");
   };
 
+  const logout = useAuthStore((s) => s.logout);
+  const handleSignOut = () => {
+    Alert.alert(
+      t("drawer.sign_out_confirm_title"),
+      t("drawer.sign_out_confirm_description"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("drawer.sign_out"),
+          style: "destructive",
+          onPress: () => logout(),
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       {/* ── Top App Bar ── */}
@@ -336,9 +365,7 @@ export default function ProfileScreen() {
           paddingHorizontal: 20,
         }}
       >
-        <Pressable onPress={openDrawer} hitSlop={8} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ width: 40 }} />
       </View>
@@ -535,14 +562,42 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          {/* Sign Out — red, icon + label side-by-side. Reimplemented as a
-              Pressable to guarantee a single horizontal row (the shared
-              destructive Button variant was rendering inconsistently across
-              devices). */}
-          {/* Sign Out intentionally lives only in the side drawer now —
-              Profile already has the identity + plan + settings surface, and
-              a second sign-out affordance duplicated the drawer's. Delete
-              account stays here because it's profile-lifecycle, not session. */}
+          {/* Sign Out — session action, moved here when the side drawer was
+              retired (2026-07 round 2): Profile is the single account surface
+              now. Quiet destructive row above the account-lifecycle Delete
+              pill so the hierarchy reads session < account. */}
+          <Pressable
+            onPress={handleSignOut}
+            accessibilityRole="button"
+            accessibilityLabel={t("drawer.sign_out")}
+            style={({ pressed }) => ({
+              marginTop: 24,
+              borderRadius: 14,
+              paddingVertical: 15,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              borderWidth: 1,
+              borderColor: "rgba(217,138,123,0.35)",
+              backgroundColor: pressed
+                ? "rgba(217,138,123,0.10)"
+                : "rgba(217,138,123,0.04)",
+            })}
+          >
+            <Ionicons name="log-out-outline" size={18} color={theme.color.danger} />
+            <Text
+              style={{
+                fontFamily: "Inter-SemiBold",
+                fontSize: 14,
+                letterSpacing: 0.3,
+                color: theme.color.danger,
+              }}
+            >
+              {t("drawer.sign_out")}
+            </Text>
+          </Pressable>
+
           <Pressable
             onPress={handleDeleteAccount}
             hitSlop={10}

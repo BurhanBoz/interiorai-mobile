@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/Button";
@@ -30,7 +29,6 @@ export default function UploadedScreen() {
   const { t } = useTranslation();
   const photo = useStudioStore((s) => s.photo);
   const setPhoto = useStudioStore((s) => s.setPhoto);
-  const { openDrawer } = useDrawer();
   const { pickImage } = useImagePicker();
 
   const handleNext = () => {
@@ -56,18 +54,9 @@ export default function UploadedScreen() {
           paddingHorizontal: 20,
         }}
       >
-        <Pressable
-          onPress={openDrawer}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        {/* Spacer keeps the brand centered — the hamburger is retired
+            (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
         <UserAvatar size="sm" onPress />
       </View>

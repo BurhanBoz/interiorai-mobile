@@ -25,7 +25,6 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useEffectiveWatermark } from "@/hooks/useEntitlement";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
@@ -77,7 +76,6 @@ interface GalleryOutput {
 /* ─────────────────── Main Screen ─────────────────── */
 export default function GalleryScreen() {
   const { t } = useTranslation();
-  const { openDrawer } = useDrawer();
   const { width } = useWindowDimensions();
 
   // Layout constants — 2-col grid for the premium "editorial" aesthetic.
@@ -511,9 +509,6 @@ export default function GalleryScreen() {
         style={{ height: 56 }}
       >
         <View className="flex-row items-center" style={{ gap: 14 }}>
-          <Pressable onPress={openDrawer} hitSlop={8}>
-            <Ionicons name="menu" size={24} color="#E5E2E1" />
-          </Pressable>
           <Text
             className="font-headline text-on-surface"
             style={{

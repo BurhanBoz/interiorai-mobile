@@ -14,7 +14,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import * as jobsService from "@/services/jobs";
 import type { JobResponse } from "@/types/api";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 /* ─────────────────── Helpers ─────────────────── */
@@ -436,7 +435,6 @@ const BUCKET_LABELS: Record<BucketKey, string> = {
 
 export default function HistoryScreen() {
   const { t } = useTranslation();
-  const { openDrawer } = useDrawer();
   const [items, setItems] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -503,9 +501,6 @@ export default function HistoryScreen() {
         style={{ height: 56 }}
       >
         <View className="flex-row items-center" style={{ gap: 16 }}>
-          <Pressable onPress={openDrawer} hitSlop={8}>
-            <Ionicons name="menu" size={24} color="#C4A882" />
-          </Pressable>
           <Text
             className="font-headline text-on-surface"
             style={{

@@ -11,7 +11,6 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { initializeIAP } from "@/services/iap";
-import { DrawerProvider } from "@/components/layout/DrawerProvider";
 import { AppSplash } from "@/components/ui/AppSplash";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
@@ -159,15 +158,13 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
-            <DrawerProvider>
-              <StatusBar style="light" />
-              {/* `key` forces the whole tree to remount when language changes.
-                  This is a belt-and-suspenders guarantee on top of useTranslation()
-                  — any screen that forgot to hook into t() will still pick up
-                  the new language the next time it mounts. */}
-              <Slot key={i18nInstance.language} />
-              <OfflineBanner />
-            </DrawerProvider>
+            <StatusBar style="light" />
+            {/* `key` forces the whole tree to remount when language changes.
+                This is a belt-and-suspenders guarantee on top of useTranslation()
+                — any screen that forgot to hook into t() will still pick up
+                the new language the next time it mounts. */}
+            <Slot key={i18nInstance.language} />
+            <OfflineBanner />
           </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
