@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "Segna l'area da modificare prima di generare.",
         "smart_edit_mode_change": "Il dipinto cambia",
         "smart_edit_mode_protect": "Il dipinto resta",
-        "smart_edit_hint_protect": "Dipingi le aree da MANTENERE. Tutto il resto verrà ridisegnato."
+        "smart_edit_hint_protect": "Dipingi le aree da MANTENERE. Tutto il resto verrà ridisegnato.",
+        "home_eyebrow": "Studio IA",
+        "home_title": "Cosa trasformiamo oggi?",
+        "feature_try": "Provalo",
+        "feature_redesign_desc": "Carica una foto, scegli uno stile — l'IA ridisegna la stanza.",
+        "feature_empty_room_desc": "Arreda uno spazio vuoto da zero.",
+        "feature_inpaint_desc": "Dipingi un'area — cambia solo ciò che selezioni.",
+        "feature_style_transfer_desc": "Mostra una foto di riferimento e applica il suo stile alla stanza."
     },
     "gallery": {
         "title": "Galleria",

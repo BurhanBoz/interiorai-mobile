@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "حدّد المنطقة المراد تعديلها قبل الإنشاء.",
         "smart_edit_mode_change": "الملوّن يتغيّر",
         "smart_edit_mode_protect": "الملوّن يبقى",
-        "smart_edit_hint_protect": "لوّن المناطق التي تريد الإبقاء عليها. كل ما عداها سيُعاد تصميمه."
+        "smart_edit_hint_protect": "لوّن المناطق التي تريد الإبقاء عليها. كل ما عداها سيُعاد تصميمه.",
+        "home_eyebrow": "استوديو الذكاء الاصطناعي",
+        "home_title": "ماذا نحوّل اليوم؟",
+        "feature_try": "جرّبه",
+        "feature_redesign_desc": "حمّل صورة واختر نمطًا — سيعيد الذكاء الاصطناعي تصميم الغرفة.",
+        "feature_empty_room_desc": "أثّث مساحة فارغة من الصفر.",
+        "feature_inpaint_desc": "لوّن منطقة — يتغيّر ما تحدده فقط.",
+        "feature_style_transfer_desc": "أرِ صورة مرجعية وطبّق نمطها على غرفتك."
     },
     "gallery": {
         "title": "المعرض",

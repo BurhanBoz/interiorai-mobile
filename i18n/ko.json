@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "생성하기 전에 편집할 영역을 표시하세요.",
         "smart_edit_mode_change": "칠한 부분 변경",
         "smart_edit_mode_protect": "칠한 부분 유지",
-        "smart_edit_hint_protect": "유지하고 싶은 영역을 칠하세요. 나머지는 모두 다시 디자인됩니다."
+        "smart_edit_hint_protect": "유지하고 싶은 영역을 칠하세요. 나머지는 모두 다시 디자인됩니다.",
+        "home_eyebrow": "AI 스튜디오",
+        "home_title": "오늘은 무엇을 바꿔볼까요?",
+        "feature_try": "사용해보기",
+        "feature_redesign_desc": "사진을 올리고 스타일을 고르면 AI가 방을 다시 디자인해요.",
+        "feature_empty_room_desc": "빈 공간을 처음부터 채워보세요.",
+        "feature_inpaint_desc": "칠한 영역만 바뀝니다.",
+        "feature_style_transfer_desc": "참고 사진의 스타일을 내 방에 적용해요."
     },
     "gallery": {
         "title": "갤러리",

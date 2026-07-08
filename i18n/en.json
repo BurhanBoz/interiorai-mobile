@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "Mark the area to edit before generating.",
         "smart_edit_mode_change": "Painted area changes",
         "smart_edit_mode_protect": "Painted area is kept",
-        "smart_edit_hint_protect": "Paint the areas you want to KEEP. Everything else will be redesigned."
+        "smart_edit_hint_protect": "Paint the areas you want to KEEP. Everything else will be redesigned.",
+        "home_eyebrow": "AI Studio",
+        "home_title": "What shall we transform today?",
+        "feature_try": "Try It",
+        "feature_redesign_desc": "Upload a photo, pick a style — AI redesigns the room.",
+        "feature_empty_room_desc": "Furnish an empty space from scratch.",
+        "feature_inpaint_desc": "Paint over an area — change only what you select.",
+        "feature_style_transfer_desc": "Show a reference photo and apply its style to your room."
     },
     "gallery": {
         "title": "Gallery",

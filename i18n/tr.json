@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "Üretmeden önce düzenlenecek alanı işaretle.",
         "smart_edit_mode_change": "Boyanan değişsin",
         "smart_edit_mode_protect": "Boyanan korunsun",
-        "smart_edit_hint_protect": "KORUMAK istediğin alanları boya. Kalan her yer yeniden tasarlanır."
+        "smart_edit_hint_protect": "KORUMAK istediğin alanları boya. Kalan her yer yeniden tasarlanır.",
+        "home_eyebrow": "AI Stüdyo",
+        "home_title": "Bugün neyi dönüştürelim?",
+        "feature_try": "Dene",
+        "feature_redesign_desc": "Fotoğraf yükle, stil seç — AI odayı yeniden tasarlasın.",
+        "feature_empty_room_desc": "Boş bir alanı sıfırdan döşe.",
+        "feature_inpaint_desc": "Bir bölgeyi boya — yalnızca seçtiğin yer değişsin.",
+        "feature_style_transfer_desc": "Referans bir fotoğraf göster, stili odana uygulansın."
     },
     "gallery": {
         "title": "Galeri",

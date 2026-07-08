@@ -287,7 +287,14 @@
         "smart_edit_mask_required": "Marca la zona a editar antes de generar.",
         "smart_edit_mode_change": "Lo pintado cambia",
         "smart_edit_mode_protect": "Lo pintado se conserva",
-        "smart_edit_hint_protect": "Pinta las zonas que quieres CONSERVAR. Todo lo demás se rediseñará."
+        "smart_edit_hint_protect": "Pinta las zonas que quieres CONSERVAR. Todo lo demás se rediseñará.",
+        "home_eyebrow": "Estudio IA",
+        "home_title": "¿Qué transformamos hoy?",
+        "feature_try": "Probar",
+        "feature_redesign_desc": "Sube una foto, elige un estilo y la IA rediseña la habitación.",
+        "feature_empty_room_desc": "Amuebla un espacio vacío desde cero.",
+        "feature_inpaint_desc": "Pinta una zona: cambia solo lo que selecciones.",
+        "feature_style_transfer_desc": "Muestra una foto de referencia y aplica su estilo a tu habitación."
     },
     "gallery": {
         "title": "Galería",
