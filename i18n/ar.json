@@ -718,7 +718,7 @@
         "help_still_curious": "لا تزال فضولياً؟",
         "help_contact_us": "تواصل معنا",
         "profile_edit_title": "تعديل الملف الشخصي",
-        "profile_edit_subtitle": "قم بتحديث اسمك المعروض أو عنوان بريدك الإلكتروني.",
+        "profile_edit_subtitle": "حدّث طريقة ظهور اسمك في التطبيق.",
         "profile_edit_display_name": "الاسم المعروض",
         "profile_edit_display_name_placeholder": "اسمك",
         "profile_edit_email": "عنوان البريد الإلكتروني",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX المميز",
         "notifications_n_upgrade_max_body": "نقل الأسلوب، Ultra HD، قائمة ذات أولوية، و40% مكافأة على كل حزمة رصيد.",
         "notifications_n_welcome_title": "مرحبًا بك في Interior AI",
-        "notifications_n_welcome_body": "ابدأ بصورة الغرفة التي تريد تحويلها. نصائح تبويب الاستوديو توضح كيفية التقاط صورة جيدة."
+        "notifications_n_welcome_body": "ابدأ بصورة الغرفة التي تريد تحويلها. نصائح تبويب الاستوديو توضح كيفية التقاط صورة جيدة.",
+        "profile_edit_eyebrow": "ملفك الشخصي",
+        "profile_edit_email_locked": "بريدك الإلكتروني هو عنوان تسجيل الدخول. تواصل مع الدعم لتغييره."
     },
     "errors": {
         "network": "خطأ في الشبكة. الرجاء التحقق من الاتصال.",

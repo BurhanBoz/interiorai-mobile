@@ -718,7 +718,7 @@
         "help_still_curious": "Still curious?",
         "help_contact_us": "Contact Us",
         "profile_edit_title": "Edit Profile",
-        "profile_edit_subtitle": "Update your display name or email address.",
+        "profile_edit_subtitle": "Update how your name appears across the app.",
         "profile_edit_display_name": "Display Name",
         "profile_edit_display_name_placeholder": "Your name",
         "profile_edit_email": "Email Address",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX premium",
         "notifications_n_upgrade_max_body": "Style Transfer, Ultra HD, priority queue and 40% bonus on every credit pack.",
         "notifications_n_welcome_title": "Welcome to Interior AI",
-        "notifications_n_welcome_body": "Start with a photo of the room you want to transform. Tips on the Studio tab show how to capture it well."
+        "notifications_n_welcome_body": "Start with a photo of the room you want to transform. Tips on the Studio tab show how to capture it well.",
+        "profile_edit_eyebrow": "Your profile",
+        "profile_edit_email_locked": "Your email is your sign-in address. Contact support to change it."
     },
     "errors": {
         "network": "Network error. Please check your connection.",

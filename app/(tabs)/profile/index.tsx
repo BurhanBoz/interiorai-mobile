@@ -351,16 +351,20 @@ export default function ProfileScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* ── Identity — compact horizontal ── */}
-        <View
-          style={{
+        {/* ── Identity — tap to edit profile (iOS "tap your name" pattern) ── */}
+        <Pressable
+          onPress={() => pushWithReturn("/settings/profile-edit", "profile")}
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.profile_edit_title")}
+          style={({ pressed }) => ({
             flexDirection: "row",
             alignItems: "center",
             gap: 16,
             paddingHorizontal: 24,
             paddingTop: 24,
             marginBottom: 32,
-          }}
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <UserAvatar size="hero" />
           <View style={{ flex: 1 }}>
@@ -397,7 +401,12 @@ export default function ProfileScreen() {
               <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
             </View>
           </View>
-        </View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="rgba(153,143,132,0.55)"
+          />
+        </Pressable>
 
         {/* ── Vault — unified balance card ── */}
         <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>

@@ -718,7 +718,7 @@
         "help_still_curious": "まだ気になりますか？",
         "help_contact_us": "お問い合わせ",
         "profile_edit_title": "プロフィールを編集",
-        "profile_edit_subtitle": "表示名またはメールアドレスを更新してください。",
+        "profile_edit_subtitle": "アプリ全体に表示される名前を変更します。",
         "profile_edit_display_name": "表示名",
         "profile_edit_display_name_placeholder": "あなたの名前",
         "profile_edit_email": "メールアドレス",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX プレミアム",
         "notifications_n_upgrade_max_body": "スタイル転送、Ultra HD、優先キュー、すべてのクレジットパックで 40% ボーナス。",
         "notifications_n_welcome_title": "Interior AI へようこそ",
-        "notifications_n_welcome_body": "変えたい部屋の写真から始めましょう。Studio タブのヒントが上手な撮り方を教えてくれます。"
+        "notifications_n_welcome_body": "変えたい部屋の写真から始めましょう。Studio タブのヒントが上手な撮り方を教えてくれます。",
+        "profile_edit_eyebrow": "プロフィール",
+        "profile_edit_email_locked": "メールアドレスはログインに使用されます。変更するにはサポートにお問い合わせください。"
     },
     "errors": {
         "network": "ネットワークエラーです。接続を確認してください。",

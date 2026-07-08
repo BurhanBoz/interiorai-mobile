@@ -718,7 +718,7 @@
         "help_still_curious": "아직 궁금하신가요?",
         "help_contact_us": "문의하기",
         "profile_edit_title": "프로필 편집",
-        "profile_edit_subtitle": "표시 이름 또는 이메일 주소를 업데이트하세요.",
+        "profile_edit_subtitle": "앱에 표시되는 이름을 변경하세요.",
         "profile_edit_display_name": "표시 이름",
         "profile_edit_display_name_placeholder": "이름",
         "profile_edit_email": "이메일 주소",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX 프리미엄",
         "notifications_n_upgrade_max_body": "스타일 전이, Ultra HD, 우선 대기열, 모든 크레딧 팩에 40% 보너스.",
         "notifications_n_welcome_title": "Interior AI에 오신 걸 환영합니다",
-        "notifications_n_welcome_body": "변환하려는 방의 사진부터 시작하세요. Studio 탭의 팁이 좋은 촬영 방법을 알려줍니다."
+        "notifications_n_welcome_body": "변환하려는 방의 사진부터 시작하세요. Studio 탭의 팁이 좋은 촬영 방법을 알려줍니다.",
+        "profile_edit_eyebrow": "프로필",
+        "profile_edit_email_locked": "이메일은 로그인 주소입니다. 변경하려면 고객지원에 문의하세요."
     },
     "errors": {
         "network": "네트워크 오류입니다. 연결을 확인해 주세요.",

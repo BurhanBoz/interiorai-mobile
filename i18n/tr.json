@@ -718,7 +718,7 @@
         "help_still_curious": "Hâlâ sorun var mı?",
         "help_contact_us": "Bize Ulaş",
         "profile_edit_title": "Profili Düzenle",
-        "profile_edit_subtitle": "Görünen adını veya e-posta adresini güncelle.",
+        "profile_edit_subtitle": "Adının uygulamada nasıl göründüğünü güncelle.",
         "profile_edit_display_name": "Görünen Ad",
         "profile_edit_display_name_placeholder": "Adın",
         "profile_edit_email": "E-posta Adresi",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX premium",
         "notifications_n_upgrade_max_body": "Stil Aktarımı, Ultra HD, öncelikli kuyruk ve her kredi paketinde %40 bonus.",
         "notifications_n_welcome_title": "Interior AI'ya hoş geldin",
-        "notifications_n_welcome_body": "Dönüştürmek istediğin odanın fotoğrafıyla başla. Studio sekmesindeki ipuçları nasıl çekeceğini gösterir."
+        "notifications_n_welcome_body": "Dönüştürmek istediğin odanın fotoğrafıyla başla. Studio sekmesindeki ipuçları nasıl çekeceğini gösterir.",
+        "profile_edit_eyebrow": "Profilin",
+        "profile_edit_email_locked": "E-postan giriş adresindir. Değiştirmek için destekle iletişime geç."
     },
     "errors": {
         "network": "Ağ hatası. Bağlantını kontrol et.",

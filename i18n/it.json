@@ -718,7 +718,7 @@
         "help_still_curious": "Ancora curioso?",
         "help_contact_us": "Contattaci",
         "profile_edit_title": "Modifica Profilo",
-        "profile_edit_subtitle": "Aggiorna il tuo nome visualizzato o indirizzo email.",
+        "profile_edit_subtitle": "Aggiorna come appare il tuo nome nell'app.",
         "profile_edit_display_name": "Nome Visualizzato",
         "profile_edit_display_name_placeholder": "Il tuo nome",
         "profile_edit_email": "Indirizzo Email",
@@ -870,7 +870,9 @@
         "notifications_n_upgrade_max_title": "Max: FLUX premium",
         "notifications_n_upgrade_max_body": "Trasferimento Stile, Ultra HD, coda prioritaria e 40% bonus su ogni pacchetto.",
         "notifications_n_welcome_title": "Benvenuto in Interior AI",
-        "notifications_n_welcome_body": "Inizia con una foto della stanza da trasformare. I consigli nello Studio ti mostrano come scattarla bene."
+        "notifications_n_welcome_body": "Inizia con una foto della stanza da trasformare. I consigli nello Studio ti mostrano come scattarla bene.",
+        "profile_edit_eyebrow": "Il tuo profilo",
+        "profile_edit_email_locked": "La tua email è l'indirizzo di accesso. Contatta l'assistenza per modificarla."
     },
     "errors": {
         "network": "Errore di rete. Controlla la connessione.",
