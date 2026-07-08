@@ -351,61 +351,74 @@ export default function ProfileScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* ── Identity — tap to edit profile (iOS "tap your name" pattern) ── */}
+        {/* ── Identity — tap to edit profile (iOS "tap your name" pattern).
+            The Pressable owns ONLY the touch target + press-flash; a plain
+            inner View owns the row layout. This mirrors ListItem / AvatarMenu
+            and preserves the original plain-View row (avatar + flex:1 text)
+            that already rendered correctly — the earlier version put the row
+            layout directly on the Pressable and it collapsed into a column. */}
         <Pressable
           onPress={() => pushWithReturn("/settings/profile-edit", "profile")}
           accessibilityRole="button"
           accessibilityLabel={t("settings.profile_edit_title")}
           style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-            paddingHorizontal: 24,
-            paddingTop: 24,
-            marginBottom: 32,
-            opacity: pressed ? 0.7 : 1,
+            marginHorizontal: 12,
+            marginTop: 12,
+            marginBottom: 28,
+            borderRadius: 20,
+            backgroundColor: pressed ? "rgba(225,195,155,0.06)" : "transparent",
           })}
         >
-          <UserAvatar size="hero" />
-          <View style={{ flex: 1 }}>
-            {displayName ? (
-              <Text
-                style={{
-                  fontFamily: "NotoSerif",
-                  fontSize: 22,
-                  lineHeight: 28,
-                  color: theme.color.onSurface,
-                  letterSpacing: -0.1,
-                }}
-                numberOfLines={1}
-              >
-                {displayName}
-              </Text>
-            ) : null}
-            {email ? (
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 13,
-                  color: theme.color.onSurfaceVariant,
-                  marginTop: 2,
-                  letterSpacing: 0.2,
-                }}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {email}
-              </Text>
-            ) : null}
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+            }}
+          >
+            <UserAvatar size="hero" />
+            <View style={{ flex: 1 }}>
+              {displayName ? (
+                <Text
+                  style={{
+                    fontFamily: "NotoSerif",
+                    fontSize: 22,
+                    lineHeight: 28,
+                    color: theme.color.onSurface,
+                    letterSpacing: -0.1,
+                  }}
+                  numberOfLines={1}
+                >
+                  {displayName}
+                </Text>
+              ) : null}
+              {email ? (
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 13,
+                    color: theme.color.onSurfaceVariant,
+                    marginTop: 2,
+                    letterSpacing: 0.2,
+                  }}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {email}
+                </Text>
+              ) : null}
+              <View style={{ flexDirection: "row", marginTop: 10 }}>
+                <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
+              </View>
             </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="rgba(153,143,132,0.55)"
+            />
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color="rgba(153,143,132,0.55)"
-          />
         </Pressable>
 
         {/* ── Vault — unified balance card ── */}
