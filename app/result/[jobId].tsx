@@ -220,7 +220,7 @@ export default function ResultDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView
-        edges={["top"]}
+        edges={[]}
         className="flex-1 bg-surface items-center justify-center"
       >
         <ActivityIndicator size="large" color="#C4A882" />
@@ -231,7 +231,7 @@ export default function ResultDetailScreen() {
   if (!job) {
     return (
       <SafeAreaView
-        edges={["top"]}
+        edges={[]}
         className="flex-1 bg-surface items-center justify-center px-8"
       >
         <Ionicons name="alert-circle-outline" size={48} color="#998F84" />
@@ -268,7 +268,7 @@ export default function ResultDetailScreen() {
   ];
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+    <SafeAreaView edges={[]} className="flex-1 bg-surface">
       <TopBar showBack showBranding />
 
       <ScrollView

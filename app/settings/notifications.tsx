@@ -475,7 +475,7 @@ export default function NotificationsSettingsScreen() {
 
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={[]}
       style={{ flex: 1, backgroundColor: theme.color.surface }}
     >
       <TopBar title={t("profile.notifications")} showBack onBack={handleBack} />

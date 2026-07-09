@@ -27,7 +27,7 @@ export default function ErrorScreen() {
   const { t } = useTranslation();
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       <TopBar
         showBranding
         rightElement={<AvatarMenu />}

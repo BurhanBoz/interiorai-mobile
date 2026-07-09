@@ -90,7 +90,7 @@ function PackCard({
             onPress={disabled ? undefined : onPress}
             disabled={disabled}
             style={({ pressed }) => ({
-                marginBottom: 12,
+                marginBottom: 16,
                 borderRadius: 14,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
@@ -386,7 +386,7 @@ export default function CreditPacksScreen() {
 
     return (
         <SafeAreaView
-            edges={["top"]}
+            edges={[]}
             style={{ flex: 1, backgroundColor: theme.color.surface }}
         >
             <TopBar

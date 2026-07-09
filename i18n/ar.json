@@ -331,7 +331,8 @@
         "status_submitted": "مُرسَل",
         "status_pending": "في الانتظار",
         "status_failed": "فشل",
-        "status_cancelled": "ملغى"
+        "status_cancelled": "ملغى",
+        "archive_eyebrow": "الأرشيف"
     },
     "profile": {
         "title": "الملف الشخصي",
@@ -340,7 +341,7 @@
         "free": "مجاني",
         "available_balance": "الرصيد المتاح",
         "buy_credits": "شراء رصيد",
-        "manage": "إدارة",
+        "manage": "إدارة الخطة",
         "credits_label": "الرصيد",
         "credits_remaining": "{{value}} من {{max}} نقطة",
         "renews_today": "يتجدد اليوم",

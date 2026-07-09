@@ -122,8 +122,6 @@ export default function OptionsScreen() {
   const setColorPalette = useStudioStore(s => s.setColorPalette);
   const setStrength = useStudioStore(s => s.setStrength);
 
-  const seed = useStudioStore(s => s.seed);
-  const setSeed = useStudioStore(s => s.setSeed);
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
   const roomType = useStudioStore(s => s.roomType);
@@ -168,7 +166,6 @@ export default function OptionsScreen() {
   // Plan-level permission checks — these reflect the current plan's
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
-  const { allowed: seedControlEnabled } = usePlanPermission("allow_seed");
   const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
   const { cost } = useCreditCost();
   // EFFECTIVE values — welcome bonus trial users get MAX plan's rules + features
@@ -231,7 +228,6 @@ export default function OptionsScreen() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setPromptOpen(v => !v);
   };
-  const [seedExpanded, setSeedExpanded] = useState(false);
   const [hintChipId, setHintChipId] = useState<string | null>(null);
   const [paletteSheetOpen, setPaletteSheetOpen] = useState(false);
 
@@ -1154,178 +1150,12 @@ export default function OptionsScreen() {
           )}
         </View>
 
-        {/* Advanced Seed Controls — gated by plan.allow_seed */}
-        <View style={{ paddingHorizontal: 24, marginTop: 12 }}>
-          <Pressable
-            onPress={() => {
-              if (!seedControlEnabled) {
-                router.push("/plans");
-                return;
-              }
-              setSeedExpanded(!seedExpanded);
-            }}
-            className="flex-row items-center justify-between"
-            style={({ pressed }) => ({
-              marginTop: 32,
-              opacity: !seedControlEnabled ? 0.55 : pressed ? 0.8 : 1,
-            })}
-          >
-            <View className="flex-row items-center" style={{ gap: 10 }}>
-              <Ionicons
-                name={seedControlEnabled ? "options" : "lock-closed"}
-                size={seedControlEnabled ? 20 : 16}
-                color={seedControlEnabled ? "#E5E2E1" : "#998F84"}
-              />
-              <Text
-                className="font-body text-on-surface"
-                style={{ fontSize: 15 }}
-              >
-                {t("studio.seed")}
-              </Text>
-              {!seedControlEnabled && (
-                <Text
-                  className="font-label"
-                  style={{
-                    fontSize: 10,
-                    color: "#E0C29A",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  PRO+
-                </Text>
-              )}
-            </View>
-            <Ionicons
-              name={seedExpanded ? "chevron-down" : "chevron-forward"}
-              size={18}
-              color="#998F84"
-            />
-          </Pressable>
+        {/* Seed controls removed (2026-07): the backend omits `seed`
+            entirely when unset (TemplateInputResolver only sends it if
+            non-null), so Replicate randomizes every run — which is the
+            behavior users actually want. Power-user seed pinning can
+            return post-launch if data asks for it. */}
 
-          {seedExpanded && seedControlEnabled && (
-            <View style={{ marginTop: 12 }}>
-              <Text
-                className="font-body text-on-surface-variant"
-                style={{ fontSize: 12, marginBottom: 10, lineHeight: 18 }}
-              >
-                {t("studio.seed_help_long")}
-              </Text>
-              <View className="flex-row items-center" style={{ gap: 8 }}>
-                <TextInput
-                  className="font-body text-on-surface"
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#1C1B1B",
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 14,
-                    borderWidth: 1,
-                    borderColor: seed !== undefined
-                      ? "rgba(225,195,155,0.35)"
-                      : "rgba(255,255,255,0.08)",
-                  }}
-                  placeholder={t("studio.seed_placeholder_long")}
-                  placeholderTextColor="#998F84"
-                  keyboardType="number-pad"
-                  returnKeyType="done"
-                  maxLength={10}
-                  value={seed !== undefined ? String(seed) : ""}
-                  onChangeText={text => {
-                    const trimmed = text.trim();
-                    if (!trimmed) {
-                      setSeed(undefined);
-                      return;
-                    }
-                    // Strip non-digits defensively (number-pad on Android can
-                    // still surface locale separators on some devices).
-                    const digits = trimmed.replace(/[^0-9]/g, "");
-                    if (!digits) return;
-                    const n = parseInt(digits, 10);
-                    if (!isNaN(n) && n >= 0 && n <= 2147483647) setSeed(n);
-                  }}
-                />
-                {/* Random button — generates a fresh 32-bit positive int. */}
-                <Pressable
-                  onPress={() => {
-                    const random = Math.floor(Math.random() * 2147483647);
-                    setSeed(random);
-                  }}
-                  hitSlop={8}
-                  style={({ pressed }) => ({
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(225,195,155,0.1)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.35)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Ionicons name="dice" size={20} color="#E0C29A" />
-                </Pressable>
-                {seed !== undefined && (
-                  <Pressable
-                    onPress={() => setSeed(undefined)}
-                    hitSlop={8}
-                    style={({ pressed }) => ({
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: pressed ? 0.5 : 1,
-                    })}
-                  >
-                    <Ionicons name="close-circle" size={22} color="#998F84" />
-                  </Pressable>
-                )}
-              </View>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{ fontSize: 10, marginTop: 8, letterSpacing: 0.3 }}
-              >
-                {seed !== undefined
-                  ? t("studio.seed_locked_hint", { seed })
-                  : t("studio.seed_empty_hint")}
-              </Text>
-            </View>
-          )}
-
-          {/* Generation Cost */}
-          <View
-            className="flex-row items-center justify-between"
-            style={{
-              marginTop: 32,
-              padding: 24,
-              borderRadius: 12,
-              backgroundColor: "#1C1B1B",
-            }}
-          >
-            <View>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.credits")}
-              </Text>
-              <Text
-                className="font-headline text-on-surface"
-                style={{ fontSize: 20, fontWeight: "700", marginTop: 4 }}
-              >
-                {t("studio.cost_credits", { count: cost })}
-              </Text>
-            </View>
-            <Ionicons name="wallet-outline" size={24} color="#E0C29A" />
-          </View>
-        </View>
       </ScrollView>
 
       {/* Floating CTA — BottomBar handles the safe-area + tab-bar math so

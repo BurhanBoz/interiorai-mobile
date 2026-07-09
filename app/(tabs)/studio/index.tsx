@@ -103,6 +103,15 @@ export default function StudioScreen() {
 
   const { t } = useTranslation();
   const setMode = useStudioStore((s) => s.setMode);
+
+  // Coming back to the tab always opens at the top (2026-07 finding:
+  // a stale scroll position made the home feel "stuck mid-list").
+  const scrollRef = useRef<ScrollView>(null);
+  useFocusEffect(
+    useCallback(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, []),
+  );
   const planCode = useEffectivePlanCode();
 
   const handleFeaturePress = (feature: StudioFeature, locked: boolean) => {
@@ -139,6 +148,7 @@ export default function StudioScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}

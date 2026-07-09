@@ -79,7 +79,7 @@ export default function GalleryScreen() {
   const { width } = useWindowDimensions();
 
   // Layout constants — 2-col grid for the premium "editorial" aesthetic.
-  const EDGE = 20;
+  const EDGE = 24; // matches History's px-6 — one horizontal rhythm app-wide
   const GAP = 12;
   const COLS = 2;
   const tileWidth = (width - EDGE * 2 - GAP * (COLS - 1)) / COLS;
@@ -505,7 +505,7 @@ export default function GalleryScreen() {
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
       {/* ── Top App Bar ── */}
       <View
-        className="flex-row items-center justify-between px-5"
+        className="flex-row items-center justify-between px-6"
         style={{ height: 56 }}
       >
         <View className="flex-row items-center" style={{ gap: 14 }}>
@@ -531,7 +531,7 @@ export default function GalleryScreen() {
 
       {allOutputs.length === 0 && !loading ? (
         <View className="flex-1">
-          <View className="px-5 pt-4 mb-8">
+          <View className="px-6 pt-4 mb-8">
             <Text
               className="font-label text-secondary font-medium mb-2"
               style={{

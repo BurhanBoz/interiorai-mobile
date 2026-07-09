@@ -331,7 +331,8 @@
         "status_submitted": "Eingereicht",
         "status_pending": "Ausstehend",
         "status_failed": "Fehlgeschlagen",
-        "status_cancelled": "Abgebrochen"
+        "status_cancelled": "Abgebrochen",
+        "archive_eyebrow": "Archiv"
     },
     "profile": {
         "title": "Profil",
@@ -340,7 +341,7 @@
         "free": "Kostenlos",
         "available_balance": "Verfügbares Guthaben",
         "buy_credits": "Credits kaufen",
-        "manage": "Verwalten",
+        "manage": "Plan verwalten",
         "credits_label": "Credits",
         "credits_remaining": "{{value}} von {{max}} Credits",
         "renews_today": "Verlängert sich heute",

@@ -33,7 +33,7 @@ export default function TermsScreen() {
   const handleBack = useBackHandler("/(tabs)/profile");
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={[]}
       style={{ flex: 1, backgroundColor: theme.color.surface }}
     >
       <TopBar title={t("settings.terms_title")} showBack onBack={handleBack} />

@@ -331,7 +331,8 @@
         "status_submitted": "Submitted",
         "status_pending": "Pending",
         "status_failed": "Failed",
-        "status_cancelled": "Cancelled"
+        "status_cancelled": "Cancelled",
+        "archive_eyebrow": "Archive"
     },
     "profile": {
         "title": "Profile",
@@ -340,7 +341,7 @@
         "free": "Free",
         "available_balance": "Available Balance",
         "buy_credits": "Buy Credits",
-        "manage": "Manage",
+        "manage": "Manage Plan",
         "credits_label": "Credits",
         "credits_remaining": "{{value}} of {{max}} credits",
         "renews_today": "Renews today",

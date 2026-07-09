@@ -331,7 +331,8 @@
         "status_submitted": "Enviado",
         "status_pending": "Pendiente",
         "status_failed": "Falló",
-        "status_cancelled": "Cancelado"
+        "status_cancelled": "Cancelado",
+        "archive_eyebrow": "Archivo"
     },
     "profile": {
         "title": "Perfil",
@@ -339,8 +340,8 @@
         "my_plan": "Mi Plan",
         "free": "Gratis",
         "available_balance": "Saldo Disponible",
-        "buy_credits": "Comprar Créditos",
-        "manage": "Administrar",
+        "buy_credits": "Comprar créditos",
+        "manage": "Gestionar plan",
         "credits_label": "Créditos",
         "credits_remaining": "{{value}} de {{max}} créditos",
         "renews_today": "Se renueva hoy",

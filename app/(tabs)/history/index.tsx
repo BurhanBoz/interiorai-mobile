@@ -518,10 +518,10 @@ export default function HistoryScreen() {
 
       {items.length === 0 ? (
         <View className="flex-1">
-          <View className="px-6 pt-8 mb-12">
+          <View className="px-6 pt-3 mb-6">
             <Text
               className="text-on-surface font-headline"
-              style={{ fontSize: 42, lineHeight: 48 }}
+              style={{ fontSize: 34, lineHeight: 40 }}
             >
               {t("history.title")}
             </Text>
@@ -549,7 +549,7 @@ export default function HistoryScreen() {
           scrollEventThrottle={400}
         >
           {/* Header Section — premium big title + subtle sub-label */}
-          <View className="px-6 pt-8 mb-10">
+          <View className="px-6 pt-3 mb-6">
             <Text
               className="font-label text-secondary mb-2"
               style={{
@@ -560,11 +560,11 @@ export default function HistoryScreen() {
                 opacity: 0.7,
               }}
             >
-              Archive
+              {t("history.archive_eyebrow")}
             </Text>
             <Text
               className="text-on-surface font-headline"
-              style={{ fontSize: 42, lineHeight: 48, fontWeight: "700" }}
+              style={{ fontSize: 34, lineHeight: 40, fontWeight: "700" }}
             >
               {t("history.title")}
             </Text>

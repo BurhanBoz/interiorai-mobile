@@ -576,7 +576,7 @@ export default function PlansScreen() {
     }, [plans, billingMode]);
 
     return (
-        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+        <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
             <TopBar title={t("plans.title")} showBack onBack={handleBack} />
 
             <ScrollView

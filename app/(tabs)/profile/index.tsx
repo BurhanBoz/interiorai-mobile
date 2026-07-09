@@ -4,7 +4,6 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle } from "react-native-svg";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
@@ -22,98 +21,6 @@ import { pushWithReturn } from "@/utils/navigation";
 import { theme } from "@/config/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
-
-/* ─────────────────── Credit Ring ─────────────────── */
-/**
- * The circular progress ring around the balance. When `max` is unknown
- * we draw just the track + center number — no fake-full ring that would
- * mislead a user into thinking they have unlimited credits.
- */
-function CreditRing({
-  value,
-  max,
-  size = 72,
-}: {
-  value: number;
-  max: number | null;
-  size?: number;
-}) {
-  const strokeWidth = 3;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const hasMax = !!max && max > 0;
-  const progress = hasMax ? Math.min(value / max, 1) : 0;
-  const dashOffset = circumference * (1 - progress);
-
-  // Generic fit: the inner diameter must hold the full number. Pick the
-  // font size so the label width stays inside the ring regardless of how
-  // many digits the balance has (1 → bold, 9999 → still clean).
-  const label = value >= 10000 ? `${Math.floor(value / 1000)}k` : String(value);
-  const innerDiameter = size - strokeWidth * 2 - 4;
-  const baseFont = size * 0.46;
-  // Each digit is ≈ 0.58× the font size in tabular-nums; cap the width.
-  const digitWidth = 0.58;
-  const widthBudget = innerDiameter / (label.length * digitWidth);
-  const fontSize = Math.min(baseFont, widthBudget);
-
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Svg
-        width={size}
-        height={size}
-        style={{
-          position: "absolute",
-          transform: [{ rotate: "-90deg" }],
-        }}
-      >
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="rgba(77,70,60,0.3)"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        {hasMax ? (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={theme.color.goldMidday}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-          />
-        ) : null}
-      </Svg>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.5}
-        style={{
-          fontFamily: "NotoSerif",
-          fontSize,
-          lineHeight: fontSize * 1.1,
-          color: theme.color.onSurface,
-          fontVariant: ["tabular-nums"],
-          maxWidth: innerDiameter,
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
 
 /* ─────────────────── Gold Action Button ─────────────────── */
 /**
@@ -452,7 +359,6 @@ export default function ProfileScreen() {
               >
                 {t("profile.available_balance") ?? "Available Balance"}
               </Text>
-              <CreditRing value={balance} max={showCreditDivisor ? monthlyLimit : null} size={44} />
             </View>
 
             <Text
@@ -564,28 +470,38 @@ export default function ProfileScreen() {
               Session sign-out lives in the top-right AvatarMenu. */}
           <Pressable
             onPress={handleDeleteAccount}
-            hitSlop={10}
+            accessibilityRole="button"
             style={({ pressed }) => ({
-              alignSelf: "center",
-              marginTop: 12,
-              paddingHorizontal: 18,
-              paddingVertical: 10,
+              marginTop: 16,
+              borderRadius: 14,
               borderWidth: 1,
-              borderColor: theme.color.danger,
-              borderRadius: 10,
-              opacity: pressed ? 0.6 : 0.9,
+              borderColor: "rgba(217,138,123,0.28)",
+              backgroundColor: pressed
+                ? "rgba(217,138,123,0.08)"
+                : "rgba(217,138,123,0.03)",
             })}
           >
-            <Text
+            <View
               style={{
-                fontFamily: "Inter",
-                fontSize: 12,
-                color: theme.color.danger,
-                letterSpacing: 0.3,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingVertical: 14,
               }}
             >
-              {t("profile.delete_my_account")}
-            </Text>
+              <Ionicons name="trash-outline" size={15} color={theme.color.danger} />
+              <Text
+                style={{
+                  fontFamily: "Inter-Medium",
+                  fontSize: 13,
+                  letterSpacing: 0.2,
+                  color: theme.color.danger,
+                }}
+              >
+                {t("profile.delete_my_account")}
+              </Text>
+            </View>
           </Pressable>
         </View>
 

@@ -1,5 +1,5 @@
 import { useFonts } from "expo-font";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,7 +33,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   // Subscribing to useTranslation here guarantees the entire app tree
   // re-renders when the language changes (via i18n.changeLanguage), because
-  // every child that uses t() is descendant of <Slot /> below.
+  // every child that uses t() is descendant of the root <Stack /> below.
   const { i18n: i18nInstance } = useTranslation();
 
   // Real weight TTFs now land in assets/fonts/ — no more synthesized
@@ -163,7 +163,17 @@ export default function RootLayout() {
                 This is a belt-and-suspenders guarantee on top of useTranslation()
                 — any screen that forgot to hook into t() will still pick up
                 the new language the next time it mounts. */}
-            <Slot key={i18nInstance.language} />
+            {/* Root is a real Stack (was Slot) — gives every pushed screen
+                deterministic back behavior AND native iOS swipe-back
+                (2026-07 tester findings: back from result landed on the
+                wrong tab; no edge-swipe anywhere). */}
+            <Stack
+              key={i18nInstance.language}
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "#131313" },
+              }}
+            />
             <OfflineBanner />
           </QueryClientProvider>
         </SafeAreaProvider>

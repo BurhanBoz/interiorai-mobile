@@ -331,7 +331,8 @@
         "status_submitted": "送信済み",
         "status_pending": "保留中",
         "status_failed": "失敗",
-        "status_cancelled": "キャンセル済み"
+        "status_cancelled": "キャンセル済み",
+        "archive_eyebrow": "アーカイブ"
     },
     "profile": {
         "title": "プロフィール",
@@ -340,7 +341,7 @@
         "free": "無料",
         "available_balance": "利用可能残高",
         "buy_credits": "クレジット購入",
-        "manage": "管理",
+        "manage": "プラン管理",
         "credits_label": "クレジット",
         "credits_remaining": "{{max}} クレジット中 {{value}}",
         "renews_today": "本日更新",

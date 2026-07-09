@@ -89,7 +89,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
       }}
       className="flex-row items-center bg-surface-container-low rounded-xl"
       style={({ pressed }) => ({
-        marginBottom: 10,
+        marginBottom: 12,
         padding: 14,
         opacity: pressed ? 0.85 : 1,
         borderWidth: 1,
@@ -168,6 +168,9 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
             fontSize: 17,
             color: amountColor,
             letterSpacing: 0.5,
+            fontVariant: ["tabular-nums"],
+            minWidth: 56,
+            textAlign: "right",
           }}
         >
           {isPositive ? "+" : ""}
@@ -331,7 +334,7 @@ export default function CreditsScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       {/* Billing-history header — brand mark + quick-access avatar.
           Back button behavior routes through useBackHandler so the
           "profile → credits → back" loop lands on Profile, not the
@@ -356,7 +359,7 @@ export default function CreditsScreen() {
             {/* ── Hero Balance Section ── */}
             <View
               className="items-center"
-              style={{ paddingTop: 32, paddingBottom: 32 }}
+              style={{ paddingTop: 16, paddingBottom: 24 }}
             >
               <Text
                 className="font-label text-secondary"
@@ -423,7 +426,7 @@ export default function CreditsScreen() {
             {/* ── One-time Credit Pack Banner ── */}
             <Pressable
               onPress={() => router.push("/credits/packs")}
-              style={{ marginBottom: 48 }}
+              style={{ marginBottom: 28 }}
             >
               <View
                 style={{
@@ -458,7 +461,7 @@ export default function CreditsScreen() {
             {referenceItems.length > 0 && (
               <View
                 className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 48 }}
+                style={{ padding: 24, marginBottom: 28 }}
               >
                 <View
                   className="flex-row items-center justify-between"
@@ -532,7 +535,7 @@ export default function CreditsScreen() {
             {subscription?.currentPeriodEnd && (
               <View
                 className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 48 }}
+                style={{ padding: 24, marginBottom: 28 }}
               >
                 <View style={{ marginBottom: 24 }}>
                   <Text

@@ -331,7 +331,8 @@
         "status_submitted": "제출됨",
         "status_pending": "대기 중",
         "status_failed": "실패",
-        "status_cancelled": "취소됨"
+        "status_cancelled": "취소됨",
+        "archive_eyebrow": "아카이브"
     },
     "profile": {
         "title": "프로필",
@@ -340,7 +341,7 @@
         "free": "무료",
         "available_balance": "사용 가능 잔액",
         "buy_credits": "크레딧 구매",
-        "manage": "관리",
+        "manage": "플랜 관리",
         "credits_label": "크레딧",
         "credits_remaining": "{{max}} 크레딧 중 {{value}}",
         "renews_today": "오늘 갱신",

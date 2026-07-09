@@ -52,7 +52,7 @@ export default function PrivacyScreen() {
   const handleBack = useBackHandler("/(tabs)/profile");
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={[]}
       style={{ flex: 1, backgroundColor: theme.color.surface }}
     >
       <TopBar title={t("settings.privacy_title")} showBack onBack={handleBack} />

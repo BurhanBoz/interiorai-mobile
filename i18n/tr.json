@@ -331,7 +331,8 @@
         "status_submitted": "Gönderildi",
         "status_pending": "Bekliyor",
         "status_failed": "Başarısız",
-        "status_cancelled": "İptal Edildi"
+        "status_cancelled": "İptal Edildi",
+        "archive_eyebrow": "Arşiv"
     },
     "profile": {
         "title": "Profil",
@@ -339,8 +340,8 @@
         "my_plan": "Planım",
         "free": "Ücretsiz",
         "available_balance": "Mevcut Bakiye",
-        "buy_credits": "Kredi Al",
-        "manage": "Yönet",
+        "buy_credits": "Kredi Satın Al",
+        "manage": "Planı Yönet",
         "credits_label": "Krediler",
         "credits_remaining": "{{max}} kredinin {{value}} tanesi",
         "renews_today": "Bugün yenileniyor",
