@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
@@ -61,10 +61,15 @@ export default function StyleTransferScreen() {
   // a plain redesign. Gate the Next CTA until one is uploaded.
   const canProceed = !!referencePhoto?.fileId;
 
+  // wizard=1 → entered right after photo upload (2026-07 IA rework):
+  // continue the shared chain (style → options → review). Otherwise this
+  // screen was opened from options/review to (re)pick the reference.
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const handleNext = () => {
     if (!canProceed) return;
     Haptics.selectionAsync();
-    router.push("/studio/review");
+    if (wizard === "1") router.replace("/studio/style");
+    else router.push("/studio/review");
   };
 
   return (

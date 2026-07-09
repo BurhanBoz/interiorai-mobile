@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
@@ -48,6 +48,9 @@ const PROTECT_GREEN = "#9CC5B0";
 
 export default function SmartEditScreen() {
   const { t } = useTranslation();
+  // wizard=1 → entered right after photo upload (2026-07 IA rework):
+  // saving continues the chain forward instead of popping back.
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const photo = useStudioStore(s => s.photo);
   const setMode = useStudioStore(s => s.setMode);
   const setMask = useStudioStore(s => s.setMask);
@@ -151,7 +154,8 @@ export default function SmartEditScreen() {
       // so the user SEES what will change before generating.
       setMask(mask.id, strokes, maskMode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+      if (wizard === "1") router.replace("/studio/style");
+      else router.back();
     } catch (e: any) {
       const msg = e?.response?.data?.message;
       Alert.alert(

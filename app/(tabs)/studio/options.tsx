@@ -44,17 +44,6 @@ const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   STYLE_TRANSFER: "STYLE_TRANSFER",
 };
 
-const MODES: {
-  key: DesignMode;
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  planBadge?: string;
-}[] = [
-  { key: "REDESIGN", labelKey: "studio.mode_redesign", icon: "sparkles" },
-  { key: "EMPTY_ROOM", labelKey: "studio.mode_empty_room", icon: "home-outline" },
-  { key: "INPAINT", labelKey: "studio.mode_inpaint", icon: "image-outline", planBadge: "PRO" },
-  { key: "STYLE_TRANSFER", labelKey: "studio.mode_style_transfer", icon: "color-palette-outline", planBadge: "MAX" },
-];
 
 /**
  * Curated three-color interior palette themes — 2025-2026 trend-aligned.
@@ -125,7 +114,6 @@ export default function OptionsScreen() {
   const prompt = useStudioStore(s => s.prompt);
   const colorPalette = useStudioStore(s => s.colorPalette);
   const strength = useStudioStore(s => s.strength);
-  const setMode = useStudioStore(s => s.setMode);
   const setQualityTier = useStudioStore(s => s.setQualityTier);
   const setNumOutputs = useStudioStore(s => s.setNumOutputs);
   const setPreserveLayout = useStudioStore(s => s.setPreserveLayout);
@@ -220,18 +208,6 @@ export default function OptionsScreen() {
     return !availableQualityTiers.some(t => t.key === tierKey);
   };
 
-  const { allowed: maskEditingAllowed } = usePlanPermission("allow_mask_editing");
-
-  const isModeAvailable = (modeKey: DesignMode) => {
-    const fc = FEATURE_CODE_MAP[modeKey];
-    if (!fc || !(features.find(f => f.featureCode === fc)?.enabled ?? false)) return false;
-    // Hard plan-code guards so feature-flag loading delays can't briefly
-    // surface a locked mode as available.
-    if (modeKey === "STYLE_TRANSFER" && planCode !== "MAX") return false;
-    if (modeKey === "INPAINT" && planCode !== "PRO" && planCode !== "MAX") return false;
-    return true;
-  };
-
   // Determine max variants from credit rules. Must use the tier-aware
   // feature_code so HD jobs look up HD_REDESIGN rules (not INTERIOR_REDESIGN)
   // — same V25-split gotcha as availableQualityTiers above.
@@ -323,124 +299,9 @@ export default function OptionsScreen() {
           </Text>
         </View>
 
-        {/* Design Mode Chips */}
-        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
-          <Text
-            className="font-label text-on-surface-variant"
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              marginBottom: 16,
-            }}
-          >
-            {t("studio.design_mode")}
-          </Text>
-          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {MODES.map(m => {
-              const locked = !isModeAvailable(m.key);
-              const isActive = mode === m.key && !locked;
-              return (
-                <Pressable
-                  key={m.key}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    if (locked) {
-                      router.push("/plans");
-                      return;
-                    }
-                    // Smart Edit's mask-drawing canvas hasn't shipped yet —
-                    // selecting it as a generation mode would submit a
-                    // mask-less INPAINT job that the backend rejects (V37).
-                    // Route to the branded Coming Soon screen instead and
-                    // keep the previous mode selected.
-                    if (m.key === "INPAINT") {
-                      router.push("/studio/smart-edit");
-                      return;
-                    }
-                    setMode(m.key);
-                    // Style Transfer needs a reference image; kick the user
-                    // into the dedicated capture screen. They return to
-                    // Review (not here) once the reference is set.
-                    if (m.key === "STYLE_TRANSFER") {
-                      router.push("/studio/style-transfer");
-                    }
-                  }}
-                  style={({ pressed }) => ({
-                    borderRadius: 12,
-                    backgroundColor: isActive
-                      ? "#E1C39B"
-                      : locked
-                        ? "rgba(28,27,27,0.6)"
-                        : "#2A2A2A",
-                    borderWidth: 1,
-                    borderColor: isActive
-                      ? "rgba(225,195,155,0.85)"
-                      : locked
-                        ? "rgba(153,143,132,0.3)"
-                        : "rgba(225,195,155,0.35)",
-                    borderStyle: locked ? "dashed" : "solid",
-                    overflow: "hidden",
-                    transform: [{ scale: pressed ? 0.96 : 1 }],
-                  })}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                    }}
-                  >
-                    <Ionicons
-                      name={locked ? "lock-closed" : (m.icon as any)}
-                      size={locked ? 12 : 14}
-                      color={isActive ? "#3F2D11" : locked ? "#998F84" : "#E0C29A"}
-                    />
-                    <Text
-                      className="font-body"
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: isActive
-                          ? "#3F2D11"
-                          : locked
-                            ? "#998F84"
-                            : "#E0C29A",
-                      }}
-                    >
-                      {t(m.labelKey)}
-                    </Text>
-                    {locked && m.planBadge && (
-                      <View
-                        style={{
-                          paddingHorizontal: 6,
-                          paddingVertical: 2,
-                          borderRadius: 4,
-                          backgroundColor: "rgba(225,195,155,0.12)",
-                          borderWidth: 1,
-                          borderColor: "rgba(225,195,155,0.28)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 9,
-                            letterSpacing: 1,
-                            color: "rgba(225,195,155,0.55)",
-                          }}
-                        >
-                          {m.planBadge}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+        {/* Design mode is chosen on the studio home (2026-07 IA rework) —
+            the chips that lived here are gone; `mode` arrives via the store
+            and mode-specific steps (mask/reference) run right after upload. */}
 
         {/* Quality & AI Strength Bento Layout */}
         <View style={{ marginTop: 48, paddingHorizontal: 24, gap: 16 }}>

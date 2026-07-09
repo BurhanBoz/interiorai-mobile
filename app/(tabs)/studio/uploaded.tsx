@@ -31,7 +31,20 @@ export default function UploadedScreen() {
   const setPhoto = useStudioStore((s) => s.setPhoto);
   const { pickImage } = useImagePicker();
 
+  const mode = useStudioStore((s) => s.mode);
   const handleNext = () => {
+    // 2026-07 IA rework: the flow was chosen on the studio home, so the
+    // specialty step (mask drawing / reference photo) comes RIGHT after
+    // the photo. Both land back on the shared chain (style → options →
+    // review) via wizard=1; review's guards stay as safety nets.
+    if (mode === "INPAINT") {
+      router.push({ pathname: "/studio/smart-edit", params: { wizard: "1" } });
+      return;
+    }
+    if (mode === "STYLE_TRANSFER") {
+      router.push({ pathname: "/studio/style-transfer", params: { wizard: "1" } });
+      return;
+    }
     router.push("/studio/style");
   };
 

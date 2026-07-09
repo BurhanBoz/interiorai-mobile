@@ -22,68 +22,122 @@ import { theme } from "@/config/theme";
  * a plain inner View owns layout — see ListItem / AvatarMenu notes.
  */
 
-const MEDIA_HEIGHT = 176;
+const MEDIA_HEIGHT = 160;
+
+/** Soft gradient at the media's bottom edge — melts the photo into the
+    card body instead of a hard line; the premium "editorial fade". */
+function MediaScrim() {
+    return (
+        <LinearGradient
+            colors={["rgba(28,27,26,0)", "rgba(28,27,26,0.55)"]}
+            style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 56,
+            }}
+            pointerEvents="none"
+        />
+    );
+}
 
 /* ───────── Before/after crossfade teaser ───────── */
 
 function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
     const fade = useRef(new Animated.Value(0)).current;
+    // Ken Burns — a barely-there push-in that breathes with the crossfade;
+    // premium/soft, never busy.
+    const zoom = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        if (media.kind !== "pair") return;
-        const loop = Animated.loop(
+        const zoomLoop = Animated.loop(
             Animated.sequence([
-                Animated.delay(1600),
-                Animated.timing(fade, {
-                    toValue: 1,
-                    duration: 800,
+                Animated.timing(zoom, {
+                    toValue: 1.06,
+                    duration: 6000,
                     easing: theme.motion.easing.standard,
                     useNativeDriver: true,
                 }),
-                Animated.delay(1600),
+                Animated.timing(zoom, {
+                    toValue: 1,
+                    duration: 6000,
+                    easing: theme.motion.easing.standard,
+                    useNativeDriver: true,
+                }),
+            ]),
+        );
+        zoomLoop.start();
+        if (media.kind !== "pair") return () => zoomLoop.stop();
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(2200),
+                Animated.timing(fade, {
+                    toValue: 1,
+                    duration: 900,
+                    easing: theme.motion.easing.standard,
+                    useNativeDriver: true,
+                }),
+                Animated.delay(2200),
                 Animated.timing(fade, {
                     toValue: 0,
-                    duration: 800,
+                    duration: 900,
                     easing: theme.motion.easing.standard,
                     useNativeDriver: true,
                 }),
             ]),
         );
         loop.start();
-        return () => loop.stop();
-    }, [fade, media.kind]);
+        return () => {
+            loop.stop();
+            zoomLoop.stop();
+        };
+    }, [fade, zoom, media.kind]);
 
     if (media.kind === "single") {
         return (
-            <Image
-                source={media.image}
-                resizeMode="cover"
-                style={{ width: "100%", height: MEDIA_HEIGHT }}
-            />
+            <View style={{ width: "100%", height: MEDIA_HEIGHT, overflow: "hidden" }}>
+                <Animated.Image
+                    source={media.image}
+                    resizeMode="cover"
+                    style={{ width: "100%", height: "100%", transform: [{ scale: zoom }] }}
+                />
+                <MediaScrim />
+            </View>
         );
     }
 
     return (
-        <View style={{ width: "100%", height: MEDIA_HEIGHT }}>
-            <Image
-                source={media.before}
-                resizeMode="cover"
-                style={{ position: "absolute", width: "100%", height: "100%" }}
-            />
+        <View style={{ width: "100%", height: MEDIA_HEIGHT, overflow: "hidden" }}>
             <Animated.View
                 style={{
                     position: "absolute",
                     width: "100%",
                     height: "100%",
-                    opacity: fade,
+                    transform: [{ scale: zoom }],
                 }}
             >
                 <Image
-                    source={media.after}
+                    source={media.before}
                     resizeMode="cover"
-                    style={{ width: "100%", height: "100%" }}
+                    style={{ position: "absolute", width: "100%", height: "100%" }}
                 />
+                <Animated.View
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        opacity: fade,
+                    }}
+                >
+                    <Image
+                        source={media.after}
+                        resizeMode="cover"
+                        style={{ width: "100%", height: "100%" }}
+                    />
+                </Animated.View>
             </Animated.View>
+            <MediaScrim />
 
             {/* Synced BEFORE/AFTER tag — bottom-left glass chip */}
             <View style={{ position: "absolute", left: 12, bottom: 12 }}>
@@ -92,7 +146,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                         paddingHorizontal: 10,
                         paddingVertical: 5,
                         borderRadius: 999,
-                        backgroundColor: "rgba(12,11,10,0.6)",
+                        backgroundColor: "rgba(12,11,10,0.5)",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.28)",
                     }}
@@ -149,7 +203,7 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
             accessibilityLabel={t(feature.titleKey)}
             style={({ pressed }) => ({
                 borderRadius: 22,
-                transform: [{ scale: pressed ? 0.982 : 1 }],
+                transform: [{ scale: pressed ? 0.985 : 1 }],
                 opacity: pressed ? 0.92 : 1,
             })}
         >
@@ -159,7 +213,7 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                     overflow: "hidden",
                     backgroundColor: theme.color.surfaceContainerLow,
                     borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.16)",
+                    borderColor: "rgba(225,195,155,0.12)",
                     ...theme.elevation.goldGlowSoft,
                 }}
             >

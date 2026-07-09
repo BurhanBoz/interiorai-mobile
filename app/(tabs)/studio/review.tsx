@@ -22,7 +22,6 @@ import { createJob } from "@/services/jobs";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { DisclaimerBanner } from "@/components/ui/DisclaimerBanner";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
 import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
@@ -269,11 +268,13 @@ export default function ReviewScreen() {
         </View>
 
         {/* Photo Preview with Lens Badges */}
+        {/* 4:3 (was 4:5) — the taller crop filled the whole viewport and
+            pushed Speed Mode etc. under the floating CTA (2026-07 UX). */}
         <View
           style={{
-            marginTop: 32,
+            marginTop: 24,
             marginHorizontal: 24,
-            aspectRatio: 4 / 5,
+            aspectRatio: 4 / 3,
             borderRadius: 12,
             overflow: "hidden",
           }}
@@ -316,15 +317,15 @@ export default function ReviewScreen() {
               bottom: 0,
               left: 0,
               right: 0,
-              padding: 16,
+              padding: 12,
             }}
           >
-            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            <View className="flex-row flex-wrap" style={{ gap: 6 }}>
               <View
                 style={{
                   backgroundColor: "rgba(19,19,19,0.7)",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
                   borderRadius: 999,
                   flexDirection: "row",
                   alignItems: "center",
@@ -348,8 +349,8 @@ export default function ReviewScreen() {
               <View
                 style={{
                   backgroundColor: "rgba(19,19,19,0.7)",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
                   borderRadius: 999,
                   flexDirection: "row",
                   alignItems: "center",
@@ -560,13 +561,6 @@ export default function ReviewScreen() {
               {t("studio.cost_credits", { count: balance })}
             </Text>
           </View>
-        </View>
-
-        {/* App Store 1.1.6 — AI-content disclaimer must be visible before
-            the user taps Generate. Sits above the floating CTA so it's
-            always in view at the decision point. */}
-        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
-          <DisclaimerBanner text={t("studio.ai_disclaimer")} />
         </View>
 
       </ScrollView>
