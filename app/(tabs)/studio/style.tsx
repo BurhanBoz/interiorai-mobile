@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
+import { catalogName } from "@/utils/catalogI18n";
 import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -380,7 +381,7 @@ export default function StyleScreen() {
                               fontFamily: "NotoSerif",
                             }}
                           >
-                            {room.name}
+                            {catalogName(t, "room", room)}
                           </Text>
                           {room.description ? (
                             <Text
@@ -579,7 +580,7 @@ export default function StyleScreen() {
                     numberOfLines={1}
                   >
                     {roomType
-                      ? roomType.name
+                      ? catalogName(t, "room", roomType)
                       : t("studio.select_room_placeholder")}
                   </Text>
                   <Ionicons
@@ -744,7 +745,7 @@ export default function StyleScreen() {
                             }}
                             numberOfLines={1}
                           >
-                            {style.name}
+                            {catalogName(t, "style", style)}
                           </Text>
                           {isSelected && (
                             <Ionicons

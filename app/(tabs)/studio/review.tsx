@@ -20,6 +20,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import { usePlanPermission } from "@/hooks/useEntitlement";
 import { createJob } from "@/services/jobs";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
+import { catalogName } from "@/utils/catalogI18n";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
@@ -268,13 +269,13 @@ export default function ReviewScreen() {
         </View>
 
         {/* Photo Preview with Lens Badges */}
-        {/* 4:3 (was 4:5) — the taller crop filled the whole viewport and
-            pushed Speed Mode etc. under the floating CTA (2026-07 UX). */}
+        {/* 16:9 (was 4:5 → 4:3) — compact hero so Speed Mode & settings
+            stay visible above the floating CTA (2026-07 UX rounds). */}
         <View
           style={{
             marginTop: 24,
             marginHorizontal: 24,
-            aspectRatio: 4 / 3,
+            aspectRatio: 16 / 9,
             borderRadius: 12,
             overflow: "hidden",
           }}
@@ -368,7 +369,7 @@ export default function ReviewScreen() {
                     letterSpacing: 2,
                   }}
                 >
-                  {designStyle?.name ?? t("studio.design_style")}
+                  {designStyle ? catalogName(t, "style", designStyle) : t("studio.design_style")}
                 </Text>
               </View>
             </View>
@@ -387,11 +388,11 @@ export default function ReviewScreen() {
         >
           <SummaryCard
             label={t("result.style")}
-            value={designStyle?.name ?? "—"}
+            value={designStyle ? catalogName(t, "style", designStyle) : "—"}
           />
           <SummaryCard
             label={t("result.room")}
-            value={roomType?.name ?? "—"}
+            value={roomType ? catalogName(t, "room", roomType) : "—"}
           />
           <SummaryCard
             label={t("result.quality")}

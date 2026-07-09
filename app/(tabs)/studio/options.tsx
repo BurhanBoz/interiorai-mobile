@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  LayoutAnimation,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -222,6 +223,14 @@ export default function OptionsScreen() {
 
   const [promptFocused, setPromptFocused] = useState(false);
   const [promptChipsExpanded, setPromptChipsExpanded] = useState(false);
+  // Custom prompt accordion (2026-07 UX): collapsed by default — most users
+  // never touch it. Opens pre-expanded when a prompt already exists.
+  const [promptOpen, setPromptOpen] = useState(() => prompt.trim().length > 0);
+  const togglePromptOpen = () => {
+    Haptics.selectionAsync();
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setPromptOpen(v => !v);
+  };
   const [seedExpanded, setSeedExpanded] = useState(false);
   const [hintChipId, setHintChipId] = useState<string | null>(null);
   const [paletteSheetOpen, setPaletteSheetOpen] = useState(false);
@@ -786,82 +795,62 @@ export default function OptionsScreen() {
           })()}
         </View>
 
-        {/* Preview Card */}
-        <View
-          style={{
-            marginTop: 48,
-            marginHorizontal: 24,
-            aspectRatio: 16 / 10,
-            borderRadius: 16,
-            overflow: "hidden",
-            backgroundColor: "#111110",
-            borderWidth: 1,
-            borderColor: "rgba(225,195,155,0.12)",
-          }}
-        >
-          <Image
-            source={photo ? { uri: photo.uri } : undefined}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="contain"
-          />
-          {/* Gradient overlay */}
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.6)"]}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "60%",
-            }}
-          />
-          {/* Glass label */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 24,
-              left: 24,
-              backgroundColor: "rgba(19,19,19,0.7)",
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.1)",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Ionicons name="sparkles" size={14} color="#FDDEB4" />
-            <Text
-              className="font-label text-on-surface"
+        {/* Material Narrative (Prompt) — collapsible */}
+        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
+          <Pressable onPress={togglePromptOpen} accessibilityRole="button">
+            <View
               style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: promptOpen ? 14 : 0,
               }}
             >
-              {t("studio.realtime_preview")}
+              <Text
+                className="font-label"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: theme.color.goldMidday,
+                }}
+              >
+                {t("studio.custom_prompt")}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                {!promptOpen && prompt.trim().length > 0 && (
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: theme.color.goldMidday,
+                    }}
+                  />
+                )}
+                <Ionicons
+                  name={promptOpen ? "chevron-up" : "chevron-down"}
+                  size={16}
+                  color={theme.color.goldMidday}
+                />
+              </View>
+            </View>
+          </Pressable>
+          {!promptOpen && prompt.trim().length > 0 && (
+            <Text
+              numberOfLines={1}
+              style={{
+                marginTop: 10,
+                fontSize: 12.5,
+                fontFamily: "Inter",
+                color: "#998F84",
+              }}
+            >
+              {prompt.trim()}
             </Text>
-          </View>
-        </View>
-
-        {/* Material Narrative (Prompt) */}
-        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
-          {/* Section label — above the container */}
-          <Text
-            className="font-label"
-            style={{
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: theme.color.goldMidday,
-              marginBottom: 14,
-            }}
-          >
-            {t("studio.custom_prompt")}
-          </Text>
-
+          )}
+          {promptOpen && (
+          <>
           {/* Outer gold-bordered container */}
           {(() => {
             const categoryOrder = ["LIGHT", "MATERIAL", "MOOD", "STYLE_DETAIL", "COLOR", "ERA", "OBJECT"];
@@ -1161,6 +1150,8 @@ export default function OptionsScreen() {
               </View>
             );
           })()}
+          </>
+          )}
         </View>
 
         {/* Advanced Seed Controls — gated by plan.allow_seed */}

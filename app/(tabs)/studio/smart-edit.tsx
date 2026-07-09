@@ -54,12 +54,17 @@ export default function SmartEditScreen() {
   const photo = useStudioStore(s => s.photo);
   const setMode = useStudioStore(s => s.setMode);
   const setMask = useStudioStore(s => s.setMask);
+  // Re-entering (e.g. back from the style step) restores the saved mask so
+  // the user edits what they drew instead of starting from a blank canvas.
+  const savedStrokes = useStudioStore(s => s.maskStrokes);
+  const savedMaskMode = useStudioStore(s => s.maskMode);
 
-  const [strokes, setStrokes] = useState<MaskStroke[]>([]);
+  const [strokes, setStrokes] = useState<MaskStroke[]>(() => savedStrokes ?? []);
   const [livePoints, setLivePoints] = useState<{ x: number; y: number }[]>([]);
   const [brushRatio, setBrushRatio] = useState<number>(BRUSHES[1].ratio);
-  const [maskMode, setMaskMode] = useState<MaskMode>("CHANGE");
+  const [maskMode, setMaskMode] = useState<MaskMode>(() => savedMaskMode ?? "CHANGE");
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const strokeColor = maskMode === "PROTECT" ? PROTECT_GREEN : GOLD;
 
@@ -143,7 +148,10 @@ export default function SmartEditScreen() {
   const handleSave = async () => {
     if (!photo?.fileId) return;
     if (strokes.length === 0) {
-      Alert.alert(t("studio.smart_edit_title"), t("studio.smart_edit_min_stroke"));
+      // Premium feedback (2026-07): no popup — warning haptic + inline
+      // hint above the CTA; clears itself as soon as a stroke lands.
+      setAttempted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
     setSaving(true);
@@ -154,7 +162,7 @@ export default function SmartEditScreen() {
       // so the user SEES what will change before generating.
       setMask(mask.id, strokes, maskMode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (wizard === "1") router.replace("/studio/style");
+      if (wizard === "1") router.push("/studio/style");
       else router.back();
     } catch (e: any) {
       const msg = e?.response?.data?.message;
@@ -350,11 +358,24 @@ export default function SmartEditScreen() {
           marginBottom: TAB_BAR_HEIGHT + 16,
         }}
       >
+        {attempted && strokes.length === 0 && (
+          <Text
+            style={{
+              marginBottom: 10,
+              fontSize: 12.5,
+              lineHeight: 17,
+              textAlign: "center",
+              fontFamily: "Inter",
+              color: "#D98A7B",
+            }}
+          >
+            {t("studio.smart_edit_mask_required")}
+          </Text>
+        )}
         <Button
           title={saving ? t("studio.smart_edit_saving") : t("studio.smart_edit_save")}
           onPress={handleSave}
           loading={saving}
-          disabled={strokes.length === 0}
         />
       </View>
     </SafeAreaView>

@@ -68,7 +68,7 @@ export default function StyleTransferScreen() {
   const handleNext = () => {
     if (!canProceed) return;
     Haptics.selectionAsync();
-    if (wizard === "1") router.replace("/studio/style");
+    if (wizard === "1") router.push("/studio/style");
     else router.push("/studio/review");
   };
 
