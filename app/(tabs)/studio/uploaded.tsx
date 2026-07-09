@@ -140,7 +140,13 @@ export default function UploadedScreen() {
                 so the glyph stays legible on both white and dark
                 photographs. */}
             <Pressable
-              onPress={() => setPhoto(null)}
+              onPress={() => {
+                // Clearing the photo returns to the capture step — before,
+                // this left the user stranded on an empty preview (the X
+                // "did nothing" from their point of view).
+                setPhoto(null);
+                router.back();
+              }}
               style={{
                 position: "absolute",
                 top: 14,

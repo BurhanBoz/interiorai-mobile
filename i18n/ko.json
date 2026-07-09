@@ -294,7 +294,9 @@
         "feature_redesign_desc": "사진을 올리고 스타일을 고르면 AI가 방을 다시 디자인해요.",
         "feature_empty_room_desc": "빈 공간을 처음부터 채워보세요.",
         "feature_inpaint_desc": "칠한 영역만 바뀝니다.",
-        "feature_style_transfer_desc": "참고 사진의 스타일을 내 방에 적용해요."
+        "feature_style_transfer_desc": "참고 사진의 스타일을 내 방에 적용해요.",
+        "room_type_required": "계속하려면 방 유형을 선택하세요.",
+        "style_required": "계속하려면 디자인 스타일을 선택하세요."
     },
     "gallery": {
         "title": "갤러리",

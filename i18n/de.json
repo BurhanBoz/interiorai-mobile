@@ -294,7 +294,9 @@
         "feature_redesign_desc": "Foto hochladen, Stil wählen — die KI gestaltet den Raum neu.",
         "feature_empty_room_desc": "Richte einen leeren Raum von Grund auf ein.",
         "feature_inpaint_desc": "Übermale einen Bereich — nur die Auswahl ändert sich.",
-        "feature_style_transfer_desc": "Zeig ein Referenzfoto — sein Stil kommt in deinen Raum."
+        "feature_style_transfer_desc": "Zeig ein Referenzfoto — sein Stil kommt in deinen Raum.",
+        "room_type_required": "Wähle einen Raumtyp, um fortzufahren.",
+        "style_required": "Wähle einen Einrichtungsstil, um fortzufahren."
     },
     "gallery": {
         "title": "Galerie",

@@ -294,7 +294,9 @@
         "feature_redesign_desc": "Carica una foto, scegli uno stile — l'IA ridisegna la stanza.",
         "feature_empty_room_desc": "Arreda uno spazio vuoto da zero.",
         "feature_inpaint_desc": "Dipingi un'area — cambia solo ciò che selezioni.",
-        "feature_style_transfer_desc": "Mostra una foto di riferimento e applica il suo stile alla stanza."
+        "feature_style_transfer_desc": "Mostra una foto di riferimento e applica il suo stile alla stanza.",
+        "room_type_required": "Scegli un tipo di stanza per continuare.",
+        "style_required": "Scegli uno stile di design per continuare."
     },
     "gallery": {
         "title": "Galleria",

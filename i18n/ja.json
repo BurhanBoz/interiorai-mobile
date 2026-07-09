@@ -294,7 +294,9 @@
         "feature_redesign_desc": "写真をアップしてスタイルを選ぶと、AIが部屋をデザインします。",
         "feature_empty_room_desc": "何もない空間をゼロからコーディネート。",
         "feature_inpaint_desc": "塗った場所だけを変更できます。",
-        "feature_style_transfer_desc": "参考写真のスタイルをあなたの部屋に適用します。"
+        "feature_style_transfer_desc": "参考写真のスタイルをあなたの部屋に適用します。",
+        "room_type_required": "続行するには部屋のタイプを選択してください。",
+        "style_required": "続行するにはデザインスタイルを選択してください。"
     },
     "gallery": {
         "title": "ギャラリー",

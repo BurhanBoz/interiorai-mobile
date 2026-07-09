@@ -294,7 +294,9 @@
         "feature_redesign_desc": "حمّل صورة واختر نمطًا — سيعيد الذكاء الاصطناعي تصميم الغرفة.",
         "feature_empty_room_desc": "أثّث مساحة فارغة من الصفر.",
         "feature_inpaint_desc": "لوّن منطقة — يتغيّر ما تحدده فقط.",
-        "feature_style_transfer_desc": "أرِ صورة مرجعية وطبّق نمطها على غرفتك."
+        "feature_style_transfer_desc": "أرِ صورة مرجعية وطبّق نمطها على غرفتك.",
+        "room_type_required": "اختر نوع الغرفة للمتابعة.",
+        "style_required": "اختر نمط التصميم للمتابعة."
     },
     "gallery": {
         "title": "المعرض",

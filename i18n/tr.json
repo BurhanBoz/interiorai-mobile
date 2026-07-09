@@ -294,7 +294,9 @@
         "feature_redesign_desc": "Fotoğraf yükle, stil seç — AI odayı yeniden tasarlasın.",
         "feature_empty_room_desc": "Boş bir alanı sıfırdan döşe.",
         "feature_inpaint_desc": "Bir bölgeyi boya — yalnızca seçtiğin yer değişsin.",
-        "feature_style_transfer_desc": "Referans bir fotoğraf göster, stili odana uygulansın."
+        "feature_style_transfer_desc": "Referans bir fotoğraf göster, stili odana uygulansın.",
+        "room_type_required": "Devam etmek için bir oda tipi seç.",
+        "style_required": "Devam etmek için bir tasarım stili seç."
     },
     "gallery": {
         "title": "Galeri",

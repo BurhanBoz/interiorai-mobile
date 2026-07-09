@@ -11,9 +11,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { getRoomTypes, getDesignStyles } from "@/services/catalog";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -211,11 +212,26 @@ export default function StyleScreen() {
     }));
   }, [roomTypes]);
 
+  // Required-field feedback (2026-07 tester finding): a silently-disabled
+  // CTA reads as "the app is broken". The button always responds — a
+  // blocked press marks what's missing (inline error + warning haptic)
+  // and scrolls the offending section into view.
+  const scrollRef = useRef<ScrollView>(null);
+  const styleSectionY = useRef(0);
+  const [attempted, setAttempted] = useState(false);
+
   const handleNext = () => {
+    if (!roomType || !designStyle) {
+      setAttempted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      scrollRef.current?.scrollTo({
+        y: !roomType ? 0 : Math.max(styleSectionY.current - 72, 0),
+        animated: true,
+      });
+      return;
+    }
     router.push("/studio/options");
   };
-
-  const canProceed = roomType !== null && designStyle !== null;
 
   /* ─── Room Type Picker Modal ─── */
   const RoomPickerModal = () => (
@@ -448,6 +464,7 @@ export default function StyleScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
@@ -524,7 +541,9 @@ export default function StyleScreen() {
                     borderWidth: 1,
                     borderColor: roomType
                       ? "rgba(224,194,154,0.4)"
-                      : "rgba(224,194,154,0.15)",
+                      : attempted
+                        ? "rgba(217,138,123,0.75)"
+                        : "rgba(224,194,154,0.15)",
                     paddingHorizontal: 16,
                     height: 56,
                   }}
@@ -570,10 +589,28 @@ export default function StyleScreen() {
                   />
                 </View>
               </Pressable>
+              {attempted && !roomType && (
+                <Text
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    lineHeight: 16,
+                    fontFamily: "Inter",
+                    color: "#D98A7B",
+                  }}
+                >
+                  {t("studio.room_type_required")}
+                </Text>
+              )}
             </View>
 
             {/* ── Design Style Section ── */}
-            <View style={{ marginTop: 36, paddingHorizontal: 24 }}>
+            <View
+              style={{ marginTop: 36, paddingHorizontal: 24 }}
+              onLayout={(e) => {
+                styleSectionY.current = e.nativeEvent.layout.y;
+              }}
+            >
               <Text
                 style={{
                   fontSize: 11,
@@ -586,6 +623,20 @@ export default function StyleScreen() {
               >
                 {t("studio.design_style")}
               </Text>
+              {attempted && !designStyle && (
+                <Text
+                  style={{
+                    marginTop: -12,
+                    marginBottom: 16,
+                    fontSize: 12,
+                    lineHeight: 16,
+                    fontFamily: "Inter",
+                    color: "#D98A7B",
+                  }}
+                >
+                  {t("studio.style_required")}
+                </Text>
+              )}
               <View
                 style={{
                   flexDirection: "row",
@@ -722,7 +773,6 @@ export default function StyleScreen() {
         <PrimaryButton
           label={t("common.next_step")}
           onPress={handleNext}
-          disabled={!canProceed}
         />
       </BottomBar>
     </SafeAreaView>
