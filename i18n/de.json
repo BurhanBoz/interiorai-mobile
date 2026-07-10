@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "Galerie",
-        "curated_collection": "Kuratierte Kollektion",
         "search_placeholder": "Nach Stil oder Raum suchen...",
         "filter_all": "Alle Interieurs",
         "filter_favorites": "Favoriten",
-        "favorites_title": "Favoriten",
         "no_favorites_title": "Noch keine Favoriten",
         "no_favorites_description": "Tippe auf das Herz eines Designs, um es hier zu speichern.",
         "empty_title": "Noch keine Designs",

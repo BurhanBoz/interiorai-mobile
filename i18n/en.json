@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "Gallery",
-        "curated_collection": "Curated Collection",
         "search_placeholder": "Search by style or room...",
         "filter_all": "All Interiors",
         "filter_favorites": "Favorites",
-        "favorites_title": "Favorites",
         "no_favorites_title": "No favorites yet",
         "no_favorites_description": "Tap the heart on any design to save it here.",
         "empty_title": "No designs yet",

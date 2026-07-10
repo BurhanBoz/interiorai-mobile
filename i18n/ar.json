@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "المعرض",
-        "curated_collection": "مجموعة منسّقة",
         "search_placeholder": "ابحث بالنمط أو الغرفة...",
         "filter_all": "كل الفضاءات",
         "filter_favorites": "المفضلة",
-        "favorites_title": "المفضلة",
         "no_favorites_title": "لا توجد عناصر مفضلة بعد",
         "no_favorites_description": "انقر على القلب لأي تصميم لحفظه هنا.",
         "empty_title": "لا توجد تصاميم بعد",

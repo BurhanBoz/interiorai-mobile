@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "갤러리",
-        "curated_collection": "큐레이션 컬렉션",
         "search_placeholder": "스타일 또는 방으로 검색...",
         "filter_all": "전체",
         "filter_favorites": "즐겨찾기",
-        "favorites_title": "즐겨찾기",
         "no_favorites_title": "아직 즐겨찾기가 없습니다",
         "no_favorites_description": "디자인의 하트를 눌러 여기에 저장하세요.",
         "empty_title": "아직 디자인이 없습니다",

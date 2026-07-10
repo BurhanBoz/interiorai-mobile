@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "Galleria",
-        "curated_collection": "Collezione Selezionata",
         "search_placeholder": "Cerca per stile o stanza...",
         "filter_all": "Tutti gli Interni",
         "filter_favorites": "Preferiti",
-        "favorites_title": "Preferiti",
         "no_favorites_title": "Nessun preferito",
         "no_favorites_description": "Tocca il cuore su qualsiasi design per salvarlo qui.",
         "empty_title": "Nessun design ancora",

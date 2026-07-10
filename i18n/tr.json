@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "Galeri",
-        "curated_collection": "Özenle Seçilmiş",
         "search_placeholder": "Stil veya odaya göre ara...",
         "filter_all": "Tümü",
         "filter_favorites": "Favoriler",
-        "favorites_title": "Favoriler",
         "no_favorites_title": "Henüz favori yok",
         "no_favorites_description": "Buraya eklemek için herhangi bir tasarımın kalbine dokun.",
         "empty_title": "Henüz tasarım yok",

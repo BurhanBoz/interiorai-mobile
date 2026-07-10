@@ -476,16 +476,6 @@ export default function GalleryScreen() {
               className="bg-secondary mt-3"
               style={{ width: 36, height: 2, borderRadius: 1 }}
             />
-            <Text
-              className="font-label text-on-surface-variant mt-3"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("gallery.curated_collection")}
-            </Text>
           </View>
           <GalleryEmpty />
         </View>
@@ -522,46 +512,15 @@ export default function GalleryScreen() {
                 }}
               >
                 <Text
-                  className="font-label text-secondary font-medium"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: 2.5,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {`${outputs.length} ${
-                    outputs.length === 1 ? "design" : "designs"
-                  }`}
-                </Text>
-                <Text
                   className="text-on-surface font-headline"
-                  style={{
-                    fontSize: 38,
-                    lineHeight: 42,
-                    fontWeight: "700",
-                    marginTop: 4,
-                  }}
+                  style={{ fontSize: 38, lineHeight: 42, fontWeight: "700" }}
                 >
-                  {activeRoomFilter === FILTER_FAVORITES
-                    ? t("gallery.favorites_title")
-                    : t("gallery.title")}
+                  {t("gallery.title")}
                 </Text>
                 <View
                   className="bg-secondary mt-3"
                   style={{ width: 36, height: 2, borderRadius: 1 }}
                 />
-                <Text
-                  className="font-label text-on-surface-variant mt-3"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {activeRoomFilter === FILTER_FAVORITES
-                    ? t("profile.curated_favorites")
-                    : t("gallery.curated_collection")}
-                </Text>
               </View>
 
               {/* Search bar */}

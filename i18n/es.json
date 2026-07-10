@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "Galería",
-        "curated_collection": "Colección Curada",
         "search_placeholder": "Busca por estilo o habitación...",
         "filter_all": "Todos los Interiores",
         "filter_favorites": "Favoritos",
-        "favorites_title": "Favoritos",
         "no_favorites_title": "Aún no hay favoritos",
         "no_favorites_description": "Toca el corazón en cualquier diseño para guardarlo aquí.",
         "empty_title": "Aún no hay diseños",

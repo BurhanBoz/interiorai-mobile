@@ -303,11 +303,9 @@
     },
     "gallery": {
         "title": "ギャラリー",
-        "curated_collection": "キュレート・コレクション",
         "search_placeholder": "スタイルや部屋で検索...",
         "filter_all": "すべて",
         "filter_favorites": "お気に入り",
-        "favorites_title": "お気に入り",
         "no_favorites_title": "まだお気に入りがありません",
         "no_favorites_description": "デザインのハートをタップしてここに保存します。",
         "empty_title": "まだデザインがありません",

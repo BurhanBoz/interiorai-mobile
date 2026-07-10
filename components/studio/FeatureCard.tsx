@@ -65,14 +65,16 @@ function TransferTeaser({
     useEffect(() => {
         const loop = Animated.loop(
             Animated.sequence([
-                Animated.delay(1300),                       // act 1 — before
-                Animated.timing(act, { toValue: 1, duration: 620,
+                Animated.delay(1500),                       // act 1 — before, alone
+                Animated.timing(act, { toValue: 1, duration: 1200,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.delay(950),                        // act 2 — ref lands
+                Animated.delay(1200),                       // act 2 — ref resting on before
                 Animated.timing(act, { toValue: 2, duration: 750,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.delay(2100),                       // act 3 — after
-                Animated.timing(act, { toValue: 3, duration: 480,
+                Animated.timing(act, { toValue: 3, duration: 700,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(2100),                       // act 4 — after
+                Animated.timing(act, { toValue: 4, duration: 480,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
             ]),
         );
@@ -80,37 +82,49 @@ function TransferTeaser({
         return () => loop.stop();
     }, [act]);
 
+    // Choreography contract (2026-07 founder notes): the AFTER may only
+    // appear once the reference has PARKED in the corner — mixing the two
+    // mid-flight read as a flicker. And the reference arrives slowly,
+    // GROWING into place (soft), not shrinking in. Every positional
+    // interpolation clamps: the loop value travels 0→4 and unclamped
+    // ranges would extrapolate the chip past its corner.
     const afterOpacity = act.interpolate({
-        inputRange: [0, 1, 2, 2.7, 3],
+        inputRange: [0, 2, 3, 3.6, 4],
         outputRange: [0, 0, 1, 1, 0],
+        extrapolate: "clamp",
     });
-    const refOpacity = act.interpolate({
-        inputRange: [0, 0.15, 1, 2, 2.75, 3],
-        outputRange: [0, 0, 1, 1, 1, 0],
-    });
-    // Center-stage card (110px) → 56px corner chip: scale 1 → 0.51
     const CARD = 110;
     const cornerTX = mediaW > 0 ? mediaW / 2 - CARD * 0.51 / 2 - 12 : 0;
     const cornerTY = MEDIA_HEIGHT / 2 - CARD * 0.51 / 2 - 12;
+    const refOpacity = act.interpolate({
+        inputRange: [0, 0.12, 1, 3.6, 4],
+        outputRange: [0, 0, 1, 1, 0],
+        extrapolate: "clamp",
+    });
     const refScale = act.interpolate({
-        inputRange: [0, 1, 2, 3],
-        outputRange: [1.18, 1, 0.51, 0.51],
+        inputRange: [0, 1, 2, 4],
+        outputRange: [0.55, 1, 0.51, 0.51],
+        extrapolate: "clamp",
     });
     const refTX = act.interpolate({
-        inputRange: [0, 1, 2, 3],
+        inputRange: [0, 1, 2, 4],
         outputRange: [0, 0, cornerTX, cornerTX],
+        extrapolate: "clamp",
     });
     const refTY = act.interpolate({
-        inputRange: [0, 1, 2, 3],
-        outputRange: [-10, 0, cornerTY, cornerTY],
+        inputRange: [0, 1, 2, 4],
+        outputRange: [0, 0, cornerTY, cornerTY],
+        extrapolate: "clamp",
     });
     const refRotate = act.interpolate({
         inputRange: [0, 1, 2],
-        outputRange: ["-7deg", "-3deg", "0deg"],
+        outputRange: ["-8deg", "-3deg", "0deg"],
+        extrapolate: "clamp",
     });
     const beforeTagOpacity = act.interpolate({
-        inputRange: [0, 1.4, 2],
+        inputRange: [0, 2.2, 2.9],
         outputRange: [1, 1, 0],
+        extrapolate: "clamp",
     });
 
     return (
