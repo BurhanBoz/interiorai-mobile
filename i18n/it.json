@@ -298,7 +298,6 @@
         "style_required": "Scegli uno stile di design per continuare.",
         "smart_edit_content_label": "Cosa deve apparire qui?",
         "smart_edit_content_placeholder": "es. divano in velluto verde smeraldo",
-        "smart_edit_content_helper": "Facoltativo: lascialo vuoto e il pezzo dipinto sarà sostituito da un nuovo design in linea con le tue scelte.",
         "outputs_locked_style_transfer": "Style Transfer genera un solo risultato per esecuzione.",
         "quality_ultra_hd": "Ultra HD"
     },

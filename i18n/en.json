@@ -298,7 +298,6 @@
         "style_required": "Choose a design style to continue.",
         "smart_edit_content_label": "What should appear here?",
         "smart_edit_content_placeholder": "e.g. emerald green velvet sofa",
-        "smart_edit_content_helper": "Optional — leave blank and the piece you painted is replaced with a new design matching your style choices.",
         "outputs_locked_style_transfer": "Style Transfer creates one faithful result per run.",
         "quality_ultra_hd": "Ultra HD"
     },

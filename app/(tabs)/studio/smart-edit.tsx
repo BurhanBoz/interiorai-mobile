@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import Svg, { Polyline, Circle } from "react-native-svg";
 
 import { useStudioStore } from "@/stores/studioStore";
+import { useDismissible } from "@/hooks/useDismissible";
 import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
 import { Button } from "@/components/ui/Button";
@@ -77,6 +78,11 @@ export default function SmartEditScreen() {
   // Drawing and scrolling share the same finger — the ScrollView yields
   // while a stroke is in progress (classic canvas-in-scroll contract).
   const [isDrawing, setIsDrawing] = useState(false);
+  // First-visit teaching overlay (2026-07 founder call): the how-to line
+  // shows ONCE as a spotlight card — X or a tap anywhere dismisses it for
+  // good. The persistent inline hint is gone; the mode toggle's own labels
+  // carry the semantics afterwards.
+  const [introVisible, dismissIntro] = useDismissible("magic_edit_intro_seen");
 
   const strokeColor = maskMode === "PROTECT" ? PROTECT_GREEN : GOLD;
 
@@ -264,17 +270,6 @@ export default function SmartEditScreen() {
         })}
       </View>
 
-      <Text
-        style={{
-          color: "#B8AC9C",
-          fontSize: 13,
-          textAlign: "center",
-          paddingHorizontal: 32,
-          marginBottom: 12,
-        }}
-      >
-        {t(maskMode === "PROTECT" ? "studio.smart_edit_hint_protect" : "studio.smart_edit_hint")}
-      </Text>
 
       {/* Region content — CHANGE only. Optional: left blank the backend
           repaints the same kind of furniture, restyled by the strength
@@ -288,7 +283,6 @@ export default function SmartEditScreen() {
             onChangeText={setPrompt}
             icon="color-wand-outline"
             autoCapitalize="sentences"
-            helper={t("studio.smart_edit_content_helper")}
           />
         </View>
       )}
@@ -423,6 +417,60 @@ export default function SmartEditScreen() {
         />
       </View>
       </ScrollView>
+
+      {/* One-shot teaching spotlight — dark backdrop, glass card, gone
+          forever on any tap. */}
+      {introVisible && (
+        <Pressable
+          onPress={dismissIntro}
+          style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(12,11,10,0.72)",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 32,
+          }}
+        >
+          <View
+            style={{
+              borderRadius: 20,
+              backgroundColor: "#1C1B1B",
+              borderWidth: 1,
+              borderColor: "rgba(225,195,155,0.35)",
+              padding: 24,
+              gap: 14,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.5,
+              shadowRadius: 24,
+            }}
+          >
+            <Pressable
+              onPress={dismissIntro}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              style={{ position: "absolute", top: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={18} color="#998F84" />
+            </Pressable>
+            <Ionicons name="color-wand-outline" size={30} color={GOLD} />
+            <Text
+              style={{
+                color: "#EDE4D7",
+                fontSize: 14.5,
+                lineHeight: 21,
+                textAlign: "center",
+                fontFamily: "Inter",
+              }}
+            >
+              {t("studio.smart_edit_hint")}
+            </Text>
+          </View>
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }

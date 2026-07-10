@@ -71,9 +71,9 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
-            // Authentic PROD output (2026-07-10, post object-labeling fix):
-            // the grey fabric sofa fully replaced by a new-form charcoal
-            // leather design — everything around it untouched.
+            // Authentic pair (2026-07-10): before is the PAINTED canvas
+            // itself (gold strokes over sofa/plant/chair — the product story
+            // in one frame), after is that exact "Modernize the couches" run.
             kind: "pair",
             before: require("@/assets/features/inpaint_before.png"),
             after: require("@/assets/features/inpaint_after.png"),

@@ -208,7 +208,13 @@ export default function GenerationProgressScreen() {
   // "About this style" is a first-generation teaching card (2026-07 tester
   // ask): show once, dismissible via its X, never again after — the spinner
   // block then centers in the freed space on every later run.
-  const [styleHintVisible, dismissStyleHint] = useDismissible("generation_style_hint_seen");
+  // Keyed PER STYLE (2026-07 founder spec): the first Modern run teaches
+  // Modern once; the next Modern shows nothing, while a first Japandi run
+  // still gets its own card. The key follows the style, not the screen.
+  const styleSlug = (styleName ?? "generic").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const [styleHintVisible, dismissStyleHint] = useDismissible(
+    `generation_style_hint_seen_${styleSlug}`,
+  );
   const showStyleHint = !errorMessage && !!styleName && styleHintVisible;
 
   const phaseLabel = t(`generation.phase_${phase === "error" ? "ready" : phase}`);

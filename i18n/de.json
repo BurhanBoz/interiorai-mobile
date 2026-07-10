@@ -298,7 +298,6 @@
         "style_required": "Wähle einen Einrichtungsstil, um fortzufahren.",
         "smart_edit_content_label": "Was soll hier erscheinen?",
         "smart_edit_content_placeholder": "z. B. smaragdgrünes Samtsofa",
-        "smart_edit_content_helper": "Optional — leer lassen und das markierte Stück wird durch ein neues Design passend zu deiner Stilwahl ersetzt.",
         "outputs_locked_style_transfer": "Style Transfer erzeugt pro Lauf ein einziges Ergebnis.",
         "quality_ultra_hd": "Ultra HD"
     },
