@@ -63,7 +63,7 @@ function ReferenceChip({
 }) {
     const scale = fade.interpolate({
         inputRange: [0, 1],
-        outputRange: [0.92, 1],
+        outputRange: [0.94, 1.04],
     });
     return (
         <View
@@ -73,27 +73,36 @@ function ReferenceChip({
                 bottom: 12,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 7,
+                gap: 8,
             }}
         >
             <Text
                 style={{
                     fontFamily: "Inter-SemiBold",
-                    fontSize: 15,
-                    color: "rgba(245,240,235,0.85)",
+                    fontSize: 18,
+                    color: theme.color.goldMidday,
                 }}
             >
                 +
             </Text>
             <Animated.View style={{ transform: [{ scale }] }}>
+                {/* Permanent gold frame + glow — the reference is often
+                    visually close to the after (that's the point of a good
+                    transfer), so without a loud frame the chip camouflages
+                    into the hero (2026-07-10 founder finding). */}
                 <View
                     style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 11,
+                        width: 56,
+                        height: 56,
+                        borderRadius: 12,
                         overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: "rgba(12,11,10,0.55)",
+                        borderWidth: 2,
+                        borderColor: theme.color.goldMidday,
+                        shadowColor: "#E1C39B",
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.55,
+                        shadowRadius: 10,
+                        elevation: 8,
                     }}
                 >
                     <Image
@@ -102,22 +111,33 @@ function ReferenceChip({
                         style={{ width: "100%", height: "100%" }}
                     />
                 </View>
-                {/* Gold ring — opacity-only so it rides the native driver
-                    alongside the crossfade (animated borderColor cannot). */}
-                <Animated.View
-                    pointerEvents="none"
+                {/* REF tag — same glass-pill language as BEFORE/AFTER
+                    (those are EN by design too), overlapping the chip's
+                    top edge so it reads as a labelled specimen. */}
+                <View
                     style={{
                         position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 11,
-                        borderWidth: 1.5,
-                        borderColor: theme.color.goldMidday,
-                        opacity: fade,
+                        top: -8,
+                        alignSelf: "center",
+                        paddingHorizontal: 7,
+                        paddingVertical: 2,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(12,11,10,0.85)",
+                        borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.5)",
                     }}
-                />
+                >
+                    <Text
+                        style={{
+                            fontFamily: "Inter-SemiBold",
+                            fontSize: 8,
+                            letterSpacing: 1.4,
+                            color: theme.color.goldMidday,
+                        }}
+                    >
+                        REF
+                    </Text>
+                </View>
             </Animated.View>
         </View>
     );

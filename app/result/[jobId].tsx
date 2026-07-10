@@ -31,7 +31,6 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
-import { VariationSheet } from "@/components/result/VariationSheet";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -84,8 +83,6 @@ export default function ResultDetailScreen() {
   const [seedCopied, setSeedCopied] = useState(false);
   // Tap on a generated image → fullscreen modal. Null = closed.
   const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
-  // V20 / Pricing Strategy V2 — variation picker sheet.
-  const [variationSheetOpen, setVariationSheetOpen] = useState(false);
 
   // Gate the upscale button by plan. CRITICAL: must use the EFFECTIVE
   // credit rules — during the 7-day welcome bonus the user is MAX-tier
@@ -424,8 +421,10 @@ export default function ResultDetailScreen() {
             Two-row layout fixes the "5 buttons in one row" overflow
             (UPSCALE was getting clipped to "U P S(") and elevates
             Upscale to a deliberate "Pro action" tier:
-              • Top row — 4 utility actions (Compare/Download/Share/
-                Variation) as evenly-spaced icon-circles
+              • Top row — 3 utility actions (Compare/Download/Share)
+                as evenly-spaced icon-circles. Variation is PARKED
+                (2026-07-10 founder call) — backend + VariationSheet
+                stay intact in git history for an easy return.
               • Bottom row — Upscale as a full-width premium pill,
                 gold-bordered with sparkles + arrow affordance
             Premium tone is intentional — Upscale costs extra credits
@@ -508,33 +507,6 @@ export default function ResultDetailScreen() {
                 }}
               >
                 {t("result.share")}
-              </Text>
-            </View>
-
-            {/* Variation — V20 / Pricing Strategy V2 §4. Opens the
-                Subtle/Bold/Wild picker sheet; tap on a preset spawns a
-                new variation job (1 credit) and routes to the progress
-                screen. Disabled if the job isn't COMPLETED so retry/
-                cancel paths don't lead here. */}
-            <View className="items-center" style={{ gap: 8 }}>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setVariationSheetOpen(true);
-                }}
-                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-              >
-                <Ionicons name="refresh-outline" size={22} color="#D1C5B8" />
-              </Pressable>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("result.variation_button")}
               </Text>
             </View>
           </View>
@@ -1049,18 +1021,6 @@ export default function ResultDetailScreen() {
           </Pressable>
         </View>
       </Modal>
-
-      {/* V20 / Pricing Strategy V2 — Variation picker. Lives at the
-          screen root so the full pageSheet can slide over the result
-          UI without inheriting any padding from the scroll container. */}
-      <VariationSheet
-        visible={variationSheetOpen}
-        onClose={() => setVariationSheetOpen(false)}
-        sourceJobId={job.id}
-        // Pass the carousel-active output so the backend mints a fresh
-        // variation per-image when the source produced multiple outputs.
-        activeOutputId={currentOutput?.id}
-      />
     </SafeAreaView>
   );
 }
