@@ -100,10 +100,14 @@ const PALETTE_THEMES: readonly PaletteTheme[] = [
 /** Encode a palette theme to the wire format the backend expects. */
 const encodePalette = (colors: readonly string[]) => colors.join(";");
 
+// ULTRA_HD removed from the picker (2026-07-11 founder call): print-grade
+// sharpness is sold AFTER generation via the 4x Upscale action (PRO/MAX),
+// where the user upscales the render they actually like — better economics
+// and no dead tier (ST had no ULTRA_HD credit rule, so even MAX saw it
+// locked here). The backend keeps accepting ULTRA_HD for compatibility.
 const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
   { key: "STANDARD", labelKey: "studio.quality_standard" },
   { key: "HD", labelKey: "studio.quality_hd" },
-  { key: "ULTRA_HD", labelKey: "studio.quality_ultra_hd" },
 ];
 
 export default function OptionsScreen() {
@@ -194,7 +198,7 @@ export default function OptionsScreen() {
     FREE: ["STANDARD"],
     BASIC: ["STANDARD", "HD"],
     PRO: ["STANDARD", "HD"],
-    MAX: ["STANDARD", "HD", "ULTRA_HD"],
+    MAX: ["STANDARD", "HD"],
   };
   const isTierLocked = (tierKey: QualityTier) => {
     const allowed = PLAN_TIER_ALLOWLIST[planCode] ?? ["STANDARD"];
@@ -209,6 +213,14 @@ export default function OptionsScreen() {
   // Determine max variants from credit rules. Must use the tier-aware
   // feature_code so HD jobs look up HD_REDESIGN rules (not INTERIOR_REDESIGN)
   // — same V25-split gotcha as availableQualityTiers above.
+  // STYLE_TRANSFER always renders a single faithful result — the stepper
+  // shows a locked 01 (2026-07-11 founder call) and the store is coerced so
+  // a value carried over from another mode can never leak into the payload.
+  const outputsLocked = mode === "STYLE_TRANSFER";
+  useEffect(() => {
+    if (outputsLocked && numOutputs !== 1) setNumOutputs(1);
+  }, [outputsLocked, numOutputs, setNumOutputs]);
+
   const maxVariants = (() => {
     const resolvedFc = resolveFeatureCode(mode, qualityTier);
     const rulesForMode = creditRules.filter(
@@ -686,6 +698,17 @@ export default function OptionsScreen() {
             >
               {t("studio.number_of_outputs")}
             </Text>
+            {outputsLocked ? (
+              <View className="flex-row items-center" style={{ gap: 10 }}>
+                <Ionicons name="lock-closed" size={13} color="#998F84" />
+                <Text
+                  className="font-headline text-on-surface"
+                  style={{ fontSize: 20, fontWeight: "700" }}
+                >
+                  01
+                </Text>
+              </View>
+            ) : (
             <View className="flex-row items-center" style={{ gap: 24 }}>
               <Pressable
                 onPress={() => setNumOutputs(Math.max(1, numOutputs - 1))}
@@ -726,7 +749,22 @@ export default function OptionsScreen() {
                 <Ionicons name="add" size={16} color="#E0C29A" />
               </Pressable>
             </View>
+            )}
           </View>
+          {outputsLocked && (
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 12,
+                lineHeight: 17,
+                color: "#998F84",
+                paddingHorizontal: 4,
+                marginTop: -6,
+              }}
+            >
+              {t("studio.outputs_locked_style_transfer")}
+            </Text>
+          )}
 
           {/* Preserve Layout Toggle — only meaningful for REDESIGN mode.
               EMPTY_ROOM (emptying conflicts with "keep furniture" directive),

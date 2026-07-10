@@ -25,19 +25,11 @@ const PLACEHOLDER_ROOM =
 
 // Label-only mapping. The product calls ULTRA_HD "4K" in the UI — the
 // underlying enum stays the same.
-const QUALITY_DISPLAY: Record<string, string> = {
-  STANDARD: "Standard",
-  HD: "HD",
-  ULTRA_HD: "4K",
-};
-
 export default function StyleTransferScreen() {
   const { t } = useTranslation();
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
   const strength = useStudioStore(s => s.strength);
-  const qualityTier = useStudioStore(s => s.qualityTier);
-  const numOutputs = useStudioStore(s => s.numOutputs);
   const setStrength = useStudioStore(s => s.setStrength);
   const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
   const { cost } = useCreditCost();
@@ -172,30 +164,18 @@ export default function StyleTransferScreen() {
         <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
           {/* Your Room */}
           <View style={{ flex: 1, gap: 16 }}>
-            <View className="flex-row items-end justify-between">
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.style_transfer_subject_label")}
-              </Text>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#998F84",
-                }}
-              >
-                {t("studio.style_transfer_subject_badge")}
-              </Text>
-            </View>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 11,
+                fontWeight: "600",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                textAlign: "center",
+              }}
+            >
+              {t("studio.style_transfer_subject_label")}
+            </Text>
             <View
               className="rounded-xl overflow-hidden bg-surface-container-low"
               style={{ aspectRatio: 4 / 5 }}
@@ -216,30 +196,18 @@ export default function StyleTransferScreen() {
 
           {/* Ref. Style */}
           <View style={{ flex: 1, gap: 16 }}>
-            <View className="flex-row items-end justify-between">
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.style_transfer_reference_label")}
-              </Text>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#FEDFB5",
-                }}
-              >
-                {t("studio.style_transfer_reference_badge")}
-              </Text>
-            </View>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                fontSize: 11,
+                fontWeight: "600",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                textAlign: "center",
+              }}
+            >
+              {t("studio.style_transfer_reference_label")}
+            </Text>
             {referencePhoto?.uri ? (
               <View style={{ position: "relative" }}>
                 <Pressable onPress={handlePickReference}>
@@ -379,56 +347,6 @@ export default function StyleTransferScreen() {
           >
             {t("studio.reference_influence_hint")}
           </Text>
-        </View>
-
-        {/* Quality & Variants */}
-        <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
-          <View
-            className="flex-1 rounded-xl p-6 bg-surface-container-low"
-            style={{ gap: 8 }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: "#998F84",
-              }}
-            >
-              {t("result.quality")}
-            </Text>
-            <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 20 }}
-            >
-              {QUALITY_DISPLAY[qualityTier] ?? qualityTier}
-            </Text>
-          </View>
-          <View
-            className="flex-1 rounded-xl p-6 bg-surface-container-low"
-            style={{ gap: 8 }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: "#998F84",
-              }}
-            >
-              {t("studio.number_of_outputs")}
-            </Text>
-            <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 20 }}
-            >
-              {String(numOutputs).padStart(2, "0")}
-            </Text>
-          </View>
         </View>
 
       </ScrollView>
