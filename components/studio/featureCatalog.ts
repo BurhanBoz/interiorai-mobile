@@ -51,8 +51,8 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_redesign_desc",
         media: {
             kind: "pair",
-            before: require("@/assets/trial/livingRoom_Before.png"),
-            after: require("@/assets/trial/livingRoom_After.png"),
+            before: require("@/assets/features/redesign_before.png"),
+            after: require("@/assets/features/redesign_after.png"),
         },
     },
     {
@@ -61,8 +61,8 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_empty_room_desc",
         media: {
             kind: "pair",
-            before: require("@/assets/trial/kitchen_Before.png"),
-            after: require("@/assets/trial/kitchen_After.png"),
+            before: require("@/assets/features/empty_before.png"),
+            after: require("@/assets/features/empty_after.png"),
         },
     },
     {
@@ -71,9 +71,12 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
+            // before is real; after is a PLACEHOLDER — the authentic inpaint
+            // output is regenerated after the 2026-07-10 CHANGE-mask fix ships
+            // (the pre-fix render painted a whole room into the masked patch).
             kind: "pair",
-            before: require("@/assets/trial/cafe_Before.png"),
-            after: require("@/assets/trial/cafe_After.png"),
+            before: require("@/assets/features/inpaint_before.png"),
+            after: require("@/assets/styles/hollywood_glam.png"),
         },
     },
     {
@@ -82,11 +85,10 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_style_transfer_desc",
         minPlan: "MAX",
         media: {
-            // PLACEHOLDERS — swap for assets/features/style_{before,reference,after}
             kind: "transfer",
-            before: require("@/assets/styles/minimalist.png"),
-            reference: require("@/assets/styles/art_deco.png"),
-            after: require("@/assets/styles/hollywood_glam.png"),
+            before: require("@/assets/features/style_before.png"),
+            reference: require("@/assets/features/style_reference.png"),
+            after: require("@/assets/features/style_after.png"),
         },
     },
 ];
