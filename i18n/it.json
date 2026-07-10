@@ -315,11 +315,7 @@
         "latest": "Recenti",
         "curated": "Opere Selezionate",
         "summary": "{{designCount}} design · {{jobCount}} lavori",
-        "all_designs": "Tutti i Design",
-        "next_series_eyebrow": "Continua a Curare",
-        "next_series_title": "La tua prossima\ncomposizione attende",
-        "next_series_body": "Ogni stanza racconta una storia. Inizia il prossimo capitolo del tuo viaggio architettonico.",
-        "next_series_cta": "Inizia"
+        "all_designs": "Tutti i Design"
     },
     "history": {
         "title": "Cronologia",

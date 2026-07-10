@@ -315,11 +315,7 @@
         "latest": "최신",
         "curated": "큐레이션 작품",
         "summary": "{{designCount}}개 디자인 · {{jobCount}}개 작업",
-        "all_designs": "모든 디자인",
-        "next_series_eyebrow": "큐레이션 계속하기",
-        "next_series_title": "다음 구성이\n당신을 기다립니다",
-        "next_series_body": "모든 방은 이야기를 담고 있습니다. 건축 여정의 다음 장을 시작하세요.",
-        "next_series_cta": "시작"
+        "all_designs": "모든 디자인"
     },
     "history": {
         "title": "기록",

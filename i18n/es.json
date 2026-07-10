@@ -315,11 +315,7 @@
         "latest": "Reciente",
         "curated": "Obras Curadas",
         "summary": "{{designCount}} diseños · {{jobCount}} trabajos",
-        "all_designs": "Todos los Diseños",
-        "next_series_eyebrow": "Continúa Curando",
-        "next_series_title": "Tu próxima\ncomposición te espera",
-        "next_series_body": "Cada habitación cuenta una historia. Comienza el siguiente capítulo de tu viaje arquitectónico.",
-        "next_series_cta": "Empezar"
+        "all_designs": "Todos los Diseños"
     },
     "history": {
         "title": "Historial",

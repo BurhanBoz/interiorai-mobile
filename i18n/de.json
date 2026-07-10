@@ -315,11 +315,7 @@
         "latest": "Neueste",
         "curated": "Kuratierte Werke",
         "summary": "{{designCount}} Designs · {{jobCount}} Jobs",
-        "all_designs": "Alle Designs",
-        "next_series_eyebrow": "Weiter Kuratieren",
-        "next_series_title": "Ihre nächste\nKomposition wartet",
-        "next_series_body": "Jeder Raum erzählt eine Geschichte. Beginnen Sie das nächste Kapitel Ihrer architektonischen Reise.",
-        "next_series_cta": "Starten"
+        "all_designs": "Alle Designs"
     },
     "history": {
         "title": "Verlauf",

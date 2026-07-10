@@ -315,11 +315,7 @@
         "latest": "الأحدث",
         "curated": "أعمال منسّقة",
         "summary": "{{designCount}} تصميم · {{jobCount}} مهمة",
-        "all_designs": "جميع التصاميم",
-        "next_series_eyebrow": "تابع التنسيق",
-        "next_series_title": "تركيبتك\nالقادمة بانتظارك",
-        "next_series_body": "كل غرفة تروي حكاية. ابدأ الفصل التالي من رحلتك المعمارية.",
-        "next_series_cta": "ابدأ"
+        "all_designs": "جميع التصاميم"
     },
     "history": {
         "title": "السجل",

@@ -315,11 +315,7 @@
         "latest": "Son Eklenen",
         "curated": "Seçkili Eserler",
         "summary": "{{designCount}} tasarım · {{jobCount}} iş",
-        "all_designs": "Tüm Tasarımlar",
-        "next_series_eyebrow": "Yolculuğa Devam",
-        "next_series_title": "Sıradaki\nkompozisyonun hazır",
-        "next_series_body": "Her oda bir hikâye anlatır. Mimari yolculuğunun yeni bölümünü başlat.",
-        "next_series_cta": "Başla"
+        "all_designs": "Tüm Tasarımlar"
     },
     "history": {
         "title": "Geçmiş",

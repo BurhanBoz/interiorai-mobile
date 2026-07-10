@@ -315,11 +315,7 @@
         "latest": "最新",
         "curated": "キュレート作品",
         "summary": "{{designCount}}デザイン · {{jobCount}}ジョブ",
-        "all_designs": "すべてのデザイン",
-        "next_series_eyebrow": "キュレーションを続ける",
-        "next_series_title": "次の構成が\nあなたを待っています",
-        "next_series_body": "すべての部屋が物語を語ります。建築の旅の次の章を始めましょう。",
-        "next_series_cta": "開始"
+        "all_designs": "すべてのデザイン"
     },
     "history": {
         "title": "履歴",

@@ -423,72 +423,6 @@ export default function GalleryScreen() {
     );
   };
 
-  /* ── Search Bar — client-side filter over style/room names ── */
-  /* ── "Continue Curating" footer card — replaces editorial NEW SERIES ── */
-  const NextSeriesCard = () => (
-    <Pressable
-      onPress={() => {
-        Haptics.selectionAsync();
-        router.push("/(tabs)/studio");
-      }}
-      style={({ pressed }) => ({
-        marginHorizontal: EDGE,
-        marginTop: 36,
-        marginBottom: 8,
-        padding: 24,
-        borderRadius: 20,
-        backgroundColor: "rgba(28,27,27,0.7)",
-        borderWidth: 1,
-        borderColor: "rgba(77,70,60,0.5)",
-        gap: 14,
-        transform: [{ scale: pressed ? 0.99 : 1 }],
-      })}
-    >
-      <Text
-        style={{
-          fontSize: 10,
-          fontWeight: "700",
-          letterSpacing: 2.5,
-          color: "#E0C29A",
-          textTransform: "uppercase",
-        }}
-      >
-        {t("gallery.next_series_eyebrow")}
-      </Text>
-      <Text
-        className="text-on-surface font-headline"
-        style={{ fontSize: 22, fontWeight: "700", lineHeight: 28 }}
-      >
-        {t("gallery.next_series_title")}
-      </Text>
-      <Text
-        style={{
-          fontSize: 13,
-          lineHeight: 20,
-          color: "#998F84",
-        }}
-      >
-        {t("gallery.next_series_body")}
-      </Text>
-      <View
-        className="flex-row items-center"
-        style={{ gap: 6, marginTop: 4 }}
-      >
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "600",
-            color: "#E0C29A",
-            letterSpacing: 0.5,
-          }}
-        >
-          {t("gallery.next_series_cta")}
-        </Text>
-        <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
-      </View>
-    </Pressable>
-  );
-
   /* ── Loading State ── */
   if (loading) {
     return (
@@ -698,12 +632,6 @@ export default function GalleryScreen() {
                 />
               ) : null}
 
-              {/* "Continue Curating" callout — hidden while the user is
-                  browsing favorites so the favorites list doesn't get a
-                  "start a new design" CTA injected into its tail. */}
-              {!loadingMore && activeRoomFilter !== FILTER_FAVORITES && (
-                <NextSeriesCard />
-              )}
             </>
           }
           ListEmptyComponent={
