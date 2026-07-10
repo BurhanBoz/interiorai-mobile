@@ -1,4 +1,5 @@
 import { View, Text, Pressable, Animated, Image } from "react-native";
+import type { ImageSourcePropType } from "react-native";
 import { useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,9 +12,11 @@ import { theme } from "@/config/theme";
  * card adapted to our dark editorial language: media on top, serif title +
  * one-line description below, gold "Try It" pill on the right.
  *
- * <p>Media: a "pair" renders a LIVE before/after crossfade (4.8s loop with
- * a synced BEFORE/AFTER tag) — communicates what the tool does without any
- * GIF asset. Bundled stills stay sharp and cost zero extra bundle weight.
+ * <p>Media: a "pair" renders a LIVE before/after crossfade (synced
+ * BEFORE/AFTER tag) — communicates what the tool does without any GIF
+ * asset. Bundled stills stay sharp and cost zero extra bundle weight.
+ * A "transfer" adds the reference chip on top of that crossfade, since
+ * Style Transfer combines TWO inputs into the result.
  *
  * <p>Locked features (plan-gated) show a lock pill over the media; the
  * whole card stays tappable — the parent routes locked taps to /plans.
@@ -42,6 +45,84 @@ function MediaScrim() {
     );
 }
 
+/**
+ * Style Transfer's third frame. The card must read "your room + THIS
+ * reference = that result", not merely "before → after". The chip carries
+ * the reference photo and its gold ring ignites in step with the crossfade,
+ * so the eye attributes the transformation to the reference.
+ *
+ * Sits bottom-RIGHT: the BEFORE/AFTER tag owns bottom-left and the plan
+ * lock pill owns top-right, so nothing ever collides.
+ */
+function ReferenceChip({
+    source,
+    fade,
+}: {
+    source: ImageSourcePropType;
+    fade: Animated.Value;
+}) {
+    const scale = fade.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.92, 1],
+    });
+    return (
+        <View
+            style={{
+                position: "absolute",
+                right: 12,
+                bottom: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 7,
+            }}
+        >
+            <Text
+                style={{
+                    fontFamily: "Inter-SemiBold",
+                    fontSize: 15,
+                    color: "rgba(245,240,235,0.85)",
+                }}
+            >
+                +
+            </Text>
+            <Animated.View style={{ transform: [{ scale }] }}>
+                <View
+                    style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 11,
+                        overflow: "hidden",
+                        borderWidth: 1,
+                        borderColor: "rgba(12,11,10,0.55)",
+                    }}
+                >
+                    <Image
+                        source={source}
+                        resizeMode="cover"
+                        style={{ width: "100%", height: "100%" }}
+                    />
+                </View>
+                {/* Gold ring — opacity-only so it rides the native driver
+                    alongside the crossfade (animated borderColor cannot). */}
+                <Animated.View
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 11,
+                        borderWidth: 1.5,
+                        borderColor: theme.color.goldMidday,
+                        opacity: fade,
+                    }}
+                />
+            </Animated.View>
+        </View>
+    );
+}
+
 /* ───────── Before/after crossfade teaser ───────── */
 
 function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
@@ -49,6 +130,9 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
     // Ken Burns — a barely-there push-in that breathes with the crossfade;
     // premium/soft, never busy.
     const zoom = useRef(new Animated.Value(1)).current;
+
+    // Both "pair" and "transfer" ride the before→after crossfade.
+    const isCrossfade = media.kind === "pair" || media.kind === "transfer";
 
     useEffect(() => {
         const zoomLoop = Animated.loop(
@@ -68,7 +152,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
             ]),
         );
         zoomLoop.start();
-        if (media.kind !== "pair") return () => zoomLoop.stop();
+        if (!isCrossfade) return () => zoomLoop.stop();
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.delay(2200),
@@ -92,7 +176,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
             loop.stop();
             zoomLoop.stop();
         };
-    }, [fade, zoom, media.kind]);
+    }, [fade, zoom, isCrossfade]);
 
     if (media.kind === "single") {
         return (
@@ -138,6 +222,10 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                 </Animated.View>
             </Animated.View>
             <MediaScrim />
+
+            {media.kind === "transfer" ? (
+                <ReferenceChip source={media.reference} fade={fade} />
+            ) : null}
 
             {/* Synced BEFORE/AFTER tag — bottom-left glass chip */}
             <View style={{ position: "absolute", left: 12, bottom: 12 }}>

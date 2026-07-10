@@ -7,10 +7,19 @@ import type { DesignMode } from "@/types/api";
  *
  * <p>Generic by design: adding a generation flow = one entry here. The
  * card component renders whatever media shape it finds:
- *   - "pair"   → live before/after crossfade teaser (bundled stills; the
- *                planned marketing GIFs can replace this by swapping to a
- *                "single" animated asset later — expo-image plays GIFs)
- *   - "single" → static image
+ *   - "pair"     → live before/after crossfade teaser
+ *   - "transfer" → before/after crossfade PLUS a reference chip, because
+ *                  Style Transfer takes TWO inputs (your room + a reference
+ *                  photo) and the card has to say "room + this = that"
+ *   - "single"   → static image (also plays GIFs via expo-image, if the
+ *                  marketing team ever ships animated teasers)
+ *
+ * <p>ASSET SWAP (pending): the founder is producing authentic pairs by
+ * running plain "before" rooms through the app itself. When they land in
+ * `assets/features/`, point the entries below at:
+ *   redesign_before/after · empty_before/after · inpaint_before/after
+ *   style_before · style_reference · style_after
+ * Until then the entries reuse bundled trial/style stills as placeholders.
  *
  * <p>Titles reuse the existing studio.mode_* i18n keys (already in all 8
  * locales); only the one-line descriptions are new.
@@ -18,6 +27,12 @@ import type { DesignMode } from "@/types/api";
 
 export type FeatureMedia =
     | { kind: "pair"; before: ImageSourcePropType; after: ImageSourcePropType }
+    | {
+          kind: "transfer";
+          before: ImageSourcePropType;
+          reference: ImageSourcePropType;
+          after: ImageSourcePropType;
+      }
     | { kind: "single"; image: ImageSourcePropType };
 
 export interface StudioFeature {
@@ -67,9 +82,11 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_style_transfer_desc",
         minPlan: "MAX",
         media: {
-            kind: "pair",
-            before: require("@/assets/styles/scandinavian.png"),
-            after: require("@/assets/styles/art_deco.png"),
+            // PLACEHOLDERS — swap for assets/features/style_{before,reference,after}
+            kind: "transfer",
+            before: require("@/assets/styles/minimalist.png"),
+            reference: require("@/assets/styles/art_deco.png"),
+            after: require("@/assets/styles/hollywood_glam.png"),
         },
     },
 ];
