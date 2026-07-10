@@ -65,10 +65,10 @@ function TransferTeaser({
     useEffect(() => {
         const loop = Animated.loop(
             Animated.sequence([
-                Animated.delay(1500),                       // act 1 — before, alone
-                Animated.timing(act, { toValue: 1, duration: 1200,
+                Animated.delay(1500),                       // act 1 — before, ref waiting in the corner
+                Animated.timing(act, { toValue: 1, duration: 1300,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.delay(1200),                       // act 2 — ref resting on before
+                Animated.delay(1100),                       // act 2 — ref center-stage on the before
                 Animated.timing(act, { toValue: 2, duration: 750,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
                 Animated.timing(act, { toValue: 3, duration: 700,
@@ -82,12 +82,13 @@ function TransferTeaser({
         return () => loop.stop();
     }, [act]);
 
-    // Choreography contract (2026-07 founder notes): the AFTER may only
-    // appear once the reference has PARKED in the corner — mixing the two
-    // mid-flight read as a flicker. And the reference arrives slowly,
-    // GROWING into place (soft), not shrinking in. Every positional
-    // interpolation clamps: the loop value travels 0→4 and unclamped
-    // ranges would extrapolate the chip past its corner.
+    // Choreography v2 (2026-07 founder note): the reference WAITS small in
+    // the bottom-right corner while the before shows, then drifts to center
+    // slowly and softly, GROWING (0.51→1); it glides back to its corner and
+    // only THEN does the after fade in. The chip itself never disappears —
+    // the loop ends exactly where it starts (corner), so the cycle reads as
+    // one continuous breath. All positional interpolations clamp: the loop
+    // value travels 0→4 and unclamped ranges would extrapolate the chip.
     const afterOpacity = act.interpolate({
         inputRange: [0, 2, 3, 3.6, 4],
         outputRange: [0, 0, 1, 1, 0],
@@ -96,29 +97,24 @@ function TransferTeaser({
     const CARD = 110;
     const cornerTX = mediaW > 0 ? mediaW / 2 - CARD * 0.51 / 2 - 12 : 0;
     const cornerTY = MEDIA_HEIGHT / 2 - CARD * 0.51 / 2 - 12;
-    const refOpacity = act.interpolate({
-        inputRange: [0, 0.12, 1, 3.6, 4],
-        outputRange: [0, 0, 1, 1, 0],
-        extrapolate: "clamp",
-    });
     const refScale = act.interpolate({
         inputRange: [0, 1, 2, 4],
-        outputRange: [0.55, 1, 0.51, 0.51],
+        outputRange: [0.51, 1, 0.51, 0.51],
         extrapolate: "clamp",
     });
     const refTX = act.interpolate({
         inputRange: [0, 1, 2, 4],
-        outputRange: [0, 0, cornerTX, cornerTX],
+        outputRange: [cornerTX, 0, cornerTX, cornerTX],
         extrapolate: "clamp",
     });
     const refTY = act.interpolate({
         inputRange: [0, 1, 2, 4],
-        outputRange: [0, 0, cornerTY, cornerTY],
+        outputRange: [cornerTY, 0, cornerTY, cornerTY],
         extrapolate: "clamp",
     });
     const refRotate = act.interpolate({
         inputRange: [0, 1, 2],
-        outputRange: ["-8deg", "-3deg", "0deg"],
+        outputRange: ["0deg", "-3deg", "0deg"],
         extrapolate: "clamp",
     });
     const beforeTagOpacity = act.interpolate({
@@ -165,7 +161,10 @@ function TransferTeaser({
             >
                 <Animated.View
                     style={{
-                        opacity: refOpacity,
+                        // Hidden for the single pre-layout frame — until
+                        // mediaW lands, cornerTX is 0 and the chip would
+                        // flash at center.
+                        opacity: mediaW > 0 ? 1 : 0,
                         transform: [
                             { translateX: refTX },
                             { translateY: refTY },
