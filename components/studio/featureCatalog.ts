@@ -71,12 +71,12 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
-            // before is real; after is a PLACEHOLDER — the authentic inpaint
-            // output is regenerated after the 2026-07-10 CHANGE-mask fix ships
-            // (the pre-fix render painted a whole room into the masked patch).
+            // Authentic app output: the grey fabric sofa repainted as an
+            // emerald velvet piece — everything else (cat included) untouched,
+            // which IS the Smart Edit promise.
             kind: "pair",
             before: require("@/assets/features/inpaint_before.png"),
-            after: require("@/assets/styles/hollywood_glam.png"),
+            after: require("@/assets/features/inpaint_after.png"),
         },
     },
     {
