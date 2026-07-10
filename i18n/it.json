@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "Dipingi un'area — cambia solo ciò che selezioni.",
         "feature_style_transfer_desc": "Mostra una foto di riferimento e applica il suo stile alla stanza.",
         "room_type_required": "Scegli un tipo di stanza per continuare.",
-        "style_required": "Scegli uno stile di design per continuare."
+        "style_required": "Scegli uno stile di design per continuare.",
+        "smart_edit_content_label": "Cosa deve apparire qui?",
+        "smart_edit_content_placeholder": "es. divano in velluto verde smeraldo",
+        "smart_edit_content_helper": "Facoltativo: lascialo vuoto e ridisegneremo ciò che c'è."
     },
     "gallery": {
         "title": "Galleria",

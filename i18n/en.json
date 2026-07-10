@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "Paint over an area — change only what you select.",
         "feature_style_transfer_desc": "Show a reference photo and apply its style to your room.",
         "room_type_required": "Choose a room type to continue.",
-        "style_required": "Choose a design style to continue."
+        "style_required": "Choose a design style to continue.",
+        "smart_edit_content_label": "What should appear here?",
+        "smart_edit_content_placeholder": "e.g. emerald green velvet sofa",
+        "smart_edit_content_helper": "Optional — leave blank and we'll restyle whatever is there."
     },
     "gallery": {
         "title": "Gallery",

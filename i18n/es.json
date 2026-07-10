@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "Pinta una zona: cambia solo lo que selecciones.",
         "feature_style_transfer_desc": "Muestra una foto de referencia y aplica su estilo a tu habitación.",
         "room_type_required": "Elige un tipo de habitación para continuar.",
-        "style_required": "Elige un estilo de diseño para continuar."
+        "style_required": "Elige un estilo de diseño para continuar.",
+        "smart_edit_content_label": "¿Qué debería aparecer aquí?",
+        "smart_edit_content_placeholder": "p. ej. sofá de terciopelo verde esmeralda",
+        "smart_edit_content_helper": "Opcional: déjalo vacío y rediseñaremos lo que haya."
     },
     "gallery": {
         "title": "Galería",

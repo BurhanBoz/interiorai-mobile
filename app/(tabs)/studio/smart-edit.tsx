@@ -19,6 +19,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 /**
  * Smart Edit (INPAINT) — mask drawing screen.
@@ -58,6 +59,13 @@ export default function SmartEditScreen() {
   // the user edits what they drew instead of starting from a blank canvas.
   const savedStrokes = useStudioStore(s => s.maskStrokes);
   const savedMaskMode = useStudioStore(s => s.maskMode);
+  // In CHANGE mode the region content is genuinely ambiguous ("the user
+  // painted a sofa — and wants WHAT there?"). Asking here, where the intent
+  // lives, beats guessing downstream. Writes the SAME store field the options
+  // screen's custom prompt uses, so there is exactly one owner (options hides
+  // its accordion for INPAINT, mirroring the Style Transfer strength rule).
+  const prompt = useStudioStore(s => s.prompt);
+  const setPrompt = useStudioStore(s => s.setPrompt);
 
   const [strokes, setStrokes] = useState<MaskStroke[]>(() => savedStrokes ?? []);
   const [livePoints, setLivePoints] = useState<{ x: number; y: number }[]>([]);
@@ -248,6 +256,23 @@ export default function SmartEditScreen() {
       >
         {t(maskMode === "PROTECT" ? "studio.smart_edit_hint_protect" : "studio.smart_edit_hint")}
       </Text>
+
+      {/* Region content — CHANGE only. Optional: left blank the backend
+          repaints the same kind of furniture, restyled by the strength
+          slider. Filled in, it becomes the region's description verbatim. */}
+      {maskMode === "CHANGE" && (
+        <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
+          <Input
+            label={t("studio.smart_edit_content_label")}
+            placeholder={t("studio.smart_edit_content_placeholder")}
+            value={prompt}
+            onChangeText={setPrompt}
+            icon="color-wand-outline"
+            autoCapitalize="sentences"
+            helper={t("studio.smart_edit_content_helper")}
+          />
+        </View>
+      )}
 
       {/* Canvas */}
       <View style={{ alignItems: "center" }}>

@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "Übermale einen Bereich — nur die Auswahl ändert sich.",
         "feature_style_transfer_desc": "Zeig ein Referenzfoto — sein Stil kommt in deinen Raum.",
         "room_type_required": "Wähle einen Raumtyp, um fortzufahren.",
-        "style_required": "Wähle einen Einrichtungsstil, um fortzufahren."
+        "style_required": "Wähle einen Einrichtungsstil, um fortzufahren.",
+        "smart_edit_content_label": "Was soll hier erscheinen?",
+        "smart_edit_content_placeholder": "z. B. smaragdgrünes Samtsofa",
+        "smart_edit_content_helper": "Optional — leer lassen und wir gestalten das Vorhandene neu."
     },
     "gallery": {
         "title": "Galerie",

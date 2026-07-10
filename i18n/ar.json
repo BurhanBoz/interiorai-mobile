@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "لوّن منطقة — يتغيّر ما تحدده فقط.",
         "feature_style_transfer_desc": "أرِ صورة مرجعية وطبّق نمطها على غرفتك.",
         "room_type_required": "اختر نوع الغرفة للمتابعة.",
-        "style_required": "اختر نمط التصميم للمتابعة."
+        "style_required": "اختر نمط التصميم للمتابعة.",
+        "smart_edit_content_label": "ما الذي يجب أن يظهر هنا؟",
+        "smart_edit_content_placeholder": "مثال: أريكة مخملية خضراء زمردية",
+        "smart_edit_content_helper": "اختياري — اتركه فارغًا وسنعيد تصميم ما هو موجود."
     },
     "gallery": {
         "title": "المعرض",

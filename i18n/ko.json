@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "칠한 영역만 바뀝니다.",
         "feature_style_transfer_desc": "참고 사진의 스타일을 내 방에 적용해요.",
         "room_type_required": "계속하려면 방 유형을 선택하세요.",
-        "style_required": "계속하려면 디자인 스타일을 선택하세요."
+        "style_required": "계속하려면 디자인 스타일을 선택하세요.",
+        "smart_edit_content_label": "여기에 무엇을 넣을까요?",
+        "smart_edit_content_placeholder": "예: 에메랄드 그린 벨벳 소파",
+        "smart_edit_content_helper": "선택 사항 — 비워두면 기존 가구를 새로 디자인합니다."
     },
     "gallery": {
         "title": "갤러리",

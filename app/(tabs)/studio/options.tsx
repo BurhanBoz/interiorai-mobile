@@ -794,7 +794,11 @@ export default function OptionsScreen() {
           })()}
         </View>
 
-        {/* Material Narrative (Prompt) — collapsible */}
+        {/* Material Narrative (Prompt) — collapsible. Hidden for INPAINT:
+            the mask screen already asks what belongs in the painted region,
+            and that writes this same store field (one owner per control,
+            same rule as STYLE_TRANSFER's influence slider). */}
+        {mode !== "INPAINT" && (
         <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
           <Pressable onPress={togglePromptOpen} accessibilityRole="button">
             <View
@@ -1152,6 +1156,7 @@ export default function OptionsScreen() {
           </>
           )}
         </View>
+        )}
 
         {/* Seed controls removed (2026-07): the backend omits `seed`
             entirely when unset (TemplateInputResolver only sends it if

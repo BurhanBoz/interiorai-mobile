@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "Bir bölgeyi boya — yalnızca seçtiğin yer değişsin.",
         "feature_style_transfer_desc": "Referans bir fotoğraf göster, stili odana uygulansın.",
         "room_type_required": "Devam etmek için bir oda tipi seç.",
-        "style_required": "Devam etmek için bir tasarım stili seç."
+        "style_required": "Devam etmek için bir tasarım stili seç.",
+        "smart_edit_content_label": "Bu alanda ne olsun?",
+        "smart_edit_content_placeholder": "örn. zümrüt yeşili kadife koltuk",
+        "smart_edit_content_helper": "İsteğe bağlı — boş bırakırsan oradakini yeniden stilleriz."
     },
     "gallery": {
         "title": "Galeri",

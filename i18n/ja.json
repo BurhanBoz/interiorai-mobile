@@ -296,7 +296,10 @@
         "feature_inpaint_desc": "塗った場所だけを変更できます。",
         "feature_style_transfer_desc": "参考写真のスタイルをあなたの部屋に適用します。",
         "room_type_required": "続行するには部屋のタイプを選択してください。",
-        "style_required": "続行するにはデザインスタイルを選択してください。"
+        "style_required": "続行するにはデザインスタイルを選択してください。",
+        "smart_edit_content_label": "ここに何を表示しますか？",
+        "smart_edit_content_placeholder": "例：エメラルドグリーンのベルベットソファ",
+        "smart_edit_content_helper": "任意 — 空欄なら既存のものを新しくデザインします。"
     },
     "gallery": {
         "title": "ギャラリー",
