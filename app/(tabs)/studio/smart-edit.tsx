@@ -164,7 +164,10 @@ export default function SmartEditScreen() {
     }
     setSaving(true);
     try {
-      const mask = await createMask(photo.fileId, strokes, maskMode);
+      const mask = await createMask(
+        photo.fileId, strokes, maskMode,
+        maskMode === "CHANGE" && prompt.trim().length > 0,
+      );
       setMode("INPAINT");
       // Keep the strokes too — Review renders them over the photo preview
       // so the user SEES what will change before generating.
