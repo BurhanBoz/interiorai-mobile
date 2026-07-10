@@ -71,9 +71,9 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
-            // Authentic app output: the grey fabric sofa repainted as an
-            // emerald velvet piece — everything else (cat included) untouched,
-            // which IS the Smart Edit promise.
+            // Authentic PROD output (2026-07-10, post object-labeling fix):
+            // the grey fabric sofa fully replaced by a new-form charcoal
+            // leather design — everything around it untouched.
             kind: "pair",
             before: require("@/assets/features/inpaint_before.png"),
             after: require("@/assets/features/inpaint_after.png"),

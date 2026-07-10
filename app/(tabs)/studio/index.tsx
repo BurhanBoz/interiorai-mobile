@@ -153,8 +153,8 @@ export default function StudioScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Eyebrow + headline — what shall we transform today? */}
-        <View style={{ marginTop: 12, marginBottom: 10 }}>
+        {/* Eyebrow + headline — centered welcome */}
+        <View style={{ marginTop: 12, marginBottom: 10, alignItems: "center" }}>
           <Text
             style={{
               fontFamily: "Inter-SemiBold",
@@ -175,6 +175,7 @@ export default function StudioScreen() {
             letterSpacing: -0.4,
             color: theme.color.onSurface,
             marginBottom: 28,
+            textAlign: "center",
           }}
         >
           {t("studio.home_title")}

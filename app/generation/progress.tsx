@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDismissible } from "@/hooks/useDismissible";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -204,6 +205,12 @@ export default function GenerationProgressScreen() {
     });
   };
 
+  // "About this style" is a first-generation teaching card (2026-07 tester
+  // ask): show once, dismissible via its X, never again after — the spinner
+  // block then centers in the freed space on every later run.
+  const [styleHintVisible, dismissStyleHint] = useDismissible("generation_style_hint_seen");
+  const showStyleHint = !errorMessage && !!styleName && styleHintVisible;
+
   const phaseLabel = t(`generation.phase_${phase === "error" ? "ready" : phase}`);
   const title = errorMessage ? t("generation.failed") : t("generation.creating");
 
@@ -227,7 +234,12 @@ export default function GenerationProgressScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingBottom: 40,
+          flexGrow: 1,
+          justifyContent: showStyleHint ? "flex-start" : "center",
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero spinner */}
@@ -379,13 +391,34 @@ export default function GenerationProgressScreen() {
           </Pressable>
         )}
 
-        {/* Style info card */}
-        {!errorMessage && styleName && (
-          <StyleInfoCard
-            title={t("generation.about_this_style")}
-            styleName={styleName}
-            description={styleDescription}
-          />
+        {/* Style info card — one-shot with its own X */}
+        {showStyleHint && (
+          <View>
+            <StyleInfoCard
+              title={t("generation.about_this_style")}
+              styleName={styleName}
+              description={styleDescription}
+            />
+            <Pressable
+              onPress={dismissStyleHint}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(19,19,19,0.55)",
+              }}
+            >
+              <Ionicons name="close" size={15} color="#D0C5B8" />
+            </Pressable>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
