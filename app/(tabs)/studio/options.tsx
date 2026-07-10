@@ -413,7 +413,11 @@ export default function OptionsScreen() {
             </View>
           </View>
 
-          {/* AI Strength — gated by plan permission */}
+          {/* AI Strength — gated by plan permission. Hidden for
+              STYLE_TRANSFER: the reference screen already owns the
+              influence percentage; a second slider here was a duplicate
+              control for the same store value (2026-07 founder call). */}
+          {mode !== "STYLE_TRANSFER" && (
           <Pressable
             onPress={() => {
               if (!strengthAllowed) router.push("/plans");
@@ -515,12 +519,11 @@ export default function OptionsScreen() {
                   fontStyle: "italic",
                 }}
               >
-                {mode === "STYLE_TRANSFER"
-                  ? t("studio.strength_helper_style_transfer")
-                  : t("studio.strength_helper_generic")}
+                {t("studio.strength_helper_generic")}
               </Text>
             )}
           </Pressable>
+          )}
         </View>
 
         {/* Color Palette — Strength-card sibling.

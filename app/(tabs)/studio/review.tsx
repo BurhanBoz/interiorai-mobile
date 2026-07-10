@@ -577,20 +577,6 @@ export default function ReviewScreen() {
           loading={isSubmitting}
           icon="sparkles"
         />
-        <Text
-          className="font-label"
-          style={{
-            marginTop: 10,
-            fontSize: 10,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            opacity: 0.55,
-            textAlign: "center",
-            color: "#D0C5B8",
-          }}
-        >
-          Estimated time: 45 seconds
-        </Text>
       </BottomBar>
     </SafeAreaView>
   );
