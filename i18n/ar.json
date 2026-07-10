@@ -299,7 +299,7 @@
         "style_required": "اختر نمط التصميم للمتابعة.",
         "smart_edit_content_label": "ما الذي يجب أن يظهر هنا؟",
         "smart_edit_content_placeholder": "مثال: أريكة مخملية خضراء زمردية",
-        "smart_edit_content_helper": "اختياري — اتركه فارغًا وسنعيد تصميم ما هو موجود."
+        "smart_edit_content_helper": "اختياري — اتركه فارغًا وسيُستبدل ما لوّنته بتصميم جديد يطابق اختياراتك."
     },
     "gallery": {
         "title": "المعرض",

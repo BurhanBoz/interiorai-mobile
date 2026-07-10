@@ -299,7 +299,7 @@
         "style_required": "Choose a design style to continue.",
         "smart_edit_content_label": "What should appear here?",
         "smart_edit_content_placeholder": "e.g. emerald green velvet sofa",
-        "smart_edit_content_helper": "Optional — leave blank and we'll restyle whatever is there."
+        "smart_edit_content_helper": "Optional — leave blank and the piece you painted is replaced with a new design matching your style choices."
     },
     "gallery": {
         "title": "Gallery",

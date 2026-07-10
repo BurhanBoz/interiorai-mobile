@@ -299,7 +299,7 @@
         "style_required": "続行するにはデザインスタイルを選択してください。",
         "smart_edit_content_label": "ここに何を表示しますか？",
         "smart_edit_content_placeholder": "例：エメラルドグリーンのベルベットソファ",
-        "smart_edit_content_helper": "任意 — 空欄なら既存のものを新しくデザインします。"
+        "smart_edit_content_helper": "任意 — 空欄の場合、塗った家具はスタイル選択に合わせた新しいデザインに置き換わります。"
     },
     "gallery": {
         "title": "ギャラリー",
