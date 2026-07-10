@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -41,7 +41,7 @@ export default function StyleTransferScreen() {
   const setStrength = useStudioStore(s => s.setStrength);
   const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
   const { cost } = useCreditCost();
-  const { pickImage } = useImagePicker();
+  const { pickImage, isUploading } = useImagePicker();
   const subscription = useSubscriptionStore(s => s.subscription);
   const planLabel = subscription?.planName ?? "Max";
 
@@ -49,6 +49,7 @@ export default function StyleTransferScreen() {
   const strengthPercent = Math.round(strength * 100);
 
   const handlePickReference = async () => {
+    if (isUploading) return; // one in-flight upload at a time
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage();
     if (result) {
@@ -289,22 +290,28 @@ export default function StyleTransferScreen() {
                     borderStyle: "dashed",
                   }}
                 >
-                  <Ionicons
-                    name="cloud-upload-outline"
-                    size={36}
-                    color="#998F84"
-                    style={{ marginBottom: 16 }}
-                  />
+                  {isUploading ? (
+                    <ActivityIndicator size="small" color="#E1C39B" style={{ marginBottom: 16 }} />
+                  ) : (
+                    <Ionicons
+                      name="cloud-upload-outline"
+                      size={36}
+                      color="#998F84"
+                      style={{ marginBottom: 16 }}
+                    />
+                  )}
                   <Text
                     className="font-label"
                     style={{
                       fontSize: 11,
                       letterSpacing: 2,
                       textTransform: "uppercase",
-                      color: "#998F84",
+                      color: isUploading ? "#E1C39B" : "#998F84",
                     }}
                   >
-                    {t("studio.upload_reference")}
+                    {isUploading
+                      ? t("studio.uploading")
+                      : t("studio.upload_reference")}
                   </Text>
                 </View>
               </Pressable>
@@ -495,7 +502,7 @@ export default function StyleTransferScreen() {
           {/* CTA Button */}
           <Pressable
             onPress={handleNext}
-            disabled={!canProceed}
+            disabled={!canProceed || isUploading}
             style={({ pressed }) => ({
               transform: [{ scale: pressed && canProceed ? 0.98 : 1 }],
               opacity: canProceed ? 1 : 0.55,

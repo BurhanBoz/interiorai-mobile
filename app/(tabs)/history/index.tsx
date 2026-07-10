@@ -444,7 +444,10 @@ export default function HistoryScreen() {
 
   const fetchPage = useCallback(async (p: number, replace = false) => {
     try {
-      const res = await jobsService.listJobs(p, 20);
+      // Page size 10 with pages 0+1 loaded up-front: first paint shows 20,
+      // every scroll-load appends 10 (2026-07 founder spec). Mixed sizes
+      // would corrupt the backend's page math, so the unit stays 10.
+      const res = await jobsService.listJobs(p, 10);
       setItems(prev => (replace ? res.content : [...prev, ...res.content]));
       setHasMore(!res.last);
       setPage(p);
@@ -457,6 +460,7 @@ export default function HistoryScreen() {
     (async () => {
       setLoading(true);
       await fetchPage(0, true);
+      await fetchPage(1);
       setLoading(false);
     })();
   }, [fetchPage]);

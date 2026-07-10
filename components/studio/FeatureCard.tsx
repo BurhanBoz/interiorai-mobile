@@ -74,8 +74,14 @@ function TransferTeaser({
                 Animated.timing(act, { toValue: 3, duration: 700,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
                 Animated.delay(2100),                       // act 4 — after
-                Animated.timing(act, { toValue: 4, duration: 480,
+                Animated.timing(act, { toValue: 4, duration: 620,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
+                // Loop seam parks in a LONG static region whose visuals are
+                // pixel-identical to act 0 (before + corner chip, after 0,
+                // BEFORE tag back on) — any single-frame reset artifact of
+                // the native-driver loop lands invisible. Without this the
+                // seam could flash the after for a frame (2026-07 tester).
+                Animated.delay(500),
             ]),
         );
         loop.start();
@@ -90,7 +96,7 @@ function TransferTeaser({
     // one continuous breath. All positional interpolations clamp: the loop
     // value travels 0→4 and unclamped ranges would extrapolate the chip.
     const afterOpacity = act.interpolate({
-        inputRange: [0, 2, 3, 3.6, 4],
+        inputRange: [0, 2, 3, 3.4, 3.9],
         outputRange: [0, 0, 1, 1, 0],
         extrapolate: "clamp",
     });
@@ -118,8 +124,8 @@ function TransferTeaser({
         extrapolate: "clamp",
     });
     const beforeTagOpacity = act.interpolate({
-        inputRange: [0, 2.2, 2.9],
-        outputRange: [1, 1, 0],
+        inputRange: [0, 2.2, 2.9, 3.5, 3.95],
+        outputRange: [1, 1, 0, 0, 1],
         extrapolate: "clamp",
     });
 

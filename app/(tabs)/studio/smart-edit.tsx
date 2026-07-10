@@ -6,6 +6,7 @@ import {
   Alert,
   Dimensions,
   PanResponder,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -73,6 +74,9 @@ export default function SmartEditScreen() {
   const [maskMode, setMaskMode] = useState<MaskMode>(() => savedMaskMode ?? "CHANGE");
   const [saving, setSaving] = useState(false);
   const [attempted, setAttempted] = useState(false);
+  // Drawing and scrolling share the same finger — the ScrollView yields
+  // while a stroke is in progress (classic canvas-in-scroll contract).
+  const [isDrawing, setIsDrawing] = useState(false);
 
   const strokeColor = maskMode === "PROTECT" ? PROTECT_GREEN : GOLD;
 
@@ -85,7 +89,10 @@ export default function SmartEditScreen() {
     // hint 40 + controls 62 + save 50 + tab bar 96 + margins ~60) ≈ 430px —
     // size the canvas to the REMAINING space so the save button never
     // slides under the tab bar, even on small devices.
-    const maxH = Math.max(200, screen.height - 430);
+    // CHANGE mode carries the extra "what belongs here?" field — shrink the
+    // canvas so toggle + hint + input + canvas + brushes + Save all breathe
+    // inside one scrollable column.
+    const maxH = Math.max(200, screen.height - (maskMode === "CHANGE" ? 545 : 430));
     const aspect =
       photo?.width && photo?.height ? photo.width / photo.height : 3 / 4;
     let w = maxW;
@@ -95,7 +102,7 @@ export default function SmartEditScreen() {
       w = h * aspect;
     }
     return { canvasW: w, canvasH: h };
-  }, [photo?.width, photo?.height]);
+  }, [photo?.width, photo?.height, maskMode]);
 
   // Refs mirror the live stroke for the PanResponder closure (created once).
   const livePointsRef = useRef<{ x: number; y: number }[]>([]);
@@ -109,6 +116,7 @@ export default function SmartEditScreen() {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: evt => {
+        setIsDrawing(true);
         const { locationX, locationY } = evt.nativeEvent;
         const p = clampToCanvas(locationX, locationY, canvasRef.current);
         livePointsRef.current = [p];
@@ -145,6 +153,7 @@ export default function SmartEditScreen() {
         }
         livePointsRef.current = [];
         setLivePoints([]);
+        setIsDrawing(false);
       },
       onPanResponderTerminate: () => {
         livePointsRef.current = [];
@@ -205,6 +214,13 @@ export default function SmartEditScreen() {
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#131313" }}>
       <Header title={t("studio.smart_edit_title")} />
 
+      <ScrollView
+        style={{ flex: 1 }}
+        scrollEnabled={!isDrawing}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 24 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
       {/* Mode: paint-to-change vs paint-to-protect. Both mental models are
           valid (a tester painted the sofa meaning "keep this"); make the
           semantic an explicit choice instead of a footnote. */}
@@ -378,12 +394,12 @@ export default function SmartEditScreen() {
         />
       </View>
 
-      {/* Save — cleared above the (tabs) bar; see TAB_BAR_HEIGHT. */}
+      {/* Save — inside the scroll column; the container's bottom padding
+          already clears the tab bar. */}
       <View
         style={{
           paddingHorizontal: 24,
-          marginTop: "auto",
-          marginBottom: TAB_BAR_HEIGHT + 16,
+          marginTop: 24,
         }}
       >
         {attempted && strokes.length === 0 && (
@@ -406,6 +422,7 @@ export default function SmartEditScreen() {
           loading={saving}
         />
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
