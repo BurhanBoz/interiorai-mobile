@@ -59,75 +59,46 @@ function TransferTeaser({
 }: {
     media: Extract<FeatureMedia, { kind: "transfer" }>;
 }) {
-    const act = useRef(new Animated.Value(0)).current;
+    // Two independent values instead of one multi-segment loop value
+    // (2026-07-11 tester flash): with act-interpolation cliffs, a native-
+    // driver loop seam could flash the after for a frame right as the
+    // reference began to move. `after` is now touched ONLY by its own two
+    // timings — it is structurally impossible for the after image to be
+    // visible outside its own act, no matter how the loop resets.
+    const pos = useRef(new Animated.Value(0)).current;    // 0 corner ↔ 1 center
+    const after = useRef(new Animated.Value(0)).current;  // 0 hidden ↔ 1 shown
     const [mediaW, setMediaW] = useState(0);
 
     useEffect(() => {
         const loop = Animated.loop(
             Animated.sequence([
-                Animated.delay(1500),                       // act 1 — before, ref waiting in the corner
-                Animated.timing(act, { toValue: 1, duration: 1300,
+                Animated.delay(1500),                       // before + chip waiting in corner
+                Animated.timing(pos, { toValue: 1, duration: 1300,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.delay(1100),                       // act 2 — ref center-stage on the before
-                Animated.timing(act, { toValue: 2, duration: 750,
+                Animated.delay(1100),                       // ref center-stage on the before
+                Animated.timing(pos, { toValue: 0, duration: 750,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.timing(act, { toValue: 3, duration: 700,
+                Animated.timing(after, { toValue: 1, duration: 700,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                Animated.delay(2100),                       // act 4 — after
-                Animated.timing(act, { toValue: 4, duration: 620,
+                Animated.delay(2100),                       // after holds
+                Animated.timing(after, { toValue: 0, duration: 620,
                     easing: theme.motion.easing.standard, useNativeDriver: true }),
-                // Loop seam parks in a LONG static region whose visuals are
-                // pixel-identical to act 0 (before + corner chip, after 0,
-                // BEFORE tag back on) — any single-frame reset artifact of
-                // the native-driver loop lands invisible. Without this the
-                // seam could flash the after for a frame (2026-07 tester).
-                Animated.delay(500),
+                Animated.delay(400),
             ]),
         );
         loop.start();
         return () => loop.stop();
-    }, [act]);
+    }, [pos, after]);
 
-    // Choreography v2 (2026-07 founder note): the reference WAITS small in
-    // the bottom-right corner while the before shows, then drifts to center
-    // slowly and softly, GROWING (0.51→1); it glides back to its corner and
-    // only THEN does the after fade in. The chip itself never disappears —
-    // the loop ends exactly where it starts (corner), so the cycle reads as
-    // one continuous breath. All positional interpolations clamp: the loop
-    // value travels 0→4 and unclamped ranges would extrapolate the chip.
-    const afterOpacity = act.interpolate({
-        inputRange: [0, 2, 3, 3.4, 3.9],
-        outputRange: [0, 0, 1, 1, 0],
-        extrapolate: "clamp",
-    });
     const CARD = 110;
     const cornerTX = mediaW > 0 ? mediaW / 2 - CARD * 0.51 / 2 - 12 : 0;
     const cornerTY = MEDIA_HEIGHT / 2 - CARD * 0.51 / 2 - 12;
-    const refScale = act.interpolate({
-        inputRange: [0, 1, 2, 4],
-        outputRange: [0.51, 1, 0.51, 0.51],
-        extrapolate: "clamp",
-    });
-    const refTX = act.interpolate({
-        inputRange: [0, 1, 2, 4],
-        outputRange: [cornerTX, 0, cornerTX, cornerTX],
-        extrapolate: "clamp",
-    });
-    const refTY = act.interpolate({
-        inputRange: [0, 1, 2, 4],
-        outputRange: [cornerTY, 0, cornerTY, cornerTY],
-        extrapolate: "clamp",
-    });
-    const refRotate = act.interpolate({
-        inputRange: [0, 1, 2],
-        outputRange: ["0deg", "-3deg", "0deg"],
-        extrapolate: "clamp",
-    });
-    const beforeTagOpacity = act.interpolate({
-        inputRange: [0, 2.2, 2.9, 3.5, 3.95],
-        outputRange: [1, 1, 0, 0, 1],
-        extrapolate: "clamp",
-    });
+    const afterOpacity = after;
+    const refScale = pos.interpolate({ inputRange: [0, 1], outputRange: [0.51, 1] });
+    const refTX = pos.interpolate({ inputRange: [0, 1], outputRange: [cornerTX, 0] });
+    const refTY = pos.interpolate({ inputRange: [0, 1], outputRange: [cornerTY, 0] });
+    const refRotate = pos.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "-3deg"] });
+    const beforeTagOpacity = after.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
 
     return (
         <View

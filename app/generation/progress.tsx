@@ -215,6 +215,17 @@ export default function GenerationProgressScreen() {
   const [styleHintVisible, dismissStyleHint] = useDismissible(
     `generation_style_hint_seen_${styleSlug}`,
   );
+  // Seen-once semantics (2026-07 founder spec): the card counting as "seen"
+  // must not depend on the user finding the X — once it has been SHOWN for
+  // a style, leaving the screen marks it permanently. X remains the early
+  // hide within the same run.
+  const shownRef = useRef(false);
+  if (!errorMessage && !!styleName && styleHintVisible) shownRef.current = true;
+  useEffect(() => {
+    return () => {
+      if (shownRef.current) dismissStyleHint();
+    };
+  }, [dismissStyleHint]);
   const showStyleHint = !errorMessage && !!styleName && styleHintVisible;
 
   const phaseLabel = t(`generation.phase_${phase === "error" ? "ready" : phase}`);
