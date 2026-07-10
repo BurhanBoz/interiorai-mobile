@@ -467,16 +467,6 @@ export default function GalleryScreen() {
         <View className="flex-1">
           <View className="px-6 pt-4 mb-8">
             <Text
-              className="font-label text-secondary font-medium mb-2"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("gallery.curation_label")}
-            </Text>
-            <Text
               className="text-on-surface font-headline"
               style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
             >
@@ -539,11 +529,9 @@ export default function GalleryScreen() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {activeRoomFilter === FILTER_FAVORITES
-                    ? `${outputs.length} ${
-                        outputs.length === 1 ? "design" : "designs"
-                      }`
-                    : t("gallery.curation_label")}
+                  {`${outputs.length} ${
+                    outputs.length === 1 ? "design" : "designs"
+                  }`}
                 </Text>
                 <Text
                   className="text-on-surface font-headline"

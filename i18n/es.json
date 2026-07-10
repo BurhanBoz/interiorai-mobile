@@ -303,7 +303,6 @@
     },
     "gallery": {
         "title": "Galería",
-        "curation_label": "Curaduría 01",
         "curated_collection": "Colección Curada",
         "search_placeholder": "Busca por estilo o habitación...",
         "filter_all": "Todos los Interiores",
@@ -330,8 +329,7 @@
         "status_submitted": "Enviado",
         "status_pending": "Pendiente",
         "status_failed": "Falló",
-        "status_cancelled": "Cancelado",
-        "archive_eyebrow": "Archivo"
+        "status_cancelled": "Cancelado"
     },
     "profile": {
         "title": "Perfil",

@@ -303,7 +303,6 @@
     },
     "gallery": {
         "title": "ギャラリー",
-        "curation_label": "キュレーション 01",
         "curated_collection": "キュレート・コレクション",
         "search_placeholder": "スタイルや部屋で検索...",
         "filter_all": "すべて",
@@ -330,8 +329,7 @@
         "status_submitted": "送信済み",
         "status_pending": "保留中",
         "status_failed": "失敗",
-        "status_cancelled": "キャンセル済み",
-        "archive_eyebrow": "アーカイブ"
+        "status_cancelled": "キャンセル済み"
     },
     "profile": {
         "title": "プロフィール",

@@ -1,4 +1,5 @@
 import { View, Text, Pressable, Platform, Animated } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef } from "react";
 import { BlurView } from "expo-blur";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -40,30 +41,28 @@ const TAB_CONFIG: TabConfig[] = [
  *     tactile, not abrupt.
  */
 /**
- * Total vertical space the floating pill claims at the screen bottom
- * (pill ~64px + 32px bottom padding). Scrollable tab screens must pad
- * their content by at least this much — import it instead of hardcoding.
+ * Total vertical space the dock claims at the screen bottom (row ~62px +
+ * home-indicator inset ~34px on notch devices). Scrollable tab screens must
+ * pad their content by at least this much — import it instead of hardcoding.
  */
 export const TAB_BAR_HEIGHT = 96;
 
 export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
 
+    // Edge-to-edge dock seated on the very bottom (2026-07 founder call —
+    // the floating pill read as "hovering"; mainstream consumer apps dock
+    // the tab bar flush). The blur extends UNDER the home indicator; a
+    // hairline top border separates it from content. No transparent
+    // gutters anymore, so no box-none dance is needed either.
     return (
         <View
-            // box-none: the wrapper spans the full width with transparent
-            // gutters (16px sides + 32px below the pill). Without this,
-            // those invisible areas swallow taps meant for content behind
-            // them — the "bottom menu overlaps clickable content" bug from
-            // the 2026-07 first review. Only the pill itself stays tappable.
-            pointerEvents="box-none"
             style={{
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
-                paddingHorizontal: 16,
-                paddingBottom: 32,
             }}
         >
             <BlurView
@@ -73,16 +72,17 @@ export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-around",
-                    borderRadius: 20,
                     overflow: "hidden",
-                    backgroundColor: "rgba(19,19,19,0.62)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.10)",
+                    backgroundColor: "rgba(19,19,19,0.72)",
+                    borderTopWidth: 1,
+                    borderTopColor: "rgba(225,195,155,0.10)",
+                    paddingTop: 4,
+                    paddingBottom: Math.max(insets.bottom, 10),
                     ...(Platform.OS === "ios" && {
-                        shadowColor: "#F5F0EB",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 40,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: -6 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 16,
                     }),
                 }}
             >

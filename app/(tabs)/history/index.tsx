@@ -551,18 +551,6 @@ export default function HistoryScreen() {
           {/* Header Section — premium big title + subtle sub-label */}
           <View className="px-6 pt-3 mb-6">
             <Text
-              className="font-label text-secondary mb-2"
-              style={{
-                fontSize: 11,
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                fontWeight: "500",
-                opacity: 0.7,
-              }}
-            >
-              {t("history.archive_eyebrow")}
-            </Text>
-            <Text
               className="text-on-surface font-headline"
               style={{ fontSize: 34, lineHeight: 40, fontWeight: "700" }}
             >

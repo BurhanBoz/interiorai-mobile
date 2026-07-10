@@ -303,7 +303,6 @@
     },
     "gallery": {
         "title": "Galleria",
-        "curation_label": "Curatela 01",
         "curated_collection": "Collezione Selezionata",
         "search_placeholder": "Cerca per stile o stanza...",
         "filter_all": "Tutti gli Interni",
@@ -330,8 +329,7 @@
         "status_submitted": "Inviato",
         "status_pending": "In attesa",
         "status_failed": "Fallito",
-        "status_cancelled": "Annullato",
-        "archive_eyebrow": "Archivio"
+        "status_cancelled": "Annullato"
     },
     "profile": {
         "title": "Profilo",

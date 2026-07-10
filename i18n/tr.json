@@ -303,7 +303,6 @@
     },
     "gallery": {
         "title": "Galeri",
-        "curation_label": "Koleksiyon 01",
         "curated_collection": "Özenle Seçilmiş",
         "search_placeholder": "Stil veya odaya göre ara...",
         "filter_all": "Tümü",
@@ -330,8 +329,7 @@
         "status_submitted": "Gönderildi",
         "status_pending": "Bekliyor",
         "status_failed": "Başarısız",
-        "status_cancelled": "İptal Edildi",
-        "archive_eyebrow": "Arşiv"
+        "status_cancelled": "İptal Edildi"
     },
     "profile": {
         "title": "Profil",

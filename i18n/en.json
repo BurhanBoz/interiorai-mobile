@@ -303,7 +303,6 @@
     },
     "gallery": {
         "title": "Gallery",
-        "curation_label": "Curation 01",
         "curated_collection": "Curated Collection",
         "search_placeholder": "Search by style or room...",
         "filter_all": "All Interiors",
@@ -330,8 +329,7 @@
         "status_submitted": "Submitted",
         "status_pending": "Pending",
         "status_failed": "Failed",
-        "status_cancelled": "Cancelled",
-        "archive_eyebrow": "Archive"
+        "status_cancelled": "Cancelled"
     },
     "profile": {
         "title": "Profile",
