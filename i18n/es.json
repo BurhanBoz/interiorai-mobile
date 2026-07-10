@@ -276,7 +276,7 @@
         "trial_expired_body": "¿Te gustó? Mantén MAX — o continúa con FREE (1 crédito/día).",
         "trial_expired_continue_free": "Continuar con FREE",
         "smart_edit_title": "Edición Inteligente",
-        "smart_edit_hint": "Pinta las zonas que quieres que la IA cambie. Las zonas sin pintar se mantienen exactamente igual.",
+        "smart_edit_hint": "Pinta el objeto que quieras cambiar, cúbrelo por completo. Lo no pintado queda exactamente igual.",
         "smart_edit_undo": "Deshacer",
         "smart_edit_clear": "Borrar",
         "smart_edit_save": "Guardar máscara y continuar",

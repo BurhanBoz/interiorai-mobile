@@ -1,6 +1,6 @@
 import { View, Text, Pressable, Animated, Image } from "react-native";
 import type { ImageSourcePropType } from "react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -46,99 +46,207 @@ function MediaScrim() {
 }
 
 /**
- * Style Transfer's third frame. The card must read "your room + THIS
- * reference = that result", not merely "before → after". The chip carries
- * the reference photo and its gold ring ignites in step with the crossfade,
- * so the eye attributes the transformation to the reference.
- *
- * Sits bottom-RIGHT: the BEFORE/AFTER tag owns bottom-left and the plan
- * lock pill owns top-right, so nothing ever collides.
+ * Style Transfer teaser — a 3-act story (2026-07 tester ask: "before görünsün,
+ * referans üstüne biniyormuş gibi olsun, after doğsun"):
+ *   act 1  hold the BEFORE room
+ *   act 2  the reference photo lands on it, center-stage (polaroid drop)
+ *   act 3  the reference glides to the corner as the AFTER fades in — the
+ *          eye reads "this photo was applied to that room"
+ * One looping native-driver value drives every layer via interpolation.
  */
-function ReferenceChip({
-    source,
-    fade,
+function TransferTeaser({
+    media,
 }: {
-    source: ImageSourcePropType;
-    fade: Animated.Value;
+    media: Extract<FeatureMedia, { kind: "transfer" }>;
 }) {
-    const scale = fade.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.94, 1.04],
+    const act = useRef(new Animated.Value(0)).current;
+    const [mediaW, setMediaW] = useState(0);
+
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(1300),                       // act 1 — before
+                Animated.timing(act, { toValue: 1, duration: 620,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(950),                        // act 2 — ref lands
+                Animated.timing(act, { toValue: 2, duration: 750,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(2100),                       // act 3 — after
+                Animated.timing(act, { toValue: 3, duration: 480,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+            ]),
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [act]);
+
+    const afterOpacity = act.interpolate({
+        inputRange: [0, 1, 2, 2.7, 3],
+        outputRange: [0, 0, 1, 1, 0],
     });
+    const refOpacity = act.interpolate({
+        inputRange: [0, 0.15, 1, 2, 2.75, 3],
+        outputRange: [0, 0, 1, 1, 1, 0],
+    });
+    // Center-stage card (110px) → 56px corner chip: scale 1 → 0.51
+    const CARD = 110;
+    const cornerTX = mediaW > 0 ? mediaW / 2 - CARD * 0.51 / 2 - 12 : 0;
+    const cornerTY = MEDIA_HEIGHT / 2 - CARD * 0.51 / 2 - 12;
+    const refScale = act.interpolate({
+        inputRange: [0, 1, 2, 3],
+        outputRange: [1.18, 1, 0.51, 0.51],
+    });
+    const refTX = act.interpolate({
+        inputRange: [0, 1, 2, 3],
+        outputRange: [0, 0, cornerTX, cornerTX],
+    });
+    const refTY = act.interpolate({
+        inputRange: [0, 1, 2, 3],
+        outputRange: [-10, 0, cornerTY, cornerTY],
+    });
+    const refRotate = act.interpolate({
+        inputRange: [0, 1, 2],
+        outputRange: ["-7deg", "-3deg", "0deg"],
+    });
+    const beforeTagOpacity = act.interpolate({
+        inputRange: [0, 1.4, 2],
+        outputRange: [1, 1, 0],
+    });
+
     return (
         <View
-            style={{
-                position: "absolute",
-                right: 12,
-                bottom: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-            }}
+            style={{ width: "100%", height: MEDIA_HEIGHT, overflow: "hidden" }}
+            onLayout={(e) => setMediaW(e.nativeEvent.layout.width)}
         >
-            <Text
+            <Image
+                source={media.before}
+                resizeMode="cover"
+                style={{ position: "absolute", width: "100%", height: "100%" }}
+            />
+            <Animated.View
                 style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 18,
-                    color: theme.color.goldMidday,
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    opacity: afterOpacity,
                 }}
             >
-                +
-            </Text>
-            <Animated.View style={{ transform: [{ scale }] }}>
-                {/* Permanent gold frame + glow — the reference is often
-                    visually close to the after (that's the point of a good
-                    transfer), so without a loud frame the chip camouflages
-                    into the hero (2026-07-10 founder finding). */}
-                <View
+                <Image
+                    source={media.after}
+                    resizeMode="cover"
+                    style={{ width: "100%", height: "100%" }}
+                />
+            </Animated.View>
+            <MediaScrim />
+
+            {/* Reference photo — lands center, settles to the corner */}
+            <View
+                pointerEvents="none"
+                style={{
+                    position: "absolute",
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Animated.View
                     style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        borderWidth: 2,
-                        borderColor: theme.color.goldMidday,
-                        shadowColor: "#E1C39B",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.55,
-                        shadowRadius: 10,
-                        elevation: 8,
+                        opacity: refOpacity,
+                        transform: [
+                            { translateX: refTX },
+                            { translateY: refTY },
+                            { scale: refScale },
+                            { rotate: refRotate },
+                        ],
                     }}
                 >
-                    <Image
-                        source={source}
-                        resizeMode="cover"
-                        style={{ width: "100%", height: "100%" }}
-                    />
-                </View>
-                {/* REF tag — same glass-pill language as BEFORE/AFTER
-                    (those are EN by design too), overlapping the chip's
-                    top edge so it reads as a labelled specimen. */}
-                <View
-                    style={{
-                        position: "absolute",
-                        top: -8,
-                        alignSelf: "center",
-                        paddingHorizontal: 7,
-                        paddingVertical: 2,
-                        borderRadius: 999,
-                        backgroundColor: "rgba(12,11,10,0.85)",
-                        borderWidth: 1,
-                        borderColor: "rgba(225,195,155,0.5)",
-                    }}
-                >
-                    <Text
+                    <View
                         style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 8,
-                            letterSpacing: 1.4,
-                            color: theme.color.goldMidday,
+                            width: CARD,
+                            height: CARD,
+                            borderRadius: 14,
+                            overflow: "hidden",
+                            borderWidth: 2.5,
+                            borderColor: theme.color.goldMidday,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 8 },
+                            shadowOpacity: 0.5,
+                            shadowRadius: 16,
+                            elevation: 10,
                         }}
                     >
-                        REF
-                    </Text>
+                        <Image
+                            source={media.reference}
+                            resizeMode="cover"
+                            style={{ width: "100%", height: "100%" }}
+                        />
+                    </View>
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: -9,
+                            alignSelf: "center",
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 999,
+                            backgroundColor: "rgba(12,11,10,0.85)",
+                            borderWidth: 1,
+                            borderColor: "rgba(225,195,155,0.5)",
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 9,
+                                letterSpacing: 1.6,
+                                color: theme.color.goldMidday,
+                            }}
+                        >
+                            REF
+                        </Text>
+                    </View>
+                </Animated.View>
+            </View>
+
+            {/* Synced BEFORE/AFTER tag — bottom-left */}
+            <View style={{ position: "absolute", left: 12, bottom: 12 }}>
+                <View
+                    style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(12,11,10,0.5)",
+                        borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.28)",
+                    }}
+                >
+                    <View>
+                        <Animated.Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 9,
+                                letterSpacing: 1.6,
+                                color: "#D0C5B8",
+                                opacity: beforeTagOpacity,
+                            }}
+                        >
+                            BEFORE
+                        </Animated.Text>
+                        <Animated.Text
+                            style={{
+                                position: "absolute",
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 9,
+                                letterSpacing: 1.6,
+                                color: theme.color.goldMidday,
+                                opacity: afterOpacity,
+                            }}
+                        >
+                            AFTER
+                        </Animated.Text>
+                    </View>
                 </View>
-            </Animated.View>
+            </View>
         </View>
     );
 }
@@ -151,8 +259,6 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
     // premium/soft, never busy.
     const zoom = useRef(new Animated.Value(1)).current;
 
-    // Both "pair" and "transfer" ride the before→after crossfade.
-    const isCrossfade = media.kind === "pair" || media.kind === "transfer";
 
     useEffect(() => {
         const zoomLoop = Animated.loop(
@@ -172,7 +278,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
             ]),
         );
         zoomLoop.start();
-        if (!isCrossfade) return () => zoomLoop.stop();
+        if (media.kind !== "pair") return () => zoomLoop.stop();
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.delay(2200),
@@ -196,7 +302,11 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
             loop.stop();
             zoomLoop.stop();
         };
-    }, [fade, zoom, isCrossfade]);
+    }, [fade, zoom, media.kind]);
+
+    if (media.kind === "transfer") {
+        return <TransferTeaser media={media} />;
+    }
 
     if (media.kind === "single") {
         return (
@@ -242,10 +352,6 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                 </Animated.View>
             </Animated.View>
             <MediaScrim />
-
-            {media.kind === "transfer" ? (
-                <ReferenceChip source={media.reference} fade={fade} />
-            ) : null}
 
             {/* Synced BEFORE/AFTER tag — bottom-left glass chip */}
             <View style={{ position: "absolute", left: 12, bottom: 12 }}>
