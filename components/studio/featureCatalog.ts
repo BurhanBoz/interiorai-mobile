@@ -33,6 +33,18 @@ export type FeatureMedia =
           reference: ImageSourcePropType;
           after: ImageSourcePropType;
       }
+    | {
+          /**
+           * Magic Edit story: `paint` is a translucent golden overlay of the
+           * job's REAL mask (same pixel frame as before/after) that gets
+           * brush-wiped onto the before, then the after fades in — the card
+           * performs the exact gesture the tool asks of the user.
+           */
+          kind: "paint";
+          before: ImageSourcePropType;
+          paint: ImageSourcePropType;
+          after: ImageSourcePropType;
+      }
     | { kind: "single"; image: ImageSourcePropType };
 
 export interface StudioFeature {
@@ -71,12 +83,14 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
-            // Authentic pair (2026-07-11): a real Magic Edit run — brown
-            // sofa + wood coffee table repainted into a grey sofa with
-            // patterned cushions + a sage glass-top table, rest of the room
-            // untouched. Swapped in from the founder's latest local job.
-            kind: "pair",
+            // Authentic run (2026-07-11): brown sofa + wood coffee table →
+            // grey patterned sofa + sage glass-top table. `paint` is that
+            // job's actual mask tinted gold — the teaser paints the sofa
+            // and table live, then the after lands (founder ask: "before'da
+            // masayı ve koltuğu boyasın, sonra after gelsin").
+            kind: "paint",
             before: require("@/assets/features/inpaint_before.png"),
+            paint: require("@/assets/features/inpaint_paint.png"),
             after: require("@/assets/features/inpaint_after.png"),
         },
     },

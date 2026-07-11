@@ -241,6 +241,162 @@ function TransferTeaser({
     );
 }
 
+/**
+ * Magic Edit teaser — performs the exact gesture the tool asks of the user:
+ *   act 1  clean BEFORE room
+ *   act 2  a golden brush sweep paints the sofa + coffee table (the job's
+ *          REAL mask, revealed left→right like a finger stroke)
+ *   act 3  the painted region becomes the AFTER
+ * Two independent values (transfer-teaser lesson): `after` is touched ONLY
+ * by its own two timings, and the wipe resets to 0 while fully hidden
+ * behind the opaque after — a stray paint/after flash is structurally
+ * impossible at the loop seam.
+ */
+function PaintTeaser({
+    media,
+}: {
+    media: Extract<FeatureMedia, { kind: "paint" }>;
+}) {
+    const wipe = useRef(new Animated.Value(0)).current;   // 0 unpainted ↔ 1 painted
+    const after = useRef(new Animated.Value(0)).current;  // 0 hidden ↔ 1 shown
+    const [mediaW, setMediaW] = useState(0);
+
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(1400),                     // clean before
+                Animated.timing(wipe, { toValue: 1, duration: 1500,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(900),                      // painted, brush lifted
+                Animated.timing(after, { toValue: 1, duration: 700,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(1200),                     // after holds
+                // Reset the paint while it's invisible behind the after —
+                // the return to BEFORE must land on a clean room.
+                Animated.timing(wipe, { toValue: 0, duration: 0, useNativeDriver: true }),
+                Animated.delay(900),
+                Animated.timing(after, { toValue: 0, duration: 620,
+                    easing: theme.motion.easing.standard, useNativeDriver: true }),
+                Animated.delay(500),
+            ]),
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [wipe, after]);
+
+    // Wipe reveal without distortion: the OUTER window slides in from the
+    // left while the INNER content slides the opposite way, so the paint
+    // stays pixel-glued to the room and only its reveal edge sweeps across.
+    const clipTX = wipe.interpolate({ inputRange: [0, 1], outputRange: [-mediaW, 0] });
+    const paintTX = wipe.interpolate({ inputRange: [0, 1], outputRange: [mediaW, 0] });
+    const afterOpacity = after;
+    const beforeTagOpacity = after.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+
+    return (
+        <View
+            style={{ width: "100%", height: MEDIA_HEIGHT, overflow: "hidden" }}
+            onLayout={(e) => setMediaW(e.nativeEvent.layout.width)}
+        >
+            <Image
+                source={media.before}
+                resizeMode="cover"
+                style={{ position: "absolute", width: "100%", height: "100%" }}
+            />
+
+            {/* Golden paint sweep — hidden for the pre-layout frame (with
+                mediaW=0 both translateX's are 0, i.e. fully painted). */}
+            <View
+                pointerEvents="none"
+                style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    opacity: mediaW > 0 ? 1 : 0,
+                }}
+            >
+                <Animated.View
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        overflow: "hidden",
+                        transform: [{ translateX: clipTX }],
+                    }}
+                >
+                    <Animated.View
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            transform: [{ translateX: paintTX }],
+                        }}
+                    >
+                        <Image
+                            source={media.paint}
+                            resizeMode="cover"
+                            style={{ width: "100%", height: "100%" }}
+                        />
+                    </Animated.View>
+                </Animated.View>
+            </View>
+
+            <Animated.View
+                style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    opacity: afterOpacity,
+                }}
+            >
+                <Image
+                    source={media.after}
+                    resizeMode="cover"
+                    style={{ width: "100%", height: "100%" }}
+                />
+            </Animated.View>
+            <MediaScrim />
+
+            {/* Synced BEFORE/AFTER tag — bottom-left glass chip */}
+            <View style={{ position: "absolute", left: 12, bottom: 12 }}>
+                <View
+                    style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 999,
+                        backgroundColor: "rgba(12,11,10,0.5)",
+                        borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.28)",
+                    }}
+                >
+                    <View>
+                        <Animated.Text
+                            style={{
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 9,
+                                letterSpacing: 1.6,
+                                color: "#D0C5B8",
+                                opacity: beforeTagOpacity,
+                            }}
+                        >
+                            BEFORE
+                        </Animated.Text>
+                        <Animated.Text
+                            style={{
+                                position: "absolute",
+                                fontFamily: "Inter-SemiBold",
+                                fontSize: 9,
+                                letterSpacing: 1.6,
+                                color: theme.color.goldMidday,
+                                opacity: afterOpacity,
+                            }}
+                        >
+                            AFTER
+                        </Animated.Text>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+}
+
 /* ───────── Before/after crossfade teaser ───────── */
 
 function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
@@ -296,6 +452,10 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
 
     if (media.kind === "transfer") {
         return <TransferTeaser media={media} />;
+    }
+
+    if (media.kind === "paint") {
+        return <PaintTeaser media={media} />;
     }
 
     if (media.kind === "single") {
