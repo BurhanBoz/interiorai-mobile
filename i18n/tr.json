@@ -462,7 +462,8 @@
         "confirm_activating_title": "Satın alma alındı",
         "confirm_activating_description": "Satın alman tamamlandı. Paketin birazdan güncellenecek — kısa sürede görünmezse aşağı çekip yenile.",
         "best_value": "En Avantajlı",
-        "manage_subscription": "Aboneliği yönet veya iptal et"
+        "manage_subscription": "Aboneliği yönet veya iptal et",
+        "free": "Ücretsiz"
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"

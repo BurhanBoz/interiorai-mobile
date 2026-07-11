@@ -462,7 +462,8 @@
         "confirm_activating_title": "Acquisto ricevuto",
         "confirm_activating_description": "Acquisto completato. Il piano si aggiornerà a breve — trascina per aggiornare se non appare subito.",
         "best_value": "Miglior Valore",
-        "manage_subscription": "Gestisci o annulla l'abbonamento"
+        "manage_subscription": "Gestisci o annulla l'abbonamento",
+        "free": "Gratis"
     },
     "credits": {
         "title": "Crediti",

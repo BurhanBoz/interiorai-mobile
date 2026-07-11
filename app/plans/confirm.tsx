@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
+import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import * as iap from "@/services/iap";
 import type { PlanResponse } from "@/types/api";
@@ -71,16 +73,17 @@ function highlightsFor(plan: PlanResponse | undefined, t: TFunction): PlanHighli
     return rows;
 }
 
-function formatPrice(plan: PlanResponse): string {
-    if (plan.priceCents === 0) return "$0";
-    const amount = (plan.priceCents / 100).toFixed(2);
-    return plan.currency === "USD" ? `$${amount}` : `${amount} ${plan.currency}`;
+/** "/month" or "/ year" — must match the plan actually being confirmed. */
+function periodSuffix(plan: PlanResponse, t: TFunction): string {
+    return plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month");
 }
 
 export default function PlanConfirmScreen() {
     const { t } = useTranslation();
     const params = useLocalSearchParams<{ planCode?: string }>();
     const plans = useSubscriptionStore((s) => s.plans);
+    const storePrices = useStorePricesStore((s) => s.prices);
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
@@ -88,6 +91,9 @@ export default function PlanConfirmScreen() {
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
+        // Confirmation + Apple disclosure must show the storefront price the
+        // payment sheet will actually charge — retry hydration if boot missed it.
+        hydrateStorePrices();
     }, []);
 
     const plan = useMemo(
@@ -222,13 +228,13 @@ export default function PlanConfirmScreen() {
                                 className="font-headline text-secondary"
                                 style={{ fontSize: 32, lineHeight: 38 }}
                             >
-                                {formatPrice(plan)}
+                                {formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}
                             </Text>
                             <Text
                                 className="font-body text-on-surface-variant"
                                 style={{ fontSize: 14, marginTop: 2 }}
                             >
-                                {t("plans.per_month")}
+                                {periodSuffix(plan, t)}
                             </Text>
                         </View>
                     </View>
@@ -376,7 +382,7 @@ export default function PlanConfirmScreen() {
                     Reviewer rejects builds that omit any of these elements. */}
                 <SubscriptionDisclosure
                     planName={plan.name}
-                    pricePerPeriod={`$${((plan.priceCents ?? 0) / 100).toFixed(2)}${t("plans.per_month")}`}
+                    pricePerPeriod={`${formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}${periodSuffix(plan, t)}`}
                 />
 
                 <Pressable

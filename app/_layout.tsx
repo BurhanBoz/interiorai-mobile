@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
 import { initializeIAP } from "@/services/iap";
 import { AppSplash } from "@/components/ui/AppSplash";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -98,9 +99,14 @@ export default function RootLayout() {
     if (isLoading) return;
     // Pass null for anonymous mode; RC creates an anonymous customer that
     // gets aliased to the real userId on the next initializeIAP call.
-    initializeIAP(user?.id ?? null).catch((e) => {
-      console.warn("[ROOT] initializeIAP failed:", e);
-    });
+    initializeIAP(user?.id ?? null)
+      // Warm the storefront-localized price map right after RC is
+      // configured so the paywall opens with ₺/€/¥ prices already in
+      // memory (screens keep a USD fallback + their own retry).
+      .then(() => useStorePricesStore.getState().hydrate())
+      .catch((e) => {
+        console.warn("[ROOT] initializeIAP failed:", e);
+      });
   }, [user?.id, isLoading]);
 
   // Sync i18next with the persisted language store on mount and on change.

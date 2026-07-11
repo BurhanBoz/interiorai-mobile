@@ -462,7 +462,8 @@
         "confirm_activating_title": "Kauf erhalten",
         "confirm_activating_description": "Dein Kauf war erfolgreich. Dein Plan wird gleich aktualisiert — zum Aktualisieren ziehen, falls er nicht erscheint.",
         "best_value": "Bestes Angebot",
-        "manage_subscription": "Abo verwalten oder kündigen"
+        "manage_subscription": "Abo verwalten oder kündigen",
+        "free": "Kostenlos"
     },
     "credits": {
         "title": "Credits",

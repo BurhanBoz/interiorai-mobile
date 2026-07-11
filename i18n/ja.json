@@ -462,7 +462,8 @@
         "confirm_activating_title": "購入を受け付けました",
         "confirm_activating_description": "購入が完了しました。プランはまもなく更新されます。表示されない場合は引っ張って更新してください。",
         "best_value": "お得",
-        "manage_subscription": "サブスクリプションの管理・解約"
+        "manage_subscription": "サブスクリプションの管理・解約",
+        "free": "無料"
     },
     "credits": {
         "title": "クレジット",

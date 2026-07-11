@@ -14,8 +14,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useState } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
 import { useBackHandler } from "@/utils/navigation";
 import { planTier } from "@/utils/planTier";
+import { formatProductPrice, type StorePriceMap } from "@/utils/price";
 import { openManageSubscriptions } from "@/services/iap";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
@@ -112,10 +114,19 @@ function resolveSource(plan: PlanResponse, allPlans: PlanResponse[]): PlanRespon
     return monthly ?? plan;
 }
 
-function formatPrice(plan: PlanResponse): string {
-    if (plan.priceCents === 0) return "$0";
-    const amount = (plan.priceCents / 100).toFixed(2);
-    return plan.currency === "USD" ? `$${amount}` : `${amount} ${plan.currency}`;
+/**
+ * StoreKit-first price label: the storefront-localized string when store
+ * prices are loaded (₺/€/¥ — what Apple's payment sheet will show), backend
+ * USD until then. FREE has no store product → localized "Free" word instead
+ * of a currency-claiming "$0".
+ */
+function priceLabel(
+    plan: PlanResponse,
+    storePrices: StorePriceMap,
+    t: (key: string) => string,
+): string {
+    if (plan.priceCents === 0) return t("plans.free");
+    return formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency);
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,6 +149,7 @@ function PlanFeatureSheet({
     onConfirm: () => void;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
 
     // Derived — no hooks needed
     const src       = plan ? resolveSource(plan, allPlans) : null;
@@ -211,11 +223,13 @@ function PlanFeatureSheet({
                                         fontFamily: "NotoSerif", fontSize: 32, lineHeight: 38,
                                         color: "#E5E2E1", letterSpacing: -0.5,
                                     }}>
-                                        {formatPrice(plan)}
+                                        {priceLabel(plan, storePrices, t)}
                                     </Text>
-                                    <Text style={{ fontFamily: "Inter", fontSize: 12, color: "rgba(209,197,184,0.5)" }}>
-                                        {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
-                                    </Text>
+                                    {plan.priceCents > 0 && (
+                                        <Text style={{ fontFamily: "Inter", fontSize: 12, color: "rgba(209,197,184,0.5)" }}>
+                                            {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
+                                        </Text>
+                                    )}
                                 </View>
                             </View>
 
@@ -410,6 +424,7 @@ function PlanCard({
     onExpand: () => void;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
 
     const tier = plan.modelTier ?? "ENTRY";
     // Annual plans grant the SAME monthly allocation every month for the
@@ -506,11 +521,13 @@ function PlanCard({
 
             <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 20 }}>
                 <Text className="font-headline text-on-surface" style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.4 }}>
-                    {formatPrice(plan)}
+                    {priceLabel(plan, storePrices, t)}
                 </Text>
-                <Text className="text-secondary" style={{ fontSize: 11.5 }}>
-                    {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
-                </Text>
+                {plan.priceCents > 0 && (
+                    <Text className="text-secondary" style={{ fontSize: 11.5 }}>
+                        {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
+                    </Text>
+                )}
             </View>
 
             {isCurrent ? (
@@ -547,6 +564,13 @@ export default function PlansScreen() {
     const subscription = useSubscriptionStore((s) => s.subscription);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
+
+    // Localized store prices — normally already hydrated at boot; this is
+    // the retry path (offline boot, RC hiccup). Idempotent.
+    useEffect(() => {
+        hydrateStorePrices();
+    }, [hydrateStorePrices]);
     const handleBack = useBackHandler("/(tabs)/profile");
     const [sheetPlan, setSheetPlan] = useState<PlanResponse | null>(null);
     const isUserOnAnnual = (subscription?.planCode ?? "").endsWith("_ANNUAL");

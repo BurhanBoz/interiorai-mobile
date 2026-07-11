@@ -462,7 +462,8 @@
         "confirm_activating_title": "구매 접수됨",
         "confirm_activating_description": "구매가 완료되었습니다. 플랜이 곧 업데이트됩니다 — 표시되지 않으면 당겨서 새로고침하세요.",
         "best_value": "최고의 가치",
-        "manage_subscription": "구독 관리 또는 해지"
+        "manage_subscription": "구독 관리 또는 해지",
+        "free": "무료"
     },
     "credits": {
         "title": "크레딧",

@@ -3,6 +3,7 @@ import Purchases, {
     PURCHASES_ERROR_CODE,
     type PurchasesError,
     type PurchasesPackage,
+    type PurchasesStoreProduct,
 } from "react-native-purchases";
 import {
     isDummyMode,
@@ -17,6 +18,7 @@ import type {
     CreditPackPurchaseResponse,
     SubscriptionResponse,
 } from "@/types/api";
+import type { StorePrice, StorePriceMap } from "@/utils/price";
 
 /**
  * In-App Purchase orchestrator.
@@ -100,6 +102,56 @@ export async function logoutIAP(): Promise<void> {
     } catch (e) {
         console.warn("[IAP] RevenueCat logOut failed:", e);
     }
+}
+
+/**
+ * Fetch storefront-localized prices for every purchasable product.
+ *
+ * <p>Feeds {@code storePricesStore} so the UI can show the price the user
+ * will ACTUALLY pay (₺/€/¥... — Apple's own per-storefront price points),
+ * instead of our backend's USD reference values. Two sources, merged:
+ * <ul>
+ *   <li>Subscriptions — packages of the current RC offering.</li>
+ *   <li>Credit packs — consumables, NOT in the offering; fetched by product
+ *       id (same {@link Purchases.getProducts} call the purchase flow uses).</li>
+ * </ul>
+ *
+ * <p>Failure semantics: dummy mode returns an empty map (screens keep their
+ * backend-USD fallback — pre-localization behavior). A pack-lookup failure
+ * degrades to subscriptions-only rather than failing the whole map.
+ */
+export async function fetchStorePrices(): Promise<StorePriceMap> {
+    if (isDummyMode) {
+        return {};
+    }
+
+    const toStorePrice = (p: PurchasesStoreProduct): StorePrice => ({
+        priceString: p.priceString,
+        price: p.price,
+        currencyCode: p.currencyCode,
+        pricePerMonthString: p.pricePerMonthString,
+    });
+
+    const map: StorePriceMap = {};
+
+    const offerings = await Purchases.getOfferings();
+    const offering = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID];
+    for (const pkg of offering?.availablePackages ?? []) {
+        map[pkg.product.identifier] = toStorePrice(pkg.product);
+    }
+
+    try {
+        const packProducts = await Purchases.getProducts(
+            Object.values(CREDIT_PACK_PRODUCT_IDS),
+        );
+        for (const product of packProducts) {
+            map[product.identifier] = toStorePrice(product);
+        }
+    } catch (e) {
+        console.warn("[IAP] credit-pack price fetch failed (subscriptions still localized):", e);
+    }
+
+    return map;
 }
 
 /**

@@ -462,7 +462,8 @@
         "confirm_activating_title": "Purchase received",
         "confirm_activating_description": "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
         "best_value": "Best Value",
-        "manage_subscription": "Manage or cancel subscription"
+        "manage_subscription": "Manage or cancel subscription",
+        "free": "Free"
     },
     "credits_bridge": {
         "or_buy_credits": "Or buy credits one-time"

@@ -15,17 +15,13 @@ import { useTranslation } from "react-i18next";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
+import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { CreditPackResponse } from "@/types/api";
-
-function formatPrice(cents: number, currency: string): string {
-    const amount = (cents / 100).toFixed(2);
-    return currency === "USD" ? `$${amount}` : `${amount} ${currency}`;
-}
-
 
 function PackCard({
     pack,
@@ -56,6 +52,7 @@ function PackCard({
     hdCost: number;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
     const isFeatured = pack.badgeLabel != null;
 
     // Loyalty bonus is computed on the frontend from the subscriber tier's
@@ -298,7 +295,7 @@ function PackCard({
                                 letterSpacing: 0.2,
                             }}
                         >
-                            {formatPrice(pack.priceCents, pack.currency)}
+                            {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
                         </Text>
                         <Ionicons name="arrow-forward" size={14} color={theme.color.onGold} />
                     </LinearGradient>
@@ -324,7 +321,7 @@ function PackCard({
                                 letterSpacing: 0.2,
                             }}
                         >
-                            {formatPrice(pack.priceCents, pack.currency)}
+                            {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
                         </Text>
                         <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
                     </View>
@@ -351,6 +348,13 @@ export default function CreditPacksScreen() {
     const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
     const hdCost = getCreditCost("HD_REDESIGN", "HD", 1);
     const handleBack = useBackHandler("/(tabs)/profile");
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
+
+    // Localized pack prices — idempotent retry in case boot hydration
+    // raced an offline window.
+    useEffect(() => {
+        hydrateStorePrices();
+    }, [hydrateStorePrices]);
 
     useEffect(() => {
         fetchPacks();
