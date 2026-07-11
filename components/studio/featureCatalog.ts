@@ -71,9 +71,10 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_inpaint_desc",
         minPlan: "PRO",
         media: {
-            // Authentic pair (2026-07-10): before is the PAINTED canvas
-            // itself (gold strokes over sofa/plant/chair — the product story
-            // in one frame), after is that exact "Modernize the couches" run.
+            // Authentic pair (2026-07-11): a real Magic Edit run — brown
+            // sofa + wood coffee table repainted into a grey sofa with
+            // patterned cushions + a sage glass-top table, rest of the room
+            // untouched. Swapped in from the founder's latest local job.
             kind: "pair",
             before: require("@/assets/features/inpaint_before.png"),
             after: require("@/assets/features/inpaint_after.png"),

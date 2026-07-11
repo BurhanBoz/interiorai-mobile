@@ -226,7 +226,7 @@ export default function PlanConfirmScreen() {
                         <View style={{ alignItems: "flex-end" }}>
                             <Text
                                 className="font-headline text-secondary"
-                                style={{ fontSize: 32, lineHeight: 38 }}
+                                style={{ fontSize: 28, lineHeight: 34 }}
                             >
                                 {formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}
                             </Text>

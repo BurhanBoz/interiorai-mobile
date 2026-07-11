@@ -87,8 +87,10 @@ function PackCard({
             onPress={disabled ? undefined : onPress}
             disabled={disabled}
             style={({ pressed }) => ({
-                marginBottom: 16,
-                borderRadius: 14,
+                // Softer premium frame (2026-07-11 polish): more air between
+                // cards + a rounder, calmer silhouette.
+                marginBottom: 20,
+                borderRadius: 20,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
                 borderColor: isFeatured
@@ -111,7 +113,7 @@ function PackCard({
                     style={{
                         position: "absolute",
                         top: 0, left: 0, right: 0, bottom: 0,
-                        borderRadius: 14,
+                        borderRadius: 20,
                     }}
                     pointerEvents="none"
                 />
@@ -150,12 +152,12 @@ function PackCard({
                 reads in one glance instead of three stacked sections. */}
             <View
                 style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    paddingTop: pack.badgeLabel ? 18 : 14,
+                    paddingHorizontal: 18,
+                    paddingVertical: 16,
+                    paddingTop: pack.badgeLabel ? 20 : 16,
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 14,
+                    gap: 16,
                 }}
             >
                 {/* Left: pack name + credit headline + bonus chip stacked */}
@@ -176,8 +178,8 @@ function PackCard({
                     <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 6 : 2 }}>
                         <Text style={{
                             fontFamily: "NotoSerif",
-                            fontSize: 28,
-                            lineHeight: 32,
+                            fontSize: 26,
+                            lineHeight: 30,
                             letterSpacing: -0.5,
                             color: theme.color.onSurface,
                             fontVariant: ["tabular-nums"],
@@ -201,7 +203,7 @@ function PackCard({
                                 gap: 4,
                                 paddingHorizontal: 7,
                                 paddingVertical: 2.5,
-                                borderRadius: 6,
+                                borderRadius: 8,
                                 backgroundColor: isPaidPlan
                                     ? "rgba(123,179,138,0.10)"
                                     : "rgba(225,195,155,0.10)",
@@ -260,7 +262,7 @@ function PackCard({
                             minWidth: 88,
                             paddingHorizontal: 14,
                             paddingVertical: 12,
-                            borderRadius: 10,
+                            borderRadius: 12,
                             alignItems: "center",
                             justifyContent: "center",
                             borderWidth: 1,
@@ -281,7 +283,7 @@ function PackCard({
                         style={{
                             paddingHorizontal: 14,
                             paddingVertical: 11,
-                            borderRadius: 10,
+                            borderRadius: 12,
                             flexDirection: "row",
                             alignItems: "center",
                             gap: 6,
@@ -290,7 +292,7 @@ function PackCard({
                         <Text
                             style={{
                                 fontFamily: "Inter-SemiBold",
-                                fontSize: 13,
+                                fontSize: 12.5,
                                 color: theme.color.onGold,
                                 letterSpacing: 0.2,
                             }}
@@ -304,7 +306,7 @@ function PackCard({
                         style={{
                             paddingHorizontal: 14,
                             paddingVertical: 11,
-                            borderRadius: 10,
+                            borderRadius: 12,
                             flexDirection: "row",
                             alignItems: "center",
                             gap: 6,
@@ -316,7 +318,7 @@ function PackCard({
                         <Text
                             style={{
                                 fontFamily: "Inter-SemiBold",
-                                fontSize: 13,
+                                fontSize: 12.5,
                                 color: "#E0C29A",
                                 letterSpacing: 0.2,
                             }}
@@ -481,7 +483,7 @@ export default function CreditPacksScreen() {
                     <View style={{
                         padding: 12,
                         marginBottom: 20,
-                        borderRadius: 10,
+                        borderRadius: 12,
                         backgroundColor: "rgba(229,181,103,0.08)",
                         borderWidth: 1,
                         borderColor: "rgba(229,181,103,0.22)",

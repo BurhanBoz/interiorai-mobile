@@ -220,7 +220,7 @@ function PlanFeatureSheet({
                                 </Text>
                                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
                                     <Text style={{
-                                        fontFamily: "NotoSerif", fontSize: 32, lineHeight: 38,
+                                        fontFamily: "NotoSerif", fontSize: 28, lineHeight: 34,
                                         color: "#E5E2E1", letterSpacing: -0.5,
                                     }}>
                                         {priceLabel(plan, storePrices, t)}
@@ -448,11 +448,13 @@ function PlanCard({
     // matches that working path everywhere. The active plan is conveyed by
     // the disabled "Current Plan" button — not by the frame.
     const baseStyle = {
-        paddingVertical: 20,
+        paddingVertical: 22,
         paddingHorizontal: 24,
-        borderRadius: 18,
+        // Softer premium frame (2026-07-11 polish): larger radius + a
+        // hairline border reads calmer than the previous 1.5px/18.
+        borderRadius: 24,
         backgroundColor: theme.color.surfaceContainerLow,
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderColor: theme.color.goldDusk,
     };
 
@@ -476,7 +478,7 @@ function PlanCard({
                     colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.02)", "rgba(253,222,181,0.08)"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     pointerEvents="none"
-                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
                 />
             ) : null}
 
@@ -497,7 +499,7 @@ function PlanCard({
             {/* Header row — tier label left, ⓘ button right, both in flow.
                 No absolute positioning: every card has identical structure
                 so labels land at the same Y position regardless of border. */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <Text className="font-label text-secondary" style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}>
                     {plan.name}
                 </Text>
@@ -515,23 +517,23 @@ function PlanCard({
                 </Pressable>
             </View>
 
-            <Text className="font-body" style={{ fontSize: 13, lineHeight: 18, color: "#E0C29A", marginBottom: 16 }}>
+            <Text className="font-body" style={{ fontSize: 12.5, lineHeight: 18, color: "#E0C29A", marginBottom: 18 }}>
                 {subtitle}
             </Text>
 
-            <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 20 }}>
-                <Text className="font-headline text-on-surface" style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.4 }}>
+            <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 22 }}>
+                <Text className="font-headline text-on-surface" style={{ fontSize: 26, lineHeight: 30, letterSpacing: -0.4 }}>
                     {priceLabel(plan, storePrices, t)}
                 </Text>
                 {plan.priceCents > 0 && (
-                    <Text className="text-secondary" style={{ fontSize: 11.5 }}>
+                    <Text className="text-secondary" style={{ fontSize: 11 }}>
                         {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
                     </Text>
                 )}
             </View>
 
             {isCurrent ? (
-                <View style={{ height: 50, borderRadius: 12, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
+                <View style={{ height: 48, borderRadius: 14, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
                     <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#998F84", letterSpacing: 0.3 }}>{cta}</Text>
                 </View>
             ) : isPopular ? (
@@ -539,13 +541,13 @@ function PlanCard({
                 <LinearGradient
                     colors={["#C4A882", "#A68A62"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={{ height: 50, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
+                    style={{ height: 48, borderRadius: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
                 >
                     <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#3F2D11", letterSpacing: 0.2 }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
                 </LinearGradient>
             ) : (
-                <View style={{ height: 50, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
+                <View style={{ height: 48, borderRadius: 14, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
                     <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#E0C29A", letterSpacing: 0.3 }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
                 </View>
@@ -679,7 +681,7 @@ export default function PlansScreen() {
                 ) : (
                     <View style={{ gap: 0, marginBottom: 36 }}>
                         {sortedPlans.map((plan) => (
-                            <View key={plan.code} style={{ marginTop: 16 }}>
+                            <View key={plan.code} style={{ marginTop: 20 }}>
                             <PlanCard
                                 plan={plan}
                                 isCurrent={plan.code === currentCode}
