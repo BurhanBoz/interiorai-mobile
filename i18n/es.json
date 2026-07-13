@@ -958,5 +958,13 @@
         "room_RESTAURANT": "Restaurante",
         "room_RETAIL_STORE": "Tienda",
         "room_SPA": "Spa / Bienestar"
+    },
+    "ai_consent": {
+        "title": "Cómo se procesan tus fotos",
+        "body_what": "Para crear tu diseño, enviamos tu foto de la habitación (más cualquier máscara o imagen de referencia que añadas) y tus preferencias de diseño — tipo de habitación, estilo, texto — a nuestros proveedores de IA mediante una conexión cifrada.",
+        "body_who": "Proveedores: Replicate, Inc. (EE. UU.) ejecuta la generación de imágenes y Anthropic, PBC (EE. UU.) analiza la escena para adaptar el diseño a tu habitación real. Ambos procesan tus datos solo durante la solicitud, no los conservan después y nunca los usan para entrenar sus modelos.",
+        "privacy_link": "Política de Privacidad",
+        "accept": "Aceptar y continuar",
+        "decline": "Ahora no"
     }
 }

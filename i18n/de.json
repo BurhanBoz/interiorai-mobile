@@ -958,5 +958,13 @@
         "room_RESTAURANT": "Restaurant",
         "room_RETAIL_STORE": "Ladengeschäft",
         "room_SPA": "Spa / Wellness"
+    },
+    "ai_consent": {
+        "title": "So werden deine Fotos verarbeitet",
+        "body_what": "Um dein Design zu erstellen, senden wir dein Raumfoto (plus ggf. Masken- oder Referenzbild) und deine Design-Auswahl — Raumtyp, Stil, Textprompt — über eine verschlüsselte Verbindung an unsere KI-Anbieter.",
+        "body_who": "Anbieter: Replicate, Inc. (USA) führt die Bildgenerierung aus; Anthropic, PBC (USA) analysiert die Szene, um das Design an deinen Raum anzupassen. Beide verarbeiten deine Daten nur für die Dauer der Anfrage, speichern sie danach nicht und nutzen sie niemals zum Training ihrer Modelle.",
+        "privacy_link": "Datenschutzerklärung",
+        "accept": "Zustimmen & Fortfahren",
+        "decline": "Jetzt nicht"
     }
 }

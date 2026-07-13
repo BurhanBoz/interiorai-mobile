@@ -958,5 +958,13 @@
         "room_RESTAURANT": "Restoran",
         "room_RETAIL_STORE": "Mağaza",
         "room_SPA": "Spa / Wellness"
+    },
+    "ai_consent": {
+        "title": "Fotoğrafların nasıl işlenir?",
+        "body_what": "Tasarımını oluşturmak için oda fotoğrafın (eklediysen maske veya referans görselinle birlikte) ve tasarım seçimlerin — oda tipi, stil, metin açıklaman — şifreli bağlantıyla AI sağlayıcılarımıza gönderilir.",
+        "body_who": "Sağlayıcılar: Replicate, Inc. (ABD) görüntü üretimini çalıştırır; Anthropic, PBC (ABD) tasarımı gerçek odana uyarlamak için sahneyi analiz eder. İkisi de verini yalnızca istek süresince işler, sonrasında saklamaz ve modellerini eğitmek için asla kullanmaz.",
+        "privacy_link": "Gizlilik Politikası",
+        "accept": "Kabul Et ve Devam",
+        "decline": "Şimdi değil"
     }
 }

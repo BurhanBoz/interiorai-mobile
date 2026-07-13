@@ -13,6 +13,7 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { initializeIAP } from "@/services/iap";
 import { AppSplash } from "@/components/ui/AppSplash";
+import { AiConsentSheet } from "@/components/ui/AiConsentSheet";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import i18n from "@/i18n";
@@ -181,6 +182,9 @@ export default function RootLayout() {
               }}
             />
             <OfflineBanner />
+            {/* AI-processing consent (5.1.2(i)) — mounted once, shown by
+                aiConsentStore right before the first photo pick. */}
+            <AiConsentSheet />
           </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
