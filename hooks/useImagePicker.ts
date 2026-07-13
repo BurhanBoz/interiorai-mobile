@@ -94,7 +94,13 @@ export function useImagePicker() {
 
         const options: ImagePicker.ImagePickerOptions = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
+            // No iOS crop step (2026-07-13 founder call): the frame UI made
+            // users think they had to cut their photo, and the models want
+            // the WHOLE room anyway — aspectRatioFor() already derives the
+            // model ratio from the full image, and generation quality is
+            // higher with more scene context. Camera keeps its native
+            // "Use Photo" confirmation; gallery picks return immediately.
+            allowsEditing: false,
             quality: 1, // keep raw quality from the picker; we downscale ourselves
         };
 
