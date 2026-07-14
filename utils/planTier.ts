@@ -1,46 +1,57 @@
 /**
  * Canonical plan-code → entitlement-tier normalization.
  *
- * <p>Backend ships both monthly and annual SKUs as distinct plan codes:
- * {@code BASIC / BASIC_ANNUAL}, {@code PRO / PRO_ANNUAL},
- * {@code MAX / MAX_ANNUAL}. Annual variants carry the SAME entitlements,
- * model tier, permissions and credit allocation as their monthly tier
- * (verified in the {@code plans} table) — the only differences are price
- * and billing period.
+ * <p>Pricing V3 (V40, 2026-07-14): the live ladder is FREE → BASE → PRO.
+ * Every plan gets the same best-in-class models; tiers differ by FEATURES
+ * (BASE = redesign/HD/empty · PRO = + Magic Edit, Style Transfer, Upscale).
  *
- * <p>Every feature gate, credit-rule lookup, badge and upsell MUST branch on
- * the <b>base tier</b>, never the raw code. Comparing {@code planCode ===
- * "PRO"} silently treats a {@code PRO_ANNUAL} subscriber as FREE (locked
- * features, FREE drip text). This module is the single source of truth so
- * that bug class cannot recur: route all plan-code branching through
- * {@link planTier} / {@link tierAtLeast}.
+ * <p>Codes this must survive:
+ *   - Live: {@code FREE}, {@code BASE}, {@code PRO} (+ future {@code *_ANNUAL})
+ *   - Legacy (pre-V40 sandbox subscribers, renamed rows): {@code BASIC_LEGACY},
+ *     {@code PRO_LEGACY}, {@code MAX_LEGACY} and their {@code *_ANNUAL_LEGACY}
+ *     forms. Legacy BASIC maps to BASE; legacy PRO/MAX map to PRO (top).
+ *     Cosmetic only — real gating still comes from the backend's
+ *     plan_features/permissions for whatever row the subscription points at.
+ *
+ * <p>Every feature gate, badge and upsell MUST branch on the normalized
+ * tier via {@link planTier} / {@link tierAtLeast}, never the raw code —
+ * a raw {@code === "PRO"} check would silently treat {@code PRO_ANNUAL}
+ * (future) or {@code PRO_LEGACY} as FREE.
  */
 
-export type PlanTier = "FREE" | "BASIC" | "PRO" | "MAX";
+export type PlanTier = "FREE" | "BASE" | "PRO";
 
-const RANK: Record<PlanTier, number> = { FREE: 0, BASIC: 1, PRO: 2, MAX: 3 };
+const RANK: Record<PlanTier, number> = { FREE: 0, BASE: 1, PRO: 2 };
 const ANNUAL_SUFFIX = "_ANNUAL";
+const LEGACY_SUFFIX = "_LEGACY";
 
 /**
- * Map any plan code (incl. {@code *_ANNUAL}, lower/mixed case, null) to its
- * base entitlement tier. Unknown codes fall back to {@code "FREE"}.
+ * Map any plan code (incl. {@code *_ANNUAL}, {@code *_LEGACY}, lower/mixed
+ * case, null) to its base entitlement tier. Unknown codes fall back to FREE.
  */
 export function planTier(code: string | null | undefined): PlanTier {
-    const upper = (code ?? "FREE").toUpperCase().trim();
-    const base = upper.endsWith(ANNUAL_SUFFIX)
-        ? upper.slice(0, -ANNUAL_SUFFIX.length)
-        : upper;
-    return base === "BASIC" || base === "PRO" || base === "MAX"
-        ? (base as PlanTier)
-        : "FREE";
+    let base = (code ?? "FREE").toUpperCase().trim();
+    if (base.endsWith(LEGACY_SUFFIX)) base = base.slice(0, -LEGACY_SUFFIX.length);
+    if (base.endsWith(ANNUAL_SUFFIX)) base = base.slice(0, -ANNUAL_SUFFIX.length);
+    switch (base) {
+        case "BASE":
+        case "BASIC": // legacy tier ≈ today's BASE
+            return "BASE";
+        case "PRO":
+        case "MAX": // legacy top tier → today's top
+            return "PRO";
+        default:
+            return "FREE";
+    }
 }
 
 /** True when the code is an annual SKU (used for billing-period UI only). */
 export function isAnnualPlan(code: string | null | undefined): boolean {
-    return (code ?? "").toUpperCase().trim().endsWith(ANNUAL_SUFFIX);
+    const c = (code ?? "").toUpperCase().trim();
+    return c.endsWith(ANNUAL_SUFFIX) || c.endsWith(ANNUAL_SUFFIX + LEGACY_SUFFIX);
 }
 
-/** Numeric rank of a code's tier (FREE 0 < BASIC 1 < PRO 2 < MAX 3). */
+/** Numeric rank of a code's tier (FREE 0 < BASE 1 < PRO 2). */
 export function tierRank(code: string | null | undefined): number {
     return RANK[planTier(code)];
 }

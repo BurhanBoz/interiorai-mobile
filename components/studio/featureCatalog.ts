@@ -1,5 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 import type { DesignMode } from "@/types/api";
+import { planTier } from "@/utils/planTier";
 
 /**
  * Studio feature registry — the single source for the studio home screen's
@@ -53,7 +54,7 @@ export interface StudioFeature {
     descKey: string;
     media: FeatureMedia;
     /** Minimum plan that unlocks the flow — mirrors options.tsx hard guards. */
-    minPlan?: "PRO" | "MAX";
+    minPlan?: "PRO";
 }
 
 export const STUDIO_FEATURES: StudioFeature[] = [
@@ -81,7 +82,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         key: "INPAINT",
         titleKey: "studio.mode_inpaint",
         descKey: "studio.feature_inpaint_desc",
-        minPlan: "PRO",
+        minPlan: "PRO",  // V3: Magic Edit is a PRO feature (BASE = redesign/empty only)
         media: {
             // Authentic run (2026-07-11): brown sofa + wood coffee table →
             // grey patterned sofa + sage glass-top table. `paint` is that
@@ -98,7 +99,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         key: "STYLE_TRANSFER",
         titleKey: "studio.mode_style_transfer",
         descKey: "studio.feature_style_transfer_desc",
-        minPlan: "MAX",
+        minPlan: "PRO",
         media: {
             kind: "transfer",
             before: require("@/assets/features/style_before.png"),
@@ -112,11 +113,16 @@ export const STUDIO_FEATURES: StudioFeature[] = [
  * Plan gate for a feature — SAME hard plan-code guards as options.tsx's
  * isModeAvailable (kept code-simple so feature-flag loading delays can't
  * briefly surface a locked mode as available). Callers pass the EFFECTIVE
- * plan code (useEffectivePlanCode → welcome-trial users read as MAX).
+ * plan code (useEffectivePlanCode → welcome-trial users read as PRO).
  * Backend remains the source of truth at job-creation time.
+ *
+ * <p>Pricing V3: both premium flows unlock at PRO (BASE = redesign/empty
+ * only). planTier normalizes annual/legacy codes so a future PRO_ANNUAL
+ * or a legacy MAX sandbox subscriber isn't treated as locked.
  */
 export function isFeatureLocked(key: DesignMode, planCode: string): boolean {
-    if (key === "STYLE_TRANSFER") return planCode !== "MAX";
-    if (key === "INPAINT") return planCode !== "PRO" && planCode !== "MAX";
+    if (key === "STYLE_TRANSFER" || key === "INPAINT") {
+        return planTier(planCode) !== "PRO";
+    }
     return false;
 }

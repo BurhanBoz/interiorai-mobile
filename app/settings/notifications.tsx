@@ -265,14 +265,14 @@ const UPSELL_CARDS: UpsellCard[] = [
     titleKey: "settings.notifications_upsell_style_transfer_title",
     descKey: "settings.notifications_upsell_style_transfer_desc",
     icon: "swap-horizontal-outline",
-    showForPlans: ["FREE", "BASIC", "PRO"],
+    showForPlans: ["FREE", "BASE"],
   },
   {
     key: "commercial",
     titleKey: "settings.notifications_upsell_commercial_title",
     descKey: "settings.notifications_upsell_commercial_desc",
     icon: "briefcase-outline",
-    showForPlans: ["FREE", "BASIC"],
+    showForPlans: ["FREE"],
   },
   {
     key: "hd",
@@ -418,10 +418,10 @@ export default function NotificationsSettingsScreen() {
       });
   }, [fetchSubscription]);
 
-  // Normalize to base tier so annual SKUs (MAX_ANNUAL → MAX) gate upsell
-  // cards the same as their monthly counterpart.
+  // Normalize to base tier so annual/legacy SKUs gate upsell cards the
+  // same as their live counterpart.
   const activePlan = planTier(subscription?.planCode ?? planCode);
-  const isMaxUser = activePlan === "MAX";
+  const isMaxUser = activePlan === "PRO";
 
   const visibleCards = useMemo(() => {
     return UPSELL_CARDS.filter((c) => {

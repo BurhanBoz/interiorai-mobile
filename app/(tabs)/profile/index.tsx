@@ -166,16 +166,16 @@ export default function ProfileScreen() {
   const email = user?.email || "";
 
   // Effective tier — what the user FEELS like, not what the backend record
-  // says. Welcome bonus grants 7-day MAX-tier access on top of the FREE plan,
-  // so the badge + label should read "MAX" during the trial window even
-  // though `planCode === "FREE"` server-side.
+  // says. Welcome bonus grants 7-day top-tier (PRO) access on top of the
+  // FREE plan, so the badge + label should read "PRO" during the trial
+  // window even though `planCode === "FREE"` server-side.
   const isOnTrial = welcomeBonusActive === true;
   // planTier normalizes annual SKUs (PRO_ANNUAL → PRO) so annual subscribers
   // get their real tier's balance UI instead of the FREE drip caption.
-  const effectiveTier: PlanTier = isOnTrial ? "MAX" : planTier(planCode);
+  const effectiveTier: PlanTier = isOnTrial ? "PRO" : planTier(planCode);
   const isFree = effectiveTier === "FREE";
   const planLabel = isOnTrial
-    ? t("profile.max_trial", { defaultValue: "MAX TRIAL" })
+    ? t("profile.pro_trial", { defaultValue: "PRO TRIAL" })
     : (subscription?.planName ?? (isFree ? t("profile.free") : planCode));
 
   // Trial countdown — "7d left", "1d left", "ends today". Replaces the

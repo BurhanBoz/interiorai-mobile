@@ -174,18 +174,16 @@ export async function fetchStorePrices(): Promise<StorePriceMap> {
  *                  unverified receipt. Caller should distinguish cancelled
  *                  vs failure via the error code (see {@link isUserCancelled}).
  */
-export async function purchaseSubscription(planCode: string): Promise<SubscriptionResponse> {
+export async function purchaseSubscription(
+    planCode: string,
+    appleProductId?: string | null,
+): Promise<SubscriptionResponse> {
     if (isDummyMode) {
         // Dev flow — bypass StoreKit, call backend's dummy activation endpoint
         // directly. Backend rejects this when `app.allow-dummy-purchases=false`
         // (production). See SubscriptionServiceImpl.activateDummySubscription.
         const { activateDummySubscription } = await import("./plans");
         return activateDummySubscription(planCode);
-    }
-
-    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
-    if (!packageId) {
-        throw new Error(`Unknown plan code: ${planCode}`);
     }
 
     // Fetch the current offering and find the target package.
@@ -195,11 +193,21 @@ export async function purchaseSubscription(planCode: string): Promise<Subscripti
         throw new Error("No RevenueCat offering available");
     }
 
+    // Server-driven resolution first (V3 improvement): the backend already
+    // ships plans.apple_product_id, so matching the offering package by its
+    // PRODUCT identifier makes future plan/price changes binary-free — a
+    // migration updating the plans table is enough. The static package-id
+    // map stays as the fallback for offline-cached plan payloads.
+    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
     const targetPackage = offering.availablePackages.find(
-        (p: PurchasesPackage) => p.identifier === packageId,
+        (p: PurchasesPackage) =>
+            (appleProductId && p.product.identifier === appleProductId) ||
+            (packageId != null && p.identifier === packageId),
     );
     if (!targetPackage) {
-        throw new Error(`Package not found in offering: ${packageId}`);
+        throw new Error(
+            `No RC package matches plan ${planCode} (product ${appleProductId ?? "?"}, package ${packageId ?? "?"})`,
+        );
     }
 
     // Trigger Apple payment sheet. User sees Apple's native UI, enters

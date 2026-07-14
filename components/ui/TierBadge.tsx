@@ -12,14 +12,13 @@ import { planTier } from "@/utils/planTier";
  * same concept look like three different features. Now every surface routes
  * through <TierBadge tier="max" /> and the look stays coherent.
  *
- * Tier tone map:
- *   - free  → muted neutral on dark
- *   - basic → cool silver
- *   - pro   → gold pill
- *   - max   → gradient gold with subtle glow
+ * Tier tone map (Pricing V3):
+ *   - free → muted neutral on dark
+ *   - base → gold pill
+ *   - pro  → gradient gold with subtle glow (the top tier)
  */
 
-export type TierCode = "FREE" | "BASIC" | "PRO" | "MAX";
+export type TierCode = "FREE" | "BASE" | "PRO";
 export type TierSize = "xs" | "sm" | "md";
 
 interface TierBadgeProps {
@@ -61,7 +60,7 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
     justifyContent: "center",
   };
 
-  if (code === "MAX") {
+  if (code === "PRO") {
     return (
       <LinearGradient
         colors={[theme.color.goldDawn, theme.color.goldMidday]}
@@ -82,7 +81,7 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
     );
   }
 
-  if (code === "PRO") {
+  if (code === "BASE") {
     return (
       <View
         style={[
@@ -96,26 +95,6 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
         ]}
       >
         <Text style={[textStyle, { color: theme.color.goldMidday }]}>
-          {text}
-        </Text>
-      </View>
-    );
-  }
-
-  if (code === "BASIC") {
-    return (
-      <View
-        style={[
-          containerStyle,
-          {
-            backgroundColor: "rgba(200,198,197,0.12)",
-            borderWidth: 1,
-            borderColor: "rgba(200,198,197,0.25)",
-          },
-          style,
-        ]}
-      >
-        <Text style={[textStyle, { color: theme.color.onSurfaceVariant }]}>
           {text}
         </Text>
       </View>

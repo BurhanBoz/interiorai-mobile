@@ -90,10 +90,12 @@ export function useComputedInbox(): InboxItem[] {
       });
     }
 
-    // 3. Plan upgrade nudge — one per tier, never on MAX.
+    // 3. Plan upgrade nudge — one per tier, never on the top tier (PRO).
+    //    V3 ladder: FREE → nudge to BASE (reuses the *_upgrade_basic keys —
+    //    copy is tier-agnostic "go paid"), BASE → nudge to PRO.
     if (tier === "FREE") {
       items.push({
-        id: "plan-upgrade-basic",
+        id: "plan-upgrade-base",
         type: "plan",
         icon: "ribbon",
         titleKey: "settings.notifications_n_upgrade_basic_title",
@@ -102,7 +104,7 @@ export function useComputedInbox(): InboxItem[] {
         read: false,
         route: "/plans",
       });
-    } else if (tier === "BASIC") {
+    } else if (tier === "BASE") {
       items.push({
         id: "plan-upgrade-pro",
         type: "plan",
@@ -111,17 +113,6 @@ export function useComputedInbox(): InboxItem[] {
         bodyKey: "settings.notifications_n_upgrade_pro_body",
         createdAt: now - 1 * DAY,
         read: false,
-        route: "/plans",
-      });
-    } else if (tier === "PRO") {
-      items.push({
-        id: "plan-upgrade-max",
-        type: "plan",
-        icon: "ribbon",
-        titleKey: "settings.notifications_n_upgrade_max_title",
-        bodyKey: "settings.notifications_n_upgrade_max_body",
-        createdAt: now - 1 * DAY,
-        read: true,
         route: "/plans",
       });
     }

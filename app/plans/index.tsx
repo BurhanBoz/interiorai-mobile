@@ -67,9 +67,8 @@ const FEATURE_ROWS: FeatureRow[] = [
 // Frontend truth table — which features each tier definitively introduces.
 // Overrides backend "—" for features we know belong to a tier.
 const TIER_HIGHLIGHTS: Record<string, string[]> = {
-    BASIC: ["allow_custom_prompt", "max_outputs"],
-    PRO:   ["ULTRA_HD_UPSCALE", "INPAINT", "allow_commercial_spaces", "advanced_controls"],
-    MAX:   ["STYLE_TRANSFER", "allow_quality_mode"],
+    BASE: ["HD_REDESIGN", "allow_custom_prompt", "allow_commercial_spaces", "max_outputs"],
+    PRO:  ["INPAINT", "STYLE_TRANSFER", "ULTRA_HD_UPSCALE", "advanced_controls"],
 };
 
 function resolveCell(plan: PlanResponse, row: FeatureRow): string {
@@ -156,7 +155,7 @@ function PlanFeatureSheet({
     const tierLabel = plan ? plan.code.replace("_ANNUAL", "") : "";
 
     const tierColor: Record<string, string> = {
-        MAX: "#FDDEB4", PRO: "#E0C29A", BASIC: "#B4C8DC", FREE: "#998F84",
+        PRO: "#FDDEB4", BASE: "#E0C29A", FREE: "#998F84",
     };
     const accentColor = tierColor[tierLabel] ?? "#998F84";
 
@@ -438,7 +437,7 @@ function PlanCard({
             : t("plans.plan_subtitle", { credits: plan.monthlyCredits, tier });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
-    const isMaxTier = planTier(plan.code) === "MAX";
+    const isTopTier = planTier(plan.code) === "PRO";
 
     // ONE wrapper for every card: a single Pressable with a PLAIN OBJECT
     // style. The previous View-vs-Pressable + function-returning-array
@@ -461,9 +460,9 @@ function PlanCard({
     // Corner badge ONLY for PRO (Most Popular) and MAX (Best Value).
     // BASIC / FREE get no badge at all (no empty pill).
     const badge =
-        planTier(plan.code) === "PRO"
+        planTier(plan.code) === "BASE"
             ? t("plans.most_popular")
-            : planTier(plan.code) === "MAX"
+            : planTier(plan.code) === "PRO"
                 ? t("plans.best_value", { defaultValue: "Best Value" })
                 : null;
 
@@ -473,7 +472,7 @@ function PlanCard({
             disabled={isCurrent}
             style={baseStyle}
         >
-            {isMaxTier ? (
+            {isTopTier ? (
                 <LinearGradient
                     colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.02)", "rgba(253,222,181,0.08)"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -590,16 +589,25 @@ export default function PlansScreen() {
 
     const currentCode = subscription?.planCode ?? "FREE";
 
+    // Pricing V3 launches monthly-only; the Monthly/Annual toggle renders
+    // only when the backend actually ships an annual SKU again. Zero-code
+    // reactivation: seed *_ANNUAL plans in a migration and the toggle is back.
+    const hasAnnualPlans = useMemo(
+        () => (plans ?? []).some((p) => p.code.endsWith("_ANNUAL")),
+        [plans],
+    );
+
     const sortedPlans = useMemo(() => {
         if (!plans) return [];
+        const mode = hasAnnualPlans ? billingMode : "MONTHLY";
         return [...plans]
             .filter((p) => {
-                if (p.code === "FREE") return billingMode === "MONTHLY";
+                if (p.code === "FREE") return mode === "MONTHLY";
                 const isAnnual = p.code.endsWith("_ANNUAL");
-                return billingMode === "ANNUAL" ? isAnnual : !isAnnual;
+                return mode === "ANNUAL" ? isAnnual : !isAnnual;
             })
             .sort((a, b) => a.sortOrder - b.sortOrder);
-    }, [plans, billingMode]);
+    }, [plans, billingMode, hasAnnualPlans]);
 
     return (
         <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
@@ -620,7 +628,8 @@ export default function PlansScreen() {
                     </Text>
                 </View>
 
-                {/* Monthly / Annual toggle */}
+                {/* Monthly / Annual toggle — hidden until annual SKUs exist */}
+                {hasAnnualPlans && (
                 <View style={{ marginBottom: 28 }}>
                     <View style={{
                         flexDirection: "row", padding: 5, borderRadius: 16,
@@ -674,6 +683,7 @@ export default function PlansScreen() {
                         </Text>
                     ) : null}
                 </View>
+                )}
 
                 {/* Plan cards */}
                 {sortedPlans.length === 0 ? (
@@ -688,7 +698,7 @@ export default function PlansScreen() {
                                 // PRO (monthly & annual) always gets the
                                 // premium gradient CTA — unless it's the
                                 // user's current plan (then it's disabled).
-                                isPopular={planTier(plan.code) === "PRO" && plan.code !== currentCode}
+                                isPopular={planTier(plan.code) === "BASE" && plan.code !== currentCode}
                                 onPress={() => router.push({ pathname: "/plans/confirm", params: { planCode: plan.code } })}
                                 onExpand={() => setSheetPlan(plan)}
                             />

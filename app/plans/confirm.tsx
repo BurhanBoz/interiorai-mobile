@@ -111,7 +111,7 @@ export default function PlanConfirmScreen() {
             // activation happens server-side via the RevenueCat webhook
             // (INITIAL_PURCHASE → AppleIapService), which lands ~1-3s after
             // the payment sheet closes — NOT synchronously here.
-            await iap.purchaseSubscription(plan.code);
+            await iap.purchaseSubscription(plan.code, plan.appleProductId);
 
             await fetchPlans();
 

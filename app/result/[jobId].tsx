@@ -115,11 +115,11 @@ export default function ResultDetailScreen() {
     creditRules.find(r => r.featureCode === "ULTRA_HD_UPSCALE")?.creditCost ?? null;
   const canUpscale =
     !isAlreadyUpscaled && upscaleFeatureEnabled && upscaleCost != null;
-  // Resolution the upscale delivers, by tier: MAX = 4K (Topaz 4x), others = 2K
-  // (Clarity ~2x). Surfaced in the confirm dialog + button so the user sees
-  // the real target before spending credits.
+  // Resolution the upscale delivers: PRO (top tier) = 4K Topaz 4x; the 2K
+  // branch only serves legacy sandbox tiers. Surfaced in the confirm dialog
+  // + button so the user sees the real target before spending credits.
   const effectiveTier = useEffectivePlanCode();
-  const upscaleResolution = effectiveTier === "MAX" ? "4K" : "2K";
+  const upscaleResolution = effectiveTier === "PRO" ? "4K" : "2K";
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's

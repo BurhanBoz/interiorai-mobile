@@ -415,7 +415,7 @@ export default function OptionsScreen() {
                             color: "#E0C29A",
                           }}
                         >
-                          {tier.key === "ULTRA_HD" ? "MAX" : "PRO"}
+                          {"BASE"}
                         </Text>
                       </View>
                     )}
