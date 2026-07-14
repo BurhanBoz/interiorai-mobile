@@ -101,10 +101,21 @@ export function AiConsentSheet() {
                                 fontSize: 13.5,
                                 lineHeight: 20,
                                 color: "#C9BFB4",
-                                marginBottom: 14,
+                                marginBottom: 12,
                             }}
                         >
                             {t("ai_consent.body_who")}
+                        </Text>
+                        <Text
+                            style={{
+                                fontFamily: "Inter",
+                                fontSize: 13.5,
+                                lineHeight: 20,
+                                color: "#C9BFB4",
+                                marginBottom: 14,
+                            }}
+                        >
+                            {t("ai_consent.body_privacy")}
                         </Text>
 
                         <Pressable

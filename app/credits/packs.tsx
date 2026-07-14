@@ -87,9 +87,9 @@ function PackCard({
             onPress={disabled ? undefined : onPress}
             disabled={disabled}
             style={({ pressed }) => ({
-                // Softer premium frame (2026-07-11 polish): more air between
-                // cards + a rounder, calmer silhouette.
-                marginBottom: 20,
+                // Softer premium frame (2026-07-14 pass): generous air
+                // between cards + a rounder, calmer silhouette.
+                marginBottom: 24,
                 borderRadius: 20,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
@@ -152,12 +152,12 @@ function PackCard({
                 reads in one glance instead of three stacked sections. */}
             <View
                 style={{
-                    paddingHorizontal: 18,
-                    paddingVertical: 16,
-                    paddingTop: pack.badgeLabel ? 20 : 16,
+                    paddingHorizontal: 20,
+                    paddingVertical: 18,
+                    paddingTop: pack.badgeLabel ? 22 : 18,
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 16,
+                    gap: 18,
                 }}
             >
                 {/* Left: pack name + credit headline + bonus chip stacked */}
@@ -169,13 +169,13 @@ function PackCard({
                             letterSpacing: 1.6,
                             textTransform: "uppercase",
                             color: "rgba(208,197,184,0.55)",
-                            marginBottom: 4,
+                            marginBottom: 7,
                         }}
                         numberOfLines={1}
                     >
                         {pack.name}
                     </Text>
-                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 6 : 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 8 : 4 }}>
                         <Text style={{
                             fontFamily: "NotoSerif",
                             fontSize: 26,
@@ -211,7 +211,7 @@ function PackCard({
                                 borderColor: isPaidPlan
                                     ? "rgba(123,179,138,0.28)"
                                     : "rgba(225,195,155,0.28)",
-                                marginBottom: 6,
+                                marginBottom: 8,
                             }}
                         >
                             <Ionicons
@@ -403,17 +403,17 @@ export default function CreditPacksScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
+                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ marginBottom: 16 }}>
+                <View style={{ marginBottom: 24 }}>
                     <Text style={{
                         fontFamily: "NotoSerif",
-                        fontSize: 32,
-                        lineHeight: 38,
+                        fontSize: 30,
+                        lineHeight: 36,
                         letterSpacing: -0.3,
                         color: theme.color.onSurface,
-                        marginBottom: 10,
+                        marginBottom: 12,
                     }}>
                         {t("credit_packs.headline")}
                     </Text>
@@ -430,8 +430,8 @@ export default function CreditPacksScreen() {
                 {/* Loyalty bonus banner — shown only for paid plans */}
                 {hasBonusPlan && (
                     <View style={{
-                        marginBottom: 20,
-                        borderRadius: 14,
+                        marginBottom: 24,
+                        borderRadius: 18,
                         overflow: "hidden",
                         borderWidth: 1,
                         borderColor: "rgba(123,179,138,0.35)",
@@ -443,8 +443,8 @@ export default function CreditPacksScreen() {
                             style={{
                                 flexDirection: "row",
                                 alignItems: "center",
-                                gap: 12,
-                                padding: 16,
+                                gap: 14,
+                                padding: 18,
                             }}
                         >
                             <View style={{

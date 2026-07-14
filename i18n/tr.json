@@ -961,10 +961,11 @@
     },
     "ai_consent": {
         "title": "Fotoğrafların nasıl işlenir?",
-        "body_what": "Tasarımını oluşturmak için oda fotoğrafın (eklediysen maske veya referans görselinle birlikte) ve tasarım seçimlerin — oda tipi, stil, metin açıklaman — şifreli bağlantıyla AI sağlayıcılarımıza gönderilir.",
-        "body_who": "Sağlayıcılar: Replicate, Inc. (ABD) görüntü üretimini çalıştırır; Anthropic, PBC (ABD) tasarımı gerçek odana uyarlamak için sahneyi analiz eder. İkisi de verini yalnızca istek süresince işler, sonrasında saklamaz ve modellerini eğitmek için asla kullanmaz.",
+        "body_what": "Tasarımını oluşturmak için uygulama şunları şifreli bağlantıyla AI sağlayıcılarımıza gönderir: seçtiğin oda fotoğrafı, boyadığın maske ya da eklediğin referans görseli ve tasarım seçimlerin — oda tipi, stil, renk paleti, dönüşüm gücü ve isteğe bağlı metin açıklaman. Bunların dışında hiçbir şey paylaşılmaz: ne isim, ne e-posta, ne kişiler, ne konum.",
+        "body_who": "Kime gider: Replicate, Inc. (ABD) tasarımını üreten görüntü modellerini çalıştırır; Anthropic, PBC (ABD) tasarımın gerçek odana uyması için sahneyi analiz eder. İkisi de bizim veri işleyicimiz olarak çalışır — içeriğini yalnızca isteğin sürdüğü saniyeler boyunca işler, sonrasında saklamaz ve modellerini eğitmek için asla kullanmaz.",
         "privacy_link": "Gizlilik Politikası",
         "accept": "Kabul Et ve Devam",
-        "decline": "Şimdi değil"
+        "decline": "Şimdi değil",
+        "body_privacy": "Fotoğrafların, bir saat içinde geçerliliğini yitiren özel ve süreli bağlantılarla taşınır. Sonuçların, sen silene ya da hesabını kapatana dek AB (Frankfurt) sunucularımızdaki kendi galerinde durur. Onayını istediğin an hesabını silerek ya da support@roomframeai.com adresine yazarak geri çekebilirsin."
     }
 }

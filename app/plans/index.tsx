@@ -600,7 +600,10 @@ export default function PlansScreen() {
         const mode = hasAnnualPlans ? billingMode : "MONTHLY";
         return [...plans]
             .filter((p) => {
-                if (p.code === "FREE") return mode === "MONTHLY";
+                // FREE is auto-assigned at signup and never purchasable —
+                // showing it on the paywall only dilutes the Base/Pro choice.
+                // The user's balance/trial state lives on Profile & Settings.
+                if (p.code === "FREE") return false;
                 const isAnnual = p.code.endsWith("_ANNUAL");
                 return mode === "ANNUAL" ? isAnnual : !isAnnual;
             })

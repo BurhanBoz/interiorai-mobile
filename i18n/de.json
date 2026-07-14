@@ -961,10 +961,11 @@
     },
     "ai_consent": {
         "title": "So werden deine Fotos verarbeitet",
-        "body_what": "Um dein Design zu erstellen, senden wir dein Raumfoto (plus ggf. Masken- oder Referenzbild) und deine Design-Auswahl — Raumtyp, Stil, Textprompt — über eine verschlüsselte Verbindung an unsere KI-Anbieter.",
-        "body_who": "Anbieter: Replicate, Inc. (USA) führt die Bildgenerierung aus; Anthropic, PBC (USA) analysiert die Szene, um das Design an deinen Raum anzupassen. Beide verarbeiten deine Daten nur für die Dauer der Anfrage, speichern sie danach nicht und nutzen sie niemals zum Training ihrer Modelle.",
+        "body_what": "Zur Erstellung deines Designs sendet die App Folgendes über eine verschlüsselte Verbindung an unsere KI-Anbieter: das gewählte Raumfoto, eine gemalte Maske oder ein Referenzbild sowie deine Design-Auswahl — Raumtyp, Stil, Farbpalette, Stärke und dein optionaler Textprompt. Sonst wird nichts geteilt: kein Name, keine E-Mail, keine Kontakte, kein Standort.",
+        "body_who": "Empfänger: Replicate, Inc. (USA) betreibt die Bildmodelle, die dein Design erzeugen; Anthropic, PBC (USA) analysiert die Szene, damit das Design zu deinem Raum passt. Beide handeln als unsere Auftragsverarbeiter — sie verarbeiten deine Inhalte nur für die Sekunden deiner Anfrage, speichern sie danach nicht und nutzen sie niemals zum Training ihrer Modelle.",
         "privacy_link": "Datenschutzerklärung",
         "accept": "Zustimmen & Fortfahren",
-        "decline": "Jetzt nicht"
+        "decline": "Jetzt nicht",
+        "body_privacy": "Deine Fotos werden über private, zeitlich begrenzte Links übertragen, die innerhalb einer Stunde ablaufen. Deine Ergebnisse liegen in deiner eigenen Galerie auf unseren EU-Servern (Frankfurt), bis du sie oder dein Konto löschst. Du kannst die Einwilligung jederzeit widerrufen — durch Löschen deines Kontos oder per E-Mail an support@roomframeai.com."
     }
 }

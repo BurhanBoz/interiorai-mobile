@@ -961,10 +961,11 @@
     },
     "ai_consent": {
         "title": "How your photos are processed",
-        "body_what": "To create your design, we send your room photo (plus any mask or reference image you add) and your design choices — room type, style, text prompt — to our AI providers over an encrypted connection.",
-        "body_who": "Providers: Replicate, Inc. (US) runs the image generation and Anthropic, PBC (US) analyses the scene to tailor the design to your actual room. Both process your data only for the duration of the request, do not keep it afterwards, and never use it to train their models.",
+        "body_what": "To create your design, the app sends the following to our AI providers over an encrypted connection: the room photo you select, any mask you paint or reference image you add, and your design choices — room type, style, color palette, strength and your optional text prompt. Nothing else is shared with them: no name, no email, no contacts, no location.",
+        "body_who": "Who receives it: Replicate, Inc. (United States) runs the image-generation models that produce your design, and Anthropic, PBC (United States) analyses the scene so the design matches your actual room. Both act as our data processors — they handle your content only for the seconds your request takes, do not store it afterwards, and never use it to train their models.",
         "privacy_link": "Privacy Policy",
         "accept": "Agree & Continue",
-        "decline": "Not now"
+        "decline": "Not now",
+        "body_privacy": "Your photos travel via private, time-limited links that expire within an hour. Your results live in your own gallery on our EU (Frankfurt) servers until you delete them or your account. You can withdraw consent at any time by deleting your account or emailing support@roomframeai.com."
     }
 }

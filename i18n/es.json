@@ -961,10 +961,11 @@
     },
     "ai_consent": {
         "title": "Cómo se procesan tus fotos",
-        "body_what": "Para crear tu diseño, enviamos tu foto de la habitación (más cualquier máscara o imagen de referencia que añadas) y tus preferencias de diseño — tipo de habitación, estilo, texto — a nuestros proveedores de IA mediante una conexión cifrada.",
-        "body_who": "Proveedores: Replicate, Inc. (EE. UU.) ejecuta la generación de imágenes y Anthropic, PBC (EE. UU.) analiza la escena para adaptar el diseño a tu habitación real. Ambos procesan tus datos solo durante la solicitud, no los conservan después y nunca los usan para entrenar sus modelos.",
+        "body_what": "Para crear tu diseño, la app envía lo siguiente a nuestros proveedores de IA mediante conexión cifrada: la foto de la habitación que elijas, cualquier máscara que pintes o imagen de referencia que añadas, y tus preferencias de diseño — tipo de habitación, estilo, paleta de colores, intensidad y tu texto opcional. No se comparte nada más: ni nombre, ni correo, ni contactos, ni ubicación.",
+        "body_who": "Quién lo recibe: Replicate, Inc. (EE. UU.) ejecuta los modelos de generación de imágenes que producen tu diseño, y Anthropic, PBC (EE. UU.) analiza la escena para que el diseño encaje con tu habitación real. Ambos actúan como nuestros encargados del tratamiento: procesan tu contenido solo durante los segundos que dura tu solicitud, no lo almacenan después y nunca lo usan para entrenar sus modelos.",
         "privacy_link": "Política de Privacidad",
         "accept": "Aceptar y continuar",
-        "decline": "Ahora no"
+        "decline": "Ahora no",
+        "body_privacy": "Tus fotos viajan mediante enlaces privados de duración limitada que caducan en una hora. Tus resultados permanecen en tu propia galería en nuestros servidores de la UE (Fráncfort) hasta que los elimines o cierres tu cuenta. Puedes retirar tu consentimiento en cualquier momento eliminando tu cuenta o escribiendo a support@roomframeai.com."
     }
 }

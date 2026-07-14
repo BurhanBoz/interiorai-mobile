@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { useDismissible } from "@/hooks/useDismissible";
 import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { Brand } from "@/components/brand/Brand";
@@ -27,6 +28,8 @@ import { theme } from "@/config/theme";
  */
 export default function UploadedScreen() {
   const { t } = useTranslation();
+  // One-shot photo-quality tip — shown on the very first visit only.
+  const [tipVisible, dismissTip] = useDismissible("studio_best_results_seen");
   const photo = useStudioStore((s) => s.photo);
   const setPhoto = useStudioStore((s) => s.setPhoto);
   const { pickImage } = useImagePicker();
@@ -215,37 +218,45 @@ export default function UploadedScreen() {
           </Pressable>
         </View>
 
-        {/* Info hint — sentence-case, warm card */}
-        <View
-          style={{
-            padding: 16,
-            borderRadius: 14,
-            backgroundColor: "rgba(225,195,155,0.05)",
-            borderWidth: 1,
-            borderColor: "rgba(225,195,155,0.18)",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-          }}
-        >
-          <Ionicons
-            name="bulb-outline"
-            size={18}
-            color={theme.color.goldMidday}
-            style={{ marginTop: 2 }}
-          />
-          <Text
+        {/* Photo-quality hint — ONE-SHOT (2026-07-14 founder call): teach
+            on the first visit, then get out of the way for good. X persists
+            the dismissal; returning users get the cleaner, quieter screen. */}
+        {tipVisible && (
+          <View
             style={{
-              flex: 1,
-              fontFamily: "Inter",
-              fontSize: 13,
-              lineHeight: 20,
-              color: theme.color.onSurfaceVariant,
+              padding: 16,
+              paddingRight: 12,
+              borderRadius: 14,
+              backgroundColor: "rgba(225,195,155,0.05)",
+              borderWidth: 1,
+              borderColor: "rgba(225,195,155,0.18)",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              gap: 12,
             }}
           >
-            {t("studio.tip_best_results")}
-          </Text>
-        </View>
+            <Ionicons
+              name="bulb-outline"
+              size={18}
+              color={theme.color.goldMidday}
+              style={{ marginTop: 2 }}
+            />
+            <Text
+              style={{
+                flex: 1,
+                fontFamily: "Inter",
+                fontSize: 13,
+                lineHeight: 20,
+                color: theme.color.onSurfaceVariant,
+              }}
+            >
+              {t("studio.tip_best_results")}
+            </Text>
+            <Pressable onPress={dismissTip} hitSlop={10} accessibilityRole="button">
+              <Ionicons name="close" size={16} color="rgba(208,197,184,0.55)" />
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {/* Fixed CTA — tab-bar-aware via BottomBar */}
