@@ -23,22 +23,13 @@ interface PlanHighlight {
 
 function highlightsFor(plan: PlanResponse | undefined, t: TFunction): PlanHighlight[] {
     if (!plan) return [];
-    const modelDescKey =
-        plan.modelTier === "FLUX"
-            ? "plans.highlight_flux_desc"
-            : plan.modelTier === "SDXL"
-                ? "plans.highlight_sdxl_desc"
-                : "plans.highlight_entry_desc";
+    // V3: every plan runs the same best-in-class models — a "model tier"
+    // row would be noise, so the highlights lead with credits.
     const rows: PlanHighlight[] = [
         {
             icon: "speedometer-outline",
             title: t("plans.highlight_credits_title", { count: plan.monthlyCredits }),
             description: t("plans.highlight_credits_desc"),
-        },
-        {
-            icon: "sparkles-outline",
-            title: t("plans.highlight_model_title", { tier: plan.modelTier ?? "ENTRY" }),
-            description: t(modelDescKey),
         },
     ];
     if (!plan.watermark) {

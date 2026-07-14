@@ -31,7 +31,6 @@ const { height: SCREEN_H } = Dimensions.get("window");
 
 type FeatureRowType =
     | "credits"
-    | "tier"
     | "feature"
     | "permission"
     | "watermark"
@@ -50,8 +49,7 @@ interface FeatureRow {
 const FEATURE_ROWS: FeatureRow[] = [
     { labelKey: "plans.row_monthly_credits",   key: "monthlyCredits",           type: "credits",    groupLabelKey: "plans.group_allowance" },
     { labelKey: "plans.row_variants",          key: "max_outputs",              type: "outputs" },
-    { labelKey: "plans.row_model_quality",     key: "modelTier",                type: "tier",       groupLabelKey: "plans.group_quality" },
-    { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark" },
+    { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark",  groupLabelKey: "plans.group_quality" },
     { labelKey: "plans.row_queue_priority",    key: "queuePriority",            type: "queue" },
     { labelKey: "plans.row_hd",                key: "HD_REDESIGN",              type: "feature",    groupLabelKey: "plans.group_capabilities" },
     { labelKey: "plans.row_upscale",           key: "ULTRA_HD_UPSCALE",         type: "feature" },
@@ -74,11 +72,11 @@ const TIER_HIGHLIGHTS: Record<string, string[]> = {
 function resolveCell(plan: PlanResponse, row: FeatureRow): string {
     switch (row.type) {
         case "credits":
-            if (plan.code === "FREE") return "1/day";
+            // V41: FREE has no recurring credits — a one-time 15-credit
+            // welcome grant lives in the subtitle copy, not this row.
+            if (plan.code === "FREE") return "—";
             if (plan.billingPeriod === "YEARLY") return String(plan.monthlyCredits * 12);
             return String(plan.monthlyCredits);
-        case "tier":
-            return plan.modelTier ?? "—";
         case "outputs": {
             const feat = plan.features?.find((f) => f.featureCode === "INTERIOR_REDESIGN");
             if (!feat?.limitsJson) return "1";
@@ -431,10 +429,10 @@ function PlanCard({
     // · billed yearly" rather than a misleading "1,800 credits/year".
     const subtitle =
         plan.code === "FREE"
-            ? t("plans.plan_subtitle_daily", { tier })
+            ? t("plans.plan_subtitle_daily")
             : plan.billingPeriod === "YEARLY"
-            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits, tier })
-            : t("plans.plan_subtitle", { credits: plan.monthlyCredits, tier });
+            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits })
+            : t("plans.plan_subtitle", { credits: plan.monthlyCredits });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
     const isTopTier = planTier(plan.code) === "PRO";
