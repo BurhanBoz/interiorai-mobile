@@ -466,7 +466,8 @@
         "free": "Gratis",
         "change_scheduled_title": "Cambio de plan programado",
         "change_scheduled_description": "Apple aplica este cambio al final de tu período de facturación actual. {{plan}} comienza el {{date}}; hasta entonces tu plan actual sigue activo.",
-        "scheduled_banner": "Programado: cambio a {{plan}} el {{date}}."
+        "scheduled_banner": "Programado: cambio a {{plan}} el {{date}}.",
+        "deferred_notice": "Este cambio se aplica al final de tu período actual ({{date}}). Hasta entonces tu plan actual sigue activo; los créditos no usados pasan al nuevo plan y los packs comprados siempre son tuyos."
     },
     "credits": {
         "title": "Créditos",

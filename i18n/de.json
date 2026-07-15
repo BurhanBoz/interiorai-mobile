@@ -466,7 +466,8 @@
         "free": "Kostenlos",
         "change_scheduled_title": "Planwechsel vorgemerkt",
         "change_scheduled_description": "Apple wendet diese Änderung am Ende deiner aktuellen Abrechnungsperiode an. {{plan}} startet am {{date}} — bis dahin bleibt dein aktueller Plan aktiv.",
-        "scheduled_banner": "Vorgemerkt: Wechsel zu {{plan}} am {{date}}."
+        "scheduled_banner": "Vorgemerkt: Wechsel zu {{plan}} am {{date}}.",
+        "deferred_notice": "Diese Änderung wird am Ende deiner aktuellen Periode ({{date}}) wirksam. Bis dahin bleibt dein aktueller Plan aktiv; ungenutzte Credits werden in den neuen Plan übernommen, gekaufte Credit-Pakete bleiben immer erhalten."
     },
     "credits": {
         "title": "Credits",

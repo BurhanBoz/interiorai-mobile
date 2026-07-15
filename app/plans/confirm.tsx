@@ -93,6 +93,31 @@ export default function PlanConfirmScreen() {
     );
     const highlights = useMemo(() => highlightsFor(plan, t), [plan, t]);
 
+    // Mirror of the backend's Apple rule (AppleIapServiceImpl PRODUCT_CHANGE):
+    // target quota > current quota → immediate upgrade; anything else between
+    // two PAID plans (downgrade, or duration crossgrade like monthly→annual)
+    // is applied by Apple at the period boundary. Disclose that BEFORE the
+    // payment sheet so the "paid but nothing changed" confusion can't happen.
+    const currentSub = useSubscriptionStore((s) => s.subscription);
+    const isDeferredChange = Boolean(
+        plan
+        && currentSub
+        && currentSub.planCode !== "FREE"
+        && currentSub.planCode !== plan.code
+        && plan.monthlyCredits <= currentSub.monthlyCredits,
+    );
+    const periodEndLabel = useMemo(() => {
+        const iso = currentSub?.currentPeriodEnd;
+        if (!iso) return "";
+        try {
+            return new Date(iso).toLocaleDateString(i18n.language, {
+                day: "numeric", month: "long", year: "numeric",
+            });
+        } catch {
+            return iso.slice(0, 10);
+        }
+    }, [currentSub?.currentPeriodEnd, i18n.language]);
+
     const handleConfirm = async () => {
         if (!plan) return;
         setSubmitting(true);
@@ -265,6 +290,29 @@ export default function PlanConfirmScreen() {
                         </View>
                     </View>
                 </View>
+
+                {/* Apple-deferred disclosure — shown before the payment sheet
+                    for downgrades/crossgrades so the user consents knowingly:
+                    when it starts, that current credits carry over, and that
+                    packs are never touched. */}
+                {isDeferredChange && (
+                    <View style={{
+                        flexDirection: "row", alignItems: "flex-start", gap: 10,
+                        marginBottom: 28, paddingVertical: 14, paddingHorizontal: 16,
+                        borderRadius: 16, borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.35)",
+                        backgroundColor: "rgba(225,195,155,0.07)",
+                    }}>
+                        <Ionicons name="time-outline" size={18} color="#E0C29A" style={{ marginTop: 1 }} />
+                        <Text className="font-body" style={{ flex: 1, fontSize: 13, lineHeight: 19, color: "#EDE4D7" }}>
+                            {t("plans.deferred_notice", {
+                                defaultValue:
+                                    "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours.",
+                                date: periodEndLabel,
+                            })}
+                        </Text>
+                    </View>
+                )}
 
                 {/* Feature highlights */}
                 <View style={{ marginBottom: 32 }}>

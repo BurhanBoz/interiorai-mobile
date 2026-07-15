@@ -466,7 +466,8 @@
         "free": "무료",
         "change_scheduled_title": "플랜 변경 예약됨",
         "change_scheduled_description": "Apple은 이 변경을 현재 결제 기간이 끝날 때 적용합니다. {{plan}}은(는) {{date}}에 시작되며, 그때까지 현재 플랜이 유지됩니다.",
-        "scheduled_banner": "예약됨: {{date}}에 {{plan}}(으)로 전환됩니다."
+        "scheduled_banner": "예약됨: {{date}}에 {{plan}}(으)로 전환됩니다.",
+        "deferred_notice": "이 변경은 현재 기간이 끝나는 시점({{date}})에 적용됩니다. 그때까지 현재 플랜이 유지되며, 사용하지 않은 크레딧은 새 플랜으로 이월되고 구매한 크레딧 팩은 항상 유지됩니다."
     },
     "credits": {
         "title": "크레딧",

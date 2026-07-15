@@ -301,10 +301,12 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
     // StoreKit purchase — throws on user-cancel (caller maps via isUserCancelled).
     await Purchases.purchaseStoreProduct(product);
 
-    // Poll for the webhook-driven grant. 8 tries × 1.5s = 12s ceiling —
-    // comfortably covers RC's typical 1-3s delivery. Each poll refreshes the
-    // authoritative balance from the backend.
-    for (let attempt = 0; attempt < 8; attempt++) {
+    // Poll for the webhook-driven grant. 12 tries × 2s = 24s ceiling — RC
+    // usually delivers in 1-3s, but the founder's 50-credit sandbox purchase
+    // (2026-07-16) landed after the old 12s window, showing the pending
+    // fallback for a purchase that was seconds from reconciling. Each poll
+    // refreshes the authoritative balance from the backend.
+    for (let attempt = 0; attempt < 12; attempt++) {
         await useCreditStore.getState().fetchBalance();
         const now = useCreditStore.getState().balance ?? 0;
         if (now > balanceBefore) {
@@ -315,7 +317,7 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
                 provider: "REVENUECAT",
             } as CreditPackPurchaseResponse;
         }
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 2000));
     }
 
     // Webhook hasn't landed within the window. The purchase DID go through on

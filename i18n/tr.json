@@ -466,7 +466,8 @@
         "free": "Ücretsiz",
         "change_scheduled_title": "Plan değişikliği planlandı",
         "change_scheduled_description": "Apple bu değişikliği mevcut fatura döneminin sonunda uygular. {{plan}} {{date}} tarihinde başlayacak — o zamana kadar mevcut planın aktif kalır.",
-        "scheduled_banner": "Planlandı: {{date}} tarihinde {{plan}} planına geçilecek."
+        "scheduled_banner": "Planlandı: {{date}} tarihinde {{plan}} planına geçilecek.",
+        "deferred_notice": "Bu değişiklik mevcut dönemin sonunda ({{date}}) uygulanır. O güne kadar mevcut planın aktif kalır; kullanılmamış kredilerin yeni planına devrolur, satın aldığın kredi paketleri her zaman senindir."
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -14,7 +14,7 @@ import { TierBadge } from "@/components/ui/TierBadge";
 import { ListItem } from "@/components/ui/ListItem";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Brand } from "@/components/brand/Brand";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ComponentProps } from "react";
 import { planTier, isAnnualPlan, type PlanTier } from "@/utils/planTier";
 import { pushWithReturn } from "@/utils/navigation";
@@ -162,6 +162,24 @@ export default function ProfileScreen() {
       .catch(() => {});
   }, []);
 
+  // Pull-to-refresh (founder request 2026-07-16): plan changes reconcile
+  // server-side (Apple webhooks), so the Settings screen needs a manual
+  // way to pull the latest subscription + balance without reopening the app.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchBalance(),
+        fetchPlans().then(() => fetchSubscription()),
+      ]);
+    } catch {
+      // Silent — pull-to-refresh failures just leave current data in place.
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchBalance, fetchPlans, fetchSubscription]);
+
   const displayName = user?.displayName ?? null;
   const email = user?.email || "";
 
@@ -257,6 +275,13 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#E0C29A"
+          />
+        }
       >
         {/* ── Identity — tap to edit profile (iOS "tap your name" pattern).
             The Pressable owns ONLY the touch target + press-flash; a plain
