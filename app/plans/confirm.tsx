@@ -70,7 +70,7 @@ function periodSuffix(plan: PlanResponse, t: TFunction): string {
 }
 
 export default function PlanConfirmScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const params = useLocalSearchParams<{ planCode?: string }>();
     const plans = useSubscriptionStore((s) => s.plans);
     const storePrices = useStorePricesStore((s) => s.prices);
@@ -115,31 +115,66 @@ export default function PlanConfirmScreen() {
             // Dummy mode reconciles instantly so the first poll exits.
             const targetPlan = plan.code;
             let reconciled = false;
+            let scheduled = false;
             for (let attempt = 0; attempt < 6; attempt++) {
                 await Promise.all([fetchSubscription(), fetchBalance()]);
-                const active = useSubscriptionStore.getState().subscription?.planCode;
-                if (active === targetPlan) {
+                const subNow = useSubscriptionStore.getState().subscription;
+                if (subNow?.planCode === targetPlan) {
                     reconciled = true;
+                    break;
+                }
+                // Apple-deferred downgrade/crossgrade: StoreKit confirmed the
+                // election, but the switch happens at the period boundary.
+                // The webhook records it as scheduledPlanCode ~1-3s after the
+                // sheet closes — recognize it and STOP polling; the plan is
+                // not supposed to flip now (founder bug 2026-07-16: this read
+                // as "payment ok but nothing changed").
+                if (subNow?.scheduledPlanCode === targetPlan) {
+                    scheduled = true;
                     break;
                 }
                 await new Promise((r) => setTimeout(r, 1500));
             }
 
+            const scheduledDate = (() => {
+                const iso = useSubscriptionStore.getState().subscription?.scheduledChangeAt
+                    ?? useSubscriptionStore.getState().subscription?.currentPeriodEnd;
+                if (!iso) return "";
+                try {
+                    return new Date(iso).toLocaleDateString(i18n.language, {
+                        day: "numeric", month: "long", year: "numeric",
+                    });
+                } catch {
+                    return iso.slice(0, 10);
+                }
+            })();
+
             Alert.alert(
                 reconciled
                     ? t("plans.confirm_activated_title")
-                    : t("plans.confirm_activating_title", {
-                        defaultValue: "Purchase received",
-                    }),
+                    : scheduled
+                        ? t("plans.change_scheduled_title", {
+                            defaultValue: "Plan change scheduled",
+                        })
+                        : t("plans.confirm_activating_title", {
+                            defaultValue: "Purchase received",
+                        }),
                 reconciled
                     ? t("plans.confirm_activated_description", {
                         plan: plan.name,
                         credits: plan.monthlyCredits,
                     })
-                    : t("plans.confirm_activating_description", {
-                        defaultValue:
-                            "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
-                    }),
+                    : scheduled
+                        ? t("plans.change_scheduled_description", {
+                            defaultValue:
+                                "Apple applies this change at the end of your current billing period. {{plan}} starts on {{date}} — until then your current plan stays active.",
+                            plan: plan.name,
+                            date: scheduledDate,
+                        })
+                        : t("plans.confirm_activating_description", {
+                            defaultValue:
+                                "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
+                        }),
                 [
                     {
                         text: "OK",

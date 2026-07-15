@@ -548,7 +548,7 @@ function PlanCard({
 /* ------------------------------------------------------------------ */
 
 export default function PlansScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const plans = useSubscriptionStore((s) => s.plans);
     const subscription = useSubscriptionStore((s) => s.subscription);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
@@ -618,6 +618,40 @@ export default function PlansScreen() {
                         {t("plans.subtitle")}
                     </Text>
                 </View>
+
+                {/* Apple-deferred change in flight — say WHEN the new plan
+                    starts, or the successful purchase reads as a silent
+                    failure (founder bug 2026-07-16). */}
+                {subscription?.scheduledPlanCode
+                    && subscription.scheduledPlanCode !== subscription.planCode && (
+                    <View style={{
+                        flexDirection: "row", alignItems: "center", gap: 10,
+                        marginBottom: 24, paddingVertical: 14, paddingHorizontal: 16,
+                        borderRadius: 16, borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.35)",
+                        backgroundColor: "rgba(225,195,155,0.07)",
+                    }}>
+                        <Ionicons name="time-outline" size={18} color={theme.color.goldMidday} />
+                        <Text className="font-body" style={{ flex: 1, fontSize: 13, lineHeight: 19, color: "#EDE4D7" }}>
+                            {t("plans.scheduled_banner", {
+                                plan: (plans ?? []).find(
+                                    (p) => p.code === subscription.scheduledPlanCode,
+                                )?.name ?? subscription.scheduledPlanCode,
+                                date: (() => {
+                                    const iso = subscription.scheduledChangeAt
+                                        ?? subscription.currentPeriodEnd;
+                                    try {
+                                        return new Date(iso).toLocaleDateString(i18n.language, {
+                                            day: "numeric", month: "long", year: "numeric",
+                                        });
+                                    } catch {
+                                        return (iso ?? "").slice(0, 10);
+                                    }
+                                })(),
+                            })}
+                        </Text>
+                    </View>
+                )}
 
                 {/* Monthly / Annual toggle — hidden until annual SKUs exist */}
                 {hasAnnualPlans && (

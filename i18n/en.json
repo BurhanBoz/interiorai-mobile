@@ -463,7 +463,10 @@
         "confirm_activating_description": "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
         "best_value": "Best Value",
         "manage_subscription": "Manage or cancel subscription",
-        "free": "Free"
+        "free": "Free",
+        "change_scheduled_title": "Plan change scheduled",
+        "change_scheduled_description": "Apple applies this change at the end of your current billing period. {{plan}} starts on {{date}} — until then your current plan stays active.",
+        "scheduled_banner": "Scheduled: switching to {{plan}} on {{date}}."
     },
     "credits_bridge": {
         "or_buy_credits": "Or buy credits one-time"

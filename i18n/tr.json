@@ -463,7 +463,10 @@
         "confirm_activating_description": "Satın alman tamamlandı. Paketin birazdan güncellenecek — kısa sürede görünmezse aşağı çekip yenile.",
         "best_value": "En Avantajlı",
         "manage_subscription": "Aboneliği yönet veya iptal et",
-        "free": "Ücretsiz"
+        "free": "Ücretsiz",
+        "change_scheduled_title": "Plan değişikliği planlandı",
+        "change_scheduled_description": "Apple bu değişikliği mevcut fatura döneminin sonunda uygular. {{plan}} {{date}} tarihinde başlayacak — o zamana kadar mevcut planın aktif kalır.",
+        "scheduled_banner": "Planlandı: {{date}} tarihinde {{plan}} planına geçilecek."
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"

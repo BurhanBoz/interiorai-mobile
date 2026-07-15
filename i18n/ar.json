@@ -463,7 +463,10 @@
         "confirm_activating_description": "تم الشراء بنجاح. ستتحدث خطتك بعد لحظات — اسحب للتحديث إذا لم تظهر قريبًا.",
         "best_value": "أفضل قيمة",
         "manage_subscription": "إدارة الاشتراك أو إلغاؤه",
-        "free": "مجاني"
+        "free": "مجاني",
+        "change_scheduled_title": "تمت جدولة تغيير الخطة",
+        "change_scheduled_description": "تطبّق Apple هذا التغيير في نهاية فترة الفوترة الحالية. تبدأ خطة {{plan}} في {{date}} — وحتى ذلك الحين تظل خطتك الحالية فعّالة.",
+        "scheduled_banner": "مجدول: التحويل إلى {{plan}} في {{date}}."
     },
     "credits": {
         "title": "الرصيد",

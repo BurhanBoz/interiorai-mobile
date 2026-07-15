@@ -202,6 +202,10 @@ export interface SubscriptionResponse {
     currentPeriodStart: string;
     currentPeriodEnd: string;
     createdAt: string;
+    /** Apple-deferred plan change target — null/absent when none pending. */
+    scheduledPlanCode?: string | null;
+    /** ISO instant when the scheduled change takes effect. */
+    scheduledChangeAt?: string | null;
 }
 
 // ── Credits ────────────────────────────────────

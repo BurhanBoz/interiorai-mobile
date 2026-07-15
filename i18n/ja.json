@@ -463,7 +463,10 @@
         "confirm_activating_description": "購入が完了しました。プランはまもなく更新されます。表示されない場合は引っ張って更新してください。",
         "best_value": "お得",
         "manage_subscription": "サブスクリプションの管理・解約",
-        "free": "無料"
+        "free": "無料",
+        "change_scheduled_title": "プラン変更を予約しました",
+        "change_scheduled_description": "Appleはこの変更を現在の請求期間の終了時に適用します。{{plan}}は{{date}}に開始されます。それまでは現在のプランが有効です。",
+        "scheduled_banner": "予約済み：{{date}}に{{plan}}へ切り替わります。"
     },
     "credits": {
         "title": "クレジット",

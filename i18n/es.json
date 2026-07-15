@@ -463,7 +463,10 @@
         "confirm_activating_description": "Tu compra se realizó. Tu plan se actualizará en un momento — desliza para actualizar si no aparece pronto.",
         "best_value": "Mejor Valor",
         "manage_subscription": "Gestionar o cancelar suscripción",
-        "free": "Gratis"
+        "free": "Gratis",
+        "change_scheduled_title": "Cambio de plan programado",
+        "change_scheduled_description": "Apple aplica este cambio al final de tu período de facturación actual. {{plan}} comienza el {{date}}; hasta entonces tu plan actual sigue activo.",
+        "scheduled_banner": "Programado: cambio a {{plan}} el {{date}}."
     },
     "credits": {
         "title": "Créditos",

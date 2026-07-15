@@ -463,7 +463,10 @@
         "confirm_activating_description": "Dein Kauf war erfolgreich. Dein Plan wird gleich aktualisiert — zum Aktualisieren ziehen, falls er nicht erscheint.",
         "best_value": "Bestes Angebot",
         "manage_subscription": "Abo verwalten oder kündigen",
-        "free": "Kostenlos"
+        "free": "Kostenlos",
+        "change_scheduled_title": "Planwechsel vorgemerkt",
+        "change_scheduled_description": "Apple wendet diese Änderung am Ende deiner aktuellen Abrechnungsperiode an. {{plan}} startet am {{date}} — bis dahin bleibt dein aktueller Plan aktiv.",
+        "scheduled_banner": "Vorgemerkt: Wechsel zu {{plan}} am {{date}}."
     },
     "credits": {
         "title": "Credits",
