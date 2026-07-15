@@ -26,7 +26,9 @@ import { theme } from "@/config/theme";
 
 const TAB_BAR_VISIBLE_HEIGHT = 58;
 const TAB_BAR_OUTER_PADDING = 32;
-const BREATHING = 16;
+// 2026-07-15 founder pass: 16px still read as "glued" under the tab
+// bar on the options screen — 24px gives every fixed CTA honest air.
+const BREATHING = 24;
 
 interface BottomBarProps {
   children: ReactNode;

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDismissible } from "@/hooks/useDismissible";
+import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -255,7 +256,9 @@ export default function GenerationProgressScreen() {
           paddingHorizontal: 24,
           paddingBottom: 40,
           flexGrow: 1,
-          justifyContent: showStyleHint ? "flex-start" : "center",
+          // The style card is a spotlight overlay now — the spinner block
+          // owns the center on every run.
+          justifyContent: "center",
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -408,36 +411,54 @@ export default function GenerationProgressScreen() {
           </Pressable>
         )}
 
-        {/* Style info card — one-shot with its own X */}
-        {showStyleHint && (
-          <View>
-            <StyleInfoCard
-              title={t("generation.about_this_style")}
-              styleName={styleName}
-              description={styleDescription}
-            />
-            <Pressable
-              onPress={dismissStyleHint}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.close")}
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(19,19,19,0.55)",
-              }}
-            >
-              <Ionicons name="close" size={15} color="#D0C5B8" />
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
+
+      {/* "About this style" — one-shot SPOTLIGHT (2026-07-15 founder spec).
+          Shown once per style; X or any tap dismisses, leaving the screen
+          gets the same seen-once marking via shownRef above. */}
+      <OneShotSpotlight
+        visible={showStyleHint}
+        onDismiss={dismissStyleHint}
+        align="stretch"
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingBottom: 14,
+            marginBottom: 4,
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(77,70,60,0.18)",
+            marginRight: 26,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 11,
+              letterSpacing: 2.2,
+              textTransform: "uppercase",
+              color: "#E0C29A",
+            }}
+          >
+            {t("generation.about_this_style")}
+          </Text>
+          <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
+        </View>
+        <Text
+          className="font-headline text-on-surface"
+          style={{ fontSize: 22, lineHeight: 28 }}
+        >
+          {styleName}
+        </Text>
+        <Text
+          className="font-body text-on-surface-variant"
+          style={{ fontSize: 14, lineHeight: 22, fontStyle: "italic" }}
+        >
+          {styleDescription}
+        </Text>
+      </OneShotSpotlight>
     </SafeAreaView>
   );
 }
@@ -460,51 +481,6 @@ function PhaseIcon({ phase }: { phase: Phase }) {
     case "error":
       return <Ionicons name="alert-circle" size={base.size} color="#FFB4AB" />;
   }
-}
-
-function StyleInfoCard(props: {
-  title: string;
-  styleName: string;
-  description: string;
-}) {
-  return (
-    <View
-      className="rounded-xl overflow-hidden mt-10"
-      style={{ backgroundColor: "#1C1B1B", padding: 28 }}
-    >
-      <View
-        className="flex-row items-center justify-between pb-4 mb-5"
-        style={{ borderBottomWidth: 1, borderBottomColor: "rgba(77,70,60,0.18)" }}
-      >
-        <Text
-          style={{
-            fontFamily: "Inter",
-            fontSize: 11,
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
-            color: "#E0C29A",
-          }}
-        >
-          {props.title}
-        </Text>
-        <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
-      </View>
-
-      <Text
-        className="font-headline text-on-surface"
-        style={{ fontSize: 22, lineHeight: 28, marginBottom: 12 }}
-      >
-        {props.styleName}
-      </Text>
-
-      <Text
-        className="font-body text-on-surface-variant"
-        style={{ fontSize: 14, lineHeight: 22, fontStyle: "italic" }}
-      >
-        {props.description}
-      </Text>
-    </View>
-  );
 }
 
 /**

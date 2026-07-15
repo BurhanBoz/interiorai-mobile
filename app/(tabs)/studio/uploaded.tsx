@@ -11,6 +11,7 @@ import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { theme } from "@/config/theme";
 
 /**
@@ -82,6 +83,11 @@ export default function UploadedScreen() {
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
+          // Fill the viewport so the photo block can center itself in the
+          // space between the headline and the CTA — with the old inline
+          // tip gone, top-anchored content left a dead gap above the button
+          // (2026-07-15 founder screenshot).
+          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -108,11 +114,15 @@ export default function UploadedScreen() {
             lineHeight: 40,
             letterSpacing: -0.4,
             color: theme.color.onSurface,
-            marginBottom: 32,
+            marginBottom: 24,
           }}
         >
           {t("studio.step1_title")}
         </Text>
+
+        {/* Photo + change-photo, vertically centered in the remaining
+            space — the screen reads balanced with or without hints. */}
+        <View style={{ flex: 1, justifyContent: "center" }}>
 
         {/* Uploaded photo preview */}
         <View
@@ -175,7 +185,7 @@ export default function UploadedScreen() {
         {/* Change photo — bordered action card, icon + label on one row.
             Wrapper View owns the bottom margin so layout is not inside
             the Pressable callback (which can drop layout props in RN). */}
-        <View style={{ marginBottom: 20 }}>
+        <View style={{ marginBottom: 0 }}>
           <Pressable
             onPress={handleChangePhoto}
             accessibilityRole="button"
@@ -218,46 +228,18 @@ export default function UploadedScreen() {
           </Pressable>
         </View>
 
-        {/* Photo-quality hint — ONE-SHOT (2026-07-14 founder call): teach
-            on the first visit, then get out of the way for good. X persists
-            the dismissal; returning users get the cleaner, quieter screen. */}
-        {tipVisible && (
-          <View
-            style={{
-              padding: 16,
-              paddingRight: 12,
-              borderRadius: 14,
-              backgroundColor: "rgba(225,195,155,0.05)",
-              borderWidth: 1,
-              borderColor: "rgba(225,195,155,0.18)",
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 12,
-            }}
-          >
-            <Ionicons
-              name="bulb-outline"
-              size={18}
-              color={theme.color.goldMidday}
-              style={{ marginTop: 2 }}
-            />
-            <Text
-              style={{
-                flex: 1,
-                fontFamily: "Inter",
-                fontSize: 13,
-                lineHeight: 20,
-                color: theme.color.onSurfaceVariant,
-              }}
-            >
-              {t("studio.tip_best_results")}
-            </Text>
-            <Pressable onPress={dismissTip} hitSlop={10} accessibilityRole="button">
-              <Ionicons name="close" size={16} color="rgba(208,197,184,0.55)" />
-            </Pressable>
-          </View>
-        )}
+        </View>
       </ScrollView>
+
+      {/* Photo-quality tip — one-shot SPOTLIGHT (2026-07-15 founder spec:
+          all first-time hints use the dimmed-backdrop prompt pattern).
+          Gone forever on X or any tap; the screen itself stays pure. */}
+      <OneShotSpotlight
+        visible={tipVisible}
+        onDismiss={dismissTip}
+        icon="bulb-outline"
+        text={t("studio.tip_best_results")}
+      />
 
       {/* Fixed CTA — tab-bar-aware via BottomBar */}
       <BottomBar overTabBar>
