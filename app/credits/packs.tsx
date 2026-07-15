@@ -88,8 +88,12 @@ function PackCard({
             disabled={disabled}
             style={({ pressed }) => ({
                 // Softer premium frame (2026-07-14 pass): generous air
-                // between cards + a rounder, calmer silhouette.
-                marginBottom: 24,
+                // between cards + a rounder, calmer silhouette. Featured
+                // cards carry a floating badge that hangs 10px ABOVE the
+                // frame — without extra headroom it visually fuses with the
+                // card above (the "nested" look the founder flagged twice).
+                marginTop: pack.badgeLabel ? 14 : 0,
+                marginBottom: 28,
                 borderRadius: 20,
                 backgroundColor: theme.color.surfaceContainerLow,
                 borderWidth: 1,
