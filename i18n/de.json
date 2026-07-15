@@ -534,7 +534,9 @@
         "credits_added_description": "+{{credits}} Credits. Neues Guthaben: {{balance}}.",
         "purchase_failed_title": "Kauf fehlgeschlagen",
         "purchase_failed_default": "Kauf fehlgeschlagen",
-        "none_available": "Momentan sind keine Credit-Pakete verfügbar."
+        "none_available": "Momentan sind keine Credit-Pakete verfügbar.",
+        "credits_pending_title": "Kauf erhalten",
+        "credits_pending_description": "Dein Kauf war erfolgreich — die Credits erscheinen gleich."
     },
     "credits_bridge": {
         "or_buy_credits": "Oder Credits einmalig kaufen"

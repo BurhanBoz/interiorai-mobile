@@ -369,12 +369,22 @@ export default function CreditPacksScreen() {
     const handlePurchase = async (packCode: string) => {
         try {
             const result = await purchase(packCode);
+            // Webhook grant hasn't reconciled within the poll window — the
+            // purchase went through on Apple's side, credits land shortly.
+            const pending = (result as { pending?: boolean }).pending
+                || result.creditsGranted <= 0;
             Alert.alert(
-                t("credit_packs.credits_added_title"),
-                t("credit_packs.credits_added_description", {
-                    credits: result.creditsGranted,
-                    balance: result.newBalance,
-                }),
+                pending
+                    ? t("credit_packs.credits_pending_title", { defaultValue: "Purchase received" })
+                    : t("credit_packs.credits_added_title"),
+                pending
+                    ? t("credit_packs.credits_pending_description", {
+                        defaultValue: "Your purchase went through — the credits will appear in a moment.",
+                    })
+                    : t("credit_packs.credits_added_description", {
+                        credits: result.creditsGranted,
+                        balance: result.newBalance,
+                    }),
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {

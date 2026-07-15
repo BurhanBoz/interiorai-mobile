@@ -534,7 +534,9 @@
         "credits_added_description": "+{{credits}} رصيد. الرصيد الجديد: {{balance}}.",
         "purchase_failed_title": "فشل الشراء",
         "purchase_failed_default": "فشل الشراء",
-        "none_available": "لا توجد حزم رصيد متاحة حاليًا."
+        "none_available": "لا توجد حزم رصيد متاحة حاليًا.",
+        "credits_pending_title": "تم استلام الشراء",
+        "credits_pending_description": "تمت عملية الشراء — ستظهر الأرصدة بعد لحظات."
     },
     "credits_bridge": {
         "or_buy_credits": "أو اشترِ رصيدًا لمرة واحدة"

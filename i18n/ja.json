@@ -534,7 +534,9 @@
         "credits_added_description": "+{{credits}}クレジット。新しい残高: {{balance}}。",
         "purchase_failed_title": "購入失敗",
         "purchase_failed_default": "購入失敗",
-        "none_available": "現在利用可能なクレジットパックはありません。"
+        "none_available": "現在利用可能なクレジットパックはありません。",
+        "credits_pending_title": "購入を受け付けました",
+        "credits_pending_description": "購入が完了しました。クレジットは間もなく反映されます。"
     },
     "credits_bridge": {
         "or_buy_credits": "または単発でクレジット購入"

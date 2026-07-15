@@ -537,7 +537,9 @@
         "credits_added_description": "+{{credits}} kredi. Yeni bakiye: {{balance}}.",
         "purchase_failed_title": "Satın alma başarısız",
         "purchase_failed_default": "Satın alma başarısız",
-        "none_available": "Şu anda kullanılabilir kredi paketi yok."
+        "none_available": "Şu anda kullanılabilir kredi paketi yok.",
+        "credits_pending_title": "Satın alma alındı",
+        "credits_pending_description": "Satın alman tamamlandı — kredilerin birazdan hesabına geçecek."
     },
     "credits_exhausted": {
         "title": "Kredin Tükendi",

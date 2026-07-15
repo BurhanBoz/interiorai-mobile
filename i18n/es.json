@@ -534,7 +534,9 @@
         "credits_added_description": "+{{credits}} créditos. Nuevo saldo: {{balance}}.",
         "purchase_failed_title": "Compra fallida",
         "purchase_failed_default": "Compra fallida",
-        "none_available": "No hay paquetes de créditos disponibles en este momento."
+        "none_available": "No hay paquetes de créditos disponibles en este momento.",
+        "credits_pending_title": "Compra recibida",
+        "credits_pending_description": "Tu compra se realizó — los créditos aparecerán en un momento."
     },
     "credits_bridge": {
         "or_buy_credits": "O compra créditos únicos"

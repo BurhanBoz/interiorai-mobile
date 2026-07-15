@@ -252,14 +252,20 @@ export async function purchaseSubscription(
 /**
  * Purchase a one-time credit pack via Apple StoreKit (through RevenueCat).
  *
- * <p>Different from subscription:
- * <ul>
- *   <li>Credit packs are <b>Consumable</b> IAPs, not subscriptions.</li>
- *   <li>They're NOT inside an RC offering — they're standalone products.</li>
- *   <li>Purchase via {@link Purchases.purchaseStoreProduct} (not purchasePackage).</li>
- * </ul>
+ * <p>Credit packs are <b>Consumable</b> IAPs (not subscriptions, not in an
+ * RC offering) — bought via {@link Purchases.purchaseStoreProduct}.
  *
- * @param packCode  backend pack code (CREDITS_SMALL / CREDITS_MEDIUM / CREDITS_LARGE)
+ * <p><b>Grant path (2026-07-15 fix):</b> the credits are granted SERVER-SIDE
+ * by the RevenueCat webhook — RC validates the receipt with Apple and POSTs
+ * a signed {@code NON_RENEWING_PURCHASE} to our backend, which credits the
+ * wallet. The client does NOT grant (the old direct-post path required a
+ * raw receipt the RC SDK abstracts away, so it always failed with "receipt
+ * required" — matching the founder's "purchase failed" report). Instead we
+ * mirror the subscription flow: after StoreKit confirms, poll our balance
+ * until the webhook lands (~1-3s), then report the delta. This is also the
+ * secure design — a client can never mint credits by forging a call.
+ *
+ * @param packCode  backend pack code (CREDITS_20 / CREDITS_50 / CREDITS_100)
  * @return          CreditPackPurchaseResponse with new balance + credits granted
  */
 export async function purchasePack(packCode: string): Promise<CreditPackPurchaseResponse> {
@@ -269,7 +275,8 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
     }
 
     if (isDummyMode) {
-        // Dev flow — simulate Apple payment with a delay, then call backend.
+        // Dev flow — simulate Apple payment with a delay, then call backend
+        // directly (backend accepts provider=DUMMY when allow-dummy-purchases).
         await new Promise((r) => setTimeout(r, 800));
         const transactionId = `dummy_${Date.now()}_${Crypto.randomUUID()}`;
         return purchaseCreditPack({
@@ -281,28 +288,47 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
         });
     }
 
-    // Real RC flow — fetch the product, trigger purchase.
+    // Real RC flow — fetch the product, trigger the StoreKit purchase.
     const products = await Purchases.getProducts([productId]);
     const product = products.find((p) => p.identifier === productId);
     if (!product) {
         throw new Error(`Product not found in App Store Connect: ${productId}`);
     }
 
-    const { customerInfo, productIdentifier } = await Purchases.purchaseStoreProduct(product);
+    const { useCreditStore } = await import("@/stores/creditStore");
+    const balanceBefore = useCreditStore.getState().balance ?? 0;
 
-    // RC keeps consumable transactions in `nonSubscriptionTransactions`.
-    // Find the most recent one for this product to grab the transaction ID.
-    const tx = customerInfo.nonSubscriptionTransactions
-        .filter((t) => t.productIdentifier === productIdentifier)
-        .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime())[0];
+    // StoreKit purchase — throws on user-cancel (caller maps via isUserCancelled).
+    await Purchases.purchaseStoreProduct(product);
 
-    return purchaseCreditPack({
+    // Poll for the webhook-driven grant. 8 tries × 1.5s = 12s ceiling —
+    // comfortably covers RC's typical 1-3s delivery. Each poll refreshes the
+    // authoritative balance from the backend.
+    for (let attempt = 0; attempt < 8; attempt++) {
+        await useCreditStore.getState().fetchBalance();
+        const now = useCreditStore.getState().balance ?? 0;
+        if (now > balanceBefore) {
+            return {
+                packCode,
+                creditsGranted: now - balanceBefore,
+                newBalance: now,
+                provider: "REVENUECAT",
+            } as CreditPackPurchaseResponse;
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    // Webhook hasn't landed within the window. The purchase DID go through on
+    // Apple's side; the grant will reconcile shortly. Return the current
+    // balance so the UI can reassure rather than show a hard failure.
+    const finalBalance = useCreditStore.getState().balance ?? balanceBefore;
+    return {
         packCode,
+        creditsGranted: Math.max(0, finalBalance - balanceBefore),
+        newBalance: finalBalance,
         provider: "REVENUECAT",
-        transactionId: tx?.transactionIdentifier ?? customerInfo.originalAppUserId,
-        productId: productIdentifier,
-        receiptData: "",
-    });
+        pending: finalBalance <= balanceBefore,
+    } as CreditPackPurchaseResponse & { pending?: boolean };
 }
 
 /**

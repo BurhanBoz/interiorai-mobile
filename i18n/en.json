@@ -537,7 +537,9 @@
         "credits_added_description": "+{{credits}} credits. New balance: {{balance}}.",
         "purchase_failed_title": "Purchase failed",
         "purchase_failed_default": "Purchase failed",
-        "none_available": "No credit packs available right now."
+        "none_available": "No credit packs available right now.",
+        "credits_pending_title": "Purchase received",
+        "credits_pending_description": "Your purchase went through — the credits will appear in a moment."
     },
     "credits_exhausted": {
         "title": "Out of Credits",
