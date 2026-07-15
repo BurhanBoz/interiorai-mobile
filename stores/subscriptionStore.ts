@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { planTier, isAnnualPlan } from "@/utils/planTier";
 import type {
     PlanResponse,
     PlanPermissions,
@@ -61,7 +62,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         const subscription = await plansService.getActiveSubscription();
         // Resolve the active plan from the already-fetched plan list.
         const plans = get().plans;
-        const plan = plans?.find((p) => p.code === subscription.planCode);
+        // Resolve the subscriber's plan record. Exact code first; when the
+        // user sits on a plan that is no longer in the ACTIVE list (e.g. a
+        // *_LEGACY row after the V40 two-tier rework), fall back to the
+        // active plan of the SAME normalized tier — otherwise features/
+        // rules/permissions resolve empty and the UI shows 0-credit costs
+        // and false locks while the backend (which reads the real plan row)
+        // charges correctly. planTier maps BASIC*→BASE, PRO*/MAX*→PRO.
+        const plan =
+            plans?.find((p) => p.code === subscription.planCode) ??
+            plans?.find(
+                (p) =>
+                    !isAnnualPlan(p.code) &&
+                    planTier(p.code) === planTier(subscription.planCode),
+            );
         set({
             subscription,
             features: plan?.features ?? [],

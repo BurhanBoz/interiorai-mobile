@@ -701,45 +701,60 @@ export default function ResultDetailScreen() {
                 backgroundColor: "rgba(225,195,155,0.04)",
               })}
             >
+              {/* Deterministic inner row (2026-07-15 founder screenshot:
+                  the lock/title/subtitle/arrow rendered stacked). The inner
+                  View owns the row layout with explicit full width so no
+                  outer-style interaction can collapse it into a column. */}
               <View
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "rgba(225,195,155,0.10)",
+                  width: "100%",
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 12,
                 }}
               >
-                <Ionicons name="lock-closed" size={14} color="#E0C29A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
+                <View
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 13,
-                    color: "#E0C29A",
-                    letterSpacing: 0.4,
-                    textTransform: "uppercase",
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: "rgba(225,195,155,0.10)",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  {t("result.upscale_locked")}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    color: "rgba(225,195,155,0.55)",
-                    marginTop: 2,
-                  }}
-                  numberOfLines={1}
-                >
-                  {t("result.upscale_locked_subtitle", {
-                    defaultValue: "Upgrade to unlock 2K upscaling",
-                  })}
-                </Text>
+                  <Ionicons name="lock-closed" size={14} color="#E0C29A" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter-SemiBold",
+                      fontSize: 13,
+                      color: "#E0C29A",
+                      letterSpacing: 0.4,
+                      textTransform: "uppercase",
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("result.upscale_locked")}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter",
+                      fontSize: 11,
+                      lineHeight: 15,
+                      color: "rgba(225,195,155,0.55)",
+                      marginTop: 2,
+                    }}
+                    numberOfLines={2}
+                  >
+                    {t("result.upscale_locked_subtitle", {
+                      defaultValue: "Unlock 4× Ultra HD upscaling with Pro",
+                    })}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
               </View>
-              <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
             </Pressable>
           )}
         </View>

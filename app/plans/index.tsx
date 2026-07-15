@@ -34,7 +34,6 @@ type FeatureRowType =
     | "feature"
     | "permission"
     | "watermark"
-    | "outputs"
     | "queue"
     | "combo";
 
@@ -48,7 +47,6 @@ interface FeatureRow {
 
 const FEATURE_ROWS: FeatureRow[] = [
     { labelKey: "plans.row_monthly_credits",   key: "monthlyCredits",           type: "credits",    groupLabelKey: "plans.group_allowance" },
-    { labelKey: "plans.row_variants",          key: "max_outputs",              type: "outputs" },
     { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark",  groupLabelKey: "plans.group_quality" },
     { labelKey: "plans.row_queue_priority",    key: "queuePriority",            type: "queue" },
     { labelKey: "plans.row_hd",                key: "HD_REDESIGN",              type: "feature",    groupLabelKey: "plans.group_capabilities" },
@@ -65,7 +63,7 @@ const FEATURE_ROWS: FeatureRow[] = [
 // Frontend truth table — which features each tier definitively introduces.
 // Overrides backend "—" for features we know belong to a tier.
 const TIER_HIGHLIGHTS: Record<string, string[]> = {
-    BASE: ["HD_REDESIGN", "allow_custom_prompt", "allow_commercial_spaces", "max_outputs"],
+    BASE: ["HD_REDESIGN", "allow_custom_prompt", "allow_commercial_spaces"],
     PRO:  ["INPAINT", "STYLE_TRANSFER", "ULTRA_HD_UPSCALE", "advanced_controls"],
 };
 
@@ -77,14 +75,6 @@ function resolveCell(plan: PlanResponse, row: FeatureRow): string {
             if (plan.code === "FREE") return "—";
             if (plan.billingPeriod === "YEARLY") return String(plan.monthlyCredits * 12);
             return String(plan.monthlyCredits);
-        case "outputs": {
-            const feat = plan.features?.find((f) => f.featureCode === "INTERIOR_REDESIGN");
-            if (!feat?.limitsJson) return "1";
-            try {
-                const l = typeof feat.limitsJson === "string" ? JSON.parse(feat.limitsJson) : feat.limitsJson;
-                return String(l?.max_outputs ?? 1);
-            } catch { return "1"; }
-        }
         case "queue":
             return (plan.queuePriority ?? 0) > 0 ? "✓" : "—";
         case "feature": {
