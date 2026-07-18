@@ -2,6 +2,7 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -67,6 +68,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrate();
+  }, []);
+
+  // Foreground token refresh (2026-07-18): the JWT lives 24h, so a user who
+  // reopens the app the next day used to race an expired token into their
+  // first request and get bounced to login. On every return to foreground we
+  // silently exchange the token (backend accepts expired ones within a
+  // 30-day sliding window), so the session just continues.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        import("@/services/api").then(({ ensureFreshSession }) => ensureFreshSession());
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // Dismiss the branded splash once fonts have loaded AND the dwell timer

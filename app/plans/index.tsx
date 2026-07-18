@@ -673,7 +673,7 @@ export default function PlansScreen() {
                                     style: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)", flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
                                 }
                                 : {
-                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, borderRadius: 12, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
+                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 10, borderRadius: 12, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 6 },
                                 };
                             return (
                                 <Pressable
@@ -682,12 +682,24 @@ export default function PlansScreen() {
                                     style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}
                                 >
                                     <PillWrapper {...pillProps}>
-                                        <Text className="font-body" style={{ fontSize: 12.5, fontWeight: active ? "700" : "500", letterSpacing: 1.6, color: active ? "#F4DDB6" : "#998F84" }}>
+                                        {/* flexShrink + single-line auto-fit: the TR strings
+                                            ("YILLIK" + "%30 TASARRUF" badge) overflowed the
+                                            pill on narrower screens and clipped mid-word
+                                            (founder report 2026-07-18). The label yields
+                                            first; the badge never shrinks. */}
+                                        <Text
+                                            className="font-body"
+                                            numberOfLines={1}
+                                            adjustsFontSizeToFit
+                                            minimumFontScale={0.72}
+                                            style={{ flexShrink: 1, fontSize: 12.5, fontWeight: active ? "700" : "500", letterSpacing: 1.1, color: active ? "#F4DDB6" : "#998F84" }}
+                                        >
                                             {isAnnual ? t("plans.toggle_annual_label") : t("plans.toggle_monthly")}
                                         </Text>
                                         {isAnnual ? (
                                             <View style={{
-                                                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+                                                flexShrink: 0,
+                                                paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999,
                                                 backgroundColor: active ? "rgba(63,45,17,0.85)" : "rgba(225,195,155,0.14)",
                                                 borderWidth: 0.5,
                                                 borderColor: active ? "rgba(244,221,182,0.3)" : "rgba(225,195,155,0.35)",
