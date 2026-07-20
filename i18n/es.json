@@ -777,7 +777,7 @@
         "help_mail_subject": "Interior AI — Solicitud de soporte",
         "help_mail_body": "Hola equipo de Interior AI,\n\n[Describa su consulta aquí]\n\n---\nVersión: {{version}}\nPlan: {{plan}}\nID de usuario: {{userId}}",
         "help_faq_q1_q": "¿Cómo funcionan los créditos?",
-        "help_faq_q1_a": "Cada render consume créditos: Estándar 2, HD 3, Magic Edit 3, Style Transfer 4 y el Upscale 4× 3 (Pro). Planes: Free comienza con 15 créditos para probarlo todo; Base incluye 150 créditos/mes, Pro 400/mes.",
+        "help_faq_q1_a": "Cada render consume créditos: rediseño Estándar 3, HD 4, Habitación Vacía 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7) y el Upscale 4× Ultra HD 3 (Pro). Planes: Free empieza con 15 créditos para probarlo todo y luego se recarga 1 crédito al día; Base incluye 150 créditos/mes, Pro 400/mes.",
         "help_faq_q2_q": "¿Cuál es la diferencia entre planes?",
         "help_faq_q2_a": "Todos los planes usan nuestros mejores modelos de IA. Free comienza con 15 créditos (con marca de agua): cuando se agotan o termina la primera semana, elige un plan para continuar. Base (150/mes) elimina la marca de agua e incluye Rediseño, Habitación vacía y HD. Pro (400/mes) desbloquea Magic Edit, Style Transfer y el Upscale 4×.",
         "help_faq_q3_q": "¿Cómo uso Style Transfer?",

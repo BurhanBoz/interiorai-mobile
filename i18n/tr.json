@@ -777,7 +777,7 @@
         "help_mail_subject": "Interior AI — Destek Talebi",
         "help_mail_body": "Merhaba Interior AI ekibi,\n\n[Sorununuzu burada açıklayın]\n\n---\nUygulama sürümü: {{version}}\nPlan: {{plan}}\nKullanıcı ID: {{userId}}",
         "help_faq_q1_q": "Krediler nasıl çalışır?",
-        "help_faq_q1_a": "Her üretim kredi harcar: Standart 2, HD 3, Magic Edit 3, Stil Transferi 4, 4× Ultra HD Upscale 3 kredi (Pro). Paketler: Free her şeyi denemen için 15 kredi ile başlar; Base ayda 150, Pro ayda 400 kredi içerir.",
+        "help_faq_q1_a": "Her üretim kredi harcar: Standart yeniden tasarım 3, HD 4, Boş Oda 4 (HD 5), Magic Edit 4 (HD 5), Stil Transferi 6 (HD 7), 4× Ultra HD Upscale 3 kredi (Pro). Paketler: Free her şeyi denemen için 15 kredi ile başlar, sonra günde 1 krediye tamamlanır; Base ayda 150, Pro ayda 400 kredi içerir.",
         "help_faq_q2_q": "Planlar arasındaki fark nedir?",
         "help_faq_q2_a": "Her paket en iyi AI modellerimizle çalışır. Free, 15 kredi ile başlatır (filigranlı) — krediler bitince ya da ilk hafta dolunca devam etmek için bir paket seçersin. Base (ayda 150) filigranı kaldırır; Redesign, Boş Oda ve HD dahildir. Pro (ayda 400) Magic Edit, Stil Transferi ve 4× Ultra HD Upscale'i açar.",
         "help_faq_q3_q": "Style Transfer'ı nasıl kullanırım?",

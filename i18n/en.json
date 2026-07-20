@@ -777,7 +777,7 @@
         "help_mail_subject": "Interior AI — Support Request",
         "help_mail_body": "Hi Interior AI team,\n\n[Please describe your issue here]\n\n---\nApp version: {{version}}\nPlan: {{plan}}\nUser ID: {{userId}}",
         "help_faq_q1_q": "How do credits work?",
-        "help_faq_q1_a": "Each render consumes credits: Standard costs 2, HD 3, Magic Edit 3, Style Transfer 4, and the 4× Ultra HD Upscale 3 (Pro). Plans: Free starts you with 15 credits to try everything; Base includes 150 credits/month, Pro 400/month.",
+        "help_faq_q1_a": "Each render consumes credits: Standard redesign 3, HD 4, Empty Room 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7), and the 4× Ultra HD Upscale 3 (Pro). Plans: Free starts you with 15 credits to try everything, then tops up 1 credit a day; Base includes 150 credits/month, Pro 400/month.",
         "help_faq_q2_q": "What's the difference between the plans?",
         "help_faq_q2_a": "Every plan runs on our best AI models. Free starts you with 15 credits (watermarked) — when they're used or the first week ends, pick a plan to continue. Base (150 credits/mo) removes the watermark and covers Redesign, Empty Room and HD. Pro (400/mo) unlocks Magic Edit, Style Transfer and the 4× Ultra HD Upscale.",
         "help_faq_q3_q": "How do I use Style Transfer?",
