@@ -28,10 +28,13 @@ import { Input } from "@/components/ui/Input";
  * Smart Edit (INPAINT) — mask drawing screen.
  *
  * The user paints the areas they want the AI to CHANGE; everything left
- * unpainted is preserved pixel-perfect by flux-fill-pro (V37). Strokes are
- * captured in resolution-independent normalized coordinates and rasterized
- * SERVER-SIDE at the photo's original dimensions (the model requires
- * mask size == image size), so this screen never touches pixel data.
+ * unpainted is preserved pixel-perfect by flux-fill-pro (V37). In PROTECT
+ * mode the backend routes to an instruction-edit model instead (V49) — the
+ * painted object is kept via the prompt while the rest is redesigned
+ * coherently. Strokes are captured in resolution-independent normalized
+ * coordinates and rasterized SERVER-SIDE at the photo's original dimensions
+ * (the model requires mask size == image size), so this screen never
+ * touches pixel data.
  */
 
 const BRUSHES = [
@@ -118,10 +121,41 @@ export default function SmartEditScreen() {
   const canvasRef = useRef({ w: canvasW, h: canvasH });
   canvasRef.current = { w: canvasW, h: canvasH };
 
+  // Commits whatever is in the live buffer as a stroke. Shared by release
+  // AND terminate: since the canvas moved inside a ScrollView (2026-07 IA
+  // rework), the scroll container could steal the responder mid-stroke —
+  // scrollEnabled={!isDrawing} lags a frame behind the gesture, so a fast
+  // vertical stroke was TERMINATED and its points silently discarded
+  // ("çizilen yer kayboluyor", 2026-07-20). Termination now (a) is refused
+  // while drawing, (b) still commits the stroke if the OS forces it.
+  const commitLiveStroke = () => {
+    const pts = livePointsRef.current;
+    if (pts.length > 0) {
+      const { w, h } = canvasRef.current;
+      const normalized = pts.map(p => ({
+        x: +(p.x / w).toFixed(4),
+        y: +(p.y / h).toFixed(4),
+      }));
+      setStrokes(prev => [
+        ...prev,
+        { brush: brushRef.current, points: normalized },
+      ]);
+      Haptics.selectionAsync();
+    }
+    livePointsRef.current = [];
+    setLivePoints([]);
+    setIsDrawing(false);
+  };
+  const commitRef = useRef(commitLiveStroke);
+  commitRef.current = commitLiveStroke;
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      // Never yield the responder mid-stroke — the enclosing ScrollView
+      // asks for it on vertical movement before scrollEnabled updates.
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: evt => {
         setIsDrawing(true);
         const { locationX, locationY } = evt.nativeEvent;
@@ -144,28 +178,11 @@ export default function SmartEditScreen() {
         pts.push(p);
         setLivePoints([...pts]);
       },
-      onPanResponderRelease: () => {
-        const pts = livePointsRef.current;
-        if (pts.length > 0) {
-          const { w, h } = canvasRef.current;
-          const normalized = pts.map(p => ({
-            x: +(p.x / w).toFixed(4),
-            y: +(p.y / h).toFixed(4),
-          }));
-          setStrokes(prev => [
-            ...prev,
-            { brush: brushRef.current, points: normalized },
-          ]);
-          Haptics.selectionAsync();
-        }
-        livePointsRef.current = [];
-        setLivePoints([]);
-        setIsDrawing(false);
-      },
-      onPanResponderTerminate: () => {
-        livePointsRef.current = [];
-        setLivePoints([]);
-      },
+      onPanResponderRelease: () => commitRef.current(),
+      // Forced termination (incoming call, OS gesture): keep the work —
+      // committing beats discarding, and isDrawing must reset or the
+      // ScrollView stays locked forever.
+      onPanResponderTerminate: () => commitRef.current(),
     }),
   ).current;
 
