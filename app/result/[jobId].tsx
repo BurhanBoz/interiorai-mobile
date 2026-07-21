@@ -32,6 +32,7 @@ import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffe
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
+import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
@@ -145,6 +146,10 @@ export default function ResultDetailScreen() {
 
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
+
+  // ASO: single, well-timed rating ask — fires on the user's 2nd successfully
+  // viewed result (see useReviewPrompt for the full strategy).
+  useReviewPrompt(outputs.length > 0);
 
   /**
    * Build the image source for expo-image.
