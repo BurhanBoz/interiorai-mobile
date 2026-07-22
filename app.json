@@ -41,6 +41,16 @@
               "com.googleusercontent.apps.21314937170-kkccfujdhofi8k1c20eoct10f7l9g4c2"
             ]
           }
+        ],
+        "CFBundleLocalizations": [
+          "en",
+          "tr",
+          "de",
+          "es",
+          "it",
+          "ja",
+          "ko",
+          "ar"
         ]
       }
     },
