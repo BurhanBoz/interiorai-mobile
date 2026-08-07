@@ -19,7 +19,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import * as jobsService from "@/services/jobs";
-import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
+import { JobActivityCard } from "@/components/gallery/JobActivityCard";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
@@ -34,6 +35,11 @@ import { theme } from "@/config/theme";
 
 const FILTER_ALL = "__ALL__";
 const FILTER_FAVORITES = "__FAVORITES__";
+// P1-5: the History tab's contents live here now. Anything that is not yet a
+// finished image — still rendering, failed, cancelled — belongs under this
+// filter rather than in a second tab reading the same endpoint. Failed rows
+// matter most: they are the only route back to a retry.
+const FILTER_ACTIVITY = "__ACTIVITY__";
 
 /* ─────────────────── Empty State ─────────────────── */
 // The "no designs yet" state — delegates to the shared <EmptyState/>
@@ -192,6 +198,29 @@ export default function GalleryScreen() {
       );
   }, [jobs]);
 
+  // Everything that is NOT a finished image. Sorted newest-first like the
+  // grid so the two views agree about what "recent" means.
+  const activityJobs = useMemo(
+    () =>
+      jobs
+        .filter((j) => j.status !== "COMPLETED" || !(j.outputs?.length > 0))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
+    [jobs],
+  );
+
+  // Live count for the chip badge — the user should not have to switch
+  // filters to discover that something is still rendering.
+  const activeCount = useMemo(
+    () =>
+      jobs.filter((j) =>
+        ["PENDING", "SUBMITTED", "PROCESSING", "RUNNING"].includes(j.status),
+      ).length,
+    [jobs],
+  );
+
   // Unique room types for the filter chip row. Sorted by frequency so the
   // user's most-used rooms surface first — small UX win.
   const roomFilters = useMemo(() => {
@@ -222,6 +251,8 @@ export default function GalleryScreen() {
     return base;
   }, [allOutputs, activeRoomFilter, favoriteIds]);
 
+  const showActivity = activeRoomFilter === FILTER_ACTIVITY;
+
   // Tap navigates directly to the result detail page. Long-press opens a
   // fullscreen zoom preview for a quick peek without losing scroll position.
   const handleTap = useCallback((item: GalleryOutput) => {
@@ -243,7 +274,7 @@ export default function GalleryScreen() {
         style={({ pressed }) => ({
           width: tileWidth,
           height: tileHeight,
-          borderRadius: 14,
+          borderRadius: theme.radius.md,
           overflow: "hidden",
           backgroundColor: "#1C1B1B",
           borderWidth: 1,
@@ -276,9 +307,7 @@ export default function GalleryScreen() {
           <Text
             className="text-white font-headline"
             style={{
-              fontSize: 14,
-              fontWeight: "700",
-              lineHeight: 17,
+              ...theme.text.title,
             }}
             numberOfLines={1}
           >
@@ -287,11 +316,8 @@ export default function GalleryScreen() {
           {item.roomTypeName ? (
             <Text
               style={{
-                fontSize: 9,
-                fontWeight: "500",
-                letterSpacing: 1.4,
+                ...theme.text.caption,
                 color: "rgba(224,194,154,0.75)",
-                textTransform: "uppercase",
                 marginTop: 2,
               }}
               numberOfLines={1}
@@ -313,7 +339,7 @@ export default function GalleryScreen() {
             right: 10,
             width: 34,
             height: 34,
-            borderRadius: 17,
+            borderRadius: theme.radius.md,
             backgroundColor: isFavorite(item.outputId)
               ? "rgba(225,195,155,0.22)"
               : "rgba(19,19,19,0.6)",
@@ -350,9 +376,7 @@ export default function GalleryScreen() {
           >
             <Text
               style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 1.5,
+                ...theme.text.caption,
                 color: "#E0C29A",
               }}
             >
@@ -381,9 +405,12 @@ export default function GalleryScreen() {
   const FilterChip = ({
     label,
     value,
+    badge,
   }: {
     label: string;
     value: string;
+    /** Live count shown as a dot-badge — used by Activity for in-flight jobs. */
+    badge?: number;
   }) => {
     const active = activeRoomFilter === value;
     return (
@@ -395,7 +422,7 @@ export default function GalleryScreen() {
         style={({ pressed }) => ({
           paddingHorizontal: 18,
           paddingVertical: 9,
-          borderRadius: 999,
+          borderRadius: theme.radius.pill,
           backgroundColor: active ? "#C4A882" : "rgba(28,27,27,0.85)",
           borderWidth: 1,
           borderColor: active
@@ -412,17 +439,37 @@ export default function GalleryScreen() {
           }),
         })}
       >
+
         <Text
           style={{
-            fontSize: 12,
-            fontWeight: active ? "700" : "500",
+            ...theme.text.caption,
             color: active ? "#3F2D11" : "#E5E2E1",
-            letterSpacing: 0.3,
           }}
           numberOfLines={1}
         >
           {label}
         </Text>
+        {badge ? (
+          <View
+            style={{
+              minWidth: 18,
+              paddingHorizontal: 5,
+              paddingVertical: 1,
+              borderRadius: theme.radius.pill,
+              backgroundColor: active ? theme.color.onGold : theme.color.goldMidday,
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                ...theme.text.label,
+                color: active ? theme.color.goldDawn : theme.color.onGold,
+              }}
+            >
+              {badge}
+            </Text>
+          </View>
+        ) : null}
       </Pressable>
     );
   };
@@ -450,9 +497,7 @@ export default function GalleryScreen() {
           <Text
             className="font-headline text-on-surface"
             style={{
-              fontSize: 13,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             {t("app.name")}
@@ -472,7 +517,7 @@ export default function GalleryScreen() {
           <View className="px-6 pt-4 mb-8">
             <Text
               className="text-on-surface font-headline"
-              style={{ fontSize: 36, lineHeight: 40, fontWeight: "700" }}
+              style={{ ...theme.text.display }}
             >
               {t("gallery.title")}
             </Text>
@@ -485,14 +530,28 @@ export default function GalleryScreen() {
         </View>
       ) : (
         <FlatList
-          data={outputs}
-          renderItem={renderTile}
-          keyExtractor={item => item.outputId}
-          numColumns={2}
-          columnWrapperStyle={{ gap: GAP, paddingHorizontal: EDGE }}
+          // One list, two shapes. Activity renders job rows (single column,
+          // no columnWrapperStyle — passing one with numColumns={1} throws);
+          // every other filter renders the 2-up image grid.
+          key={showActivity ? "activity" : "grid"}
+          data={showActivity ? (activityJobs as any[]) : (outputs as any[])}
+          renderItem={
+            showActivity
+              ? ({ item }: any) => (
+                  <View style={{ paddingHorizontal: EDGE }}>
+                    <JobActivityCard item={item} />
+                  </View>
+                )
+              : (renderTile as any)
+          }
+          keyExtractor={(item: any) => (showActivity ? item.id : item.outputId)}
+          numColumns={showActivity ? 1 : 2}
+          columnWrapperStyle={
+            showActivity ? undefined : { gap: GAP, paddingHorizontal: EDGE }
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingBottom: TAB_BAR_HEIGHT + 40,
+            paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
             gap: GAP,
           }}
           onEndReached={loadMore}
@@ -517,7 +576,7 @@ export default function GalleryScreen() {
               >
                 <Text
                   className="text-on-surface font-headline"
-                  style={{ fontSize: 38, lineHeight: 42, fontWeight: "700" }}
+                  style={{ ...theme.text.display }}
                 >
                   {t("gallery.title")}
                 </Text>
@@ -549,6 +608,11 @@ export default function GalleryScreen() {
                   <FilterChip
                     label={t("gallery.filter_favorites")}
                     value={FILTER_FAVORITES}
+                  />
+                  <FilterChip
+                    label={t("gallery.filter_activity")}
+                    value={FILTER_ACTIVITY}
+                    badge={activeCount || undefined}
                   />
                   {roomFilters.map(name => (
                     <FilterChip key={name} label={name} value={name} />
@@ -644,7 +708,7 @@ export default function GalleryScreen() {
               left: 20,
               width: 40,
               height: 40,
-              borderRadius: 20,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(0,0,0,0.6)",
               alignItems: "center",
               justifyContent: "center",
@@ -659,7 +723,7 @@ export default function GalleryScreen() {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                paddingHorizontal: 20,
+                paddingHorizontal: theme.space.gutter,
                 paddingBottom: 50,
                 paddingTop: 24,
               }}
@@ -677,8 +741,7 @@ export default function GalleryScreen() {
               <View style={{ zIndex: 1 }}>
                 <Text
                   style={{
-                    fontSize: 18,
-                    fontWeight: "700",
+                    ...theme.text.subtitle,
                     color: "#fff",
                     marginBottom: 4,
                   }}
@@ -687,7 +750,7 @@ export default function GalleryScreen() {
                 </Text>
                 {previewItem.roomTypeName ? (
                   <Text
-                    style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}
+                    style={{ ...theme.text.body, color: "rgba(255,255,255,0.6)" }}
                   >
                     {previewItem.roomTypeName}
                   </Text>

@@ -45,7 +45,7 @@ export function AiConsentSheet() {
                         backgroundColor: "#1C1B1A",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.35)",
-                        paddingHorizontal: 24,
+                        paddingHorizontal: theme.space.gutter,
                         paddingTop: 26,
                         paddingBottom: 22,
                         maxHeight: "86%",
@@ -57,7 +57,7 @@ export function AiConsentSheet() {
                             style={{
                                 width: 46,
                                 height: 46,
-                                borderRadius: 23,
+                                borderRadius: theme.radius.lg,
                                 backgroundColor: "rgba(225,195,155,0.1)",
                                 borderWidth: 1,
                                 borderColor: "rgba(225,195,155,0.35)",
@@ -74,46 +74,38 @@ export function AiConsentSheet() {
                         </View>
                         <Text
                             style={{
-                                fontFamily: "NotoSerif",
-                                fontSize: 21,
-                                lineHeight: 27,
+                                ...theme.text.headline,
                                 color: theme.color.onSurface,
                                 marginBottom: 12,
-                            }}
+                              }}
                         >
                             {t("ai_consent.title")}
                         </Text>
 
                         <Text
                             style={{
-                                fontFamily: "Inter",
-                                fontSize: 13.5,
-                                lineHeight: 20,
+                                ...theme.text.body,
                                 color: "#C9BFB4",
                                 marginBottom: 12,
-                            }}
+                              }}
                         >
                             {t("ai_consent.body_what")}
                         </Text>
                         <Text
                             style={{
-                                fontFamily: "Inter",
-                                fontSize: 13.5,
-                                lineHeight: 20,
+                                ...theme.text.body,
                                 color: "#C9BFB4",
                                 marginBottom: 12,
-                            }}
+                              }}
                         >
                             {t("ai_consent.body_who")}
                         </Text>
                         <Text
                             style={{
-                                fontFamily: "Inter",
-                                fontSize: 13.5,
-                                lineHeight: 20,
+                                ...theme.text.body,
                                 color: "#C9BFB4",
                                 marginBottom: 14,
-                            }}
+                              }}
                         >
                             {t("ai_consent.body_privacy")}
                         </Text>
@@ -125,11 +117,10 @@ export function AiConsentSheet() {
                         >
                             <Text
                                 style={{
-                                    fontFamily: "Inter-SemiBold",
-                                    fontSize: 13,
+                                    ...theme.text.subtitle,
                                     color: theme.color.goldMidday,
                                     textDecorationLine: "underline",
-                                }}
+                                  }}
                             >
                                 {t("ai_consent.privacy_link")}
                             </Text>
@@ -148,18 +139,16 @@ export function AiConsentSheet() {
                                 end={{ x: 1, y: 1 }}
                                 style={{
                                     height: 50,
-                                    borderRadius: 14,
+                                    borderRadius: theme.radius.md,
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}
                             >
                                 <Text
                                     style={{
-                                        fontFamily: "Inter-SemiBold",
-                                        fontSize: 14.5,
+                                        ...theme.text.subtitle,
                                         color: theme.color.onGold,
-                                        letterSpacing: 0.2,
-                                    }}
+                                      }}
                                 >
                                     {t("ai_consent.accept")}
                                 </Text>
@@ -178,10 +167,9 @@ export function AiConsentSheet() {
                         >
                             <Text
                                 style={{
-                                    fontFamily: "Inter",
-                                    fontSize: 14,
+                                    ...theme.text.body,
                                     color: "#9A9089",
-                                }}
+                                  }}
                             >
                                 {t("ai_consent.decline")}
                             </Text>

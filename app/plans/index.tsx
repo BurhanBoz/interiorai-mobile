@@ -195,25 +195,25 @@ function PlanFeatureSheet({
                         <>
                             {/* Header */}
                             <View style={{
-                                paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16,
+                                paddingHorizontal: theme.space.gutter, paddingTop: 10, paddingBottom: 16,
                                 borderBottomWidth: 1, borderBottomColor: "rgba(77,70,60,0.3)",
                             }}>
                                 <Text style={{
-                                    fontFamily: "Inter-SemiBold", fontSize: 10,
-                                    letterSpacing: 2.4, textTransform: "uppercase",
-                                    color: accentColor, marginBottom: 4,
-                                }}>
+                                    ...theme.text.label,
+                                    color: accentColor,
+ marginBottom: 4,
+                                  }}>
                                     {plan.name}
                                 </Text>
                                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
                                     <Text style={{
-                                        fontFamily: "NotoSerif", fontSize: 28, lineHeight: 34,
-                                        color: "#E5E2E1", letterSpacing: -0.5,
-                                    }}>
+                                        ...theme.text.display,
+                                        color: "#E5E2E1",
+                                      }}>
                                         {priceLabel(plan, storePrices, t)}
                                     </Text>
                                     {plan.priceCents > 0 && (
-                                        <Text style={{ fontFamily: "Inter", fontSize: 12, color: "rgba(209,197,184,0.5)" }}>
+                                        <Text style={{ ...theme.text.caption, color: "rgba(209,197,184,0.5)" }}>
                                             {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
                                         </Text>
                                     )}
@@ -252,15 +252,14 @@ function PlanFeatureSheet({
                                             <View key={row.key}>
                                                 {showGroupHeader && row.groupLabelKey ? (
                                                     <View style={{
-                                                        paddingHorizontal: 24, paddingTop: 16, paddingBottom: 6,
+                                                        paddingHorizontal: theme.space.gutter, paddingTop: 16, paddingBottom: 6,
                                                         borderTopWidth: lastGroup !== row.groupLabelKey ? 0 : 1,
                                                         borderTopColor: "rgba(77,70,60,0.2)",
                                                     }}>
                                                         <Text style={{
-                                                            fontFamily: "Inter-SemiBold", fontSize: 10,
-                                                            letterSpacing: 1.8, textTransform: "uppercase",
+                                                            ...theme.text.caption,
                                                             color: "rgba(225,195,155,0.5)",
-                                                        }}>
+                                                          }}>
                                                             {t(row.groupLabelKey)}
                                                         </Text>
                                                     </View>
@@ -297,12 +296,12 @@ function PlanFeatureSheet({
                                                     )}
 
                                                     <Text style={{
-                                                        flex: 1, fontFamily: isNew ? "Inter-SemiBold" : "Inter",
-                                                        fontSize: 13, lineHeight: 18,
+                                                        ...theme.text.body,
+                                                        flex: 1,
                                                         color: isDash
                                                             ? "rgba(209,197,184,0.32)"
                                                             : isNew ? "#EDE8E2" : "#C8C0B8",
-                                                    }}>
+                                                      }}>
                                                         {t(labelKey)}
                                                     </Text>
 
@@ -316,18 +315,18 @@ function PlanFeatureSheet({
                                                             marginLeft: 10, flexShrink: 0,
                                                         }}>
                                                             <Text style={{
-                                                                fontFamily: "Inter-SemiBold", fontSize: 10,
-                                                                letterSpacing: 1.2, textTransform: "uppercase",
+                                                                ...theme.text.label,
                                                                 color: accentColor,
-                                                            }}>
+                                                              }}>
                                                                 {tierLabel}
                                                             </Text>
                                                         </View>
                                                     ) : (!isCheck && !isDash) ? (
                                                         <Text style={{
-                                                            fontFamily: "Inter-SemiBold",
-                                                            fontSize: 13, color: "#E0C29A", marginLeft: 8,
-                                                        }}>
+                                                            ...theme.text.subtitle,
+ color: "#E0C29A",
+ marginLeft: 8,
+                                                          }}>
                                                             {val}
                                                         </Text>
                                                     ) : null}
@@ -340,19 +339,19 @@ function PlanFeatureSheet({
 
                             {/* CTA */}
                             <View style={{
-                                paddingHorizontal: 20, paddingTop: 14, paddingBottom: 36,
+                                paddingHorizontal: theme.space.gutter, paddingTop: 14, paddingBottom: 36,
                                 borderTopWidth: 1, borderTopColor: "rgba(77,70,60,0.2)",
                             }}>
                                 {isCurrent ? (
                                     <View style={{
-                                        height: 56, borderRadius: 16, backgroundColor: "#2A2A2A",
+                                        height: 56, borderRadius: theme.radius.md, backgroundColor: "#2A2A2A",
                                         alignItems: "center", justifyContent: "center",
                                         borderWidth: 1, borderColor: "rgba(77,70,60,0.4)",
                                     }}>
                                         <Text style={{
-                                            fontFamily: "Inter-SemiBold", fontSize: 14,
-                                            color: "#998F84", letterSpacing: 0.3,
-                                        }}>
+                                            ...theme.text.subtitle,
+                                            color: "#998F84",
+                                          }}>
                                             {t("plans.current_plan")}
                                         </Text>
                                     </View>
@@ -365,15 +364,15 @@ function PlanFeatureSheet({
                                             colors={["#C4A882", "#A68A62"]}
                                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                                             style={{
-                                                height: 56, borderRadius: 16,
+                                                height: 56, borderRadius: theme.radius.md,
                                                 flexDirection: "row", alignItems: "center",
-                                                justifyContent: "space-between", paddingHorizontal: 24,
+                                                justifyContent: "space-between", paddingHorizontal: theme.space.gutter,
                                             }}
                                         >
                                             <Text style={{
-                                                fontFamily: "Inter-SemiBold", fontSize: 14,
-                                                color: "#3F2D11", letterSpacing: 0.3,
-                                            }}>
+                                                ...theme.text.subtitle,
+                                                color: "#3F2D11",
+                                              }}>
                                                 {t("plans.confirm")}
                                             </Text>
                                             <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
@@ -436,10 +435,10 @@ function PlanCard({
     // the disabled "Current Plan" button — not by the frame.
     const baseStyle = {
         paddingVertical: 22,
-        paddingHorizontal: 24,
+        paddingHorizontal: theme.space.gutter,
         // Softer premium frame (2026-07-11 polish): larger radius + a
         // hairline border reads calmer than the previous 1.5px/18.
-        borderRadius: 24,
+        borderRadius: theme.radius.lg,
         backgroundColor: theme.color.surfaceContainerLow,
         borderWidth: 1,
         borderColor: theme.color.goldDusk,
@@ -465,7 +464,7 @@ function PlanCard({
                     colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.02)", "rgba(253,222,181,0.08)"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     pointerEvents="none"
-                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: theme.radius.lg }}
                 />
             ) : null}
 
@@ -474,9 +473,9 @@ function PlanCard({
                     <LinearGradient
                         colors={[theme.color.goldMidday, theme.color.goldDusk]}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 0.5, borderColor: "rgba(63,45,17,0.2)" }}
+                        style={{ borderRadius: theme.radius.pill, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 0.5, borderColor: "rgba(63,45,17,0.2)" }}
                     >
-                        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: theme.color.onGold, textTransform: "uppercase", letterSpacing: 1.6 }}>
+                        <Text style={{ ...theme.text.label, color: theme.color.onGold }}>
                             {badge}
                         </Text>
                     </LinearGradient>
@@ -487,14 +486,14 @@ function PlanCard({
                 No absolute positioning: every card has identical structure
                 so labels land at the same Y position regardless of border. */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <Text className="font-label text-secondary" style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}>
+                <Text className="font-label text-secondary" style={{ ...theme.text.label }}>
                     {plan.name}
                 </Text>
                 <Pressable
                     onPress={onExpand}
                     hitSlop={12}
                     style={{
-                        width: 28, height: 28, borderRadius: 14,
+                        width: 28, height: 28, borderRadius: theme.radius.md,
                         borderWidth: 1, borderColor: "rgba(225,195,155,0.3)",
                         backgroundColor: "rgba(225,195,155,0.07)",
                         alignItems: "center", justifyContent: "center",
@@ -504,38 +503,38 @@ function PlanCard({
                 </Pressable>
             </View>
 
-            <Text className="font-body" style={{ fontSize: 12.5, lineHeight: 18, color: "#E0C29A", marginBottom: 18 }}>
+            <Text className="font-body" style={{ ...theme.text.caption, color: "#E0C29A", marginBottom: 18 }}>
                 {subtitle}
             </Text>
 
             <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 22 }}>
-                <Text className="font-headline text-on-surface" style={{ fontSize: 26, lineHeight: 30, letterSpacing: -0.4 }}>
+                <Text className="font-headline text-on-surface" style={{ ...theme.text.headline }}>
                     {priceLabel(plan, storePrices, t)}
                 </Text>
                 {plan.priceCents > 0 && (
-                    <Text className="text-secondary" style={{ fontSize: 11 }}>
+                    <Text className="text-secondary" style={{ ...theme.text.caption }}>
                         {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
                     </Text>
                 )}
             </View>
 
             {isCurrent ? (
-                <View style={{ height: 48, borderRadius: 14, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#998F84", letterSpacing: 0.3 }}>{cta}</Text>
+                <View style={{ height: 48, borderRadius: theme.radius.md, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#998F84" }}>{cta}</Text>
                 </View>
             ) : isPopular ? (
                 // Visual only — the whole card Pressable handles navigation.
                 <LinearGradient
                     colors={["#C4A882", "#A68A62"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={{ height: 48, borderRadius: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
+                    style={{ height: 48, borderRadius: theme.radius.md, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: theme.space.gutter }}
                 >
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#3F2D11", letterSpacing: 0.2 }}>{cta}</Text>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#3F2D11" }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
                 </LinearGradient>
             ) : (
-                <View style={{ height: 48, borderRadius: 14, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#E0C29A", letterSpacing: 0.3 }}>{cta}</Text>
+                <View style={{ height: 48, borderRadius: theme.radius.md, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#E0C29A" }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
                 </View>
             )}
@@ -546,6 +545,9 @@ function PlanCard({
 /* ------------------------------------------------------------------ */
 /*  Screen                                                              */
 /* ------------------------------------------------------------------ */
+
+/** Half the toggle track, minus the gap. Static so nothing can drop it. */
+const PILL_SLOT = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } as const;
 
 export default function PlansScreen() {
     const { t, i18n } = useTranslation();
@@ -606,15 +608,15 @@ export default function PlansScreen() {
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+                contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Headline */}
                 <View style={{ marginTop: 24, marginBottom: 24 }}>
-                    <Text className="font-headline text-on-surface" style={{ fontSize: 36, lineHeight: 42, marginBottom: 12 }}>
+                    <Text className="font-headline text-on-surface" style={{ ...theme.text.display, marginBottom: 12 }}>
                         {t("plans.title")}
                     </Text>
-                    <Text className="font-body text-secondary" style={{ fontSize: 14 }}>
+                    <Text className="font-body text-secondary" style={{ ...theme.text.body }}>
                         {t("plans.subtitle")}
                     </Text>
                 </View>
@@ -627,12 +629,12 @@ export default function PlansScreen() {
                     <View style={{
                         flexDirection: "row", alignItems: "center", gap: 10,
                         marginBottom: 24, paddingVertical: 14, paddingHorizontal: 16,
-                        borderRadius: 16, borderWidth: 1,
+                        borderRadius: theme.radius.md, borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.35)",
                         backgroundColor: "rgba(225,195,155,0.07)",
                     }}>
                         <Ionicons name="time-outline" size={18} color={theme.color.goldMidday} />
-                        <Text className="font-body" style={{ flex: 1, fontSize: 13, lineHeight: 19, color: "#EDE4D7" }}>
+                        <Text className="font-body" style={{ ...theme.text.body, flex: 1, color: "#EDE4D7" }}>
                             {t("plans.scheduled_banner", {
                                 plan: (plans ?? []).find(
                                     (p) => p.code === subscription.scheduledPlanCode,
@@ -656,8 +658,14 @@ export default function PlansScreen() {
                 {/* Monthly / Annual toggle — hidden until annual SKUs exist */}
                 {hasAnnualPlans && (
                 <View style={{ marginBottom: 28 }}>
+                    {/* The two pills split this track evenly. They used to hug
+                        their labels on the left with dead space to the right
+                        (founder screenshot 2026-08-07): `flex: 1` alone lets a
+                        child fall back to content width, so the share is stated
+                        explicitly on both the Pressable and the pill below. */}
                     <View style={{
-                        flexDirection: "row", padding: 5, borderRadius: 16,
+                        flexDirection: "row", alignSelf: "stretch", gap: 6,
+                        padding: 5, borderRadius: theme.radius.md,
                         backgroundColor: "rgba(20,19,19,0.85)",
                         borderWidth: 1, borderColor: "rgba(77,70,60,0.28)",
                         ...theme.elevation.sm,
@@ -670,16 +678,22 @@ export default function PlansScreen() {
                                 ? {
                                     colors: ["rgba(253,222,181,0.18)", "rgba(225,195,155,0.10)"],
                                     start: { x: 0, y: 0 }, end: { x: 1, y: 1 },
-                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)", flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
+                                    style: { alignSelf: "stretch" as const, paddingVertical: 13, paddingHorizontal: 12, borderRadius: theme.radius.sm, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)", flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
                                 }
                                 : {
-                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 10, borderRadius: 12, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 6 },
+                                    style: { alignSelf: "stretch" as const, paddingVertical: 13, paddingHorizontal: 10, borderRadius: theme.radius.sm, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 6 },
                                 };
                             return (
                                 <Pressable
                                     key={mode}
                                     onPress={() => setBillingMode(mode)}
-                                    style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}
+                                    // STATIC, not a style callback: the callback
+                                    // form is being dropped somewhere in this app's
+                                    // render path, which left the Pressable sized to
+                                    // its content — so the 100%-wide pill inside it
+                                    // ran off the right edge and clipped "SAVE 30%"
+                                    // (founder screenshot, 2026-08-07).
+                                    style={PILL_SLOT}
                                 >
                                     <PillWrapper {...pillProps}>
                                         {/* flexShrink + single-line auto-fit: the TR strings
@@ -692,19 +706,24 @@ export default function PlansScreen() {
                                             numberOfLines={1}
                                             adjustsFontSizeToFit
                                             minimumFontScale={0.72}
-                                            style={{ flexShrink: 1, fontSize: 12.5, fontWeight: active ? "700" : "500", letterSpacing: 1.1, color: active ? "#F4DDB6" : "#998F84" }}
+                                            style={{ ...theme.text.caption, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
                                         >
                                             {isAnnual ? t("plans.toggle_annual_label") : t("plans.toggle_monthly")}
                                         </Text>
                                         {isAnnual ? (
                                             <View style={{
-                                                flexShrink: 0,
-                                                paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999,
+                                                // Was flexShrink:0 — an unshrinkable badge next to
+                                                // an unshrinkable pill is what pushed ANNUAL past the
+                                                // track edge. It may now give ground; the label
+                                                // auto-fits first, so the badge only yields on the
+                                                // narrowest screens and longest locales.
+                                                flexShrink: 1,
+                                                paddingHorizontal: 7, paddingVertical: 3, borderRadius: theme.radius.pill,
                                                 backgroundColor: active ? "rgba(63,45,17,0.85)" : "rgba(225,195,155,0.14)",
                                                 borderWidth: 0.5,
                                                 borderColor: active ? "rgba(244,221,182,0.3)" : "rgba(225,195,155,0.35)",
                                             }}>
-                                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: 1.1, color: active ? "#F4DDB6" : "#E0C29A" }}>
+                                                <Text style={{ ...theme.text.caption, color: active ? "#F4DDB6" : "#E0C29A" }}>
                                                     {t("plans.toggle_save_badge")}
                                                 </Text>
                                             </View>
@@ -714,11 +733,11 @@ export default function PlansScreen() {
                             );
                         })}
                     </View>
-                    {billingMode === "ANNUAL" ? (
-                        <Text style={{ marginTop: 10, fontSize: 11.5, letterSpacing: 0.3, textAlign: "center", color: "rgba(225,195,155,0.7)", fontFamily: "Inter" }}>
-                            {t("plans.toggle_annual_hint")}
-                        </Text>
-                    ) : null}
+                    {/* The "save up to 30%" hint under the toggle is gone
+                        (founder call, 2026-08-07): the ANNUAL pill already
+                        carries a SAVE 30% badge, so the line repeated itself
+                        — and because it only appeared on one of the two
+                        states, switching tabs shifted every card below it. */}
                 </View>
                 )}
 
@@ -747,14 +766,14 @@ export default function PlansScreen() {
                 {/* Credit pack bridge */}
                 <Pressable onPress={() => router.push("/credits/packs")} style={{ marginBottom: 48 }}>
                     <View className="bg-surface-container-low rounded-xl flex-row items-center" style={{ padding: 20, borderWidth: 1, borderColor: "rgba(77,70,60,0.3)" }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(224,194,154,0.1)", alignItems: "center", justifyContent: "center", marginRight: 16 }}>
+                        <View style={{ width: 40, height: 40, borderRadius: theme.radius.lg, backgroundColor: "rgba(224,194,154,0.1)", alignItems: "center", justifyContent: "center", marginRight: 16 }}>
                             <Ionicons name="flash-outline" size={20} color="#E0C29A" />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text className="font-body text-on-surface" style={{ fontSize: 14, fontWeight: "600", marginBottom: 2 }}>
+                            <Text className="font-body text-on-surface" style={{ ...theme.text.body, marginBottom: 2 }}>
                                 {t("plans.credit_pack_bridge_title")}
                             </Text>
-                            <Text className="font-body text-on-surface-variant" style={{ fontSize: 12 }}>
+                            <Text className="font-body text-on-surface-variant" style={{ ...theme.text.caption }}>
                                 {t("plans.credit_pack_bridge_subtitle")}
                             </Text>
                         </View>
@@ -786,11 +805,9 @@ export default function PlansScreen() {
                             <Ionicons name="settings-outline" size={15} color="#998F84" />
                             <Text
                                 style={{
-                                    fontFamily: "Inter-Medium",
-                                    fontSize: 13,
-                                    letterSpacing: 0.2,
+                                    ...theme.text.subtitle,
                                     color: "#998F84",
-                                }}
+                                  }}
                             >
                                 {t("plans.manage_subscription", {
                                     defaultValue: "Manage or cancel subscription",

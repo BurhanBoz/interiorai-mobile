@@ -43,23 +43,19 @@ export function SubscriptionDisclosure({ planName, pricePerPeriod }: Subscriptio
             {/* Title + period — Apple wants subscription name + length explicit */}
             <Text
                 style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 12,
-                    letterSpacing: 0.4,
+                    ...theme.text.caption,
                     color: theme.color.onSurface,
                     textAlign: "center",
-                }}
+                  }}
             >
                 {t("plans.disclosure_title", { plan: planName })}
             </Text>
             <Text
                 style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    lineHeight: 16,
+                    ...theme.text.caption,
                     color: theme.color.onSurfaceVariant,
                     textAlign: "center",
-                }}
+                  }}
             >
                 {t("plans.disclosure_period", { price: pricePerPeriod })}
             </Text>
@@ -67,24 +63,20 @@ export function SubscriptionDisclosure({ planName, pricePerPeriod }: Subscriptio
             {/* Auto-renewal + manage — Apple-required statements */}
             <Text
                 style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    lineHeight: 16,
+                    ...theme.text.caption,
                     color: theme.color.onSurfaceVariant,
                     textAlign: "center",
                     marginTop: 4,
-                }}
+                  }}
             >
                 {t("plans.disclosure_auto_renew")}
             </Text>
             <Text
                 style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    lineHeight: 16,
+                    ...theme.text.caption,
                     color: theme.color.onSurfaceVariant,
                     textAlign: "center",
-                }}
+                  }}
             >
                 {t("plans.disclosure_manage")}
             </Text>
@@ -92,14 +84,12 @@ export function SubscriptionDisclosure({ planName, pricePerPeriod }: Subscriptio
             {/* Privacy + Terms links — must be functional, not just text */}
             <Text
                 style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    lineHeight: 16,
+                    ...theme.text.caption,
                     color: theme.color.onSurfaceVariant,
                     opacity: 0.85,
                     textAlign: "center",
                     marginTop: 4,
-                }}
+                  }}
             >
                 {t("plans.disclosure_agreement_prefix")}{" "}
                 <Text

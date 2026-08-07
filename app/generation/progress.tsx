@@ -200,8 +200,11 @@ export default function GenerationProgressScreen() {
   };
 
   const handleRetry = () => {
+    // Options is where Generate lives since P2-8 folded Review into it. The
+    // studio store still holds every selection, so the user lands on a filled
+    // screen and can retap Generate — not restart the wizard.
     router.replace({
-      pathname: "/(tabs)/studio/review" as any,
+      pathname: "/(tabs)/studio/options" as any,
       params: errorMessage ? { error: errorMessage } : {},
     });
   };
@@ -253,7 +256,7 @@ export default function GenerationProgressScreen() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           paddingBottom: 40,
           flexGrow: 1,
           // The style card is a spotlight overlay now — the spinner block
@@ -315,7 +318,7 @@ export default function GenerationProgressScreen() {
         {/* Title */}
         <Text
           className="font-headline text-on-background text-center mt-10"
-          style={{ fontSize: 28, letterSpacing: -0.3, fontStyle: "italic" }}
+          style={{ ...theme.text.display, fontStyle: "italic" }}
         >
           {title}
         </Text>
@@ -324,10 +327,7 @@ export default function GenerationProgressScreen() {
         <Text
           className="text-center mt-4"
           style={{
-            fontFamily: "Inter",
-            fontSize: 11,
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: phase === "error" ? "#FFB4AB" : "#E0C29A",
           }}
         >
@@ -349,7 +349,7 @@ export default function GenerationProgressScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{
                   flex: 1,
-                  borderRadius: 9999,
+                  borderRadius: theme.radius.pill,
                   shadowColor: "#FEDFB5",
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.6,
@@ -364,10 +364,8 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-label"
               style={{
-                fontSize: 10,
+                ...theme.text.caption,
                 color: "rgba(209,197,184,0.6)",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
               }}
             >
               {t("generation.elapsed_label")} · {formatElapsed(elapsedMs, t)}
@@ -375,7 +373,7 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-headline"
               style={{
-                fontSize: 14,
+                ...theme.text.title,
                 color: phase === "error" ? "#FFB4AB" : "#FEDFB5",
               }}
             >
@@ -390,7 +388,7 @@ export default function GenerationProgressScreen() {
             onPress={handleRetry}
             className="mt-8 self-center rounded-xl"
             style={{
-              paddingHorizontal: 24,
+              paddingHorizontal: theme.space.gutter,
               paddingVertical: 14,
               backgroundColor: "#2A2A2A",
               borderWidth: 1,
@@ -400,10 +398,7 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-label text-secondary"
               style={{
-                fontSize: 12,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                fontWeight: "600",
+                ...theme.text.caption,
               }}
             >
               {t("common.try_again")}
@@ -435,10 +430,7 @@ export default function GenerationProgressScreen() {
         >
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 11,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "#E0C29A",
             }}
           >
@@ -448,13 +440,13 @@ export default function GenerationProgressScreen() {
         </View>
         <Text
           className="font-headline text-on-surface"
-          style={{ fontSize: 22, lineHeight: 28 }}
+          style={{ ...theme.text.headline }}
         >
           {styleName}
         </Text>
         <Text
           className="font-body text-on-surface-variant"
-          style={{ fontSize: 14, lineHeight: 22, fontStyle: "italic" }}
+          style={{ ...theme.text.body, fontStyle: "italic" }}
         >
           {styleDescription}
         </Text>

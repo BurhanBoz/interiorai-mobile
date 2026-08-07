@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -134,7 +135,7 @@ export default function StudioScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         {/* Spacer keeps the brand centered — the hamburger is retired
@@ -150,31 +151,23 @@ export default function StudioScreen() {
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
+        contentContainerStyle={{
+          paddingHorizontal: theme.space.gutter,
+          paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Eyebrow + headline — centered welcome */}
-        <View style={{ marginTop: 12, marginBottom: 10, alignItems: "center" }}>
-          <Text
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: theme.color.goldMidday,
-            }}
-          >
-            {t("studio.home_eyebrow")}
-          </Text>
-        </View>
+        {/* Headline. The eyebrow above it ("AI STUDIO") was removed
+            2026-08-07: it said what the headline already says, in 10pt
+            uppercase, and cost 35pt of the only 544pt this screen has for
+            the five feature cards — on a product whose entire pitch is the
+            before/after imagery inside them. */}
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 32,
-            lineHeight: 38,
-            letterSpacing: -0.4,
+            ...theme.text.display,
             color: theme.color.onSurface,
-            marginBottom: 28,
+            marginTop: 12,
+            marginBottom: 16,
             textAlign: "center",
           }}
         >
@@ -250,7 +243,7 @@ export default function StudioScreen() {
             {/* Professional tips — same one-shot intro, second card group. */}
             <View
               pointerEvents="box-none"
-              style={{ paddingHorizontal: 24, gap: 18, marginTop: 8 }}
+              style={{ paddingHorizontal: theme.space.gutter, gap: 18, marginTop: 8 }}
             >
               <View
                 style={{
@@ -261,9 +254,7 @@ export default function StudioScreen() {
               >
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 14,
-                    letterSpacing: 0.2,
+                    ...theme.text.subtitle,
                     color: theme.color.onSurfaceVariant,
                   }}
                 >
@@ -285,7 +276,7 @@ export default function StudioScreen() {
                     key={tip.icon}
                     style={{
                       padding: 18,
-                      borderRadius: 16,
+                      borderRadius: theme.radius.md,
                       backgroundColor: theme.color.surfaceContainerLow,
                       borderWidth: 1,
                       borderColor: "rgba(77,70,60,0.25)",
@@ -298,7 +289,7 @@ export default function StudioScreen() {
                       style={{
                         width: 44,
                         height: 44,
-                        borderRadius: 12,
+                        borderRadius: theme.radius.sm,
                         backgroundColor: "rgba(225,195,155,0.08)",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.18)",
@@ -316,10 +307,7 @@ export default function StudioScreen() {
                     <View style={{ flex: 1 }}>
                       <Text
                         style={{
-                          fontFamily: "Inter-SemiBold",
-                          fontSize: 13,
-                          letterSpacing: 1.4,
-                          textTransform: "uppercase",
+                          ...theme.text.caption,
                           color: theme.color.goldMidday,
                           marginBottom: 4,
                         }}
@@ -328,9 +316,7 @@ export default function StudioScreen() {
                       </Text>
                       <Text
                         style={{
-                          fontFamily: "Inter",
-                          fontSize: 13,
-                          lineHeight: 19,
+                          ...theme.text.body,
                           color: theme.color.onSurfaceVariant,
                         }}
                       >

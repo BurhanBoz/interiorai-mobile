@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Platform, Animated } from "react-native";
+import { View, Text, Pressable, Platform, Animated, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef } from "react";
 import { BlurView } from "expo-blur";
@@ -20,7 +20,6 @@ interface TabConfig {
 const TAB_CONFIG: TabConfig[] = [
     { name: "studio", labelKey: "tabs.studio", icon: "color-palette" },
     { name: "gallery", labelKey: "tabs.gallery", icon: "images" },
-    { name: "history", labelKey: "tabs.history", icon: "time" },
     // Route stays "profile" (renaming the folder would churn every deep
     // link); the SLOT is presented as Settings — the account hub. Quick
     // personal actions live in the top-right AvatarMenu instead.
@@ -46,6 +45,17 @@ const TAB_CONFIG: TabConfig[] = [
  * pad their content by at least this much — import it instead of hardcoding.
  */
 export const TAB_BAR_HEIGHT = 96;
+
+/**
+ * Extra room a scrolling screen leaves under its last row, on top of the tab
+ * bar itself. Screens were each inventing a number (128, 120, 136, 60…), so
+ * some ended with their final control tucked behind the bar. Responsive for
+ * the same reason the CTA gap is: a fixed 40 is generous on a 6.7" phone and
+ * expensive on an SE.
+ */
+export const BOTTOM_SAFE_GAP = Math.round(
+  Math.min(48, Math.max(32, Dimensions.get("window").height * 0.05)),
+);
 
 export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
     const { t } = useTranslation();
@@ -157,11 +167,9 @@ function TabItem({ tab, isActive, label, onPress }: TabItemProps) {
             </Animated.View>
             <Text
                 style={{
-                    fontFamily: isActive ? "Inter-SemiBold" : "Inter-Medium",
-                    fontSize: 10,
-                    letterSpacing: 0.2,
+                    ...theme.text.caption,
                     color,
-                }}
+                  }}
             >
                 {label}
             </Text>

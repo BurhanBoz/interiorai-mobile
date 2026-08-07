@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -55,14 +56,15 @@ export default function StyleTransferScreen() {
   const canProceed = !!referencePhoto?.fileId;
 
   // wizard=1 → entered right after photo upload (2026-07 IA rework):
-  // continue the shared chain (style → options → review). Otherwise this
-  // screen was opened from options/review to (re)pick the reference.
+  // continue the shared chain (style → options). Otherwise this screen was
+  // opened from Options to (re)pick the reference, so go back there —
+  // Options owns Generate since the Review step was folded into it (P2-8).
   const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const handleNext = () => {
     if (!canProceed) return;
     Haptics.selectionAsync();
     if (wizard === "1") router.push("/studio/style");
-    else router.push("/studio/review");
+    else router.replace("/(tabs)/studio/options");
   };
 
   return (
@@ -78,7 +80,7 @@ export default function StyleTransferScreen() {
             style={{
               width: 40,
               height: 40,
-              borderRadius: 20,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(42,42,42,0.8)",
               borderWidth: 1,
               borderColor: "rgba(77,70,60,0.15)",
@@ -91,9 +93,7 @@ export default function StyleTransferScreen() {
           <Text
             className="font-headline text-on-surface"
             style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             Roomframe AI
@@ -105,7 +105,7 @@ export default function StyleTransferScreen() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           // Footer (~120px) sits at bottom: TAB_BAR_HEIGHT (96px). Add a
           // 60px buffer on top of those so the last visible content is
           // never hidden behind the glass bar.
@@ -130,10 +130,7 @@ export default function StyleTransferScreen() {
               <Text
                 className="font-label"
                 style={{
-                  fontSize: 10,
-                  fontWeight: "700",
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#FEDFB5",
                 }}
               >
@@ -143,10 +140,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 10,
-                fontWeight: "500",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.label,
               }}
             >
               {planLabel}
@@ -154,7 +148,7 @@ export default function StyleTransferScreen() {
           </View>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 36, lineHeight: 42 }}
+            style={{ ...theme.text.display }}
           >
             {t("studio.style_transfer_headline")}
           </Text>
@@ -167,10 +161,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 11,
-                fontWeight: "600",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 textAlign: "center",
               }}
             >
@@ -199,10 +190,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 11,
-                fontWeight: "600",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 textAlign: "center",
               }}
             >
@@ -236,7 +224,7 @@ export default function StyleTransferScreen() {
                     right: 10,
                     width: 32,
                     height: 32,
-                    borderRadius: 16,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "rgba(19,19,19,0.80)",
                     borderWidth: 1,
                     borderColor: "rgba(225,195,155,0.30)",
@@ -271,9 +259,7 @@ export default function StyleTransferScreen() {
                   <Text
                     className="font-label"
                     style={{
-                      fontSize: 11,
-                      letterSpacing: 2,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                       color: isUploading ? "#E1C39B" : "#998F84",
                     }}
                   >
@@ -293,10 +279,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface"
               style={{
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
               }}
             >
               {t("studio.reference_influence")}
@@ -304,8 +287,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-headline text-primary"
               style={{
-                fontSize: 24,
-                letterSpacing: -0.5,
+                ...theme.text.headline,
                 fontStyle: "italic",
               }}
             >
@@ -337,10 +319,8 @@ export default function StyleTransferScreen() {
           <Text
             className="font-label"
             style={{
-              fontSize: 11,
-              letterSpacing: 0.8,
+              ...theme.text.caption,
               fontStyle: "italic",
-              lineHeight: 18,
               color: "#998F84",
               marginTop: 8,
             }}
@@ -376,7 +356,7 @@ export default function StyleTransferScreen() {
           intensity={55}
           tint="dark"
           style={{
-            paddingHorizontal: 20,
+            paddingHorizontal: theme.space.gutter,
             paddingTop: 14,
             paddingBottom: 18,
             backgroundColor: "rgba(19,19,19,0.55)",
@@ -392,11 +372,8 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label"
               style={{
-                fontSize: 10,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "#998F84",
-                fontWeight: "600",
               }}
             >
               {t("studio.style_transfer_cost_label")}
@@ -406,9 +383,8 @@ export default function StyleTransferScreen() {
               <Text
                 className="font-headline"
                 style={{
-                  fontSize: 17,
+                  ...theme.text.title,
                   fontStyle: "italic",
-                  letterSpacing: -0.3,
                   color: "#E5E2E1",
                 }}
               >
@@ -435,7 +411,7 @@ export default function StyleTransferScreen() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 height: 54,
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 paddingHorizontal: 22,
                 borderWidth: 1,
                 borderColor: "rgba(254,223,181,0.35)",
@@ -449,10 +425,7 @@ export default function StyleTransferScreen() {
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  letterSpacing: 1.8,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#3F2D11",
                 }}
               >

@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { theme } from "@/config/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -36,7 +37,7 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
             style={{
                 marginHorizontal: 24,
                 marginBottom: 16,
-                borderRadius: 16,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.4)",
@@ -57,7 +58,7 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                     <Ionicons name="sparkles" size={18} color="#E0C29A" />
                     <Text
                         className="font-headline"
-                        style={{ fontSize: 18, color: "#E5E2E1", flex: 1 }}
+                        style={{ ...theme.text.title, color: "#E5E2E1", flex: 1 }}
                     >
                         {t("studio.welcome_banner_title")}
                     </Text>
@@ -70,7 +71,7 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                         style={{
                             width: 28,
                             height: 28,
-                            borderRadius: 14,
+                            borderRadius: theme.radius.md,
                             alignItems: "center",
                             justifyContent: "center",
                             backgroundColor: "rgba(19,19,19,0.35)",
@@ -82,7 +83,7 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                 </View>
                 <Text
                     className="font-body"
-                    style={{ fontSize: 13, lineHeight: 19, color: "#D0C5B8" }}
+                    style={{ ...theme.text.body, color: "#D0C5B8" }}
                 >
                     {t("studio.welcome_banner_body")}
                 </Text>
@@ -125,7 +126,7 @@ export function TrialCountdownBadge() {
                 gap: 6,
                 paddingHorizontal: 10,
                 paddingVertical: 5,
-                borderRadius: 999,
+                borderRadius: theme.radius.pill,
                 backgroundColor: "rgba(225,195,155,0.14)",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.45)",
@@ -135,11 +136,9 @@ export function TrialCountdownBadge() {
             <Text
                 className="font-label"
                 style={{
-                    fontSize: 11,
-                    letterSpacing: 0.6,
+                    ...theme.text.caption,
                     color: "#E0C29A",
-                    fontWeight: "600",
-                }}
+                  }}
             >
                 {t("studio.trial_countdown_label")} · {remainingLabel}
             </Text>

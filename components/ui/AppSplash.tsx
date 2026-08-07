@@ -1,4 +1,5 @@
 import { View, Text, Animated } from "react-native";
+import { theme } from "@/config/theme";
 import { useEffect, useRef } from "react";
 import { Image } from "expo-image";
 
@@ -105,13 +106,10 @@ export function AppSplash() {
             >
                 <Text
                     style={{
-                        fontFamily: "NotoSerif",
-                        fontSize: 24,
-                        lineHeight: 34,
+                        ...theme.text.headline,
                         color: "#E0C29A",
-                        letterSpacing: 6,
                         textAlign: "center",
-                    }}
+                      }}
                 >
                     ARCHITECTURAL{"\n"}LENS
                 </Text>
@@ -121,11 +119,9 @@ export function AppSplash() {
             <Animated.View style={{ opacity: taglineOpacity }}>
                 <Text
                     style={{
-                        fontFamily: "Inter",
-                        fontSize: 12,
+                        ...theme.text.caption,
                         color: "#998F84",
-                        letterSpacing: 4,
-                    }}
+                      }}
                 >
                     DIGITAL CURATOR
                 </Text>
@@ -150,11 +146,9 @@ export function AppSplash() {
                 />
                 <Text
                     style={{
-                        fontFamily: "Inter",
-                        fontSize: 11,
+                        ...theme.text.caption,
                         color: "#6E6864",
-                        letterSpacing: 3,
-                    }}
+                      }}
                 >
                     PREMIUM INTERIOR DESIGN
                 </Text>

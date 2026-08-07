@@ -10,6 +10,7 @@ import {
   StatusBar,
   Alert,
 } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef } from "react";
@@ -33,6 +34,7 @@ import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 import { useReviewPrompt } from "@/hooks/useReviewPrompt";
+import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
@@ -150,6 +152,7 @@ export default function ResultDetailScreen() {
   // ASO: single, well-timed rating ask — fires on the user's 2nd successfully
   // viewed result (see useReviewPrompt for the full strategy).
   useReviewPrompt(outputs.length > 0);
+  useAccountPrompt(outputs.length > 0);
 
   /**
    * Build the image source for expo-image.
@@ -239,7 +242,7 @@ export default function ResultDetailScreen() {
         <Ionicons name="alert-circle-outline" size={48} color="#998F84" />
         <Text
           className="font-headline text-on-surface mt-4"
-          style={{ fontSize: 20 }}
+          style={{ ...theme.text.headline }}
         >
           {t("errors.generic")}
         </Text>
@@ -247,9 +250,7 @@ export default function ResultDetailScreen() {
           <Text
             className="font-label text-secondary"
             style={{
-              fontSize: 13,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             {t("common.back")}
@@ -275,7 +276,7 @@ export default function ResultDetailScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Main Image Stage */}
@@ -292,10 +293,8 @@ export default function ResultDetailScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
+                ...theme.text.caption,
                 marginTop: 12,
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
               }}
             >
               {t("common.loading")}
@@ -378,9 +377,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-primary font-semibold"
                 style={{
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                 }}
               >
                 {t("studio.cost_credits", { count: job.creditsConsumed })}
@@ -454,9 +451,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.compare")}
@@ -480,9 +475,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.download")}
@@ -506,9 +499,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.share")}
@@ -539,7 +530,7 @@ export default function ResultDetailScreen() {
             // Android and would suggest tappability.
             <View
               style={{
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 borderWidth: 1,
                 borderColor: "rgba(143,227,161,0.22)",
                 flexDirection: "row",
@@ -554,7 +545,7 @@ export default function ResultDetailScreen() {
                 style={{
                   width: 32,
                   height: 32,
-                  borderRadius: 16,
+                  borderRadius: theme.radius.md,
                   backgroundColor: "rgba(143,227,161,0.12)",
                   alignItems: "center",
                   justifyContent: "center",
@@ -565,11 +556,8 @@ export default function ResultDetailScreen() {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 13,
+                    ...theme.text.caption,
                     color: "#8FE3A1",
-                    letterSpacing: 0.4,
-                    textTransform: "uppercase",
                   }}
                 >
                   {t("result.already_upscaled", {
@@ -578,11 +566,9 @@ export default function ResultDetailScreen() {
                 </Text>
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
+                    ...theme.text.caption,
                     color: "rgba(143,227,161,0.65)",
                     marginTop: 2,
-                    letterSpacing: 0.2,
                   }}
                   numberOfLines={1}
                 >
@@ -622,7 +608,7 @@ export default function ResultDetailScreen() {
                 );
               }}
               style={({ pressed }) => ({
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: pressed
@@ -647,7 +633,7 @@ export default function ResultDetailScreen() {
                   style={{
                     width: 32,
                     height: 32,
-                    borderRadius: 16,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "rgba(253,222,181,0.14)",
                     alignItems: "center",
                     justifyContent: "center",
@@ -658,22 +644,17 @@ export default function ResultDetailScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontFamily: "Inter-SemiBold",
-                      fontSize: 13,
+                      ...theme.text.label,
                       color: "#F4DDB6",
-                      letterSpacing: 0.4,
-                      textTransform: "uppercase",
                     }}
                   >
                     {t("result.upscale")}
                   </Text>
                   <Text
                     style={{
-                      fontFamily: "Inter",
-                      fontSize: 11,
+                      ...theme.text.caption,
                       color: "rgba(225,195,155,0.65)",
                       marginTop: 2,
-                      letterSpacing: 0.2,
                     }}
                     numberOfLines={1}
                   >
@@ -691,7 +672,7 @@ export default function ResultDetailScreen() {
             <Pressable
               onPress={() => router.push("/plans")}
               style={({ pressed }) => ({
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: pressed
@@ -722,7 +703,7 @@ export default function ResultDetailScreen() {
                   style={{
                     width: 32,
                     height: 32,
-                    borderRadius: 16,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "rgba(225,195,155,0.10)",
                     alignItems: "center",
                     justifyContent: "center",
@@ -733,11 +714,8 @@ export default function ResultDetailScreen() {
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     style={{
-                      fontFamily: "Inter-SemiBold",
-                      fontSize: 13,
+                      ...theme.text.label,
                       color: "#E0C29A",
-                      letterSpacing: 0.4,
-                      textTransform: "uppercase",
                     }}
                     numberOfLines={1}
                   >
@@ -745,9 +723,7 @@ export default function ResultDetailScreen() {
                   </Text>
                   <Text
                     style={{
-                      fontFamily: "Inter",
-                      fontSize: 11,
-                      lineHeight: 15,
+                      ...theme.text.caption,
                       color: "rgba(225,195,155,0.55)",
                       marginTop: 2,
                     }}
@@ -772,16 +748,14 @@ export default function ResultDetailScreen() {
                 <Text
                   className="font-label text-on-surface-variant mb-1"
                   style={{
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {item.label}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
-                  style={{ fontSize: 14 }}
+                  style={{ ...theme.text.title }}
                 >
                   {item.value}
                 </Text>
@@ -798,16 +772,14 @@ export default function ResultDetailScreen() {
                 <Text
                   className="font-label text-on-surface-variant mb-1"
                   style={{
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {t("result.generation_time")}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
-                  style={{ fontSize: 14 }}
+                  style={{ ...theme.text.title }}
                 >
                   {(currentOutput.generationTimeMs / 1000).toFixed(1)}s
                 </Text>
@@ -817,9 +789,7 @@ export default function ResultDetailScreen() {
                   <Text
                     className="font-label text-on-surface-variant mb-1"
                     style={{
-                      fontSize: 10,
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {t("result.seed")}
@@ -843,8 +813,7 @@ export default function ResultDetailScreen() {
                     <Text
                       className="font-headline text-on-surface"
                       style={{
-                        fontSize: 14,
-                        letterSpacing: 0.5,
+                        ...theme.text.title,
                         fontVariant: ["tabular-nums"],
                       }}
                     >
@@ -863,16 +832,14 @@ export default function ResultDetailScreen() {
                   <Text
                     className="font-label text-on-surface-variant mb-1"
                     style={{
-                      fontSize: 10,
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {t("result.resolution")}
                   </Text>
                   <Text
                     className="font-headline text-on-surface"
-                    style={{ fontSize: 14 }}
+                    style={{ ...theme.text.title }}
                   >
                     {currentOutput.width}×{currentOutput.height}
                   </Text>
@@ -928,7 +895,7 @@ export default function ResultDetailScreen() {
               right: 20,
               width: 44,
               height: 44,
-              borderRadius: 22,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(0,0,0,0.55)",
               justifyContent: "center",
               alignItems: "center",

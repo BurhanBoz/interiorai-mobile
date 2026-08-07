@@ -1,4 +1,4 @@
-import { View, type ViewStyle } from "react-native";
+import { View, Dimensions, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -27,8 +27,17 @@ import { theme } from "@/config/theme";
 const TAB_BAR_VISIBLE_HEIGHT = 58;
 const TAB_BAR_OUTER_PADDING = 32;
 // 2026-07-15 founder pass: 16px still read as "glued" under the tab
-// bar on the options screen — 24px gives every fixed CTA honest air.
-const BREATHING = 24;
+// Air between a fixed CTA and whatever sits under it (tab bar or home
+// indicator). 24pt was measured too tight on the wizard steps: the button
+// looked welded to the tab bar (founder screenshot, 2026-08-07).
+//
+// Responsive on purpose. A fixed 32 that breathes on a 6.7" screen eats a
+// meaningful slice of an iPhone SE, where vertical space is the scarce
+// resource — so the gap scales with the screen and is then clamped, which
+// keeps small phones usable and stops tall ones from looking gappy.
+const BREATHING = Math.round(
+  Math.min(40, Math.max(28, Dimensions.get("window").height * 0.042)),
+);
 
 interface BottomBarProps {
   children: ReactNode;
@@ -65,7 +74,7 @@ export function BottomBar({
           right: 0,
           bottom: 0,
           paddingTop: 24,
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           paddingBottom: bottomOffset,
         },
         style,
@@ -96,7 +105,18 @@ export function BottomBar({
  * when a BottomBar overlays it. Add this to `contentContainerStyle.paddingBottom`
  * so the last row of content doesn't get trapped behind the floating CTA.
  */
-export const BOTTOM_BAR_SCROLL_PADDING = (overTabBar = true) =>
+export const BOTTOM_BAR_SCROLL_PADDING = (
+  overTabBar = true,
+  /**
+   * Height of what the bar actually renders. The default covers a lone
+   * CTA button; pass the real figure when the bar carries more — Options
+   * stacks a summary strip above its button, and reserving for a button
+   * alone left the last control trapped underneath it.
+   */
+  barContentHeight = 72,
+) =>
   (overTabBar
     ? TAB_BAR_VISIBLE_HEIGHT + TAB_BAR_OUTER_PADDING + BREATHING
-    : BREATHING) + 72; // 72 ≈ CTA button height + its own paddingTop
+    : BREATHING) +
+  barContentHeight +
+  24; // the bar's own paddingTop

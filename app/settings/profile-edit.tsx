@@ -96,7 +96,7 @@ export default function ProfileEditScreen() {
       >
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48 }}
+          contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -105,10 +105,7 @@ export default function ProfileEditScreen() {
             <UserAvatar size="hero" initialsOverride={previewInitials} />
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.goldMidday,
                 marginTop: 20,
               }}
@@ -117,10 +114,7 @@ export default function ProfileEditScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "NotoSerif",
-                fontSize: 28,
-                lineHeight: 34,
-                letterSpacing: -0.3,
+                ...theme.text.display,
                 color: theme.color.onSurface,
                 marginTop: 6,
                 textAlign: "center",
@@ -130,9 +124,7 @@ export default function ProfileEditScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 13,
-                lineHeight: 19,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
                 marginTop: 8,
                 textAlign: "center",

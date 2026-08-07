@@ -71,7 +71,7 @@ export function Badge({ label, tone = "neutral", dot = false, style }: BadgeProp
           alignSelf: "flex-start",
           paddingHorizontal: 10,
           paddingVertical: 3,
-          borderRadius: 999,
+          borderRadius: theme.radius.pill,
           backgroundColor: palette.bg,
           borderWidth: 1,
           borderColor: palette.border,
@@ -91,10 +91,7 @@ export function Badge({ label, tone = "neutral", dot = false, style }: BadgeProp
       ) : null}
       <Text
         style={{
-          fontFamily: "Inter-SemiBold",
-          fontSize: 10,
-          letterSpacing: 1.5,
-          textTransform: "uppercase",
+          ...theme.text.caption,
           color: palette.fg,
         }}
       >

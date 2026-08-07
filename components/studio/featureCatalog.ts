@@ -107,6 +107,21 @@ export const STUDIO_FEATURES: StudioFeature[] = [
             after: require("@/assets/features/style_after.png"),
         },
     },
+    {
+        // V52 — Outdoor Design (1.1). Real pair from the founder's first
+        // outdoor render (2026-08-03): weathered green timber house + wild
+        // garden → sage modern facade with landscaped beds. Same before→after
+        // teaser animation as the redesign/empty cards (kind:"pair").
+        key: "OUTDOOR",
+        titleKey: "studio.mode_outdoor",
+        descKey: "studio.feature_outdoor_desc",
+        minPlan: "PRO",
+        media: {
+            kind: "pair",
+            before: require("@/assets/features/outdoor_before.png"),
+            after: require("@/assets/features/outdoor_after.png"),
+        },
+    },
 ];
 
 /**

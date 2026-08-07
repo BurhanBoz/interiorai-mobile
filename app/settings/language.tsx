@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -23,9 +24,7 @@ export default function LanguageScreen() {
         <Text
           className="font-headline text-on-surface"
           style={{
-            fontSize: 14,
-            letterSpacing: 3,
-            textTransform: "uppercase",
+            ...theme.text.label,
           }}
         >
           Roomframe AI
@@ -35,14 +34,14 @@ export default function LanguageScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Title */}
         <View style={{ marginBottom: 48, marginTop: 24 }}>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 38, lineHeight: 44, marginBottom: 16 }}
+            style={{ ...theme.text.display, marginBottom: 16 }}
           >
             {t("settings.language_title")}
           </Text>
@@ -83,10 +82,7 @@ export default function LanguageScreen() {
                       <Text
                         className="font-label text-primary"
                         style={{
-                          fontSize: 11,
-                          fontWeight: "600",
-                          letterSpacing: 2,
-                          textTransform: "uppercase",
+                          ...theme.text.caption,
                           marginBottom: 4,
                         }}
                       >
@@ -98,8 +94,7 @@ export default function LanguageScreen() {
                         isSelected ? "text-on-surface" : "text-on-surface-variant"
                       }`}
                       style={{
-                        fontSize: 18,
-                        fontWeight: isSelected ? "500" : "400",
+                        ...theme.text.subtitle,
                       }}
                     >
                       {lang.nativeName}
@@ -108,11 +103,9 @@ export default function LanguageScreen() {
                       <Text
                         className="font-label text-on-surface-variant"
                         style={{
-                          fontSize: 11,
-                          letterSpacing: 1.5,
+                          ...theme.text.caption,
                           marginTop: 2,
                           opacity: 0.7,
-                          textTransform: "uppercase",
                         }}
                       >
                         {lang.englishName}
@@ -138,7 +131,7 @@ export default function LanguageScreen() {
         <LinearGradient
           colors={["transparent", "rgba(19,19,19,0.9)", "#131313"]}
           locations={[0, 0.35, 1]}
-          style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 40 }}
+          style={{ paddingHorizontal: theme.space.gutter, paddingTop: 64, paddingBottom: 40 }}
         >
           <PrimaryButton label={t("common.continue")} onPress={() => router.back()} />
         </LinearGradient>

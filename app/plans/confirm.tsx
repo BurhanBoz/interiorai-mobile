@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -256,12 +257,9 @@ export default function PlanConfirmScreen() {
                     <Text
                         className="font-label text-secondary"
                         style={{
-                            fontSize: 11,
-                            fontWeight: "500",
-                            letterSpacing: 2.2,
-                            textTransform: "uppercase",
+                            ...theme.text.label,
                             marginBottom: 16,
-                        }}
+                          }}
                     >
                         {t("plans.confirm_membership_tier")}
                     </Text>
@@ -269,7 +267,7 @@ export default function PlanConfirmScreen() {
                     <View className="flex-row justify-between items-end">
                         <Text
                             className="font-headline text-on-surface"
-                            style={{ fontSize: 36, lineHeight: 42 }}
+                            style={{ ...theme.text.display }}
                         >
                             {t("plans.confirm_upgrade_to")}{"\n"}
                             {plan.name}
@@ -277,13 +275,13 @@ export default function PlanConfirmScreen() {
                         <View style={{ alignItems: "flex-end" }}>
                             <Text
                                 className="font-headline text-secondary"
-                                style={{ fontSize: 28, lineHeight: 34 }}
+                                style={{ ...theme.text.display }}
                             >
                                 {formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}
                             </Text>
                             <Text
                                 className="font-body text-on-surface-variant"
-                                style={{ fontSize: 14, marginTop: 2 }}
+                                style={{ ...theme.text.body, marginTop: 2 }}
                             >
                                 {periodSuffix(plan, t)}
                             </Text>
@@ -299,12 +297,12 @@ export default function PlanConfirmScreen() {
                     <View style={{
                         flexDirection: "row", alignItems: "flex-start", gap: 10,
                         marginBottom: 28, paddingVertical: 14, paddingHorizontal: 16,
-                        borderRadius: 16, borderWidth: 1,
+                        borderRadius: theme.radius.md, borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.35)",
                         backgroundColor: "rgba(225,195,155,0.07)",
                     }}>
                         <Ionicons name="time-outline" size={18} color="#E0C29A" style={{ marginTop: 1 }} />
-                        <Text className="font-body" style={{ flex: 1, fontSize: 13, lineHeight: 19, color: "#EDE4D7" }}>
+                        <Text className="font-body" style={{ ...theme.text.body, flex: 1, color: "#EDE4D7" }}>
                             {t("plans.deferred_notice", {
                                 defaultValue:
                                     "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours.",
@@ -336,13 +334,13 @@ export default function PlanConfirmScreen() {
                             <View className="flex-1" style={{ gap: 4 }}>
                                 <Text
                                     className="font-body text-on-surface"
-                                    style={{ fontSize: 16, fontWeight: "500" }}
+                                    style={{ ...theme.text.subtitle }}
                                 >
                                     {feature.title}
                                 </Text>
                                 <Text
                                     className="font-body text-on-surface-variant"
-                                    style={{ fontSize: 13, lineHeight: 20 }}
+                                    style={{ ...theme.text.body }}
                                 >
                                     {feature.description}
                                 </Text>
@@ -367,7 +365,7 @@ export default function PlanConfirmScreen() {
                         <Ionicons name="flask-outline" size={20} color="#E0C29A" />
                         <Text
                             className="flex-1 font-body text-on-surface-variant"
-                            style={{ fontSize: 12, lineHeight: 18 }}
+                            style={{ ...theme.text.caption }}
                         >
                             {t("plans.confirm_dev_notice", { plan: plan.name })}
                         </Text>
@@ -387,13 +385,13 @@ export default function PlanConfirmScreen() {
                     <View className="flex-1">
                         <Text
                             className="font-body text-on-surface"
-                            style={{ fontSize: 13, fontWeight: "600", marginBottom: 2 }}
+                            style={{ ...theme.text.body, marginBottom: 2 }}
                         >
                             {t("plans.confirm_not_ready")}
                         </Text>
                         <Text
                             className="font-body text-on-surface-variant"
-                            style={{ fontSize: 12 }}
+                            style={{ ...theme.text.caption }}
                         >
                             {t("plans.confirm_buy_packs_instead")}
                         </Text>
@@ -422,8 +420,8 @@ export default function PlanConfirmScreen() {
                             justifyContent: "center",
                             gap: 12,
                             height: 56,
-                            borderRadius: 16,
-                            paddingHorizontal: 24,
+                            borderRadius: theme.radius.md,
+                            paddingHorizontal: theme.space.gutter,
                             borderWidth: 1,
                             borderColor: "rgba(196,168,130,0.3)",
                         }}
@@ -435,12 +433,9 @@ export default function PlanConfirmScreen() {
                                 <Text
                                     numberOfLines={1}
                                     style={{
-                                        fontSize: 14,
-                                        fontWeight: "700",
-                                        letterSpacing: 1.5,
-                                        textTransform: "uppercase",
+                                        ...theme.text.label,
                                         color: "#3F2D11",
-                                    }}
+                                      }}
                                 >
                                     {t("plans.confirm")}
                                 </Text>
@@ -467,11 +462,10 @@ export default function PlanConfirmScreen() {
                     <Text
                         className="font-body text-on-surface-variant"
                         style={{
-                            fontSize: 14,
-                            fontWeight: "500",
+                            ...theme.text.body,
                             textDecorationLine: "underline",
                             textDecorationColor: "rgba(77,70,60,0.3)",
-                        }}
+                          }}
                     >
                         {t("plans.confirm_cancel_return")}
                     </Text>

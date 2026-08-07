@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
+import { router , useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -41,6 +41,11 @@ export default function RegisterScreen() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const register = useAuthStore((s) => s.register);
+  const upgradeGuest = useAuthStore((s) => s.upgradeGuest);
+  // V53 guest-first — ?upgrade=1 converts the CURRENT guest in place
+  // (same wallet/jobs) instead of creating a brand-new account.
+  const { upgrade } = useLocalSearchParams<{ upgrade?: string }>();
+  const isUpgrade = upgrade === "1";
   const {
     appleAvailable,
     loading: socialLoading,
@@ -73,7 +78,11 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      await register(email.trim(), password, fullName.trim() || undefined);
+      if (isUpgrade) {
+        await upgradeGuest(email.trim(), password, fullName.trim() || undefined);
+      } else {
+        await register(email.trim(), password, fullName.trim() || undefined);
+      }
     } catch (e: any) {
       const status = e?.response?.status;
       const msg =
@@ -115,10 +124,7 @@ export default function RegisterScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
               marginBottom: 12,
             }}
@@ -127,10 +133,7 @@ export default function RegisterScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.3,
+              ...theme.text.display,
               color: theme.color.onSurface,
               marginBottom: 36,
             }}
@@ -221,10 +224,7 @@ export default function RegisterScreen() {
             />
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.onSurfaceMuted,
               }}
             >
@@ -271,8 +271,7 @@ export default function RegisterScreen() {
           >
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 14,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
               }}
             >
@@ -281,10 +280,8 @@ export default function RegisterScreen() {
             <Pressable onPress={() => router.push("/login")} hitSlop={6}>
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 14,
+                  ...theme.text.subtitle,
                   color: theme.color.goldMidday,
-                  letterSpacing: 0.2,
                 }}
               >
                 {t("auth.sign_in_link")}
@@ -334,8 +331,8 @@ function SocialButton({
           justifyContent: "center",
           gap: 10,
           minHeight: 56,
-          paddingHorizontal: 20,
-          borderRadius: 14,
+          paddingHorizontal: theme.space.gutter,
+          borderRadius: theme.radius.md,
           borderWidth: 1,
           borderColor: "rgba(63,45,17,0.18)",
         }}
@@ -348,9 +345,7 @@ function SocialButton({
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 14,
-                letterSpacing: 0.3,
+                ...theme.text.subtitle,
                 color: theme.color.onGold,
               }}
             >

@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -29,6 +30,9 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
  * cleanly (flex:1, no width:"100%"). Label auto-shrinks for longer copy so
  * "UPGRADE NOW" doesn't push the card edge off-screen.
  */
+/** Half the CTA row, minus the gap. Static so nothing can drop it. */
+const CTA_SLOT = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } as const;
+
 function GoldActionButton({
   label,
   onPress,
@@ -36,6 +40,7 @@ function GoldActionButton({
   label: string;
   onPress: () => void;
 }) {
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       onPress={() => {
@@ -44,18 +49,25 @@ function GoldActionButton({
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({
-        flex: 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      // STATIC, not a style callback. The pair hugged their labels at ~60% of
+      // the row because the callback form is being dropped somewhere in this
+      // app's render path — the same symptom hit the plan toggle and the
+      // Advanced-settings shell on the same day. A plain object cannot be
+      // dropped; press feedback moves to the gradient below via `pressed`
+      // state, which is a normal re-render.
+      style={CTA_SLOT}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
     >
       <LinearGradient
         colors={theme.gradient.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          height: 42,
-          borderRadius: 12,
+          alignSelf: "stretch",
+          height: 44,
+          opacity: pressed ? 0.9 : 1,
+          borderRadius: theme.radius.sm,
           paddingHorizontal: 14,
           alignItems: "center",
           justifyContent: "center",
@@ -68,10 +80,7 @@ function GoldActionButton({
           adjustsFontSizeToFit
           minimumFontScale={0.7}
           style={{
-            fontFamily: "Inter-SemiBold",
-            fontSize: 12,
-            letterSpacing: 1.2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: theme.color.onGold,
             textAlign: "center",
           }}
@@ -263,7 +272,7 @@ export default function ProfileScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         <View style={{ width: 40 }} />
@@ -274,7 +283,7 @@ export default function ProfileScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -289,6 +298,11 @@ export default function ProfileScreen() {
             and preserves the original plain-View row (avatar + flex:1 text)
             that already rendered correctly — the earlier version put the row
             layout directly on the Pressable and it collapsed into a column. */}
+        {/* Guest 'secure account' banner removed 2026-08-03 (founder call):
+            the single upgrade nudge is now the 3rd-generation prompt
+            (useAccountPrompt). Re-add a settings row here if guest→email
+            conversion needs a persistent surface later. */}
+
         <Pressable
           onPress={() => pushWithReturn("/settings/profile-edit", "profile")}
           accessibilityRole="button"
@@ -297,7 +311,7 @@ export default function ProfileScreen() {
             marginHorizontal: 12,
             marginTop: 12,
             marginBottom: 28,
-            borderRadius: 20,
+            borderRadius: theme.radius.lg,
             backgroundColor: pressed ? "rgba(225,195,155,0.06)" : "transparent",
           })}
         >
@@ -315,11 +329,8 @@ export default function ProfileScreen() {
               {displayName ? (
                 <Text
                   style={{
-                    fontFamily: "NotoSerif",
-                    fontSize: 22,
-                    lineHeight: 28,
+                    ...theme.text.headline,
                     color: theme.color.onSurface,
-                    letterSpacing: -0.1,
                   }}
                   numberOfLines={1}
                 >
@@ -329,11 +340,9 @@ export default function ProfileScreen() {
               {email ? (
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 13,
+                    ...theme.text.body,
                     color: theme.color.onSurfaceVariant,
                     marginTop: 2,
-                    letterSpacing: 0.2,
                   }}
                   numberOfLines={1}
                   ellipsizeMode="middle"
@@ -354,11 +363,11 @@ export default function ProfileScreen() {
         </Pressable>
 
         {/* ── Vault — unified balance card ── */}
-        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 32 }}>
           <View
             style={{
               padding: 24,
-              borderRadius: 20,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(225,195,155,0.05)",
               borderWidth: 1,
               borderColor: "rgba(225,195,155,0.22)",
@@ -375,10 +384,7 @@ export default function ProfileScreen() {
             >
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.goldMidday,
                 }}
               >
@@ -388,10 +394,7 @@ export default function ProfileScreen() {
 
             <Text
               style={{
-                fontFamily: "NotoSerif",
-                fontSize: 44,
-                lineHeight: 50,
-                letterSpacing: -0.8,
+                ...theme.text.hero,
                 color: theme.color.onSurface,
                 fontVariant: ["tabular-nums"],
               }}
@@ -400,8 +403,7 @@ export default function ProfileScreen() {
               {showCreditDivisor ? (
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 18,
+                    ...theme.text.subtitle,
                     color: theme.color.onSurfaceMuted,
                   }}
                 >
@@ -412,9 +414,7 @@ export default function ProfileScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 13,
-                lineHeight: 18,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
                 marginTop: 6,
               }}
@@ -440,6 +440,7 @@ export default function ProfileScreen() {
             <View
               style={{
                 flexDirection: "row",
+                alignSelf: "stretch",
                 gap: 10,
                 marginTop: 20,
               }}
@@ -461,7 +462,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Settings ── */}
-        <View style={{ paddingHorizontal: 24 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter }}>
           <SectionHeader
             title={t("drawer.settings")}
             serif={false}
@@ -469,7 +470,7 @@ export default function ProfileScreen() {
           />
           <View
             style={{
-              borderRadius: 16,
+              borderRadius: theme.radius.md,
               backgroundColor: theme.color.surfaceContainerLow,
               borderWidth: 1,
               borderColor: "rgba(77,70,60,0.18)",
@@ -498,7 +499,7 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             style={({ pressed }) => ({
               marginTop: 16,
-              borderRadius: 14,
+              borderRadius: theme.radius.md,
               borderWidth: 1,
               borderColor: "rgba(217,138,123,0.28)",
               backgroundColor: pressed
@@ -518,9 +519,7 @@ export default function ProfileScreen() {
               <Ionicons name="trash-outline" size={15} color={theme.color.danger} />
               <Text
                 style={{
-                  fontFamily: "Inter-Medium",
-                  fontSize: 13,
-                  letterSpacing: 0.2,
+                  ...theme.text.subtitle,
                   color: theme.color.danger,
                 }}
               >

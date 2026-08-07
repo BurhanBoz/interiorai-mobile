@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import * as StoreReview from "expo-store-review";
 
 /**
@@ -32,11 +32,10 @@ export function useReviewPrompt(jobSucceeded: boolean) {
 
     (async () => {
       try {
-        if ((await AsyncStorage.getItem(ASKED_KEY)) === "1") return;
+        if (await isFlagSet(ASKED_KEY)) return;
 
-        const count =
-          parseInt((await AsyncStorage.getItem(SUCCESS_COUNT_KEY)) ?? "0", 10) + 1;
-        await AsyncStorage.setItem(SUCCESS_COUNT_KEY, String(count));
+        const count = (await readCounter(SUCCESS_COUNT_KEY)) + 1;
+        await writeCounter(SUCCESS_COUNT_KEY, count);
         if (count < ASK_ON_NTH_SUCCESS) return;
 
         if (!(await StoreReview.isAvailableAsync())) return;
@@ -46,7 +45,7 @@ export function useReviewPrompt(jobSucceeded: boolean) {
           // Mark BEFORE requesting: the OS gives no callback about whether
           // the sheet was actually shown, and re-asking is worse than
           // occasionally missing one.
-          await AsyncStorage.setItem(ASKED_KEY, "1");
+          await setFlag(ASKED_KEY);
           await StoreReview.requestReview();
         }, ASK_DELAY_MS);
       } catch {

@@ -1,26 +1,38 @@
 import { useCallback, useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 
 /**
- * One-shot dismissible UI state, persisted across launches.
+ * One-shot dismissible UI state, persisted across launches AND reinstalls.
  *
- * `visible` starts false and only flips to true once AsyncStorage confirms
- * the user has never dismissed this key — so a previously-dismissed element
- * never flashes on screen before hiding. `dismiss()` hides it immediately
- * and persists the choice.
+ * `visible` starts false and only flips to true once storage confirms the
+ * user has never seen this key — so a previously-seen element never flashes
+ * on screen before hiding.
  *
- * Used for the welcome-trial banner and the studio "Professional Tips"
- * section (2026-07 first-review feedback: onboarding chrome must get out
- * of the way once acknowledged).
+ * Used for the welcome-trial banner, the studio "Professional Tips"
+ * section, the Magic Edit intro and the progress-screen style hint
+ * (2026-07 first-review feedback: onboarding chrome must get out of the
+ * way once acknowledged).
+ *
+ * Two fixes are baked in, both from founder reports:
+ *   - 2026-08-03: mark seen ON FIRST SHOW, not only on an explicit tap.
+ *     Shipped 1.0.1 persisted only in `dismiss()`, so scrolling past an
+ *     intro without hitting the X replayed it on EVERY entry.
+ *   - 2026-08-07: the flag lives in the Keychain (see {@link isFlagSet}),
+ *     giving it the same lifetime as the guest `device_key` — a reinstall
+ *     that restores the account no longer replays the first-run intros.
  */
 export function useDismissible(storageKey: string): [boolean, () => void] {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
         let alive = true;
-        AsyncStorage.getItem(storageKey)
-            .then((stored) => {
-                if (alive && stored == null) setVisible(true);
+        isFlagSet(storageKey)
+            .then((seen) => {
+                if (!alive || seen) return;
+                setVisible(true);
+                // One appearance = acknowledged; the X below only hides it
+                // sooner within the same session.
+                setFlag(storageKey).catch(() => {});
             })
             .catch(() => {
                 // Storage unreadable — fail open (show the element).
@@ -33,7 +45,7 @@ export function useDismissible(storageKey: string): [boolean, () => void] {
 
     const dismiss = useCallback(() => {
         setVisible(false);
-        AsyncStorage.setItem(storageKey, "1").catch(() => {});
+        setFlag(storageKey).catch(() => {});
     }, [storageKey]);
 
     return [visible, dismiss];

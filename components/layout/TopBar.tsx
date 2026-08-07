@@ -46,7 +46,7 @@ export function TopBar({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         {/* Left slot — back button OR spacer */}
@@ -58,7 +58,7 @@ export function TopBar({
               style={({ pressed }) => ({
                 width: 40,
                 height: 40,
-                borderRadius: 20,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: pressed ? "rgba(225,195,155,0.08)" : "transparent",
@@ -84,9 +84,7 @@ export function TopBar({
               <Text
                 numberOfLines={1}
                 style={{
-                  fontFamily: "NotoSerif",
-                  fontSize: 17,
-                  letterSpacing: -0.1,
+                  ...theme.text.title,
                   color: theme.color.onSurface,
                 }}
               >
@@ -96,10 +94,8 @@ export function TopBar({
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
+                    ...theme.text.caption,
                     color: theme.color.onSurfaceMuted,
-                    letterSpacing: 0.3,
                     marginTop: 1,
                   }}
                 >

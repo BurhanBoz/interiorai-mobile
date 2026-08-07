@@ -60,7 +60,7 @@ function MenuRow({
             onPress={onPress}
             style={({ pressed }) => ({
                 marginHorizontal: 8,
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 backgroundColor: pressed
                     ? destructive
                         ? "rgba(217,138,123,0.08)"
@@ -81,7 +81,7 @@ function MenuRow({
                     style={{
                         width: 36,
                         height: 36,
-                        borderRadius: 11,
+                        borderRadius: theme.radius.sm,
                         backgroundColor: destructive
                             ? "rgba(217,138,123,0.08)"
                             : "rgba(225,195,155,0.08)",
@@ -97,13 +97,11 @@ function MenuRow({
                 </View>
                 <Text
                     style={{
-                        fontFamily: "Inter-Medium",
-                        fontSize: 15,
-                        letterSpacing: 0.1,
+                        ...theme.text.subtitle,
                         color: destructive
                             ? theme.color.danger
                             : theme.color.onSurface,
-                    }}
+                      }}
                 >
                     {label}
                 </Text>
@@ -218,7 +216,7 @@ export function AvatarMenu() {
                             top: insets.top + 54,
                             right: 16,
                             width: 268,
-                            borderRadius: 22,
+                            borderRadius: theme.radius.lg,
                             overflow: "hidden",
                             borderWidth: 1,
                             borderColor: "rgba(225,195,155,0.18)",

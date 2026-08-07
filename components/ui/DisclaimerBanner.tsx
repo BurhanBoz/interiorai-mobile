@@ -20,7 +20,7 @@ export function DisclaimerBanner({ text }: DisclaimerBannerProps) {
                 gap: 10,
                 paddingVertical: 12,
                 paddingHorizontal: 14,
-                borderRadius: 12,
+                borderRadius: theme.radius.sm,
                 backgroundColor: "rgba(214, 169, 92, 0.10)",
                 borderWidth: 1,
                 borderColor: "rgba(214, 169, 92, 0.28)",
@@ -34,13 +34,10 @@ export function DisclaimerBanner({ text }: DisclaimerBannerProps) {
             />
             <Text
                 style={{
+                    ...theme.text.caption,
                     flex: 1,
-                    fontFamily: "Inter",
-                    fontSize: 12,
-                    lineHeight: 17,
-                    letterSpacing: 0.1,
                     color: "#D6A95C",
-                }}
+                  }}
             >
                 {text}
             </Text>

@@ -55,13 +55,17 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
+// Size changes the BOX, never the type. The label is one scale step
+// (`label`) at every size — a button that shouts louder simply because it is
+// taller was the old 13/14/15 ladder, and it made three buttons on one screen
+// read as three different components.
 const SIZE_MAP: Record<
   ButtonSize,
-  { height: number; paddingX: number; fontSize: number; iconSize: number; radius: number }
+  { height: number; paddingX: number; iconSize: number; radius: number }
 > = {
-  sm: { height: 44, paddingX: 18, fontSize: 13, iconSize: 16, radius: 12 },
-  md: { height: 52, paddingX: 22, fontSize: 14, iconSize: 18, radius: 14 },
-  lg: { height: 60, paddingX: 28, fontSize: 15, iconSize: 20, radius: 16 },
+  sm: { height: 44, paddingX: 18, iconSize: 16, radius: theme.radius.sm },
+  md: { height: 52, paddingX: 22, iconSize: 18, radius: theme.radius.md },
+  lg: { height: 60, paddingX: 28, iconSize: 20, radius: theme.radius.md },
 };
 
 export function Button({
@@ -90,12 +94,7 @@ export function Button({
     onPress();
   };
 
-  const labelStyle: TextStyle = {
-    fontFamily: "Inter-SemiBold",
-    fontSize: dims.fontSize,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  };
+  const labelStyle: TextStyle = { ...theme.text.label };
 
   const containerBase: ViewStyle = {
     flexDirection: "row",
@@ -121,7 +120,7 @@ export function Button({
           {
             width: 44,
             height: 44,
-            borderRadius: 22,
+            borderRadius: theme.radius.lg,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: pressed
@@ -328,12 +327,7 @@ export function Button({
       ) : null}
       {title ? (
         <Text
-          style={{
-            fontFamily: "Inter-Medium",
-            fontSize: dims.fontSize,
-            color: theme.color.goldMidday,
-            letterSpacing: 0.3,
-          }}
+          style={{ ...theme.text.subtitle, color: theme.color.goldMidday }}
         >
           {title}
         </Text>

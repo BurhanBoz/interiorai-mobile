@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
+import { getDeviceCheckToken } from "@/modules/roomframe-device-check";
+import * as Crypto from "expo-crypto";
 import { jwtDecode } from "jwt-decode";
 import type { UserResponse, AuthResponse } from "@/types/api";
 import * as authService from "@/services/auth";
@@ -17,6 +19,10 @@ interface AuthState {
     isAuthenticated: boolean;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    /** V53 guest-first — silent device account; used by onboarding Get Started. */
+    guestLogin: () => Promise<void>;
+    /** V53 — attach email+password to the current guest (same user id). */
+    upgradeGuest: (email: string, password: string, displayName?: string) => Promise<void>;
     register: (email: string, password: string, displayName?: string) => Promise<void>;
     loginWithApple: (params: { identityToken: string; fullName?: string; nonce?: string }) => Promise<void>;
     loginWithGoogle: (params: { identityToken: string; fullName?: string }) => Promise<void>;
@@ -41,6 +47,26 @@ async function persistAuth(data: AuthResponse) {
     await SecureStore.setItemAsync("user_id", data.user.id);
 }
 
+/**
+ * Identifiers for the physical device, resolved fresh on every
+ * account-creating call (guest, register, Apple, Google).
+ *
+ * The Keychain key is created on first use and never rewritten, so it is the
+ * same value across reinstalls. The DeviceCheck token is minted per call and
+ * is null on the Simulator — see modules/roomframe-device-check.
+ *
+ * Sending BOTH on the email/social paths (not just on guest) is what closes
+ * "delete the app, register a new email, collect another welcome bonus".
+ */
+async function deviceIdentity(): Promise<authService.DeviceIdentity> {
+    let deviceKey = await SecureStore.getItemAsync("device_key");
+    if (!deviceKey) {
+        deviceKey = Crypto.randomUUID();
+        await SecureStore.setItemAsync("device_key", deviceKey);
+    }
+    return { deviceKey, deviceCheckToken: await getDeviceCheckToken() };
+}
+
 async function clearAuth() {
     await SecureStore.deleteItemAsync("auth_token");
     await SecureStore.deleteItemAsync("org_id");
@@ -54,6 +80,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     isAuthenticated: false,
     isLoading: true,
 
+    guestLogin: async () => {
+        // Stable per-device key: Keychain-persisted, survives reinstall —
+        // same device always resolves to the same guest account (and the
+        // welcome bonus is granted once per device, backend welcome_grants).
+        const data = await authService.guestLogin(await deviceIdentity());
+        await persistAuth(data);
+        set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true, isLoading: false });
+    },
+
+    upgradeGuest: async (email, password, displayName) => {
+        const data = await authService.upgradeAccount(email, password, displayName);
+        await persistAuth(data);
+        set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true });
+    },
+
     login: async (email, password) => {
         const data = await authService.login(email, password);
         await persistAuth(data);
@@ -66,7 +107,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     register: async (email, password, displayName) => {
-        const data = await authService.register(email, password, displayName);
+        const data = await authService.register(email, password, displayName, await deviceIdentity());
         await persistAuth(data);
         set({
             token: data.token,
@@ -77,7 +118,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     loginWithApple: async (params) => {
-        const data = await authService.loginWithApple(params);
+        const data = await authService.loginWithApple(params, await deviceIdentity());
         await persistAuth(data);
         set({
             token: data.token,
@@ -88,7 +129,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     loginWithGoogle: async (params) => {
-        const data = await authService.loginWithGoogle(params);
+        const data = await authService.loginWithGoogle(params, await deviceIdentity());
         await persistAuth(data);
         set({
             token: data.token,

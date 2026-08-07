@@ -38,7 +38,7 @@ export default function CreditsExhaustedScreen() {
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         {/* Credit ring — zero state. No fake progress fill. */}
@@ -70,10 +70,7 @@ export default function CreditsExhaustedScreen() {
             />
             <Text
               style={{
-                fontFamily: "NotoSerif",
-                fontSize: 44,
-                lineHeight: 48,
-                letterSpacing: -0.5,
+                ...theme.text.hero,
                 color: theme.color.onSurface,
                 fontVariant: ["tabular-nums"],
               }}
@@ -82,10 +79,7 @@ export default function CreditsExhaustedScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.onSurfaceVariant,
                 marginTop: 6,
               }}
@@ -98,10 +92,7 @@ export default function CreditsExhaustedScreen() {
         {/* Headline + body */}
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 28,
-            lineHeight: 34,
-            letterSpacing: -0.3,
+            ...theme.text.display,
             color: theme.color.onSurface,
             textAlign: "center",
             marginBottom: 14,
@@ -111,9 +102,7 @@ export default function CreditsExhaustedScreen() {
         </Text>
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 14,
-            lineHeight: 22,
+            ...theme.text.body,
             color: theme.color.onSurfaceVariant,
             textAlign: "center",
             maxWidth: 300,
@@ -129,7 +118,7 @@ export default function CreditsExhaustedScreen() {
             width: "100%",
             maxWidth: 420,
             padding: 24,
-            borderRadius: 20,
+            borderRadius: theme.radius.lg,
             backgroundColor: "rgba(225,195,155,0.05)",
             borderWidth: 1,
             borderColor: "rgba(225,195,155,0.22)",
@@ -154,10 +143,7 @@ export default function CreditsExhaustedScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
               marginBottom: 12,
             }}
@@ -167,9 +153,7 @@ export default function CreditsExhaustedScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 14,
-              lineHeight: 22,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               marginBottom: 24,
             }}

@@ -25,7 +25,11 @@ import { theme } from "@/config/theme";
  * a plain inner View owns layout — see ListItem / AvatarMenu notes.
  */
 
-const MEDIA_HEIGHT = 160;
+// 150, not 160: five cards at 276pt each meant two fit on an iPhone 13.
+// Ten points of media per card plus the tightened body padding below buys a
+// third card into the first paint — the difference between "here are two
+// things" and "here is a product".
+const MEDIA_HEIGHT = 150;
 
 /** Soft gradient at the media's bottom edge — melts the photo into the
     card body instead of a hard line; the premium "editorial fade". */
@@ -154,7 +158,7 @@ function TransferTeaser({
                         style={{
                             width: CARD,
                             height: CARD,
-                            borderRadius: 14,
+                            borderRadius: theme.radius.md,
                             overflow: "hidden",
                             borderWidth: 2.5,
                             borderColor: theme.color.goldMidday,
@@ -178,7 +182,7 @@ function TransferTeaser({
                             alignSelf: "center",
                             paddingHorizontal: 8,
                             paddingVertical: 2,
-                            borderRadius: 999,
+                            borderRadius: theme.radius.pill,
                             backgroundColor: "rgba(12,11,10,0.85)",
                             borderWidth: 1,
                             borderColor: "rgba(225,195,155,0.5)",
@@ -186,11 +190,9 @@ function TransferTeaser({
                     >
                         <Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
+                                ...theme.text.label,
                                 color: theme.color.goldMidday,
-                            }}
+                              }}
                         >
                             REF
                         </Text>
@@ -204,7 +206,7 @@ function TransferTeaser({
                     style={{
                         paddingHorizontal: 10,
                         paddingVertical: 5,
-                        borderRadius: 999,
+                        borderRadius: theme.radius.pill,
                         backgroundColor: "rgba(12,11,10,0.5)",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.28)",
@@ -213,24 +215,20 @@ function TransferTeaser({
                     <View>
                         <Animated.Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
+                                ...theme.text.label,
                                 color: "#D0C5B8",
                                 opacity: beforeTagOpacity,
-                            }}
+                              }}
                         >
                             BEFORE
                         </Animated.Text>
                         <Animated.Text
                             style={{
+                                ...theme.text.label,
                                 position: "absolute",
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
                                 color: theme.color.goldMidday,
                                 opacity: afterOpacity,
-                            }}
+                              }}
                         >
                             AFTER
                         </Animated.Text>
@@ -360,7 +358,7 @@ function PaintTeaser({
                     style={{
                         paddingHorizontal: 10,
                         paddingVertical: 5,
-                        borderRadius: 999,
+                        borderRadius: theme.radius.pill,
                         backgroundColor: "rgba(12,11,10,0.5)",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.28)",
@@ -369,24 +367,20 @@ function PaintTeaser({
                     <View>
                         <Animated.Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
+                                ...theme.text.label,
                                 color: "#D0C5B8",
                                 opacity: beforeTagOpacity,
-                            }}
+                              }}
                         >
                             BEFORE
                         </Animated.Text>
                         <Animated.Text
                             style={{
+                                ...theme.text.label,
                                 position: "absolute",
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
                                 color: theme.color.goldMidday,
                                 opacity: afterOpacity,
-                            }}
+                              }}
                         >
                             AFTER
                         </Animated.Text>
@@ -509,7 +503,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                     style={{
                         paddingHorizontal: 10,
                         paddingVertical: 5,
-                        borderRadius: 999,
+                        borderRadius: theme.radius.pill,
                         backgroundColor: "rgba(12,11,10,0.5)",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.28)",
@@ -518,27 +512,23 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                     <View>
                         <Animated.Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
+                                ...theme.text.label,
                                 color: "#D0C5B8",
                                 opacity: fade.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: [1, 0],
                                 }),
-                            }}
+                              }}
                         >
                             BEFORE
                         </Animated.Text>
                         <Animated.Text
                             style={{
+                                ...theme.text.label,
                                 position: "absolute",
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 9,
-                                letterSpacing: 1.6,
                                 color: theme.color.goldMidday,
                                 opacity: fade,
-                            }}
+                              }}
                         >
                             AFTER
                         </Animated.Text>
@@ -566,14 +556,14 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
             accessibilityRole="button"
             accessibilityLabel={t(feature.titleKey)}
             style={({ pressed }) => ({
-                borderRadius: 22,
+                borderRadius: theme.radius.lg,
                 transform: [{ scale: pressed ? 0.985 : 1 }],
                 opacity: pressed ? 0.92 : 1,
             })}
         >
             <View
                 style={{
-                    borderRadius: 22,
+                    borderRadius: theme.radius.lg,
                     overflow: "hidden",
                     backgroundColor: theme.color.surfaceContainerLow,
                     borderWidth: 1,
@@ -596,7 +586,7 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                                 gap: 5,
                                 paddingHorizontal: 10,
                                 paddingVertical: 5,
-                                borderRadius: 999,
+                                borderRadius: theme.radius.pill,
                                 backgroundColor: "rgba(12,11,10,0.62)",
                                 borderWidth: 1,
                                 borderColor: "rgba(225,195,155,0.45)",
@@ -609,11 +599,9 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                             />
                             <Text
                                 style={{
-                                    fontFamily: "Inter-SemiBold",
-                                    fontSize: 10,
-                                    letterSpacing: 1.2,
+                                    ...theme.text.label,
                                     color: theme.color.goldMidday,
-                                }}
+                                  }}
                             >
                                 {feature.minPlan}
                             </Text>
@@ -628,29 +616,24 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                         alignItems: "center",
                         gap: 14,
                         paddingHorizontal: 18,
-                        paddingVertical: 16,
+                        paddingVertical: 13,
                     }}
                 >
                     <View style={{ flex: 1 }}>
                         <Text
                             style={{
-                                fontFamily: "NotoSerif",
-                                fontSize: 19,
-                                lineHeight: 24,
-                                letterSpacing: -0.2,
+                                ...theme.text.title,
                                 color: theme.color.onSurface,
-                            }}
+                              }}
                         >
                             {t(feature.titleKey)}
                         </Text>
                         <Text
                             style={{
-                                fontFamily: "Inter",
-                                fontSize: 12.5,
-                                lineHeight: 18,
+                                ...theme.text.caption,
                                 color: theme.color.onSurfaceVariant,
                                 marginTop: 4,
-                            }}
+                              }}
                             numberOfLines={2}
                         >
                             {t(feature.descKey)}
@@ -664,7 +647,7 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                         style={{
                             paddingHorizontal: 16,
                             height: 36,
-                            borderRadius: 999,
+                            borderRadius: theme.radius.pill,
                             alignItems: "center",
                             justifyContent: "center",
                             borderWidth: 1,
@@ -673,12 +656,9 @@ export function FeatureCard({ feature, locked, onPress }: FeatureCardProps) {
                     >
                         <Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 11,
-                                letterSpacing: 1.2,
-                                textTransform: "uppercase",
+                                ...theme.text.label,
                                 color: theme.color.onGold,
-                            }}
+                              }}
                         >
                             {t("studio.feature_try")}
                         </Text>

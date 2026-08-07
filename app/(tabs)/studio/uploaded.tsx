@@ -68,7 +68,7 @@ export default function UploadedScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         {/* Spacer keeps the brand centered — the hamburger is retired
@@ -81,7 +81,7 @@ export default function UploadedScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
           // Fill the viewport so the photo block can center itself in the
           // space between the headline and the CTA — with the old inline
@@ -95,10 +95,7 @@ export default function UploadedScreen() {
         <View style={{ marginTop: 16, marginBottom: 10 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
+              ...theme.text.label,
               color: theme.color.goldMidday,
             }}
           >
@@ -109,10 +106,7 @@ export default function UploadedScreen() {
         {/* Headline */}
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 34,
-            lineHeight: 40,
-            letterSpacing: -0.4,
+            ...theme.text.display,
             color: theme.color.onSurface,
             marginBottom: 24,
           }}
@@ -127,7 +121,7 @@ export default function UploadedScreen() {
         {/* Uploaded photo preview */}
         <View
           style={{
-            borderRadius: 18,
+            borderRadius: theme.radius.md,
             overflow: "hidden",
             marginBottom: 20,
             ...theme.elevation.lg,
@@ -166,7 +160,7 @@ export default function UploadedScreen() {
                 right: 14,
                 width: 40,
                 height: 40,
-                borderRadius: 20,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: "rgba(19,19,19,0.78)",
@@ -198,10 +192,10 @@ export default function UploadedScreen() {
             <View
               style={{
                 paddingVertical: 18,
-                paddingHorizontal: 20,
+                paddingHorizontal: theme.space.gutter,
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.55)",
-                borderRadius: 18,
+                borderRadius: theme.radius.md,
                 backgroundColor: "rgba(225,195,155,0.04)",
                 flexDirection: "row",
                 alignItems: "center",
@@ -216,9 +210,7 @@ export default function UploadedScreen() {
               />
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 15,
-                  letterSpacing: 0.2,
+                  ...theme.text.subtitle,
                   color: theme.color.onSurface,
                 }}
               >

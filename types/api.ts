@@ -1,5 +1,5 @@
 // ── Enums ──────────────────────────────────────
-export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER";
+export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR";
 export type QualityTier = "STANDARD" | "HD" | "ULTRA_HD";
 export type JobStatus = "PENDING" | "SUBMITTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type StorageStatus = "PENDING" | "UPLOADED" | "FAILED";
@@ -12,6 +12,8 @@ export interface UserResponse {
     displayName: string;
     status: string;
     createdAt: string;
+    /** V53 guest-first — anonymous device account */
+    guest?: boolean;
 }
 
 export interface AuthResponse {

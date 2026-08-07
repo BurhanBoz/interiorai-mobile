@@ -1,6 +1,32 @@
 import api from "./api";
 import type { AuthResponse, MessageResponse } from "@/types/api";
 
+/**
+ * Device identifiers attached to every call that can CREATE an account and
+ * therefore mint a welcome bonus (guest, register, Apple, Google).
+ *
+ * - `deviceKey` — Keychain UUID. Survives app deletion, so the ordinary
+ *   "reinstall for another free trial" loop is closed. Client-owned, so a
+ *   crafted request can always present a fresh one.
+ * - `deviceCheckToken` — Apple-minted proof. Cannot be forged, and the bits
+ *   Apple stores against it outlive a factory reset. Absent on the Simulator.
+ *
+ * Both are optional on the wire: the backend degrades to whichever it gets.
+ */
+export type DeviceIdentity = {
+    deviceKey?: string | null;
+    deviceCheckToken?: string | null;
+};
+
+/** Only the fields that actually have a value — never send explicit nulls. */
+function deviceBody(device?: DeviceIdentity): Record<string, string> {
+    if (!device) return {};
+    return {
+        ...(device.deviceKey ? { deviceKey: device.deviceKey } : {}),
+        ...(device.deviceCheckToken ? { deviceCheckToken: device.deviceCheckToken } : {}),
+    };
+}
+
 export async function login(email: string, password: string): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/login", { email, password });
     return data;
@@ -9,12 +35,14 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export async function register(
     email: string,
     password: string,
-    displayName?: string
+    displayName?: string,
+    device?: DeviceIdentity,
 ): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/register", {
         email,
         password,
         displayName,
+        ...deviceBody(device),
     });
     return data;
 }
@@ -58,8 +86,11 @@ export async function loginWithApple(params: {
     identityToken: string;
     fullName?: string;
     nonce?: string;
-}): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>("/api/auth/apple", params);
+}, device?: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/apple", {
+        ...params,
+        ...deviceBody(device),
+    });
     return data;
 }
 
@@ -70,7 +101,31 @@ export async function loginWithApple(params: {
 export async function loginWithGoogle(params: {
     identityToken: string;
     fullName?: string;
-}): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>("/api/auth/google", params);
+}, device?: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/google", {
+        ...params,
+        ...deviceBody(device),
+    });
+    return data;
+}
+
+/**
+ * V53 guest-first — silent anonymous account for this device.
+ *
+ * `deviceCheckToken` (1.2) is Apple's unforgeable device proof; the backend
+ * uses it to refuse a second welcome bonus to hardware that already had one.
+ * Null on the Simulator and whenever Apple declines to mint one — the
+ * backend then falls back to `deviceKey` alone.
+ */
+export async function guestLogin(device: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/guest", deviceBody(device));
+    return data;
+}
+
+/** V53 — attach email+password to the CURRENT guest (same user id; wallet/jobs kept). */
+export async function upgradeAccount(
+    email: string, password: string, displayName?: string,
+): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/users/me/upgrade", { email, password, displayName });
     return data;
 }

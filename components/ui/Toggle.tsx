@@ -53,7 +53,7 @@ export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) 
       style={{
         width: TRACK_WIDTH,
         height: THUMB_SIZE + THUMB_INSET * 2,
-        borderRadius: 999,
+        borderRadius: theme.radius.pill,
         justifyContent: "center",
         paddingHorizontal: THUMB_INSET,
         backgroundColor: value

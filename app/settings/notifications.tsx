@@ -67,9 +67,7 @@ function ToggleRow({
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontFamily: "Inter-Medium",
-            fontSize: 14,
-            letterSpacing: 0.2,
+            ...theme.text.subtitle,
             color: theme.color.onSurface,
           }}
         >
@@ -77,9 +75,7 @@ function ToggleRow({
         </Text>
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 12,
-            lineHeight: 16,
+            ...theme.text.caption,
             color: theme.color.onSurfaceMuted,
             marginTop: 3,
           }}
@@ -127,7 +123,7 @@ function InboxRow({
       onPress={() => onPress(item)}
       style={({ pressed }) => ({
         padding: 16,
-        borderRadius: 14,
+        borderRadius: theme.radius.md,
         backgroundColor: item.read
           ? "rgba(32,31,31,0.55)"
           : "rgba(225,195,155,0.06)",
@@ -144,7 +140,7 @@ function InboxRow({
         style={{
           width: 38,
           height: 38,
-          borderRadius: 11,
+          borderRadius: theme.radius.sm,
           backgroundColor: item.read
             ? "rgba(77,70,60,0.25)"
             : "rgba(225,195,155,0.12)",
@@ -159,13 +155,11 @@ function InboxRow({
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text
             style={{
+              ...theme.text.subtitle,
               flex: 1,
-              fontFamily: "Inter-SemiBold",
-              fontSize: 14,
               color: item.read
                 ? theme.color.onSurfaceVariant
                 : theme.color.onSurface,
-              letterSpacing: 0.1,
             }}
             numberOfLines={1}
           >
@@ -184,9 +178,7 @@ function InboxRow({
         </View>
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 13,
-            lineHeight: 18,
+            ...theme.text.body,
             color: theme.color.onSurfaceVariant,
           }}
           numberOfLines={2}
@@ -195,10 +187,8 @@ function InboxRow({
         </Text>
         <Text
           style={{
+            ...theme.text.caption,
             marginTop: 4,
-            fontFamily: "Inter-Medium",
-            fontSize: 11,
-            letterSpacing: 0.3,
             color: theme.color.onSurfaceMuted,
           }}
         >
@@ -297,7 +287,7 @@ function UpsellCardView({ card }: { card: UpsellCard }) {
       onPress={() => router.push("/plans")}
       style={({ pressed }) => ({
         padding: 18,
-        borderRadius: 16,
+        borderRadius: theme.radius.md,
         backgroundColor: "rgba(225,195,155,0.04)",
         borderWidth: 1,
         borderColor: "rgba(225,195,155,0.22)",
@@ -310,7 +300,7 @@ function UpsellCardView({ card }: { card: UpsellCard }) {
           style={{
             width: 40,
             height: 40,
-            borderRadius: 12,
+            borderRadius: theme.radius.sm,
             backgroundColor: "rgba(225,195,155,0.10)",
             borderWidth: 1,
             borderColor: "rgba(225,195,155,0.25)",
@@ -328,19 +318,15 @@ function UpsellCardView({ card }: { card: UpsellCard }) {
         <View style={{ flex: 1, gap: 3 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 15,
+              ...theme.text.subtitle,
               color: theme.color.onSurface,
-              letterSpacing: 0.1,
             }}
           >
             {t(card.titleKey)}
           </Text>
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 13,
-              lineHeight: 19,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
             }}
           >
@@ -356,10 +342,7 @@ function UpsellCardView({ card }: { card: UpsellCard }) {
           >
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 1.8,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.goldMidday,
               }}
             >
@@ -482,17 +465,14 @@ export default function NotificationsSettingsScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Editorial hero — sentence-case title, single eyebrow */}
         <View style={{ marginTop: 16, marginBottom: 32 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 1.8,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "rgba(225,195,155,0.62)",
               marginBottom: 10,
             }}
@@ -501,10 +481,7 @@ export default function NotificationsSettingsScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 30,
-              lineHeight: 36,
-              letterSpacing: -0.3,
+              ...theme.text.display,
               color: theme.color.onSurface,
             }}
           >
@@ -522,9 +499,7 @@ export default function NotificationsSettingsScreen() {
           />
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 14,
-              lineHeight: 22,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               maxWidth: 320,
               marginTop: 14,
@@ -550,10 +525,7 @@ export default function NotificationsSettingsScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 13,
-                  letterSpacing: 1.6,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.onSurfaceVariant,
                 }}
               >
@@ -565,7 +537,7 @@ export default function NotificationsSettingsScreen() {
                     minWidth: 22,
                     height: 22,
                     paddingHorizontal: 7,
-                    borderRadius: 11,
+                    borderRadius: theme.radius.sm,
                     backgroundColor: theme.color.goldMidday,
                     alignItems: "center",
                     justifyContent: "center",
@@ -573,10 +545,8 @@ export default function NotificationsSettingsScreen() {
                 >
                   <Text
                     style={{
-                      fontFamily: "Inter-SemiBold",
-                      fontSize: 11,
+                      ...theme.text.caption,
                       color: theme.color.onGold,
-                      letterSpacing: 0.2,
                     }}
                   >
                     {unreadCount}
@@ -588,9 +558,7 @@ export default function NotificationsSettingsScreen() {
               <Pressable onPress={markAllRead} hitSlop={8}>
                 <Text
                   style={{
-                    fontFamily: "Inter-Medium",
-                    fontSize: 12,
-                    letterSpacing: 0.3,
+                    ...theme.text.caption,
                     color: theme.color.goldMidday,
                   }}
                 >
@@ -616,8 +584,8 @@ export default function NotificationsSettingsScreen() {
             <View
               style={{
                 paddingVertical: 40,
-                paddingHorizontal: 20,
-                borderRadius: 16,
+                paddingHorizontal: theme.space.gutter,
+                borderRadius: theme.radius.md,
                 backgroundColor: "rgba(32,31,31,0.55)",
                 borderWidth: 1,
                 borderColor: "rgba(77,70,60,0.18)",
@@ -628,8 +596,7 @@ export default function NotificationsSettingsScreen() {
               <Ionicons name="mail-open-outline" size={28} color={theme.color.onSurfaceMuted} />
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 14,
+                  ...theme.text.subtitle,
                   color: theme.color.onSurfaceVariant,
                   textAlign: "center",
                 }}
@@ -638,9 +605,7 @@ export default function NotificationsSettingsScreen() {
               </Text>
               <Text
                 style={{
-                  fontFamily: "Inter",
-                  fontSize: 12,
-                  lineHeight: 18,
+                  ...theme.text.caption,
                   color: theme.color.onSurfaceMuted,
                   textAlign: "center",
                   maxWidth: 280,
@@ -665,7 +630,7 @@ export default function NotificationsSettingsScreen() {
             <View
               style={{
                 padding: 16,
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 backgroundColor: "rgba(225,195,155,0.06)",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.25)",
@@ -683,11 +648,9 @@ export default function NotificationsSettingsScreen() {
               />
               <Text
                 style={{
+                  ...theme.text.subtitle,
                   flex: 1,
-                  fontFamily: "Inter-Medium",
-                  fontSize: 13,
                   color: theme.color.goldMidday,
-                  letterSpacing: 0.2,
                 }}
               >
                 {t("settings.notifications_you_are_max")}
@@ -719,10 +682,7 @@ export default function NotificationsSettingsScreen() {
             <View>
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.onSurfaceMuted,
                   marginBottom: 10,
                   paddingLeft: 2,
@@ -732,7 +692,7 @@ export default function NotificationsSettingsScreen() {
               </Text>
               <View
                 style={{
-                  borderRadius: 14,
+                  borderRadius: theme.radius.md,
                   borderWidth: 1,
                   borderColor: "rgba(77,70,60,0.18)",
                   marginBottom: 28,
@@ -766,10 +726,7 @@ export default function NotificationsSettingsScreen() {
 
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.onSurfaceMuted,
                   marginBottom: 10,
                   paddingLeft: 2,
@@ -779,7 +736,7 @@ export default function NotificationsSettingsScreen() {
               </Text>
               <View
                 style={{
-                  borderRadius: 14,
+                  borderRadius: theme.radius.md,
                   borderWidth: 1,
                   borderColor: "rgba(77,70,60,0.18)",
                   overflow: "hidden",

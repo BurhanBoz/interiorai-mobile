@@ -9,6 +9,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
+import { BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import { theme } from "@/config/theme";
 
 /**
@@ -81,7 +82,7 @@ export default function UploadScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
         <Pressable
@@ -104,7 +105,15 @@ export default function UploadScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 128 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: theme.space.gutter,
+          // Step 1's CTA scrolls with the content rather than floating, so it
+          // needs the same clearance a BottomBar would have reserved —
+          // otherwise it ends up welded to the tab bar (founder screenshot,
+          // 2026-08-07). Shared helper, so the four wizard steps stay in step.
+          paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Vertically centered cluster — same as the pre-rework studio home */}
@@ -113,10 +122,7 @@ export default function UploadScreen() {
           <View style={{ marginTop: 12, marginBottom: 10 }}>
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.label,
                 color: theme.color.goldMidday,
               }}
             >
@@ -127,10 +133,7 @@ export default function UploadScreen() {
           {/* Headline */}
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 34,
-              lineHeight: 40,
-              letterSpacing: -0.4,
+              ...theme.text.display,
               color: theme.color.onSurface,
               marginBottom: 36,
             }}
@@ -159,11 +162,11 @@ export default function UploadScreen() {
                 style={{
                   width: "100%",
                   paddingVertical: 36,
-                  paddingHorizontal: 24,
+                  paddingHorizontal: theme.space.gutter,
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "rgba(225,195,155,0.72)",
-                  borderRadius: 20,
+                  borderRadius: theme.radius.lg,
                   backgroundColor: "rgba(225,195,155,0.05)",
                   alignItems: "center",
                   ...theme.elevation.goldGlowSoft,
@@ -178,10 +181,7 @@ export default function UploadScreen() {
                 </Animated.View>
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 15,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                     color: theme.color.onSurface,
                     marginBottom: 6,
                   }}
@@ -190,10 +190,8 @@ export default function UploadScreen() {
                 </Text>
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 13,
+                    ...theme.text.body,
                     color: theme.color.onSurfaceMuted,
-                    letterSpacing: 0.2,
                   }}
                 >
                   JPEG · HEIC · PNG
@@ -214,10 +212,7 @@ export default function UploadScreen() {
               <View style={{ flex: 1, height: 1, backgroundColor: "rgba(77,70,60,0.35)" }} />
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.onSurfaceMuted,
                 }}
               >
@@ -241,10 +236,10 @@ export default function UploadScreen() {
                 style={{
                   width: "100%",
                   paddingVertical: 22,
-                  paddingHorizontal: 24,
+                  paddingHorizontal: theme.space.gutter,
                   borderWidth: 1,
                   borderColor: "rgba(225,195,155,0.45)",
-                  borderRadius: 20,
+                  borderRadius: theme.radius.lg,
                   backgroundColor: "rgba(225,195,155,0.03)",
                   flexDirection: "row",
                   alignItems: "center",
@@ -259,9 +254,7 @@ export default function UploadScreen() {
                 />
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 15,
-                    letterSpacing: 0.3,
+                    ...theme.text.subtitle,
                     color: theme.color.onSurface,
                   }}
                 >

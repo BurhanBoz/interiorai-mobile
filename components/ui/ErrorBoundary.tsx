@@ -1,4 +1,5 @@
 import React, { Component, type ReactNode } from "react";
+import { theme } from "@/config/theme";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -80,24 +81,21 @@ export class ErrorBoundary extends Component<Props, State> {
                         </View>
                         <Text
                             style={{
-                                fontSize: 24,
-                                fontWeight: "700",
+                                ...theme.text.headline,
                                 color: "#E5E2E1",
-                                fontFamily: "NotoSerif",
                                 textAlign: "center",
                                 marginBottom: 8,
-                            }}
+                              }}
                         >
                             Something Went Wrong
                         </Text>
                         <Text
                             style={{
-                                fontSize: 14,
+                                ...theme.text.body,
                                 color: "#998F84",
                                 textAlign: "center",
-                                lineHeight: 20,
                                 maxWidth: 320,
-                            }}
+                              }}
                         >
                             The app hit an unexpected error. You can return home and try
                             again — nothing was lost.
@@ -108,7 +106,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         <View
                             style={{
                                 backgroundColor: "rgba(28,27,27,0.9)",
-                                borderRadius: 12,
+                                borderRadius: theme.radius.sm,
                                 padding: 16,
                                 marginBottom: 24,
                                 borderWidth: 1,
@@ -117,13 +115,10 @@ export class ErrorBoundary extends Component<Props, State> {
                         >
                             <Text
                                 style={{
-                                    fontSize: 11,
-                                    letterSpacing: 1.5,
-                                    textTransform: "uppercase",
+                                    ...theme.text.caption,
                                     color: "#E0C29A",
-                                    fontWeight: "700",
                                     marginBottom: 8,
-                                }}
+                                  }}
                             >
                                 Dev Debug
                             </Text>
@@ -163,18 +158,15 @@ export class ErrorBoundary extends Component<Props, State> {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 height: 54,
-                                borderRadius: 14,
+                                borderRadius: theme.radius.md,
                                 gap: 10,
                             }}
                         >
                             <Text
                                 style={{
-                                    fontSize: 14,
-                                    fontWeight: "700",
-                                    letterSpacing: 1.5,
-                                    textTransform: "uppercase",
+                                    ...theme.text.caption,
                                     color: "#3F2D11",
-                                }}
+                                  }}
                             >
                                 Return Home
                             </Text>

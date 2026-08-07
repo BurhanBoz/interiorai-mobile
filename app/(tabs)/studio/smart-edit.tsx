@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { theme } from "@/config/theme";
 import {
   View,
   Text,
@@ -226,7 +227,7 @@ export default function SmartEditScreen() {
         <Header title={t("studio.smart_edit_title")} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Ionicons name="image-outline" size={40} color={GOLD} />
-          <Text style={{ color: "#EDE4D7", fontSize: 16, textAlign: "center", marginTop: 16 }}>
+          <Text style={{ ...theme.text.subtitle, color: "#EDE4D7", textAlign: "center", marginTop: 16 }}>
             {t("studio.smart_edit_no_photo")}
           </Text>
         </View>
@@ -253,7 +254,7 @@ export default function SmartEditScreen() {
           flexDirection: "row",
           marginHorizontal: 24,
           marginBottom: 10,
-          borderRadius: 12,
+          borderRadius: theme.radius.sm,
           backgroundColor: "rgba(42,42,42,0.8)",
           borderWidth: 1,
           borderColor: "rgba(77,70,60,0.15)",
@@ -273,14 +274,14 @@ export default function SmartEditScreen() {
               style={{
                 flex: 1,
                 paddingVertical: 9,
-                borderRadius: 9,
+                borderRadius: theme.radius.sm,
                 alignItems: "center",
                 backgroundColor: active ? "rgba(225,195,155,0.14)" : "transparent",
                 borderWidth: active ? 1 : 0,
                 borderColor: tint,
               }}
             >
-              <Text style={{ color: active ? tint : "#8D8271", fontSize: 13, fontWeight: "600" }}>
+              <Text style={{ ...theme.text.body, color: active ? tint : "#8D8271" }}>
                 {t(m === "CHANGE" ? "studio.smart_edit_mode_change" : "studio.smart_edit_mode_protect")}
               </Text>
             </Pressable>
@@ -293,7 +294,7 @@ export default function SmartEditScreen() {
           repaints the same kind of furniture, restyled by the strength
           slider. Filled in, it becomes the region's description verbatim. */}
       {maskMode === "CHANGE" && (
-        <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 16 }}>
           <Input
             label={t("studio.smart_edit_content_label")}
             placeholder={t("studio.smart_edit_content_placeholder")}
@@ -311,7 +312,7 @@ export default function SmartEditScreen() {
           style={{
             width: canvasW,
             height: canvasH,
-            borderRadius: 16,
+            borderRadius: theme.radius.md,
             overflow: "hidden",
             backgroundColor: "#1C1C1C",
           }}
@@ -370,7 +371,7 @@ export default function SmartEditScreen() {
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: 22,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: active ? "rgba(225,195,155,0.18)" : "rgba(42,42,42,0.8)",
@@ -410,18 +411,16 @@ export default function SmartEditScreen() {
           already clears the tab bar. */}
       <View
         style={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           marginTop: 24,
         }}
       >
         {attempted && strokes.length === 0 && (
           <Text
             style={{
+              ...theme.text.caption,
               marginBottom: 10,
-              fontSize: 12.5,
-              lineHeight: 17,
               textAlign: "center",
-              fontFamily: "Inter",
               color: "#D98A7B",
             }}
           >
@@ -481,7 +480,7 @@ function ControlButton({
         justifyContent: "center",
         paddingHorizontal: 12,
         height: 44,
-        borderRadius: 22,
+        borderRadius: theme.radius.lg,
         backgroundColor: "rgba(42,42,42,0.8)",
         borderWidth: 1,
         borderColor: "rgba(77,70,60,0.15)",
@@ -491,7 +490,7 @@ function ControlButton({
       }}
     >
       <Ionicons name={icon} size={16} color={GOLD} />
-      <Text style={{ color: "#EDE4D7", fontSize: 13 }}>{label}</Text>
+      <Text style={{ ...theme.text.body, color: "#EDE4D7" }}>{label}</Text>
     </Pressable>
   );
 }
@@ -536,7 +535,7 @@ function Header({ title }: { title: string }) {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 24,
+        paddingHorizontal: theme.space.gutter,
         paddingVertical: 16,
       }}
     >
@@ -546,7 +545,7 @@ function Header({ title }: { title: string }) {
         style={{
           width: 40,
           height: 40,
-          borderRadius: 20,
+          borderRadius: theme.radius.lg,
           backgroundColor: "rgba(42,42,42,0.8)",
           borderWidth: 1,
           borderColor: "rgba(77,70,60,0.15)",
@@ -558,9 +557,8 @@ function Header({ title }: { title: string }) {
       </Pressable>
       <Text
         style={{
+          ...theme.text.subtitle,
           color: "#EDE4D7",
-          fontSize: 18,
-          fontWeight: "600",
           marginLeft: 16,
         }}
       >

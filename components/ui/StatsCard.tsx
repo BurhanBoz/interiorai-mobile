@@ -48,9 +48,9 @@ export function StatsCard({
     <View
       style={[
         {
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
           paddingVertical: 20,
-          borderRadius: 16,
+          borderRadius: theme.radius.md,
           backgroundColor: emphasis
             ? "rgba(225,195,155,0.06)"
             : theme.color.surfaceContainerLow,
@@ -73,10 +73,7 @@ export function StatsCard({
       >
         <Text
           style={{
-            fontFamily: "Inter-SemiBold",
-            fontSize: 10,
-            letterSpacing: 1.8,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: emphasis
               ? theme.color.goldMidday
               : "rgba(208,197,184,0.7)",
@@ -95,10 +92,7 @@ export function StatsCard({
       </View>
       <Text
         style={{
-          fontFamily: "NotoSerif",
-          fontSize: 34,
-          lineHeight: 38,
-          letterSpacing: -0.6,
+          ...theme.text.display,
           color: theme.color.onSurface,
           fontVariant: ["tabular-nums"],
         }}
@@ -108,9 +102,7 @@ export function StatsCard({
       {description ? (
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 12,
-            lineHeight: 16,
+            ...theme.text.caption,
             color: theme.color.onSurfaceMuted,
             marginTop: 6,
           }}

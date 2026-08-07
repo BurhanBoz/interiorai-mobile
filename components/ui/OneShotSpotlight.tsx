@@ -65,7 +65,7 @@ export function OneShotSpotlight({
                 style={[
                     {
                         width: "100%",
-                        borderRadius: 20,
+                        borderRadius: theme.radius.lg,
                         backgroundColor: "#1C1B1B",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.35)",
@@ -100,12 +100,10 @@ export function OneShotSpotlight({
                 {text ? (
                     <Text
                         style={{
+                            ...theme.text.body,
                             color: "#EDE4D7",
-                            fontSize: 14.5,
-                            lineHeight: 21,
                             textAlign: align === "center" ? "center" : "left",
-                            fontFamily: "Inter",
-                        }}
+                          }}
                     >
                         {text}
                     </Text>

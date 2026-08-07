@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
+import { useAuthStore } from "@/stores/authStore";
 import { LegalFooter } from "@/components/ui/LegalFooter";
 import { theme } from "@/config/theme";
 
@@ -31,6 +32,12 @@ import { theme } from "@/config/theme";
  */
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+// Responsive pair-image height: two stacked images + chip + dots + CTA must
+// fit every device. ~360pt of fixed chrome (header, title, chip, gaps, dots,
+// footer) leaves the rest for the two images; 220 stays the cap on tall
+// screens so the cards never balloon.
+const PAIR_IMG_HEIGHT = Math.min(220, Math.floor((SCREEN_HEIGHT - 360) / 2));
 
 // Curated before/after pairs ship as bundled assets so the carousel renders
 // with no network round-trip — the unauth trial screen must feel instant.
@@ -72,9 +79,7 @@ function Caption({ label }: { label: string }) {
     >
       <Text
         style={{
-          fontFamily: "Inter-SemiBold",
-          fontSize: 10,
-          letterSpacing: 1.6,
+          ...theme.text.caption,
           color: "#E5E2E1",
         }}
       >
@@ -85,6 +90,22 @@ function Caption({ label }: { label: string }) {
 }
 
 export default function AnonymousTrialScreen() {
+  const guestLogin = useAuthStore((st) => st.guestLogin);
+  const [busy, setBusy] = useState(false);
+  // Same guest-first entry as onboarding's Get Started — after browsing the
+  // examples the only forward action is IN, not a signup form.
+  const handleGetStarted = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await guestLogin();
+      router.replace("/(tabs)/studio");
+    } catch {
+      router.push("/register");
+    } finally {
+      setBusy(false);
+    }
+  };
   const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -101,65 +122,44 @@ export default function AnonymousTrialScreen() {
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
-      <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: "row", alignItems: "center" }}>
+      <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 8, flexDirection: "row", alignItems: "center" }}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
         </Pressable>
       </View>
 
-      <View style={{ paddingHorizontal: 24, paddingTop: 18 }}>
-        <Text
-          style={{
-            fontFamily: "NotoSerif",
-            fontSize: 28,
-            lineHeight: 34,
-            letterSpacing: -0.3,
-            color: theme.color.onSurface,
-          }}
-        >
-          {t("auth.trial_intro_title")}
-        </Text>
-        <Text
-          style={{
-            fontFamily: "Inter",
-            fontSize: 14,
-            lineHeight: 20,
-            color: theme.color.onSurfaceVariant,
-            marginTop: 10,
-          }}
-        >
-          {t("auth.trial_intro_subtitle")}
-        </Text>
+      <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 18 }}>
+        {/* title removed 2026-08-03 — the photos are the pitch */}
+        {/* subtitle removed 2026-08-03 — title alone carries the screen */}
       </View>
 
       <View style={{ flex: 1, justifyContent: "center" }}>
         <FlatList
+          style={{ flexGrow: 0 }}
           data={PAIRS}
           renderItem={({ item }) => (
             <View
               style={{
                 width: SCREEN_WIDTH,
-                paddingHorizontal: 24,
+                paddingHorizontal: theme.space.gutter,
                 gap: 12,
               }}
             >
               <View
                 style={{
-                  alignSelf: "flex-start",
+                  alignSelf: "center",
                   backgroundColor: "rgba(214, 169, 92, 0.14)",
                   borderColor: "rgba(214, 169, 92, 0.32)",
                   borderWidth: 1,
                   paddingHorizontal: 10,
                   paddingVertical: 4,
-                  borderRadius: 999,
+                  borderRadius: theme.radius.pill,
                   marginBottom: 4,
                 }}
               >
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 11,
-                    letterSpacing: 0.6,
+                    ...theme.text.caption,
                     color: theme.color.goldMidday,
                   }}
                 >
@@ -168,8 +168,8 @@ export default function AnonymousTrialScreen() {
               </View>
               <View
                 style={{
-                  height: 220,
-                  borderRadius: 14,
+                  height: PAIR_IMG_HEIGHT,
+                  borderRadius: theme.radius.md,
                   overflow: "hidden",
                   backgroundColor: theme.color.surfaceContainerLow,
                 }}
@@ -184,8 +184,8 @@ export default function AnonymousTrialScreen() {
               </View>
               <View
                 style={{
-                  height: 220,
-                  borderRadius: 14,
+                  height: PAIR_IMG_HEIGHT,
+                  borderRadius: theme.radius.md,
                   overflow: "hidden",
                   backgroundColor: theme.color.surfaceContainerLow,
                 }}
@@ -222,13 +222,15 @@ export default function AnonymousTrialScreen() {
             index,
           })}
         />
+      </View>
+
 
         <View
           style={{
             flexDirection: "row",
             alignSelf: "center",
             gap: 6,
-            marginTop: 18,
+            marginVertical: 14,
           }}
         >
           {PAIRS.map((_, i) => (
@@ -244,24 +246,17 @@ export default function AnonymousTrialScreen() {
             />
           ))}
         </View>
-      </View>
 
-      <View style={{ paddingHorizontal: 24, paddingBottom: 8, gap: 8 }}>
+      <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 4, paddingBottom: 12, gap: 8 }}>
         <Button
           title={t("auth.trial_cta_primary")}
           variant="primary"
           size="lg"
-          onPress={() => router.push("/register")}
+          onPress={handleGetStarted}
           icon="sparkles"
         />
         <View style={{ alignItems: "center" }}>
-          <Button
-            title={t("auth.trial_cta_secondary")}
-            variant="tertiary"
-            size="sm"
-            onPress={() => router.push("/login")}
-            fullWidth={false}
-          />
+          {/* Sign-in button removed 2026-08-03 — guest-first single path */}
         </View>
         <LegalFooter />
       </View>

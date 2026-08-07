@@ -110,7 +110,7 @@ export function OfflineBanner() {
                     gap: 10,
                     paddingVertical: 10,
                     paddingHorizontal: 16,
-                    borderRadius: 14,
+                    borderRadius: theme.radius.md,
                     // Warm, desaturated crimson — intrudes less than iOS red
                     backgroundColor: "rgba(122, 28, 25, 0.94)",
                     borderWidth: 1,
@@ -126,11 +126,9 @@ export function OfflineBanner() {
                 <Text
                     numberOfLines={1}
                     style={{
-                        fontFamily: "Inter-SemiBold",
-                        fontSize: 12,
-                        letterSpacing: 0.3,
+                        ...theme.text.caption,
                         color: "#FFE4E0",
-                    }}
+                      }}
                 >
                     {t("common.offline_banner")}
                 </Text>

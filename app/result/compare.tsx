@@ -5,6 +5,7 @@ import {
   Pressable,
   LayoutChangeEvent,
 } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -189,7 +190,7 @@ function BeforeAfterSlider({
       >
         <Text
           className="font-label text-on-surface-variant"
-          style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}
+          style={{ ...theme.text.caption }}
         >
           {t("result.before")}
         </Text>
@@ -210,9 +211,7 @@ function BeforeAfterSlider({
         <Text
           className="font-label font-semibold"
           style={{
-            fontSize: 11,
-            letterSpacing: 2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: "#281801",
           }}
         >
@@ -251,7 +250,7 @@ function BeforeAfterSlider({
           style={{
             width: 48,
             height: 48,
-            borderRadius: 24,
+            borderRadius: theme.radius.lg,
             borderWidth: 2,
             borderColor: "#FEDFB5",
             shadowColor: "#000",
@@ -303,9 +302,7 @@ export default function CompareScreen() {
           <Text
             className="font-headline text-primary-container"
             style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             {t("result.compare")}
@@ -316,7 +313,7 @@ export default function CompareScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 24 }}
+        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: theme.space.gutter }}
         showsVerticalScrollIndicator={false}
       >
         {authReady ? (
@@ -338,13 +335,13 @@ export default function CompareScreen() {
         <View className="mt-8" style={{ gap: 16 }}>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 22, lineHeight: 28 }}
+            style={{ ...theme.text.headline }}
           >
             {t("result.before_after_title")}
           </Text>
           <Text
             className="font-body text-on-surface-variant"
-            style={{ fontSize: 14, lineHeight: 22 }}
+            style={{ ...theme.text.body }}
           >
             {t("result.before_after_description")}
           </Text>

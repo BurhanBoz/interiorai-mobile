@@ -23,6 +23,7 @@ export function resolveFeatureCode(
     if (mode === "EMPTY_ROOM") return "EMPTY_ROOM";
     if (mode === "INPAINT") return "INPAINT";
     if (mode === "STYLE_TRANSFER") return "STYLE_TRANSFER";
+    if (mode === "OUTDOOR") return "OUTDOOR_DESIGN"; // V52 — tier-agnostic like EMPTY_ROOM
     return "INTERIOR_REDESIGN";
 }
 

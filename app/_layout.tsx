@@ -147,6 +147,15 @@ export default function RootLayout() {
     // tapped from the same device while still logged in should open the
     // form, not bounce to Studio.
     const isPasswordReset = (segments as string[])[1] === "reset-password";
+    // V53 guest-first — a GUEST deliberately routed to register (the
+    // 3rd-generation "secure your account" prompt) must not be bounced:
+    // guests ARE authenticated, so without this exception the upgrade
+    // screen closed itself instantly (founder-reported, 2026-08-03).
+    // login is included so register's "Sign in" link keeps working for
+    // returning account holders. Onboarding/trial screens stay guarded.
+    const isUpgradeReachable =
+      (segments as string[])[1] === "register" ||
+      (segments as string[])[1] === "login";
     // Public legal screens — Terms of Service and Privacy Policy are
     // reachable BEFORE login (Apple §5.1.1(ix), GDPR Art. 13). The
     // LegalFooter on onboarding/login/register routes here, so the
@@ -159,7 +168,7 @@ export default function RootLayout() {
 
     if (!isAuthenticated && !inAuthGroup && !inPublicLegal) {
       router.replace("/(auth)/onboarding");
-    } else if (isAuthenticated && inAuthGroup && !isPasswordReset) {
+    } else if (isAuthenticated && inAuthGroup && !isPasswordReset && !isUpgradeReachable) {
       router.replace("/(tabs)/studio");
     }
   }, [isAuthenticated, isLoading, segments, fontsLoaded, fontError]);

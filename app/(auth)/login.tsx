@@ -169,10 +169,7 @@ export default function LoginScreen() {
           {/* Editorial hero — eyebrow + display serif + sub-headline */}
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
               marginBottom: 12,
             }}
@@ -181,10 +178,7 @@ export default function LoginScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.3,
+              ...theme.text.display,
               color: theme.color.onSurface,
               marginBottom: 10,
             }}
@@ -193,9 +187,7 @@ export default function LoginScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 15,
-              lineHeight: 22,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               marginBottom: 36,
             }}
@@ -288,10 +280,7 @@ export default function LoginScreen() {
             />
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.onSurfaceMuted,
               }}
             >
@@ -338,8 +327,7 @@ export default function LoginScreen() {
           >
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 14,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
               }}
             >
@@ -348,10 +336,8 @@ export default function LoginScreen() {
             <Pressable onPress={() => router.push("/register")} hitSlop={6}>
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 14,
+                  ...theme.text.subtitle,
                   color: theme.color.goldMidday,
-                  letterSpacing: 0.2,
                 }}
               >
                 {t("auth.register_link")}
@@ -407,8 +393,8 @@ function SocialButton({
           justifyContent: "center",
           gap: 10,
           minHeight: 56,
-          paddingHorizontal: 20,
-          borderRadius: 14,
+          paddingHorizontal: theme.space.gutter,
+          borderRadius: theme.radius.md,
           borderWidth: 1,
           borderColor: "rgba(63,45,17,0.18)",
         }}
@@ -421,9 +407,7 @@ function SocialButton({
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 14,
-                letterSpacing: 0.3,
+                ...theme.text.subtitle,
                 color: theme.color.onGold,
               }}
             >

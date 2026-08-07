@@ -29,10 +29,11 @@ interface TierBadgeProps {
   style?: ViewStyle;
 }
 
-const SIZE_MAP: Record<TierSize, { px: number; py: number; font: number; gap: number; tracking: number }> = {
-  xs: { px: 7, py: 2, font: 9, gap: 4, tracking: 1.5 },
-  sm: { px: 9, py: 3, font: 10, gap: 5, tracking: 1.8 },
-  md: { px: 12, py: 4, font: 11, gap: 6, tracking: 2 },
+// Padding is what `size` controls; the text is always `theme.text.label`.
+const SIZE_MAP: Record<TierSize, { px: number; py: number; gap: number }> = {
+  xs: { px: 7, py: 2, gap: 4 },
+  sm: { px: 9, py: 3, gap: 5 },
+  md: { px: 12, py: 4, gap: 6 },
 };
 
 // Shared normalization — maps annual SKUs (e.g. PRO_ANNUAL) to their base
@@ -44,17 +45,12 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
   const dims = SIZE_MAP[size];
   const text = (label ?? code).toUpperCase();
 
-  const textStyle: TextStyle = {
-    fontFamily: "Inter-SemiBold",
-    fontSize: dims.font,
-    letterSpacing: dims.tracking,
-    textTransform: "uppercase",
-  };
+  const textStyle: TextStyle = { ...theme.text.label };
 
   const containerStyle: ViewStyle = {
     paddingHorizontal: dims.px,
     paddingVertical: dims.py,
-    borderRadius: 999,
+    borderRadius: theme.radius.pill,
     alignSelf: "flex-start",
     alignItems: "center",
     justifyContent: "center",
