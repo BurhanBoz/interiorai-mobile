@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "مرحبًا بك في Interior AI",
     "notifications_n_welcome_body": "ابدأ بصورة الغرفة التي تريد تحويلها. نصائح تبويب الاستوديو توضح كيفية التقاط صورة جيدة.",
     "profile_edit_eyebrow": "ملفك الشخصي",
-    "profile_edit_email_locked": "بريدك الإلكتروني هو عنوان تسجيل الدخول. تواصل مع الدعم لتغييره."
+    "profile_edit_email_locked": "بريدك الإلكتروني هو عنوان تسجيل الدخول. تواصل مع الدعم لتغييره.",
+    "profile_edit_new_email": "البريد الإلكتروني الجديد",
+    "profile_edit_email_cta": "تغيير البريد الإلكتروني",
+    "profile_edit_email_hint": "سنُخطر عنوانك الحالي. ستسجّل الدخول بالعنوان الجديد.",
+    "profile_edit_email_success": "تم تحديث البريد الإلكتروني. ستسجّل الدخول به من الآن فصاعدًا.",
+    "profile_edit_email_managed": "تتم إدارته عبر تسجيل الدخول بواسطة {{provider}}."
   },
   "errors": {
     "network": "خطأ في الشبكة. الرجاء التحقق من الاتصال.",

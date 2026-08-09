@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Willkommen bei Interior AI",
     "notifications_n_welcome_body": "Starte mit einem Foto des Raums, den du verwandeln willst. Tipps im Studio-Tab zeigen, wie man es gut aufnimmt.",
     "profile_edit_eyebrow": "Dein Profil",
-    "profile_edit_email_locked": "Deine E-Mail ist deine Anmeldeadresse. Wende dich an den Support, um sie zu ändern."
+    "profile_edit_email_locked": "Deine E-Mail ist deine Anmeldeadresse. Wende dich an den Support, um sie zu ändern.",
+    "profile_edit_new_email": "Neue E-Mail-Adresse",
+    "profile_edit_email_cta": "E-Mail ändern",
+    "profile_edit_email_hint": "Wir benachrichtigen deine aktuelle Adresse. Du meldest dich künftig mit der neuen an.",
+    "profile_edit_email_success": "E-Mail aktualisiert. Ab jetzt meldest du dich damit an.",
+    "profile_edit_email_managed": "Wird über deine {{provider}}-Anmeldung verwaltet."
   },
   "errors": {
     "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",

@@ -12,6 +12,7 @@ import { router , useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { EMAIL_REGEX } from "@/utils/validation";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +23,6 @@ import { LegalFooter } from "@/components/ui/LegalFooter";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "@/config/theme";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Account creation screen. Same editorial treatment as login, with three

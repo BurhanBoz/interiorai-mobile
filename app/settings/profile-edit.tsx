@@ -1,15 +1,12 @@
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Pressable, Alert } from "react-native";
 import { useState, useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { TopBar } from "@/components/layout/TopBar";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { EMAIL_REGEX } from "@/utils/validation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -52,6 +49,58 @@ export default function ProfileEditScreen() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ── Account shape decides the email section (2026-08-09) ──
+  //   guest        → "add email" card (upgrade flow; a guest has no real email)
+  //   social       → read-only + "managed by Apple/Google" (provider owns it)
+  //   password     → real change form: new email + CURRENT password.
+  // The password requirement mirrors the backend contract: a live JWT is
+  // possession of the phone, not proof of ownership.
+  const isGuest = user?.guest === true;
+  const socialProvider = !isGuest && user?.externalProvider ? user.externalProvider : null;
+  const canChangeEmail = !isGuest && !socialProvider;
+
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const changeEmail = useAuthStore((s) => s.changeEmail);
+
+  const handleChangeEmail = async () => {
+    const trimmedEmail = newEmail.trim();
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setEmailError(t("auth.invalid_email"));
+      return;
+    }
+    if (!emailPassword) {
+      setEmailError(t("auth.password_required"));
+      return;
+    }
+    setEmailError("");
+    setEmailBusy(true);
+    try {
+      await changeEmail(trimmedEmail, emailPassword);
+      setNewEmail("");
+      setEmailPassword("");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(t("settings.profile_edit_email_success"));
+    } catch (e: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      const status = e?.response?.status;
+      const code = e?.response?.data?.code;
+      setEmailError(
+        status === 409 || code === "EMAIL_ALREADY_EXISTS"
+          ? t("settings.profile_edit_email_in_use")
+          : code === "ACCOUNT_LOCKED"
+            ? (e?.response?.data?.message ?? t("errors.generic"))
+            : status === 401 || code === "INVALID_CREDENTIALS"
+              ? t("settings.delete_account_invalid_password")
+              : (e?.response?.data?.message ?? t("errors.generic")),
+      );
+    } finally {
+      setEmailBusy(false);
+    }
+  };
 
   const trimmed = displayName.trim();
   const original = (user?.displayName ?? "").trim();
@@ -151,16 +200,110 @@ export default function ProfileEditScreen() {
               error={error || null}
             />
 
-            {/* Email — locked. Sign-in identity; change flow ships with
-                email verification (GAPS P1-10). */}
-            <Input
-              label={t("settings.profile_edit_email")}
-              value={user?.email ?? ""}
-              onChangeText={() => {}}
-              icon="lock-closed-outline"
-              disabled
-              helper={t("settings.profile_edit_email_locked")}
-            />
+            {isGuest ? (
+              /* R3 (2026-08-09): the durable upgrade path. The 3rd-generation
+                 alert is one-shot by design — anyone who tapped "Later" had NO
+                 discoverable way back to attaching an email. This card is that
+                 way back, exactly where the founder placed it: the screen you
+                 open to edit your identity. Reuses the alert's own i18n keys. */
+              <Pressable
+                onPress={() => router.push({ pathname: "/register", params: { upgrade: "1" } })}
+                accessibilityRole="button"
+                accessibilityLabel={t("auth.secure_account_cta")}
+              >
+                <View
+                  style={{
+                    padding: 20,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: "rgba(225,195,155,0.05)",
+                    borderWidth: 1,
+                    borderColor: "rgba(225,195,155,0.28)",
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Ionicons name="mail-outline" size={theme.iconSize.md} color={theme.color.goldMidday} />
+                    <Text style={{ ...theme.text.subtitle, color: theme.color.onSurface }}>
+                      {t("auth.secure_account_title")}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      ...theme.text.caption,
+                      color: theme.color.onSurfaceVariant,
+                      marginTop: 8,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {t("auth.secure_account_body")}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 }}>
+                    <Text style={{ ...theme.text.subtitle, color: theme.color.goldMidday }}>
+                      {t("auth.secure_account_cta")}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={theme.iconSize.sm} color={theme.color.goldMidday} />
+                  </View>
+                </View>
+              </Pressable>
+            ) : socialProvider ? (
+              /* Provider-owned account: our copy of the email mirrors Apple/
+                 Google; changing it here would desync the identity source. */
+              <Input
+                label={t("settings.profile_edit_email")}
+                value={user?.email ?? ""}
+                onChangeText={() => {}}
+                icon="lock-closed-outline"
+                disabled
+                helper={t("settings.profile_edit_email_managed", { provider: socialProvider === "APPLE" ? "Apple" : "Google" })}
+              />
+            ) : (
+              /* Password account: the real change flow. */
+              <View style={{ gap: 16 }}>
+                <Input
+                  label={t("settings.profile_edit_email")}
+                  value={user?.email ?? ""}
+                  onChangeText={() => {}}
+                  icon="mail-outline"
+                  disabled
+                />
+                <Input
+                  label={t("settings.profile_edit_new_email")}
+                  placeholder={t("settings.profile_edit_email_placeholder")}
+                  value={newEmail}
+                  onChangeText={(v) => {
+                    if (emailError) setEmailError("");
+                    setNewEmail(v);
+                  }}
+                  icon="mail-unread-outline"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  disabled={emailBusy}
+                />
+                <Input
+                  label={t("settings.delete_account_password_label")}
+                  placeholder={t("settings.delete_account_password_placeholder")}
+                  value={emailPassword}
+                  onChangeText={(v) => {
+                    if (emailError) setEmailError("");
+                    setEmailPassword(v);
+                  }}
+                  icon="lock-closed-outline"
+                  secureTextEntry
+                  disabled={emailBusy}
+                  error={emailError || null}
+                  helper={emailError ? undefined : t("settings.profile_edit_email_hint")}
+                />
+                <Button
+                  title={t("settings.profile_edit_email_cta")}
+                  onPress={handleChangeEmail}
+                  variant="secondary"
+                  icon="swap-horizontal"
+                  iconLeft
+                  fullWidth
+                  disabled={emailBusy || !newEmail.trim() || !emailPassword}
+                  loading={emailBusy}
+                />
+              </View>
+            )}
           </View>
 
           {/* ── Save ── */}

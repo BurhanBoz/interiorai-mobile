@@ -14,6 +14,8 @@ export interface UserResponse {
     createdAt: string;
     /** V53 guest-first — anonymous device account */
     guest?: boolean;
+    /** "APPLE" / "GOOGLE" when the provider owns the account; absent otherwise. */
+    externalProvider?: string | null;
 }
 
 export interface AuthResponse {

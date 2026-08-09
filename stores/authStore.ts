@@ -23,6 +23,8 @@ interface AuthState {
     guestLogin: () => Promise<void>;
     /** V53 — attach email+password to the current guest (same user id). */
     upgradeGuest: (email: string, password: string, displayName?: string) => Promise<void>;
+    /** Change the sign-in email (password accounts only; re-authenticates). */
+    changeEmail: (email: string, currentPassword: string) => Promise<void>;
     register: (email: string, password: string, displayName?: string) => Promise<void>;
     loginWithApple: (params: { identityToken: string; fullName?: string; nonce?: string }) => Promise<void>;
     loginWithGoogle: (params: { identityToken: string; fullName?: string }) => Promise<void>;
@@ -45,6 +47,19 @@ async function persistAuth(data: AuthResponse) {
     await SecureStore.setItemAsync("auth_token", data.token);
     await SecureStore.setItemAsync("org_id", data.organizationId);
     await SecureStore.setItemAsync("user_id", data.user.id);
+
+    // R1 companion (2026-08-09): remember that a REGISTERED account has lived
+    // on this device. If that account's session ever dies past the 30-day
+    // refresh window, onboarding uses this to show a "Sign in" path — without
+    // it, the only visible button is Get Started, which would silently fork
+    // the person into a fresh empty guest ("kredilerim gitti"). Deliberately
+    // NOT cleared by clearAuth: the hint must survive exactly the moment the
+    // session doesn't. Cleared only on account deletion.
+    if (data.user?.guest !== true
+            && data.user?.email
+            && !data.user.email.endsWith("@guest.roomframe.internal")) {
+        await SecureStore.setItemAsync("last_registered_email", data.user.email).catch?.(() => {});
+    }
 }
 
 /**
@@ -87,6 +102,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         const data = await authService.guestLogin(await deviceIdentity());
         await persistAuth(data);
         set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true, isLoading: false });
+    },
+
+    changeEmail: async (email, currentPassword) => {
+        // Server reissues the JWT (email claim inside) — the returned
+        // AuthResponse REPLACES the stored session, same as a login.
+        const data = await userService.changeEmail(email, currentPassword);
+        await persistAuth(data);
+        set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true });
     },
 
     upgradeGuest: async (email, password, displayName) => {
@@ -175,16 +198,47 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
 
             if (isExpired(token)) {
-                // Token is stale — clear and land on onboarding
-                await clearAuth();
-                set({
-                    token: null,
-                    user: null,
-                    orgId: null,
-                    isAuthenticated: false,
-                    isLoading: false,
-                });
-                return;
+                // R1 (2026-08-09): the backend's sliding session accepts an
+                // EXPIRED bearer for 30 days past expiry (2026-07-18 contract,
+                // built from the launch-week "kredi almak isterken login
+                // ekranına attı" report) — but this branch used to discard the
+                // token without ever asking. Result: everyone away >24h was
+                // dumped on onboarding; a registered user tapping Get Started
+                // there silently became a fresh empty guest. Try the window
+                // first; only a definitive 401/403 clears the session.
+                try {
+                    const data = await authService.refreshWithToken(token);
+                    await persistAuth(data);
+                    set({
+                        token: data.token,
+                        user: data.user,
+                        orgId: data.organizationId,
+                        isAuthenticated: true,
+                        isLoading: false,
+                    });
+                    return;
+                } catch (e: any) {
+                    const status = e?.response?.status;
+                    if (status === 401 || status === 403) {
+                        // Beyond the window, or the account is gone — the
+                        // session is genuinely dead.
+                        await clearAuth();
+                        set({
+                            token: null,
+                            user: null,
+                            orgId: null,
+                            isAuthenticated: false,
+                            isLoading: false,
+                        });
+                        return;
+                    }
+                    // Network/5xx: DON'T destroy a session over a flaky
+                    // connection. Keep it optimistically — the api request
+                    // interceptor retries this same sliding refresh on the
+                    // next call once connectivity returns.
+                    set({ token, orgId, isAuthenticated: true, isLoading: false });
+                    return;
+                }
             }
 
             set({

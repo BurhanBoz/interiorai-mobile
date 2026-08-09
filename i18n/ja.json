@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Interior AI へようこそ",
     "notifications_n_welcome_body": "変えたい部屋の写真から始めましょう。Studio タブのヒントが上手な撮り方を教えてくれます。",
     "profile_edit_eyebrow": "プロフィール",
-    "profile_edit_email_locked": "メールアドレスはログインに使用されます。変更するにはサポートにお問い合わせください。"
+    "profile_edit_email_locked": "メールアドレスはログインに使用されます。変更するにはサポートにお問い合わせください。",
+    "profile_edit_new_email": "新しいメールアドレス",
+    "profile_edit_email_cta": "メールアドレスを変更",
+    "profile_edit_email_hint": "現在のアドレスに通知します。今後は新しいアドレスでサインインします。",
+    "profile_edit_email_success": "メールアドレスを更新しました。今後はこのアドレスでサインインします。",
+    "profile_edit_email_managed": "{{provider}}のサインインで管理されています。"
   },
   "errors": {
     "network": "ネットワークエラーです。接続を確認してください。",

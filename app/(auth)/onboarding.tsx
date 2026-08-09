@@ -10,6 +10,7 @@ import {
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@/stores/authStore";
 import * as Haptics from "expo-haptics";
 import { useRef, useState, useCallback, useEffect } from "react";
@@ -98,6 +99,22 @@ function PaginationDot({ active }: { active: boolean }) {
 export default function OnboardingScreen() {
   const guestLogin = useAuthStore((st) => st.guestLogin);
   const [guestBusy, setGuestBusy] = useState(false);
+
+  // R1 companion (2026-08-09). The 2026-08-03 removal of the Sign-In link
+  // was right for NEW users — but it left returning ACCOUNT HOLDERS (session
+  // dead past the 30-day refresh window, or after a logout) with only Get
+  // Started, which silently forks them into a fresh empty guest. This link
+  // renders ONLY when a registered account has actually lived on this device
+  // (Keychain hint written by persistAuth), so the guest-first funnel for
+  // new installs is untouched.
+  const [hadRegisteredAccount, setHadRegisteredAccount] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    SecureStore.getItemAsync("last_registered_email")
+      .then((v) => { if (alive) setHadRegisteredAccount(!!v); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
   // V53 guest-first — Get Started creates a silent device account and lands
   // straight in the Studio. Register/Sign In stay reachable (tertiary + settings).
   const handleGetStarted = async () => {
@@ -297,10 +314,16 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            {/* Onboarding Sign-In link removed 2026-08-03 (guest-first):
-                Get Started is the single path in. Returning account holders
-                still reach login via Profile → Secure account → register
-                screen's sign-in link; the auth screens themselves remain. */}
+            {hadRegisteredAccount ? (
+              <View style={{ marginTop: 12, alignItems: "center" }}>
+                <Button
+                  title={t("auth.sign_in")}
+                  variant="tertiary"
+                  size="sm"
+                  onPress={() => router.push("/login")}
+                />
+              </View>
+            ) : null}
 
             <View style={{ marginTop: 10 }}>
               <LegalFooter />

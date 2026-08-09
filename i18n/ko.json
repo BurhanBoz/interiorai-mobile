@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Interior AI에 오신 걸 환영합니다",
     "notifications_n_welcome_body": "변환하려는 방의 사진부터 시작하세요. Studio 탭의 팁이 좋은 촬영 방법을 알려줍니다.",
     "profile_edit_eyebrow": "프로필",
-    "profile_edit_email_locked": "이메일은 로그인 주소입니다. 변경하려면 고객지원에 문의하세요."
+    "profile_edit_email_locked": "이메일은 로그인 주소입니다. 변경하려면 고객지원에 문의하세요.",
+    "profile_edit_new_email": "새 이메일 주소",
+    "profile_edit_email_cta": "이메일 변경",
+    "profile_edit_email_hint": "현재 주소로 알림을 보냅니다. 앞으로는 새 이메일로 로그인합니다.",
+    "profile_edit_email_success": "이메일이 변경되었습니다. 이제 이 주소로 로그인합니다.",
+    "profile_edit_email_managed": "{{provider}} 로그인으로 관리됩니다."
   },
   "errors": {
     "network": "네트워크 오류입니다. 연결을 확인해 주세요.",

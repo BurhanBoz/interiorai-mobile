@@ -1,3 +1,5 @@
+import axios from "axios";
+import env from "@/config/environment";
 import api from "./api";
 import type { AuthResponse, MessageResponse } from "@/types/api";
 
@@ -59,6 +61,26 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function refreshToken(): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/refresh");
+    return data;
+}
+
+/**
+ * Sliding-session refresh with an EXPLICIT (possibly expired) token — used by
+ * `authStore.hydrate` on cold start.
+ *
+ * <p>Raw axios on purpose, not the shared `api` instance: the shared
+ * instance's request interceptor reads the stored token and runs its own
+ * refresh dance, which at hydrate time would either recurse or double-refresh.
+ * The backend accepts an expired bearer here for up to
+ * `jwt-refresh-window-days` (30) after expiry — the 2026-07-18 sliding-session
+ * contract built precisely for the "reopened the app days later" case.
+ */
+export async function refreshWithToken(expiredToken: string): Promise<AuthResponse> {
+    const { data } = await axios.post<AuthResponse>(
+        `${env.apiUrl}/api/auth/refresh`,
+        null,
+        { headers: { Authorization: `Bearer ${expiredToken}` }, timeout: 12000 },
+    );
     return data;
 }
 

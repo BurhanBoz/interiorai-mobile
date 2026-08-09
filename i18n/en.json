@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Welcome to Interior AI",
     "notifications_n_welcome_body": "Start with a photo of the room you want to transform. Tips on the Studio tab show how to capture it well.",
     "profile_edit_eyebrow": "Your profile",
-    "profile_edit_email_locked": "Your email is your sign-in address. Contact support to change it."
+    "profile_edit_email_locked": "Your email is your sign-in address. Contact support to change it.",
+    "profile_edit_new_email": "New email address",
+    "profile_edit_email_cta": "Change email",
+    "profile_edit_email_hint": "We'll notify your current address. You'll sign in with the new one.",
+    "profile_edit_email_success": "Email updated. You'll use it to sign in from now on.",
+    "profile_edit_email_managed": "Managed by your {{provider}} sign-in."
   },
   "errors": {
     "network": "Network error. Please check your connection.",

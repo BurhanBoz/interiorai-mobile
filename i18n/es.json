@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Bienvenido a Interior AI",
     "notifications_n_welcome_body": "Empieza con una foto del cuarto que quieres transformar. Los consejos en Studio muestran cómo capturarlo bien.",
     "profile_edit_eyebrow": "Tu perfil",
-    "profile_edit_email_locked": "Tu correo es tu dirección de inicio de sesión. Contacta con soporte para cambiarlo."
+    "profile_edit_email_locked": "Tu correo es tu dirección de inicio de sesión. Contacta con soporte para cambiarlo.",
+    "profile_edit_new_email": "Nuevo correo electrónico",
+    "profile_edit_email_cta": "Cambiar correo",
+    "profile_edit_email_hint": "Avisaremos a tu dirección actual. Iniciarás sesión con la nueva.",
+    "profile_edit_email_success": "Correo actualizado. Desde ahora iniciarás sesión con él.",
+    "profile_edit_email_managed": "Gestionado por tu inicio de sesión de {{provider}}."
   },
   "errors": {
     "network": "Error de red. Verifica tu conexión.",

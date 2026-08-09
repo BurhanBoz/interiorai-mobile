@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Interior AI'ya hoş geldin",
     "notifications_n_welcome_body": "Dönüştürmek istediğin odanın fotoğrafıyla başla. Studio sekmesindeki ipuçları nasıl çekeceğini gösterir.",
     "profile_edit_eyebrow": "Profilin",
-    "profile_edit_email_locked": "E-postan giriş adresindir. Değiştirmek için destekle iletişime geç."
+    "profile_edit_email_locked": "E-postan giriş adresindir. Değiştirmek için destekle iletişime geç.",
+    "profile_edit_new_email": "Yeni e-posta adresi",
+    "profile_edit_email_cta": "E-postayı değiştir",
+    "profile_edit_email_hint": "Mevcut adresine bilgi göndereceğiz. Girişlerini yeni adresle yapacaksın.",
+    "profile_edit_email_success": "E-posta güncellendi. Artık girişlerini bu adresle yapacaksın.",
+    "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor."
   },
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",

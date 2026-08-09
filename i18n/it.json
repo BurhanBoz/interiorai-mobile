@@ -892,7 +892,12 @@
     "notifications_n_welcome_title": "Benvenuto in Interior AI",
     "notifications_n_welcome_body": "Inizia con una foto della stanza da trasformare. I consigli nello Studio ti mostrano come scattarla bene.",
     "profile_edit_eyebrow": "Il tuo profilo",
-    "profile_edit_email_locked": "La tua email è l'indirizzo di accesso. Contatta l'assistenza per modificarla."
+    "profile_edit_email_locked": "La tua email è l'indirizzo di accesso. Contatta l'assistenza per modificarla.",
+    "profile_edit_new_email": "Nuovo indirizzo email",
+    "profile_edit_email_cta": "Cambia email",
+    "profile_edit_email_hint": "Avviseremo il tuo indirizzo attuale. Accederai con quello nuovo.",
+    "profile_edit_email_success": "Email aggiornata. D'ora in poi accederai con questa.",
+    "profile_edit_email_managed": "Gestito dal tuo accesso {{provider}}."
   },
   "errors": {
     "network": "Errore di rete. Controlla la connessione.",
