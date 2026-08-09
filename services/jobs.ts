@@ -103,3 +103,13 @@ export async function rateOutput(
 ): Promise<void> {
     await api.patch(`/api/jobs/${jobId}/outputs/${outputId}/rating`, { rating });
 }
+
+/**
+ * C1 learning loop — tell the backend this output was worth keeping
+ * (favorited) or taking away (downloaded). Fire-and-forget BY CONTRACT:
+ * a quality signal must never surface an error into the moment the user
+ * is enjoying their render. Idempotent server-side (append-once).
+ */
+export function sendOutputSignal(outputId: string, type: "FAVORITE" | "DOWNLOAD"): void {
+    api.post(`/api/jobs/outputs/${outputId}/signals`, { type }).catch(() => {});
+}

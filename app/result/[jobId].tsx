@@ -22,7 +22,7 @@ import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { TopBar } from "@/components/layout/TopBar";
-import { getJob } from "@/services/jobs";
+import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useImageActions } from "@/hooks/useImageActions";
@@ -188,6 +188,9 @@ export default function ResultDetailScreen() {
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
+    // C1: a download is the strongest quality vote we have — the user is
+    // taking this render OUT of the app. Fire-and-forget by contract.
+    if (currentOutput?.id) sendOutputSignal(currentOutput.id, "DOWNLOAD");
     // No auth headers — see getOutputImageUrl.
     await saveToPhotos(url, {
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
