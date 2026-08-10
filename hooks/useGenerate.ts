@@ -49,6 +49,8 @@ export function useGenerate() {
   const guidanceScale = useStudioStore((s) => s.guidanceScale);
   const referencePhoto = useStudioStore((s) => s.referencePhoto);
   const maskFileId = useStudioStore((s) => s.maskFileId);
+  const extraStyleRefs = useStudioStore((s) => s.extraStyleRefs);
+  const objectRefs = useStudioStore((s) => s.objectRefs);
 
   const balance = useCreditStore((s) => s.balance);
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
@@ -123,6 +125,17 @@ export function useGenerate() {
           aspectRatio: computedAspectRatio,
           referenceFileId: referencePhoto?.fileId || undefined,
           maskFileId: mode === "INPAINT" ? maskFileId || undefined : undefined,
+          // IO-2 "+" tiles — role-scoped by screen: extra STYLE refs exist
+          // only on the ST screen, OBJECT refs only on free-form options.
+          // The store clears them on mode/preserve changes, so what's here
+          // is always valid for the current request shape.
+          extraReferences: (() => {
+            const extras = [
+              ...extraStyleRefs.map((r) => ({ fileId: r.fileId, role: "STYLE" as const })),
+              ...objectRefs.map((r) => ({ fileId: r.fileId, role: "OBJECT" as const })),
+            ];
+            return extras.length > 0 ? extras : undefined;
+          })(),
         }, idempotencyKeyRef.current);
 
         // Success — release the key so the next generate intent gets a fresh

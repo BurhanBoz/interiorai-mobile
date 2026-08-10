@@ -30,6 +30,9 @@ export default function StyleTransferScreen() {
   const { t } = useTranslation();
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
+  const extraStyleRefs = useStudioStore(s => s.extraStyleRefs);
+  const addExtraStyleRef = useStudioStore(s => s.addExtraStyleRef);
+  const removeExtraStyleRef = useStudioStore(s => s.removeExtraStyleRef);
   const strength = useStudioStore(s => s.strength);
   const setStrength = useStudioStore(s => s.setStrength);
   const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
@@ -47,6 +50,17 @@ export default function StyleTransferScreen() {
     const result = await pickImage();
     if (result) {
       setReferencePhoto({ uri: result.uri, fileId: result.fileId ?? "" });
+    }
+  };
+
+  // IO-2 — extra style reference for the "+" tile (max 2, store-capped;
+  // each bills +1 credit, mirrored in useCreditCost).
+  const handlePickExtraRef = async () => {
+    if (isUploading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await pickImage();
+    if (result?.fileId) {
+      addExtraStyleRef({ uri: result.uri, fileId: result.fileId });
     }
   };
 
@@ -270,6 +284,76 @@ export default function StyleTransferScreen() {
                 </View>
               </Pressable>
             )}
+
+            {/* IO-2 — extra style reference "+" tiles (max 2, +1 credit each).
+                Only offered once the primary reference exists: the extras are
+                "more of the same aesthetic", not a substitute for it. */}
+            {referencePhoto?.uri ? (
+              <View style={{ marginTop: 14 }}>
+                <View className="flex-row" style={{ gap: 10 }}>
+                  {extraStyleRefs.map((ref) => (
+                    <View key={ref.fileId} style={{ position: "relative", width: 72, height: 72 }}>
+                      <View className="rounded-xl overflow-hidden" style={{ width: 72, height: 72 }}>
+                        <Image
+                          source={{ uri: ref.uri }}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      </View>
+                      <Pressable
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          removeExtraStyleRef(ref.fileId);
+                        }}
+                        hitSlop={8}
+                        style={{
+                          position: "absolute",
+                          top: -6,
+                          right: -6,
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          backgroundColor: "rgba(19,19,19,0.92)",
+                          borderWidth: 1,
+                          borderColor: "rgba(225,195,155,0.30)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Ionicons name="close" size={12} color="#F5F0EB" />
+                      </Pressable>
+                    </View>
+                  ))}
+                  {extraStyleRefs.length < 2 ? (
+                    <Pressable onPress={handlePickExtraRef} disabled={isUploading}>
+                      <View
+                        className="rounded-xl items-center justify-center bg-surface-container-low"
+                        style={{
+                          width: 72,
+                          height: 72,
+                          borderWidth: 1.5,
+                          borderColor: "rgba(225,195,155,0.45)",
+                          borderStyle: "dashed",
+                        }}
+                      >
+                        {isUploading ? (
+                          <ActivityIndicator size="small" color="#E1C39B" />
+                        ) : (
+                          <Ionicons name="add" size={26} color="#998F84" />
+                        )}
+                      </View>
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Text
+                  className="font-label"
+                  style={{ ...theme.text.caption, color: "#998F84", marginTop: 8 }}
+                >
+                  {t("studio.extra_ref_hint")}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
 

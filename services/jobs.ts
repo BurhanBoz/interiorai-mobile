@@ -92,6 +92,28 @@ export async function upscaleJob(
 }
 
 /**
+ * IO-1 (2026-08-11) — Expand a completed output beyond its frame via
+ * flux-fill outpaint. Mirrors upscaleJob's chain-job contract: backend
+ * returns the new child job in PENDING state; poll it to completion.
+ * Blocked server-side on upscaled/expanded parents (expand first, then
+ * upscale). Costs 2 credits on every plan.
+ */
+export type ExpandMode = "ZOOM_OUT_15" | "ZOOM_OUT_2" | "MAKE_SQUARE";
+
+export async function expandJob(
+    parentJobId: string,
+    mode: ExpandMode,
+    outputId?: string,
+): Promise<JobResponse> {
+    const { data } = await api.post<JobResponse>(
+        `/api/jobs/${parentJobId}/expand`,
+        null,
+        { params: { mode, ...(outputId ? { outputId } : {}) } },
+    );
+    return data;
+}
+
+/**
  * Record user feedback on a specific generated output.
  * Rating: -1 (dislike), 0 (neutral / clear), 1 (like).
  * Feeds per-tier / per-style quality analytics on the backend.

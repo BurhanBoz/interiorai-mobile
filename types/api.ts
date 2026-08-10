@@ -88,7 +88,15 @@ export interface CreateJobRequest {
     speedMode?: SpeedMode;
     referenceFileId?: string;
     maskFileId?: string;
+    /**
+     * IO-2 (V58) — "+" tile additions. STYLE extras: Style Transfer only.
+     * OBJECT insertions: free-form REDESIGN/OUTDOOR/EMPTY_ROOM (preserve
+     * layout off). Max 3 total; each bills +1 credit on the backend.
+     */
+    extraReferences?: { fileId: string; role: ExtraReferenceRole }[];
 }
+
+export type ExtraReferenceRole = "STYLE" | "OBJECT";
 
 export interface JobOutputResponse {
     id: string;

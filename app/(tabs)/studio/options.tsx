@@ -9,6 +9,7 @@ import {
   Modal,
   FlatList,
   LayoutAnimation,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -38,6 +39,7 @@ import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import { AdvancedSettings } from "@/components/studio/AdvancedSettings";
 import { useGenerate } from "@/hooks/useGenerate";
+import { useImagePicker } from "@/hooks/useImagePicker";
 import { theme } from "@/config/theme";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
@@ -177,6 +179,26 @@ export default function OptionsScreen() {
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
   const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
+  // IO-2 object insertion — same permission flag that gates Style Transfer's
+  // reference image; the backend enforces it hard-fail on job creation.
+  const { allowed: referenceImageAllowed } = usePlanPermission("allow_reference_image");
+  const objectRefs = useStudioStore(s => s.objectRefs);
+  const addObjectRef = useStudioStore(s => s.addObjectRef);
+  const removeObjectRef = useStudioStore(s => s.removeObjectRef);
+  const { pickImage: pickObjectImage, isUploading: isObjectUploading } = useImagePicker();
+
+  const handlePickObject = async () => {
+    if (!referenceImageAllowed) {
+      router.push("/plans");
+      return;
+    }
+    if (isObjectUploading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await pickObjectImage();
+    if (result?.fileId) {
+      addObjectRef({ uri: result.uri, fileId: result.fileId });
+    }
+  };
   const { cost } = useCreditCost();
   // EFFECTIVE values — welcome bonus trial users get MAX plan's rules + features
   // + plan code. Without this override, trial users see STYLE_TRANSFER + INPAINT
@@ -452,6 +474,106 @@ export default function OptionsScreen() {
             </View>
           </View>
         </View>
+
+        {/* IO-2 — object insertion "+" row (2026-08-11). Free-form modes
+            only: the depth (preserve) route has no input_images channel, so
+            the row disappears when preserve is on — and the store clears any
+            attached objects on that toggle. Each object bills +1 credit
+            (mirrored in useCreditCost). Plan-gated by allow_reference_image;
+            unentitled taps route to the paywall like the strength slider. */}
+        {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM")
+          && !preserveLayout && (
+          <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 24 }}>
+            <View className="flex-row items-center justify-between" style={{ marginBottom: 10 }}>
+              <Text
+                className="font-label text-on-surface"
+                style={{ ...theme.text.label }}
+              >
+                {t("studio.add_object_label")}
+              </Text>
+              {!referenceImageAllowed && (
+                <View
+                  className="rounded-full"
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    backgroundColor: "rgba(225,195,155,0.14)",
+                  }}
+                >
+                  <Text className="font-label" style={{ ...theme.text.caption, color: "#E0C29A" }}>
+                    {"PRO"}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <View className="flex-row" style={{ gap: 10 }}>
+              {objectRefs.map((ref) => (
+                <View key={ref.fileId} style={{ position: "relative", width: 72, height: 72 }}>
+                  <View className="rounded-xl overflow-hidden" style={{ width: 72, height: 72 }}>
+                    <Image
+                      source={{ uri: ref.uri }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      removeObjectRef(ref.fileId);
+                    }}
+                    hitSlop={8}
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -6,
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: "rgba(19,19,19,0.92)",
+                      borderWidth: 1,
+                      borderColor: "rgba(225,195,155,0.30)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="close" size={12} color="#F5F0EB" />
+                  </Pressable>
+                </View>
+              ))}
+              {objectRefs.length < 2 && (
+                <Pressable onPress={handlePickObject} disabled={isObjectUploading}>
+                  <View
+                    className="rounded-xl items-center justify-center bg-surface-container-low"
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderWidth: 1.5,
+                      borderColor: "rgba(225,195,155,0.45)",
+                      borderStyle: "dashed",
+                    }}
+                  >
+                    {isObjectUploading ? (
+                      <ActivityIndicator size="small" color="#E1C39B" />
+                    ) : (
+                      <Ionicons
+                        name={referenceImageAllowed ? "add" : "lock-closed-outline"}
+                        size={referenceImageAllowed ? 26 : 18}
+                        color="#998F84"
+                      />
+                    )}
+                  </View>
+                </Pressable>
+              )}
+            </View>
+            <Text
+              className="font-label"
+              style={{ ...theme.text.caption, color: "#998F84", marginTop: 8 }}
+            >
+              {t("studio.add_object_hint")}
+            </Text>
+          </View>
+        )}
 
         {/* Everything below is folded by default (P1-4). Each of these four
             controls already had the right default, so as a permanent wall

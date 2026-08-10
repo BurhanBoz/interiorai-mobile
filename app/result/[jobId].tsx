@@ -118,6 +118,15 @@ export default function ResultDetailScreen() {
     creditRules.find(r => r.featureCode === "ULTRA_HD_UPSCALE")?.creditCost ?? null;
   const canUpscale =
     !isAlreadyUpscaled && upscaleFeatureEnabled && upscaleCost != null;
+  // IO-1 Expand (V57) — enabled on every active plan; hidden on chain jobs
+  // (jobType UPSCALE/EXPAND → featureCode tells us) because the backend
+  // rejects chain-of-chain in both directions.
+  const { enabled: expandFeatureEnabled } = useEntitlement("EXPAND_VIEW");
+  const isChainJob =
+    job?.featureCode === "ULTRA_HD_UPSCALE" || job?.featureCode === "EXPAND_VIEW";
+  const expandCost =
+    creditRules.find(r => r.featureCode === "EXPAND_VIEW")?.creditCost ?? null;
+  const canExpand = !isChainJob && expandFeatureEnabled && expandCost != null;
   // Resolution the upscale delivers: PRO (top tier) = 4K Topaz 4x; the 2K
   // branch only serves legacy sandbox tiers. Surfaced in the confirm dialog
   // + button so the user sees the real target before spending credits.
@@ -735,6 +744,99 @@ export default function ResultDetailScreen() {
                     {t("result.upscale_locked_subtitle", {
                       defaultValue: "Unlock 4× Ultra HD upscaling with Pro",
                     })}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
+              </View>
+            </Pressable>
+          )}
+
+          {/* IO-1 — Expand pill (2026-08-11). Same premium-pill grammar as
+              Upscale, one step quieter (no gradient wash). Hidden on chain
+              jobs (backend rejects expand-of-upscale/expand — the right
+              order is expand first, then upscale). Single alert carries
+              both the mode choice and the cost consent. */}
+          {canExpand && (
+            <Pressable
+              onPress={() => {
+                if (!currentOutput?.id) return;
+                Haptics.selectionAsync();
+                Alert.alert(
+                  t("result.expand_title"),
+                  t("result.expand_body", { cost: expandCost }),
+                  [
+                    {
+                      text: t("result.expand_zoom_15"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_15` as any,
+                        ),
+                    },
+                    {
+                      text: t("result.expand_zoom_2"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_2` as any,
+                        ),
+                    },
+                    {
+                      text: t("result.expand_square"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=MAKE_SQUARE` as any,
+                        ),
+                    },
+                    { text: t("common.cancel"), style: "cancel" },
+                  ],
+                );
+              }}
+              style={({ pressed }) => ({
+                marginTop: 10,
+                borderRadius: theme.radius.md,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: pressed
+                  ? "rgba(225,195,155,0.45)"
+                  : "rgba(225,195,155,0.22)",
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+                backgroundColor: "rgba(225,195,155,0.04)",
+              })}
+            >
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 18,
+                  paddingVertical: 14,
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: "rgba(225,195,155,0.10)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="expand-outline" size={16} color="#E0C29A" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ ...theme.text.label, color: "#F4DDB6" }} numberOfLines={1}>
+                    {t("result.expand")}
+                  </Text>
+                  <Text
+                    style={{
+                      ...theme.text.caption,
+                      color: "rgba(225,195,155,0.65)",
+                      marginTop: 2,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("result.expand_subtitle", { cost: expandCost })}
                   </Text>
                 </View>
                 <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
