@@ -96,7 +96,11 @@ const initialState = {
     qualityTier: "STANDARD" as QualityTier,
     speedMode: "BALANCED" as SpeedMode,
     numOutputs: 1,
-    preserveLayout: true,
+    // Free-form by default (2026-08-11). Preserve pins every piece of
+    // furniture in place, so the default run only ever restyled surfaces —
+    // a weaker first impression than the redesign people came for. It stays
+    // one tap away in Advanced for the "same layout, new materials" job.
+    preserveLayout: false,
     prompt: "",
     negativePrompt: "",
     colorPalette: DEFAULT_COLOR_PALETTE,

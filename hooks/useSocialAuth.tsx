@@ -105,7 +105,7 @@ export function useSocialAuth(options?: { upgrade?: boolean; onSuccess?: () => v
                     await loginWithGoogleStore({ identityToken: idToken });
                 }
                 if (onSuccess) onSuccess();
-                else router.replace("/(tabs)/gallery");
+                else router.replace("/(tabs)/studio");
             } finally {
                 setLoading(null);
             }
@@ -154,7 +154,7 @@ export function useSocialAuth(options?: { upgrade?: boolean; onSuccess?: () => v
                 });
             }
             if (onSuccess) onSuccess();
-            else router.replace("/(tabs)/gallery");
+            else router.replace("/(tabs)/studio");
         } catch (e: any) {
             if (e?.code !== "ERR_REQUEST_CANCELED") {
                 Alert.alert(t("auth.apple_failed_title"), t("auth.social_retry"));

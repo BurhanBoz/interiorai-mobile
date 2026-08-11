@@ -61,7 +61,7 @@ export default function RegisterScreen() {
       // lands on the CURRENT guest — plain sign-in would hand the user a new
       // account and leave their credits and designs behind. On success we
       // return to where they came from instead of jumping to the gallery.
-      ? { upgrade: true, onSuccess: () => (router.canGoBack() ? router.back() : router.replace("/(tabs)/gallery")) }
+      ? { upgrade: true, onSuccess: () => (router.canGoBack() ? router.back() : router.replace("/(tabs)/studio")) }
       : undefined,
   );
   const busy = loading || socialLoading !== null;
@@ -95,7 +95,7 @@ export default function RegisterScreen() {
         // the backend derives a name from the address and Settings can edit it.
         await upgradeGuest(email.trim(), password);
         if (router.canGoBack()) router.back();
-        else router.replace("/(tabs)/gallery");
+        else router.replace("/(tabs)/studio");
       } else {
         await register(email.trim(), password, fullName.trim() || undefined);
       }
