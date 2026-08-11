@@ -330,28 +330,26 @@ export default function StyleTransferScreen() {
                       <View
                         className="rounded-xl items-center justify-center bg-surface-container-low"
                         style={{
-                          width: 72,
-                          height: 72,
+                          width: 76,
+                          height: 76,
                           borderWidth: 1.5,
-                          borderColor: "rgba(225,195,155,0.45)",
+                          borderColor: "rgba(225,195,155,0.32)",
                           borderStyle: "dashed",
+                          gap: 3,
                         }}
                       >
                         {isUploading ? (
                           <ActivityIndicator size="small" color="#E1C39B" />
                         ) : (
-                          <Ionicons name="add" size={26} color="#998F84" />
+                          <>
+                            <Ionicons name="images-outline" size={22} color="#8C8378" />
+                            <Ionicons name="add" size={14} color="#A79C8E" />
+                          </>
                         )}
                       </View>
                     </Pressable>
                   ) : null}
                 </View>
-                <Text
-                  className="font-label"
-                  style={{ ...theme.text.caption, color: "#998F84", marginTop: 8 }}
-                >
-                  {t("studio.extra_ref_hint")}
-                </Text>
               </View>
             ) : null}
           </View>

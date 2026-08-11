@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "屋外デザイン",
         "feature_outdoor_desc": "庭・中庭・テラス — 屋外空間をリデザイン",
-        "advanced_settings": "詳細設定",
-        "extra_ref_hint": "スタイル参照をあと2枚まで追加 · 各+1クレジット",
-        "add_object_label": "家具・小物を追加（任意）",
-        "add_object_hint": "商品写真を添付 — デザインに配置されます · 各+1クレジット"
+        "advanced_settings": "詳細設定"
     },
     "gallery": {
         "title": "ギャラリー",

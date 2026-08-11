@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Dış Mekân Tasarımı",
         "feature_outdoor_desc": "Bahçe, avlu, teras — dış mekânın yeniden tasarlanır",
-        "advanced_settings": "Gelişmiş ayarlar",
-        "extra_ref_hint": "En fazla 2 stil referansı daha ekle · her biri +1 kredi",
-        "add_object_label": "Mobilya veya dekor ekle (isteğe bağlı)",
-        "add_object_hint": "Bir ürün fotoğrafı ekle — tasarımına yerleştirilir · her biri +1 kredi"
+        "advanced_settings": "Gelişmiş ayarlar"
     },
     "gallery": {
         "title": "Galeri",

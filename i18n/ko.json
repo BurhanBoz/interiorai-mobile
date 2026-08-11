@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "야외 디자인",
         "feature_outdoor_desc": "정원, 안뜰, 테라스 — 야외 공간을 새롭게",
-        "advanced_settings": "고급 설정",
-        "extra_ref_hint": "스타일 참조를 최대 2장 더 추가 · 각 +1 크레딧",
-        "add_object_label": "가구 또는 소품 추가 (선택)",
-        "add_object_hint": "제품 사진을 첨부하세요 — 디자인에 배치됩니다 · 각 +1 크레딧"
+        "advanced_settings": "고급 설정"
     },
     "gallery": {
         "title": "갤러리",

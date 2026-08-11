@@ -483,33 +483,17 @@ export default function OptionsScreen() {
             unentitled taps route to the paywall like the strength slider. */}
         {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM")
           && !preserveLayout && (
+          // No heading, no helper line: the tile IS the affordance. A dashed
+          // slot with a sofa glyph reads as "drop a piece of furniture here"
+          // in every language, and the credit total below updates the moment
+          // something lands in it — which is the only consequence worth
+          // announcing (founder, 2026-08-11: screens should explain
+          // themselves, people don't read labels).
           <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 24 }}>
-            <View className="flex-row items-center justify-between" style={{ marginBottom: 10 }}>
-              <Text
-                className="font-label text-on-surface"
-                style={{ ...theme.text.label }}
-              >
-                {t("studio.add_object_label")}
-              </Text>
-              {!referenceImageAllowed && (
-                <View
-                  className="rounded-full"
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    backgroundColor: "rgba(225,195,155,0.14)",
-                  }}
-                >
-                  <Text className="font-label" style={{ ...theme.text.caption, color: "#E0C29A" }}>
-                    {"PRO"}
-                  </Text>
-                </View>
-              )}
-            </View>
             <View className="flex-row" style={{ gap: 10 }}>
               {objectRefs.map((ref) => (
-                <View key={ref.fileId} style={{ position: "relative", width: 72, height: 72 }}>
-                  <View className="rounded-xl overflow-hidden" style={{ width: 72, height: 72 }}>
+                <View key={ref.fileId} style={{ position: "relative", width: 76, height: 76 }}>
+                  <View className="rounded-xl overflow-hidden" style={{ width: 76, height: 76 }}>
                     <Image
                       source={{ uri: ref.uri }}
                       style={{ width: "100%", height: "100%" }}
@@ -546,32 +530,28 @@ export default function OptionsScreen() {
                   <View
                     className="rounded-xl items-center justify-center bg-surface-container-low"
                     style={{
-                      width: 72,
-                      height: 72,
+                      width: 76,
+                      height: 76,
                       borderWidth: 1.5,
-                      borderColor: "rgba(225,195,155,0.45)",
+                      borderColor: "rgba(225,195,155,0.32)",
                       borderStyle: "dashed",
+                      gap: 3,
                     }}
                   >
                     {isObjectUploading ? (
                       <ActivityIndicator size="small" color="#E1C39B" />
+                    ) : referenceImageAllowed ? (
+                      <>
+                        <Ionicons name="bed-outline" size={22} color="#8C8378" />
+                        <Ionicons name="add" size={14} color="#A79C8E" />
+                      </>
                     ) : (
-                      <Ionicons
-                        name={referenceImageAllowed ? "add" : "lock-closed-outline"}
-                        size={referenceImageAllowed ? 26 : 18}
-                        color="#998F84"
-                      />
+                      <Ionicons name="lock-closed-outline" size={18} color="#8C8378" />
                     )}
                   </View>
                 </Pressable>
               )}
             </View>
-            <Text
-              className="font-label"
-              style={{ ...theme.text.caption, color: "#998F84", marginTop: 8 }}
-            >
-              {t("studio.add_object_hint")}
-            </Text>
           </View>
         )}
 

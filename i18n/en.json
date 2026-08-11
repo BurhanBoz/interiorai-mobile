@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Outdoor Design",
         "feature_outdoor_desc": "Gardens, courtyards, terraces — your outdoor space, redesigned",
-        "advanced_settings": "Advanced settings",
-        "extra_ref_hint": "Add up to 2 more style references · +1 credit each",
-        "add_object_label": "Add furniture or decor (optional)",
-        "add_object_hint": "Attach a product photo — it will be placed into your design · +1 credit each"
+        "advanced_settings": "Advanced settings"
     },
     "gallery": {
         "title": "Gallery",

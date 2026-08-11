@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "تصميم خارجي",
         "feature_outdoor_desc": "حدائق، أفنية، تراسات — مساحتك الخارجية بتصميم جديد",
-        "advanced_settings": "إعدادات متقدمة",
-        "extra_ref_hint": "أضف حتى مرجعي ستايل إضافيين · +1 رصيد لكل صورة",
-        "add_object_label": "أضف أثاثًا أو ديكورًا (اختياري)",
-        "add_object_hint": "أرفق صورة المنتج — سيتم وضعه في تصميمك · +1 رصيد لكل صورة"
+        "advanced_settings": "إعدادات متقدمة"
     },
     "gallery": {
         "title": "المعرض",

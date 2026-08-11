@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Design Esterni",
         "feature_outdoor_desc": "Giardini, cortili, terrazze — il tuo spazio esterno, riprogettato",
-        "advanced_settings": "Impostazioni avanzate",
-        "extra_ref_hint": "Aggiungi fino a 2 riferimenti di stile · +1 credito ciascuno",
-        "add_object_label": "Aggiungi mobili o decorazioni (opzionale)",
-        "add_object_hint": "Allega una foto del prodotto — verrà inserita nel tuo design · +1 credito ciascuna"
+        "advanced_settings": "Impostazioni avanzate"
     },
     "gallery": {
         "title": "Galleria",

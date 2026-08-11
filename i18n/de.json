@@ -310,10 +310,7 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Außenbereich",
         "feature_outdoor_desc": "Garten, Hof, Terrasse — dein Außenbereich, neu gestaltet",
-        "advanced_settings": "Erweiterte Einstellungen",
-        "extra_ref_hint": "Bis zu 2 weitere Stilreferenzen · je +1 Credit",
-        "add_object_label": "Möbel oder Deko hinzufügen (optional)",
-        "add_object_hint": "Produktfoto anhängen — es wird in dein Design eingefügt · je +1 Credit"
+        "advanced_settings": "Erweiterte Einstellungen"
     },
     "gallery": {
         "title": "Galerie",
