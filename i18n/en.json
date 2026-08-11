@@ -112,7 +112,14 @@
         "secure_account_title": "Secure your account",
         "secure_account_body": "Your designs and credits live only on this device. Add an email to keep them safe and use them anywhere.",
         "secure_account_cta": "Add email",
-        "secure_account_later": "Later"
+        "secure_account_later": "Later",
+        "upgrade_eyebrow": "SECURE YOUR ACCOUNT",
+        "upgrade_title": "Add your email",
+        "upgrade_subtitle": "Your credits and designs stay exactly where they are — this only adds a way to sign back in.",
+        "upgrade_cta": "Save and continue",
+        "upgrade_failed_title": "Couldn't add your email",
+        "upgrade_email_taken_title": "Email already in use",
+        "upgrade_email_taken_body": "An account already exists with this address. Sign in to it instead — designs made as a guest stay on this device."
     },
     "forgot_password": {
         "title": "Reset Password",

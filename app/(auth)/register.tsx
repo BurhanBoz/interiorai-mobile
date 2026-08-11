@@ -46,12 +46,24 @@ export default function RegisterScreen() {
   // (same wallet/jobs) instead of creating a brand-new account.
   const { upgrade } = useLocalSearchParams<{ upgrade?: string }>();
   const isUpgrade = upgrade === "1";
+  // Reached from inside the app (profile → "secure your account"), so this
+  // screen must be escapable. Onboarding pushes it as the first route, where
+  // there is nothing to go back to and the control stays hidden.
+  const canDismiss = router.canGoBack();
   const {
     appleAvailable,
     loading: socialLoading,
     signInWithApple,
     signInWithGoogle,
-  } = useSocialAuth();
+  } = useSocialAuth(
+    isUpgrade
+      // In upgrade mode the token goes to /me/upgrade/social so the identity
+      // lands on the CURRENT guest — plain sign-in would hand the user a new
+      // account and leave their credits and designs behind. On success we
+      // return to where they came from instead of jumping to the gallery.
+      ? { upgrade: true, onSuccess: () => (router.canGoBack() ? router.back() : router.replace("/(tabs)/gallery")) }
+      : undefined,
+  );
   const busy = loading || socialLoading !== null;
 
   const handleSignUp = async () => {
@@ -79,21 +91,42 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       if (isUpgrade) {
-        await upgradeGuest(email.trim(), password, fullName.trim() || undefined);
+        // No display name here: the upgrade form asks for credentials only —
+        // the backend derives a name from the address and Settings can edit it.
+        await upgradeGuest(email.trim(), password);
+        if (router.canGoBack()) router.back();
+        else router.replace("/(tabs)/gallery");
       } else {
         await register(email.trim(), password, fullName.trim() || undefined);
       }
     } catch (e: any) {
       const status = e?.response?.status;
+      // A taken address is the one failure with a real next step, and in
+      // upgrade mode that step is NOT "try again": the user already owns an
+      // account, so offer to sign into it.
+      const emailTaken = status === 409
+        || e?.response?.data?.code === "EMAIL_ALREADY_EXISTS";
+      if (isUpgrade && emailTaken) {
+        Alert.alert(
+          t("auth.upgrade_email_taken_title"),
+          t("auth.upgrade_email_taken_body"),
+          [
+            { text: t("common.cancel"), style: "cancel" },
+            { text: t("auth.sign_in_link"), onPress: () => router.push("/login") },
+          ],
+        );
+        return;
+      }
       const msg =
         status === 429
           ? t("errors.rate_limit")
-          : status === 409
-            ? t("auth.register_failed_description")
-            : status >= 500
-              ? t("errors.generic")
-              : t("auth.register_failed_description");
-      Alert.alert(t("auth.register_failed_title"), msg);
+          : status >= 500
+            ? t("errors.generic")
+            : t("auth.register_failed_description");
+      Alert.alert(
+        isUpgrade ? t("auth.upgrade_failed_title") : t("auth.register_failed_title"),
+        msg,
+      );
     } finally {
       setLoading(false);
     }
@@ -118,8 +151,29 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ marginBottom: 48 }}>
+          {/* Dismiss — without it this screen was a dead end: the user tapped
+              "add your email" from Settings and had no way back out. */}
+          <View style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 40,
+          }}>
             <Brand variant="inline" size="sm" tone="gold" />
+            {canDismiss ? (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel")}
+                style={{
+                  width: 36, height: 36, borderRadius: 18,
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: "rgba(225,195,155,0.08)",
+                  borderWidth: 1, borderColor: "rgba(225,195,155,0.22)",
+                }}
+              >
+                <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
+              </Pressable>
+            ) : null}
           </View>
 
           <Text
@@ -129,28 +183,44 @@ export default function RegisterScreen() {
               marginBottom: 12,
             }}
           >
-            {t("auth.register_eyebrow")}
+            {isUpgrade ? t("auth.upgrade_eyebrow") : t("auth.register_eyebrow")}
           </Text>
           <Text
             style={{
               ...theme.text.display,
               color: theme.color.onSurface,
-              marginBottom: 36,
+              marginBottom: isUpgrade ? 12 : 36,
             }}
           >
-            {t("auth.register_title")}
+            {isUpgrade ? t("auth.upgrade_title") : t("auth.register_title")}
           </Text>
+          {isUpgrade ? (
+            <Text
+              style={{
+                ...theme.text.body,
+                color: theme.color.onSurfaceVariant,
+                marginBottom: 32,
+              }}
+            >
+              {t("auth.upgrade_subtitle")}
+            </Text>
+          ) : null}
 
-          {/* Form */}
+          {/* Form — upgrade asks for credentials only. The guest already has a
+              display name ("Guest 5"); the backend replaces it from the address
+              and Settings can change it later, so a name field here is friction
+              in the one flow we most need people to finish. */}
           <View style={{ gap: 18 }}>
-            <Input
-              label={t("auth.full_name_label")}
-              placeholder={t("auth.full_name_placeholder")}
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="words"
-              icon="person-outline"
-            />
+            {!isUpgrade ? (
+              <Input
+                label={t("auth.full_name_label")}
+                placeholder={t("auth.full_name_placeholder")}
+                value={fullName}
+                onChangeText={setFullName}
+                autoCapitalize="words"
+                icon="person-outline"
+              />
+            ) : null}
             <Input
               label={t("auth.email_label")}
               placeholder={t("auth.email_placeholder")}
@@ -196,7 +266,13 @@ export default function RegisterScreen() {
           {/* Primary CTA */}
           <View style={{ marginTop: 28 }}>
             <Button
-              title={loading ? t("auth.creating") : t("auth.sign_up")}
+              title={
+                loading
+                  ? t("auth.creating")
+                  : isUpgrade
+                    ? t("auth.upgrade_cta")
+                    : t("auth.sign_up")
+              }
               variant="primary"
               size="lg"
               onPress={handleSignUp}
@@ -259,35 +335,40 @@ export default function RegisterScreen() {
             ) : null}
           </View>
 
-          {/* Footer */}
-          <View
-            style={{
-              marginTop: "auto",
-              paddingTop: 36,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text
+          {/* Footer — hidden while upgrading: signing into another account
+              would abandon the guest whose credits and designs the user came
+              here to keep. The taken-email alert offers that path explicitly
+              when it is genuinely the right one. */}
+          {!isUpgrade ? (
+            <View
               style={{
-                ...theme.text.body,
-                color: theme.color.onSurfaceVariant,
+                marginTop: "auto",
+                paddingTop: 36,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              {t("auth.already_have_account")}{" "}
-            </Text>
-            <Pressable onPress={() => router.push("/login")} hitSlop={6}>
               <Text
                 style={{
-                  ...theme.text.subtitle,
-                  color: theme.color.goldMidday,
+                  ...theme.text.body,
+                  color: theme.color.onSurfaceVariant,
                 }}
               >
-                {t("auth.sign_in_link")}
+                {t("auth.already_have_account")}{" "}
               </Text>
-            </Pressable>
-          </View>
+              <Pressable onPress={() => router.push("/login")} hitSlop={6}>
+                <Text
+                  style={{
+                    ...theme.text.subtitle,
+                    color: theme.color.goldMidday,
+                  }}
+                >
+                  {t("auth.sign_in_link")}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           <LegalFooter />
         </ScrollView>

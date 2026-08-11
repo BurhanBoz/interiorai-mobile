@@ -112,7 +112,14 @@
         "secure_account_title": "Protege tu cuenta",
         "secure_account_body": "Tus diseños y créditos solo existen en este dispositivo. Añade un email para protegerlos.",
         "secure_account_cta": "Añadir email",
-        "secure_account_later": "Más tarde"
+        "secure_account_later": "Más tarde",
+        "upgrade_eyebrow": "PROTEGE TU CUENTA",
+        "upgrade_title": "Añade tu correo",
+        "upgrade_subtitle": "Tus créditos y diseños se quedan tal cual — esto solo añade una forma de volver a entrar.",
+        "upgrade_cta": "Guardar y continuar",
+        "upgrade_failed_title": "No se pudo añadir el correo",
+        "upgrade_email_taken_title": "Correo ya en uso",
+        "upgrade_email_taken_body": "Ya existe una cuenta con esta dirección. Inicia sesión en ella — los diseños creados como invitado permanecen en este dispositivo."
     },
     "forgot_password": {
         "title": "Restablecer Contraseña",

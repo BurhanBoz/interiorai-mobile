@@ -112,7 +112,14 @@
         "secure_account_title": "アカウントを保護",
         "secure_account_body": "デザインとクレジットはこの端末にのみ保存されています。メールを追加して安全に保ちましょう。",
         "secure_account_cta": "メールを追加",
-        "secure_account_later": "後で"
+        "secure_account_later": "後で",
+        "upgrade_eyebrow": "アカウントを保護",
+        "upgrade_title": "メールアドレスを追加",
+        "upgrade_subtitle": "クレジットとデザインはそのまま残ります。再ログインの手段が増えるだけです。",
+        "upgrade_cta": "保存して続ける",
+        "upgrade_failed_title": "メールアドレスを追加できませんでした",
+        "upgrade_email_taken_title": "このメールは使用中です",
+        "upgrade_email_taken_body": "このアドレスのアカウントが既にあります。そちらでログインしてください。ゲストとして作成したデザインはこの端末に残ります。"
     },
     "forgot_password": {
         "title": "パスワードをリセット",

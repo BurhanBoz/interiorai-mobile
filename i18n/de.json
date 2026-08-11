@@ -112,7 +112,14 @@
         "secure_account_title": "Konto sichern",
         "secure_account_body": "Deine Designs und Credits existieren nur auf diesem Gerät. Füge eine E-Mail hinzu, um sie zu sichern.",
         "secure_account_cta": "E-Mail hinzufügen",
-        "secure_account_later": "Später"
+        "secure_account_later": "Später",
+        "upgrade_eyebrow": "KONTO SICHERN",
+        "upgrade_title": "E-Mail hinzufügen",
+        "upgrade_subtitle": "Deine Credits und Designs bleiben genau dort, wo sie sind — das ergänzt nur eine Anmeldemöglichkeit.",
+        "upgrade_cta": "Speichern und fortfahren",
+        "upgrade_failed_title": "E-Mail konnte nicht hinzugefügt werden",
+        "upgrade_email_taken_title": "E-Mail bereits vergeben",
+        "upgrade_email_taken_body": "Mit dieser Adresse existiert bereits ein Konto. Melde dich stattdessen dort an — als Gast erstellte Designs bleiben auf diesem Gerät."
     },
     "forgot_password": {
         "title": "Passwort zurücksetzen",

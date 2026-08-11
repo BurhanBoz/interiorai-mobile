@@ -162,8 +162,31 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Brand mark */}
-          <View style={{ marginBottom: 48 }}>
+          {/* Same dismiss affordance as register: reached from the register
+              screen or from a deep link inside the app, this was a one-way
+              door. Hidden when it IS the first route (onboarding), where
+              there is nothing behind it. */}
+          <View style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 40,
+          }}>
             <Brand variant="inline" size="sm" tone="gold" />
+            {router.canGoBack() ? (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel")}
+                style={{
+                  width: 36, height: 36, borderRadius: 18,
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: "rgba(225,195,155,0.08)",
+                  borderWidth: 1, borderColor: "rgba(225,195,155,0.22)",
+                }}
+              >
+                <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Editorial hero — eyebrow + display serif + sub-headline */}

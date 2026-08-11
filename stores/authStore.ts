@@ -23,6 +23,17 @@ interface AuthState {
     guestLogin: () => Promise<void>;
     /** V53 — attach email+password to the current guest (same user id). */
     upgradeGuest: (email: string, password: string, displayName?: string) => Promise<void>;
+    /**
+     * Attach a verified Apple/Google identity to the CURRENT guest instead of
+     * signing into a new account — the guest's credits and designs live on
+     * this row, so the plain social sign-in path would strand them.
+     */
+    upgradeWithSocial: (params: {
+        provider: "APPLE" | "GOOGLE";
+        identityToken: string;
+        nonce?: string;
+        fullName?: string;
+    }) => Promise<void>;
     /** Change the sign-in email (password accounts only; re-authenticates). */
     changeEmail: (email: string, currentPassword: string) => Promise<void>;
     register: (email: string, password: string, displayName?: string) => Promise<void>;
@@ -114,6 +125,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     upgradeGuest: async (email, password, displayName) => {
         const data = await authService.upgradeAccount(email, password, displayName);
+        await persistAuth(data);
+        set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true });
+    },
+
+    upgradeWithSocial: async (params) => {
+        const data = await authService.upgradeAccountWithSocial(params);
         await persistAuth(data);
         set({ token: data.token, user: data.user, orgId: data.organizationId, isAuthenticated: true });
     },

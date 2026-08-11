@@ -112,7 +112,14 @@
         "secure_account_title": "أمّن حسابك",
         "secure_account_body": "تصاميمك ورصيدك موجودة على هذا الجهاز فقط. أضف بريدك الإلكتروني للحفاظ عليها.",
         "secure_account_cta": "أضف بريدك",
-        "secure_account_later": "لاحقاً"
+        "secure_account_later": "لاحقاً",
+        "upgrade_eyebrow": "أمّن حسابك",
+        "upgrade_title": "أضف بريدك الإلكتروني",
+        "upgrade_subtitle": "أرصدتك وتصاميمك تبقى كما هي — هذا يضيف فقط طريقة لتسجيل الدخول مجددًا.",
+        "upgrade_cta": "احفظ وتابع",
+        "upgrade_failed_title": "تعذّرت إضافة البريد الإلكتروني",
+        "upgrade_email_taken_title": "البريد الإلكتروني مستخدم بالفعل",
+        "upgrade_email_taken_body": "يوجد حساب بهذا العنوان بالفعل. سجّل الدخول إليه بدلاً من ذلك — التصاميم التي أنشأتها كضيف تبقى على هذا الجهاز."
     },
     "forgot_password": {
         "title": "إعادة تعيين كلمة المرور",

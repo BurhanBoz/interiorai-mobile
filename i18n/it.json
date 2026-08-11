@@ -112,7 +112,14 @@
         "secure_account_title": "Proteggi il tuo account",
         "secure_account_body": "I tuoi design e crediti esistono solo su questo dispositivo. Aggiungi un'email per proteggerli.",
         "secure_account_cta": "Aggiungi email",
-        "secure_account_later": "Più tardi"
+        "secure_account_later": "Più tardi",
+        "upgrade_eyebrow": "METTI AL SICURO L'ACCOUNT",
+        "upgrade_title": "Aggiungi la tua email",
+        "upgrade_subtitle": "I tuoi crediti e i tuoi progetti restano dove sono — questo aggiunge solo un modo per rientrare.",
+        "upgrade_cta": "Salva e continua",
+        "upgrade_failed_title": "Impossibile aggiungere l'email",
+        "upgrade_email_taken_title": "Email già in uso",
+        "upgrade_email_taken_body": "Esiste già un account con questo indirizzo. Accedi a quello — i progetti creati come ospite restano su questo dispositivo."
     },
     "forgot_password": {
         "title": "Reimposta Password",

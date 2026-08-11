@@ -112,7 +112,14 @@
         "secure_account_title": "계정 보호하기",
         "secure_account_body": "디자인과 크레딧은 이 기기에만 저장됩니다. 이메일을 추가해 안전하게 보관하세요.",
         "secure_account_cta": "이메일 추가",
-        "secure_account_later": "나중에"
+        "secure_account_later": "나중에",
+        "upgrade_eyebrow": "계정 보호하기",
+        "upgrade_title": "이메일 추가",
+        "upgrade_subtitle": "크레딧과 디자인은 그대로 유지됩니다. 다시 로그인할 수단만 추가됩니다.",
+        "upgrade_cta": "저장하고 계속",
+        "upgrade_failed_title": "이메일을 추가하지 못했습니다",
+        "upgrade_email_taken_title": "이미 사용 중인 이메일",
+        "upgrade_email_taken_body": "이 주소로 된 계정이 이미 있습니다. 그 계정으로 로그인하세요. 게스트로 만든 디자인은 이 기기에 남습니다."
     },
     "forgot_password": {
         "title": "비밀번호 재설정",

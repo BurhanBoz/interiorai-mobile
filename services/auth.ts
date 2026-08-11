@@ -151,3 +151,19 @@ export async function upgradeAccount(
     const { data } = await api.post<AuthResponse>("/api/users/me/upgrade", { email, password, displayName });
     return data;
 }
+
+/**
+ * Social half of the guest upgrade (2026-08-11). Must NOT go through
+ * /api/auth/apple|google: those endpoints don't know who is signed in, so a
+ * guest would get a brand-new account and lose the credits and designs sitting
+ * on their guest row. This one binds the verified identity to the current user.
+ */
+export async function upgradeAccountWithSocial(params: {
+    provider: "APPLE" | "GOOGLE";
+    identityToken: string;
+    nonce?: string;
+    fullName?: string;
+}): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/users/me/upgrade/social", params);
+    return data;
+}

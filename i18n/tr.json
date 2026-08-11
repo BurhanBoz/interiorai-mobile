@@ -112,7 +112,14 @@
         "secure_account_title": "Hesabını güvenceye al",
         "secure_account_body": "Tasarımların ve kredilerin yalnız bu cihazda. E-posta ekle, her yerden eriş ve güvende tut.",
         "secure_account_cta": "E-posta ekle",
-        "secure_account_later": "Sonra"
+        "secure_account_later": "Sonra",
+        "upgrade_eyebrow": "HESABINI GÜVENCEYE AL",
+        "upgrade_title": "E-postanı ekle",
+        "upgrade_subtitle": "Kredilerin ve tasarımların olduğu gibi kalır — bu yalnızca tekrar giriş yapabilmen için.",
+        "upgrade_cta": "Kaydet ve devam et",
+        "upgrade_failed_title": "E-posta eklenemedi",
+        "upgrade_email_taken_title": "Bu e-posta kullanımda",
+        "upgrade_email_taken_body": "Bu adresle zaten bir hesap var. Onunla giriş yapabilirsin — misafirken yaptığın tasarımlar bu cihazda kalır."
     },
     "forgot_password": {
         "title": "Şifreyi Sıfırla",
