@@ -289,11 +289,13 @@ export default function StyleTransferScreen() {
                 Only offered once the primary reference exists: the extras are
                 "more of the same aesthetic", not a substitute for it. */}
             {referencePhoto?.uri ? (
-              <View style={{ marginTop: 14 }}>
-                <View className="flex-row" style={{ gap: 10 }}>
+              <View style={{ marginTop: 16 }}>
+                {/* Top-aligned so the captioned empty tile doesn't push the
+                    thumbnails off the shared edge. */}
+                <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
                   {extraStyleRefs.map((ref) => (
-                    <View key={ref.fileId} style={{ position: "relative", width: 72, height: 72 }}>
-                      <View className="rounded-xl overflow-hidden" style={{ width: 72, height: 72 }}>
+                    <View key={ref.fileId} style={{ position: "relative", width: 76, height: 76 }}>
+                      <View className="rounded-xl overflow-hidden" style={{ width: 76, height: 76 }}>
                         <Image
                           source={{ uri: ref.uri }}
                           style={{ width: "100%", height: "100%" }}
@@ -327,25 +329,43 @@ export default function StyleTransferScreen() {
                   ))}
                   {extraStyleRefs.length < 2 ? (
                     <Pressable onPress={handlePickExtraRef} disabled={isUploading}>
-                      <View
-                        className="rounded-xl items-center justify-center bg-surface-container-low"
-                        style={{
-                          width: 76,
-                          height: 76,
-                          borderWidth: 1.5,
-                          borderColor: "rgba(225,195,155,0.32)",
-                          borderStyle: "dashed",
-                          gap: 3,
-                        }}
-                      >
-                        {isUploading ? (
-                          <ActivityIndicator size="small" color="#E1C39B" />
-                        ) : (
-                          <>
-                            <Ionicons name="images-outline" size={22} color="#8C8378" />
-                            <Ionicons name="add" size={14} color="#A79C8E" />
-                          </>
-                        )}
+                      <View style={{ alignItems: "center", gap: 7 }}>
+                        <View
+                          className="rounded-xl items-center justify-center bg-surface-container-low"
+                          style={{
+                            width: 76,
+                            height: 76,
+                            borderWidth: 1.5,
+                            borderColor: "rgba(225,195,155,0.32)",
+                            borderStyle: "dashed",
+                            gap: 3,
+                          }}
+                        >
+                          {isUploading ? (
+                            <ActivityIndicator size="small" color="#E1C39B" />
+                          ) : (
+                            <>
+                              <Ionicons name="images-outline" size={22} color="#8C8378" />
+                              <Ionicons name="add" size={14} color="#A79C8E" />
+                            </>
+                          )}
+                        </View>
+                        <Text
+                          style={{
+                            fontFamily: "Inter",
+                            fontSize: 10,
+                            lineHeight: 13,
+                            letterSpacing: 0.2,
+                            textAlign: "center",
+                            color: "#8C8378",
+                            width: 76,
+                          }}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.8}
+                        >
+                          {t("studio.add_reference")}
+                        </Text>
                       </View>
                     </Pressable>
                   ) : null}

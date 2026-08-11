@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "تصميم خارجي",
         "feature_outdoor_desc": "حدائق، أفنية، تراسات — مساحتك الخارجية بتصميم جديد",
-        "advanced_settings": "إعدادات متقدمة"
+        "advanced_settings": "إعدادات متقدمة",
+        "add_furniture": "إضافة أثاث",
+        "add_reference": "إضافة مرجع"
     },
     "gallery": {
         "title": "المعرض",

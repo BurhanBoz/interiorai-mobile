@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Diseño Exterior",
         "feature_outdoor_desc": "Jardines, patios, terrazas — tu espacio exterior, rediseñado",
-        "advanced_settings": "Ajustes avanzados"
+        "advanced_settings": "Ajustes avanzados",
+        "add_furniture": "Añadir mueble",
+        "add_reference": "Referencia"
     },
     "gallery": {
         "title": "Galería",

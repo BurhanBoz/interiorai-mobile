@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "야외 디자인",
         "feature_outdoor_desc": "정원, 안뜰, 테라스 — 야외 공간을 새롭게",
-        "advanced_settings": "고급 설정"
+        "advanced_settings": "고급 설정",
+        "add_furniture": "가구 추가",
+        "add_reference": "참고 추가"
     },
     "gallery": {
         "title": "갤러리",

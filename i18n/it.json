@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Design Esterni",
         "feature_outdoor_desc": "Giardini, cortili, terrazze — il tuo spazio esterno, riprogettato",
-        "advanced_settings": "Impostazioni avanzate"
+        "advanced_settings": "Impostazioni avanzate",
+        "add_furniture": "Aggiungi mobile",
+        "add_reference": "Riferimento"
     },
     "gallery": {
         "title": "Galleria",

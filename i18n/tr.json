@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Dış Mekân Tasarımı",
         "feature_outdoor_desc": "Bahçe, avlu, teras — dış mekânın yeniden tasarlanır",
-        "advanced_settings": "Gelişmiş ayarlar"
+        "advanced_settings": "Gelişmiş ayarlar",
+        "add_furniture": "Mobilya ekle",
+        "add_reference": "Referans ekle"
     },
     "gallery": {
         "title": "Galeri",

@@ -10,6 +10,7 @@ import {
   FlatList,
   LayoutAnimation,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -48,6 +49,35 @@ const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   INPAINT: "INPAINT",
   STYLE_TRANSFER: "STYLE_TRANSFER",
   OUTDOOR: "OUTDOOR_DESIGN",
+};
+
+/* Reference-tile row (IO-2).
+ *
+ * Vertical air is responsive for the same reason BottomBar's BREATHING is: a
+ * fixed 24 reads as a proper section break on a 6.7" screen but eats a
+ * meaningful slice of an SE, where vertical space is the scarce resource. The
+ * row had no top margin at all, so it sat welded to the Quality card above it
+ * (founder screenshot, 2026-08-11) — clamped both ends so it never welds and
+ * never floats away.
+ *
+ * The caption is the smallest thing that removes ambiguity: a bare dashed tile
+ * in a screen full of controls could just as easily mean "another photo of the
+ * room". One or two words under the tile — share-sheet grammar, not a section
+ * heading — and only while the tile is empty, because a thumbnail explains
+ * itself and the caption would turn into noise.
+ */
+const TILE_ROW_SPACING = Math.round(
+  Math.min(32, Math.max(20, Dimensions.get("window").height * 0.028)),
+);
+const TILE_SIZE = 76;
+const TILE_CAPTION = {
+  fontFamily: "Inter",
+  fontSize: 10,
+  lineHeight: 13,
+  letterSpacing: 0.2,
+  textAlign: "center" as const,
+  color: "#8C8378",
+  width: TILE_SIZE,
 };
 
 
@@ -483,17 +513,18 @@ export default function OptionsScreen() {
             unentitled taps route to the paywall like the strength slider. */}
         {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM")
           && !preserveLayout && (
-          // No heading, no helper line: the tile IS the affordance. A dashed
-          // slot with a sofa glyph reads as "drop a piece of furniture here"
-          // in every language, and the credit total below updates the moment
-          // something lands in it — which is the only consequence worth
-          // announcing (founder, 2026-08-11: screens should explain
-          // themselves, people don't read labels).
-          <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 24 }}>
-            <View className="flex-row" style={{ gap: 10 }}>
+          <View style={{
+            paddingHorizontal: theme.space.gutter,
+            marginTop: TILE_ROW_SPACING,
+            marginBottom: TILE_ROW_SPACING,
+          }}>
+            {/* Top-aligned: only the empty tile carries a caption, so the
+                thumbnails must hang from the same edge rather than centre
+                themselves against a taller neighbour. */}
+            <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
               {objectRefs.map((ref) => (
-                <View key={ref.fileId} style={{ position: "relative", width: 76, height: 76 }}>
-                  <View className="rounded-xl overflow-hidden" style={{ width: 76, height: 76 }}>
+                <View key={ref.fileId} style={{ position: "relative", width: TILE_SIZE, height: TILE_SIZE }}>
+                  <View className="rounded-xl overflow-hidden" style={{ width: TILE_SIZE, height: TILE_SIZE }}>
                     <Image
                       source={{ uri: ref.uri }}
                       style={{ width: "100%", height: "100%" }}
@@ -527,27 +558,37 @@ export default function OptionsScreen() {
               ))}
               {objectRefs.length < 2 && (
                 <Pressable onPress={handlePickObject} disabled={isObjectUploading}>
-                  <View
-                    className="rounded-xl items-center justify-center bg-surface-container-low"
-                    style={{
-                      width: 76,
-                      height: 76,
-                      borderWidth: 1.5,
-                      borderColor: "rgba(225,195,155,0.32)",
-                      borderStyle: "dashed",
-                      gap: 3,
-                    }}
-                  >
-                    {isObjectUploading ? (
-                      <ActivityIndicator size="small" color="#E1C39B" />
-                    ) : referenceImageAllowed ? (
-                      <>
-                        <Ionicons name="bed-outline" size={22} color="#8C8378" />
-                        <Ionicons name="add" size={14} color="#A79C8E" />
-                      </>
-                    ) : (
-                      <Ionicons name="lock-closed-outline" size={18} color="#8C8378" />
-                    )}
+                  <View style={{ alignItems: "center", gap: 7 }}>
+                    <View
+                      className="rounded-xl items-center justify-center bg-surface-container-low"
+                      style={{
+                        width: TILE_SIZE,
+                        height: TILE_SIZE,
+                        borderWidth: 1.5,
+                        borderColor: "rgba(225,195,155,0.32)",
+                        borderStyle: "dashed",
+                        gap: 3,
+                      }}
+                    >
+                      {isObjectUploading ? (
+                        <ActivityIndicator size="small" color="#E1C39B" />
+                      ) : referenceImageAllowed ? (
+                        <>
+                          <Ionicons name="bed-outline" size={22} color="#8C8378" />
+                          <Ionicons name="add" size={14} color="#A79C8E" />
+                        </>
+                      ) : (
+                        <Ionicons name="lock-closed-outline" size={18} color="#8C8378" />
+                      )}
+                    </View>
+                    <Text
+                      style={TILE_CAPTION}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                    >
+                      {t("studio.add_furniture")}
+                    </Text>
                   </View>
                 </Pressable>
               )}

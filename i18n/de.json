@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Außenbereich",
         "feature_outdoor_desc": "Garten, Hof, Terrasse — dein Außenbereich, neu gestaltet",
-        "advanced_settings": "Erweiterte Einstellungen"
+        "advanced_settings": "Erweiterte Einstellungen",
+        "add_furniture": "Möbel",
+        "add_reference": "Referenz"
     },
     "gallery": {
         "title": "Galerie",

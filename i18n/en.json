@@ -310,7 +310,9 @@
         "quality_ultra_hd": "Ultra HD",
         "mode_outdoor": "Outdoor Design",
         "feature_outdoor_desc": "Gardens, courtyards, terraces — your outdoor space, redesigned",
-        "advanced_settings": "Advanced settings"
+        "advanced_settings": "Advanced settings",
+        "add_furniture": "Add furniture",
+        "add_reference": "Add reference"
     },
     "gallery": {
         "title": "Gallery",
