@@ -549,6 +549,33 @@ function PlanCard({
 /** Half the toggle track, minus the gap. Static so nothing can drop it. */
 const PILL_SLOT = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } as const;
 
+/* Segmented control sizing.
+ *
+ * The annual pill carries TWO pieces of text — the period label plus the
+ * savings badge — and both grow with the locale ("YILLIK" + "%30 TASARRUF",
+ * "ANNUALE" + "RISPARMIA 30%"). At 12px each they no longer fit half a
+ * 390pt-wide track, and because the badge had no line limit it WRAPPED:
+ * the annual pill then grew taller than the monthly one and its content ran
+ * to the track edge (founder screenshot, iPhone 13, 2026-08-11).
+ *
+ * The fix is sizing, not per-device tweaking: a smaller type scale for this
+ * control, one enforced line each with auto-fit as the shrink valve, and a
+ * fixed min height so the two pills are identical whatever they hold. That
+ * holds for every locale and every width, not just the phone that showed it.
+ */
+const SEGMENT_MIN_HEIGHT = 46;
+const SEGMENT_LABEL_TEXT = {
+    ...theme.text.caption,
+    fontSize: 11.5,
+    lineHeight: 15,
+} as const;
+const SEGMENT_BADGE_TEXT = {
+    ...theme.text.caption,
+    fontSize: 9.5,
+    lineHeight: 12,
+    letterSpacing: 0.2,
+} as const;
+
 export default function PlansScreen() {
     const { t, i18n } = useTranslation();
     const plans = useSubscriptionStore((s) => s.plans);
@@ -674,15 +701,28 @@ export default function PlansScreen() {
                             const active = billingMode === mode;
                             const isAnnual = mode === "ANNUAL";
                             const PillWrapper: any = active ? LinearGradient : View;
+                            // Identical box metrics in both states — only the
+                            // fill and border change. Equal min height keeps
+                            // the two pills the same size even when one holds
+                            // a badge and the other doesn't.
+                            const pillBox = {
+                                alignSelf: "stretch" as const,
+                                minHeight: SEGMENT_MIN_HEIGHT,
+                                paddingVertical: 10,
+                                paddingHorizontal: 10,
+                                borderRadius: theme.radius.sm,
+                                flexDirection: "row" as const,
+                                alignItems: "center" as const,
+                                justifyContent: "center" as const,
+                                gap: 6,
+                            };
                             const pillProps = active
                                 ? {
                                     colors: ["rgba(253,222,181,0.18)", "rgba(225,195,155,0.10)"],
                                     start: { x: 0, y: 0 }, end: { x: 1, y: 1 },
-                                    style: { alignSelf: "stretch" as const, paddingVertical: 13, paddingHorizontal: 12, borderRadius: theme.radius.sm, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)", flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
+                                    style: { ...pillBox, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)" },
                                 }
-                                : {
-                                    style: { alignSelf: "stretch" as const, paddingVertical: 13, paddingHorizontal: 10, borderRadius: theme.radius.sm, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 6 },
-                                };
+                                : { style: pillBox };
                             return (
                                 <Pressable
                                     key={mode}
@@ -705,25 +745,31 @@ export default function PlansScreen() {
                                             className="font-body"
                                             numberOfLines={1}
                                             adjustsFontSizeToFit
-                                            minimumFontScale={0.72}
-                                            style={{ ...theme.text.caption, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
+                                            minimumFontScale={0.8}
+                                            style={{ ...SEGMENT_LABEL_TEXT, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
                                         >
                                             {isAnnual ? t("plans.toggle_annual_label") : t("plans.toggle_monthly")}
                                         </Text>
                                         {isAnnual ? (
                                             <View style={{
-                                                // Was flexShrink:0 — an unshrinkable badge next to
-                                                // an unshrinkable pill is what pushed ANNUAL past the
-                                                // track edge. It may now give ground; the label
-                                                // auto-fits first, so the badge only yields on the
-                                                // narrowest screens and longest locales.
+                                                // minWidth:0 is what actually lets the badge shrink:
+                                                // without it a flex child is floored at its content
+                                                // width, so flexShrink alone changed nothing and the
+                                                // text wrapped instead of narrowing.
                                                 flexShrink: 1,
-                                                paddingHorizontal: 7, paddingVertical: 3, borderRadius: theme.radius.pill,
+                                                minWidth: 0,
+                                                paddingHorizontal: 6, paddingVertical: 2.5,
+                                                borderRadius: theme.radius.pill,
                                                 backgroundColor: active ? "rgba(63,45,17,0.85)" : "rgba(225,195,155,0.14)",
                                                 borderWidth: 0.5,
                                                 borderColor: active ? "rgba(244,221,182,0.3)" : "rgba(225,195,155,0.35)",
                                             }}>
-                                                <Text style={{ ...theme.text.caption, color: active ? "#F4DDB6" : "#E0C29A" }}>
+                                                <Text
+                                                    numberOfLines={1}
+                                                    adjustsFontSizeToFit
+                                                    minimumFontScale={0.75}
+                                                    style={{ ...SEGMENT_BADGE_TEXT, color: active ? "#F4DDB6" : "#E0C29A" }}
+                                                >
                                                     {t("plans.toggle_save_badge")}
                                                 </Text>
                                             </View>
