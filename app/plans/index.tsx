@@ -214,7 +214,11 @@ function PlanFeatureSheet({
                                     </Text>
                                     {plan.priceCents > 0 && (
                                         <Text style={{ ...theme.text.caption, color: "rgba(209,197,184,0.5)" }}>
-                                            {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
+                                            {plan.billingPeriod === "YEARLY"
+                                                ? t("plans.per_year")
+                                                : plan.billingPeriod === "WEEKLY"
+                                                ? t("plans.per_week")
+                                                : t("plans.per_month")}
                                         </Text>
                                     )}
                                 </View>
@@ -241,8 +245,12 @@ function PlanFeatureSheet({
                                         const isNew   = isCheck && isHighlight;
 
                                         const labelKey =
-                                            plan.billingPeriod === "YEARLY" && row.labelKey === "plans.row_monthly_credits"
-                                                ? "plans.row_yearly_credits"
+                                            row.labelKey === "plans.row_monthly_credits"
+                                                ? plan.billingPeriod === "YEARLY"
+                                                    ? "plans.row_yearly_credits"
+                                                    : plan.billingPeriod === "WEEKLY"
+                                                    ? "plans.row_weekly_credits"
+                                                    : row.labelKey
                                                 : row.labelKey;
 
                                         const showGroupHeader = row.groupLabelKey && row.groupLabelKey !== lastGroup;
@@ -421,6 +429,11 @@ function PlanCard({
             ? t("plans.plan_subtitle_daily")
             : plan.billingPeriod === "YEARLY"
             ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits })
+            : plan.billingPeriod === "WEEKLY"
+            ? t("plans.plan_subtitle_weekly", {
+                  credits: plan.monthlyCredits,
+                  cap: plan.monthlyCredits * 2,
+              })
             : t("plans.plan_subtitle", { credits: plan.monthlyCredits });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
@@ -513,7 +526,11 @@ function PlanCard({
                 </Text>
                 {plan.priceCents > 0 && (
                     <Text className="text-secondary" style={{ ...theme.text.caption }}>
-                        {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
+                        {plan.billingPeriod === "YEARLY"
+                                                ? t("plans.per_year")
+                                                : plan.billingPeriod === "WEEKLY"
+                                                ? t("plans.per_week")
+                                                : t("plans.per_month")}
                     </Text>
                 )}
             </View>
@@ -592,8 +609,12 @@ export default function PlansScreen() {
     const handleBack = useBackHandler("/(tabs)/profile");
     const [sheetPlan, setSheetPlan] = useState<PlanResponse | null>(null);
     const isUserOnAnnual = (subscription?.planCode ?? "").endsWith("_ANNUAL");
-    const [billingMode, setBillingMode] = useState<"MONTHLY" | "ANNUAL">(
-        isUserOnAnnual ? "ANNUAL" : "MONTHLY",
+    // Pricing V4 (2026-08-11): the storefront sells WEEKLY + ANNUAL. The
+    // first segment falls back to MONTHLY only while the backend has no
+    // weekly SKUs yet (transition safety — an empty paywall is worse than a
+    // stale one).
+    const [billingMode, setBillingMode] = useState<"PERIODIC" | "ANNUAL">(
+        isUserOnAnnual ? "ANNUAL" : "PERIODIC",
     );
 
     useEffect(() => {
@@ -606,28 +627,35 @@ export default function PlansScreen() {
 
     const currentCode = subscription?.planCode ?? "FREE";
 
-    // Pricing V3 launches monthly-only; the Monthly/Annual toggle renders
-    // only when the backend actually ships an annual SKU again. Zero-code
-    // reactivation: seed *_ANNUAL plans in a migration and the toggle is back.
     const hasAnnualPlans = useMemo(
         () => (plans ?? []).some((p) => p.code.endsWith("_ANNUAL")),
+        [plans],
+    );
+    // V4: weekly SKUs exist once V59 is live. Until then the first segment
+    // keeps selling the monthly rows so 1.2.1-era backends never render an
+    // empty paywall.
+    const hasWeeklyPlans = useMemo(
+        () => (plans ?? []).some((p) => p.billingPeriod === "WEEKLY"),
         [plans],
     );
 
     const sortedPlans = useMemo(() => {
         if (!plans) return [];
-        const mode = hasAnnualPlans ? billingMode : "MONTHLY";
+        const mode = hasAnnualPlans ? billingMode : "PERIODIC";
         return [...plans]
             .filter((p) => {
                 // FREE is auto-assigned at signup and never purchasable —
                 // showing it on the paywall only dilutes the Base/Pro choice.
                 // The user's balance/trial state lives on Profile & Settings.
                 if (p.code === "FREE") return false;
-                const isAnnual = p.code.endsWith("_ANNUAL");
-                return mode === "ANNUAL" ? isAnnual : !isAnnual;
+                if (mode === "ANNUAL") return p.code.endsWith("_ANNUAL");
+                // Periodic segment: weekly when available, else legacy monthly.
+                return hasWeeklyPlans
+                    ? p.billingPeriod === "WEEKLY"
+                    : p.billingPeriod === "MONTHLY";
             })
             .sort((a, b) => a.sortOrder - b.sortOrder);
-    }, [plans, billingMode, hasAnnualPlans]);
+    }, [plans, billingMode, hasAnnualPlans, hasWeeklyPlans]);
 
     return (
         <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
@@ -697,7 +725,7 @@ export default function PlansScreen() {
                         borderWidth: 1, borderColor: "rgba(77,70,60,0.28)",
                         ...theme.elevation.sm,
                     }}>
-                        {(["MONTHLY", "ANNUAL"] as const).map((mode) => {
+                        {(["PERIODIC", "ANNUAL"] as const).map((mode) => {
                             const active = billingMode === mode;
                             const isAnnual = mode === "ANNUAL";
                             const PillWrapper: any = active ? LinearGradient : View;
@@ -748,7 +776,11 @@ export default function PlansScreen() {
                                             minimumFontScale={0.8}
                                             style={{ ...SEGMENT_LABEL_TEXT, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
                                         >
-                                            {isAnnual ? t("plans.toggle_annual_label") : t("plans.toggle_monthly")}
+                                            {isAnnual
+                                                ? t("plans.toggle_annual_label")
+                                                : hasWeeklyPlans
+                                                ? t("plans.toggle_weekly")
+                                                : t("plans.toggle_monthly")}
                                         </Text>
                                         {isAnnual ? (
                                             <View style={{

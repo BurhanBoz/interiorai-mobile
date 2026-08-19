@@ -274,7 +274,7 @@
         "choose_palette": "Choose a Palette",
         "palette_helper": "Choose a curated palette to set the room's mood. Skip it to let the model pick its own atmosphere.",
         "welcome_banner_title": "Welcome to Roomframe AI",
-        "welcome_banner_body": "15 credits + 7 days of PRO access — Style Transfer, HD, Magic Edit all unlocked.",
+        "welcome_banner_body": "10 credits + 7 days of PRO access — Style Transfer, HD, Magic Edit all unlocked.",
         "welcome_banner_cta": "Start designing",
         "trial_countdown_label": "PRO trial",
         "trial_countdown_days": "{{days}}d left",
@@ -471,7 +471,7 @@
         "toggle_annual_hint": "Best value — pay yearly, save up to 30%",
         "per_year": "/ year",
         "plan_subtitle_yearly": "{{credits}} credits/month · billed yearly",
-        "plan_subtitle_daily": "15 credits to try everything — no card needed",
+        "plan_subtitle_daily": "10 credits to try everything — no card needed",
         "annual_savings_basic": "Save 27% vs monthly",
         "annual_savings_pro": "Save 29% vs monthly",
         "annual_savings_max": "Save 30% vs monthly",
@@ -483,7 +483,11 @@
         "change_scheduled_title": "Plan change scheduled",
         "change_scheduled_description": "Apple applies this change at the end of your current billing period. {{plan}} starts on {{date}} — until then your current plan stays active.",
         "scheduled_banner": "Scheduled: switching to {{plan}} on {{date}}.",
-        "deferred_notice": "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours."
+        "deferred_notice": "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours.",
+        "toggle_weekly": "WEEKLY",
+        "per_week": "/week",
+        "plan_subtitle_weekly": "{{credits}} credits every week · unused roll over (up to {{cap}})",
+        "row_weekly_credits": "Weekly credits"
     },
     "credits_bridge": {
         "or_buy_credits": "Or buy credits one-time"
@@ -536,7 +540,8 @@
         "empty_cta": "Start designing",
         "empty_filtered_title": "Nothing in this view",
         "empty_filtered_subtitle": "Switch to another filter or come back after your next activity.",
-        "ref_outdoor": "Outdoor Design"
+        "ref_outdoor": "Outdoor Design",
+        "ledger.weekly_renewal": "Weekly credits +{{count}}"
     },
     "credit_packs": {
         "title": "Credit Packs",
@@ -801,9 +806,9 @@
         "help_mail_subject": "Interior AI — Support Request",
         "help_mail_body": "Hi Interior AI team,\n\n[Please describe your issue here]\n\n---\nApp version: {{version}}\nPlan: {{plan}}\nUser ID: {{userId}}",
         "help_faq_q1_q": "How do credits work?",
-        "help_faq_q1_a": "Each render consumes credits: Standard redesign 3, HD 4, Empty Room 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7), and the 4× Ultra HD Upscale 3 (Pro). Plans: Free starts you with 15 credits to try everything, then tops up 1 credit a day; Base includes 150 credits/month, Pro 400/month.",
+        "help_faq_q1_a": "Each render consumes credits: Standard redesign 3, HD 4, Empty Room 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7), Expand 2, and the 4× Ultra HD Upscale 3. Plans: Free starts you with 10 credits to try everything, then tops back up 1 credit a day (up to 5); Base includes 50 credits/week, Pro 100/week — unused credits roll over up to 2× your weekly amount.",
         "help_faq_q2_q": "What's the difference between the plans?",
-        "help_faq_q2_a": "Every plan runs on our best AI models. Free starts you with 15 credits (watermarked) — when they're used or the first week ends, pick a plan to continue. Base (150 credits/mo) removes the watermark and covers Redesign, Empty Room and HD. Pro (400/mo) unlocks Magic Edit, Style Transfer and the 4× Ultra HD Upscale.",
+        "help_faq_q2_a": "Every plan runs on our best AI models. Free starts you with 10 credits (watermarked) — leftovers stay yours, plus 1 free credit a day. Base (50 credits/week) removes the watermark and covers everything except Style Transfer. Pro (100 credits/week) unlocks it all, including Style Transfer.",
         "help_faq_q3_q": "How do I use Style Transfer?",
         "help_faq_q3_a": "On the Pro plan, choose Style Transfer from the Studio home, upload your room, then add a reference photo. Your room is redesigned using the reference's aesthetic.",
         "help_faq_q4_q": "Can I use generated designs commercially?",

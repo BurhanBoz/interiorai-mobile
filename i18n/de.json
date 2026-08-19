@@ -274,7 +274,7 @@
         "choose_palette": "Palette Wählen",
         "palette_helper": "Wähle eine kuratierte Palette, um die Stimmung des Raums festzulegen. Lass sie leer und das Modell wählt selbst.",
         "welcome_banner_title": "Willkommen bei Roomframe AI",
-        "welcome_banner_body": "15 Credits + 7 Tage PRO-Zugang — Style Transfer, HD, Magic Edit freigeschaltet.",
+        "welcome_banner_body": "10 Credits + 7 Tage PRO-Zugang — Style Transfer, HD, Magic Edit freigeschaltet.",
         "welcome_banner_cta": "Mit Designen beginnen",
         "trial_countdown_label": "PRO-Test",
         "trial_countdown_days": "{{days}}T übrig",
@@ -471,7 +471,7 @@
         "toggle_annual_hint": "Bester Wert — jährlich zahlen, bis zu 30% sparen",
         "per_year": "/ Jahr",
         "plan_subtitle_yearly": "{{credits}} Credits/Monat · jährlich abgerechnet",
-        "plan_subtitle_daily": "15 Credits zum Ausprobieren — ohne Karte",
+        "plan_subtitle_daily": "10 Credits zum Ausprobieren — ohne Karte",
         "annual_savings_basic": "27% sparen vs monatlich",
         "annual_savings_pro": "29% sparen vs monatlich",
         "annual_savings_max": "30% sparen vs monatlich",
@@ -483,7 +483,11 @@
         "change_scheduled_title": "Planwechsel vorgemerkt",
         "change_scheduled_description": "Apple wendet diese Änderung am Ende deiner aktuellen Abrechnungsperiode an. {{plan}} startet am {{date}} — bis dahin bleibt dein aktueller Plan aktiv.",
         "scheduled_banner": "Vorgemerkt: Wechsel zu {{plan}} am {{date}}.",
-        "deferred_notice": "Diese Änderung wird am Ende deiner aktuellen Periode ({{date}}) wirksam. Bis dahin bleibt dein aktueller Plan aktiv; ungenutzte Credits werden in den neuen Plan übernommen, gekaufte Credit-Pakete bleiben immer erhalten."
+        "deferred_notice": "Diese Änderung wird am Ende deiner aktuellen Periode ({{date}}) wirksam. Bis dahin bleibt dein aktueller Plan aktiv; ungenutzte Credits werden in den neuen Plan übernommen, gekaufte Credit-Pakete bleiben immer erhalten.",
+        "toggle_weekly": "WÖCHENTLICH",
+        "per_week": "/Woche",
+        "plan_subtitle_weekly": "{{credits}} Credits pro Woche · ungenutzte bleiben (bis {{cap}})",
+        "row_weekly_credits": "Wöchentliche Credits"
     },
     "credits": {
         "title": "Credits",
@@ -533,7 +537,8 @@
         "empty_cta": "Jetzt entwerfen",
         "empty_filtered_title": "Nichts in dieser Ansicht",
         "empty_filtered_subtitle": "Wechsle den Filter oder komm nach deiner nächsten Aktivität zurück.",
-        "ref_outdoor": "Außenbereich-Design"
+        "ref_outdoor": "Außenbereich-Design",
+        "ledger.weekly_renewal": "Wöchentliche Credits +{{count}}"
     },
     "credit_packs": {
         "title": "Credit-Pakete",
@@ -801,9 +806,9 @@
         "help_mail_subject": "Interior AI — Support-Anfrage",
         "help_mail_body": "Hallo Interior AI Team,\n\n[Beschreibe dein Anliegen hier]\n\n---\nVersion: {{version}}\nPlan: {{plan}}\nUser ID: {{userId}}",
         "help_faq_q1_q": "Wie funktionieren Credits?",
-        "help_faq_q1_a": "Jede Generierung kostet Credits: Standard-Redesign 3, HD 4, Leerer Raum 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7) und der 4×-Ultra-HD-Upscale 3 (Pro). Pläne: Free startet mit 15 Credits zum Ausprobieren und wird täglich auf 1 Credit aufgefüllt; Base enthält 150 Credits/Monat, Pro 400/Monat.",
+        "help_faq_q1_a": "Jede Generierung kostet Credits: Standard-Redesign 3, HD 4, Leerer Raum 4 (HD 5), Magic Edit 4 (HD 5), Style Transfer 6 (HD 7), Erweitern 2, 4×-Ultra-HD-Upscale 3. Pläne: Free startet mit 10 Credits und füllt täglich 1 Credit nach (bis 5); Base enthält 50 Credits/Woche, Pro 100/Woche — ungenutzte Credits bleiben bis zum 2-fachen des Wochenbetrags erhalten.",
         "help_faq_q2_q": "Was ist der Unterschied zwischen den Plänen?",
-        "help_faq_q2_a": "Jeder Plan nutzt unsere besten KI-Modelle. Free startet mit 15 Credits (mit Wasserzeichen) — sind sie verbraucht oder die erste Woche vorbei, wähle einen Plan. Base (150/Monat) entfernt das Wasserzeichen und umfasst Redesign, leeren Raum und HD. Pro (400/Monat) schaltet Magic Edit, Style Transfer und 4×-Upscale frei.",
+        "help_faq_q2_a": "Jeder Plan nutzt unsere besten KI-Modelle. Free startet mit 10 Credits (mit Wasserzeichen) — Reste bleiben dir, plus 1 Gratis-Credit pro Tag. Base (50 Credits/Woche) entfernt das Wasserzeichen und umfasst alles außer Style Transfer. Pro (100 Credits/Woche) schaltet alles frei, inklusive Style Transfer.",
         "help_faq_q3_q": "Wie nutze ich Style Transfer?",
         "help_faq_q3_a": "Wähle im Pro-Plan auf dem Studio-Startbildschirm Style Transfer, lade deinen Raum hoch und füge ein Referenzfoto hinzu. Dein Raum wird im Stil der Referenz neu gestaltet.",
         "help_faq_q4_q": "Darf ich Designs kommerziell nutzen?",

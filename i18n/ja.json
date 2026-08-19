@@ -274,7 +274,7 @@
         "choose_palette": "パレットを選ぶ",
         "palette_helper": "厳選されたパレットを選んで部屋の雰囲気を決めましょう。未選択ならモデルが独自のトーンを選びます。",
         "welcome_banner_title": "Roomframe AIへようこそ",
-        "welcome_banner_body": "15クレジット + 7日間のPROアクセス — スタイル転送、HD、Magic Editすべてアンロック。",
+        "welcome_banner_body": "10クレジット + 7日間のPROアクセス — スタイル転送、HD、マジック編集がすべて解放。",
         "welcome_banner_cta": "デザインを始める",
         "trial_countdown_label": "PRO試用",
         "trial_countdown_days": "残り{{days}}日",
@@ -471,7 +471,7 @@
         "toggle_annual_hint": "最もお得 — 年払いで最大30%節約",
         "per_year": "/ 年",
         "plan_subtitle_yearly": "月{{credits}}クレジット · 年払い",
-        "plan_subtitle_daily": "お試し用15クレジット — カード不要",
+        "plan_subtitle_daily": "すべて試せる10クレジット — カード不要",
         "annual_savings_basic": "月額より27%お得",
         "annual_savings_pro": "月額より29%お得",
         "annual_savings_max": "月額より30%お得",
@@ -483,7 +483,11 @@
         "change_scheduled_title": "プラン変更を予約しました",
         "change_scheduled_description": "Appleはこの変更を現在の請求期間の終了時に適用します。{{plan}}は{{date}}に開始されます。それまでは現在のプランが有効です。",
         "scheduled_banner": "予約済み：{{date}}に{{plan}}へ切り替わります。",
-        "deferred_notice": "この変更は現在の期間終了時（{{date}}）に適用されます。それまでは現在のプランが有効です。未使用のクレジットは新しいプランに引き継がれ、購入したクレジットパックは常に保持されます。"
+        "deferred_notice": "この変更は現在の期間終了時（{{date}}）に適用されます。それまでは現在のプランが有効です。未使用のクレジットは新しいプランに引き継がれ、購入したクレジットパックは常に保持されます。",
+        "toggle_weekly": "週額",
+        "per_week": "/週",
+        "plan_subtitle_weekly": "毎週{{credits}}クレジット · 未使用分は繰り越し（最大{{cap}}）",
+        "row_weekly_credits": "週間クレジット"
     },
     "credits": {
         "title": "クレジット",
@@ -533,7 +537,8 @@
         "empty_cta": "デザインを始める",
         "empty_filtered_title": "このビューには何もありません",
         "empty_filtered_subtitle": "別のフィルターに切り替えるか、次のアクティビティ後に戻ってきてください。",
-        "ref_outdoor": "アウトドアデザイン"
+        "ref_outdoor": "アウトドアデザイン",
+        "ledger.weekly_renewal": "週間クレジット +{{count}}"
     },
     "credit_packs": {
         "title": "クレジットパック",
@@ -801,9 +806,9 @@
         "help_mail_subject": "Interior AI — サポートリクエスト",
         "help_mail_body": "Interior AI チームへ、\n\n[こちらに問題をご記入ください]\n\n---\nバージョン: {{version}}\nプラン: {{plan}}\nユーザー ID: {{userId}}",
         "help_faq_q1_q": "クレジットはどう使われますか？",
-        "help_faq_q1_a": "生成ごとにクレジットを消費します：標準リデザイン3、HD 4、空き部屋4（HD 5）、Magic Edit 4（HD 5）、スタイル転送6（HD 7）、4×ウルトラHDアップスケール3（Pro）。プラン：Freeはお試し用15クレジットから始まり、その後は毎日1クレジットまで補充されます。Baseは月150クレジット、Proは月400クレジットです。",
+        "help_faq_q1_a": "各生成はクレジットを消費します：標準リデザイン3、HD4、空き部屋4（HD5）、マジック編集4（HD5）、スタイル転送6（HD7）、拡張2、4×Ultra HDアップスケール3。プラン：Freeは10クレジットで開始し、毎日1クレジット補充（最大5）。Baseは週50、Proは週100 — 未使用分は週間量の2倍まで繰り越せます。",
         "help_faq_q2_q": "プラン間の違いは？",
-        "help_faq_q2_a": "すべてのプランで最高のAIモデルを使用します。Freeは15クレジット（透かし付き）から。使い切るか最初の1週間が終わったら、プランを選んで続行します。Base（月150）は透かしを外し、リデザイン・空室・HDに対応。Pro（月400）はMagic Edit、スタイル転送、4×アップスケールを解放します。",
+        "help_faq_q2_a": "すべてのプランが最高のAIモデルで動作します。Freeは10クレジット（透かし付き）で開始 — 残りはそのまま、さらに毎日1クレジット無料。Base（週50）は透かしを外し、スタイル転送以外のすべてをカバー。Pro（週100）はスタイル転送を含むすべてを解放します。",
         "help_faq_q3_q": "スタイル転送の使い方は？",
         "help_faq_q3_a": "ProプランでStudioホームからスタイル転送を選び、部屋をアップロードして参照写真を追加します。参照の雰囲気で部屋がリデザインされます。",
         "help_faq_q4_q": "生成したデザインを商用利用できますか？",

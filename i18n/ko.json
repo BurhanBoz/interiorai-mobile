@@ -274,7 +274,7 @@
         "choose_palette": "팔레트 선택",
         "palette_helper": "큐레이션된 팔레트를 선택해 공간의 분위기를 정하세요. 비워두면 모델이 자체 톤을 선택합니다.",
         "welcome_banner_title": "Roomframe AI에 오신 것을 환영합니다",
-        "welcome_banner_body": "15 크레딧 + 7일간 PRO 액세스 — 스타일 전송, HD, Magic Edit 모두 잠금 해제.",
+        "welcome_banner_body": "10 크레딧 + 7일 PRO 이용 — 스타일 전송, HD, 매직 편집 모두 해제.",
         "welcome_banner_cta": "디자인 시작",
         "trial_countdown_label": "PRO 체험",
         "trial_countdown_days": "{{days}}일 남음",
@@ -471,7 +471,7 @@
         "toggle_annual_hint": "최고의 가치 — 연간 결제로 최대 30% 절약",
         "per_year": "/ 년",
         "plan_subtitle_yearly": "월 {{credits}}크레딧 · 연간 결제",
-        "plan_subtitle_daily": "모든 기능 체험용 15크레딧 — 카드 불필요",
+        "plan_subtitle_daily": "모든 기능을 써볼 10 크레딧 — 카드 불필요",
         "annual_savings_basic": "월간 대비 27% 절약",
         "annual_savings_pro": "월간 대비 29% 절약",
         "annual_savings_max": "월간 대비 30% 절약",
@@ -483,7 +483,11 @@
         "change_scheduled_title": "플랜 변경 예약됨",
         "change_scheduled_description": "Apple은 이 변경을 현재 결제 기간이 끝날 때 적용합니다. {{plan}}은(는) {{date}}에 시작되며, 그때까지 현재 플랜이 유지됩니다.",
         "scheduled_banner": "예약됨: {{date}}에 {{plan}}(으)로 전환됩니다.",
-        "deferred_notice": "이 변경은 현재 기간이 끝나는 시점({{date}})에 적용됩니다. 그때까지 현재 플랜이 유지되며, 사용하지 않은 크레딧은 새 플랜으로 이월되고 구매한 크레딧 팩은 항상 유지됩니다."
+        "deferred_notice": "이 변경은 현재 기간이 끝나는 시점({{date}})에 적용됩니다. 그때까지 현재 플랜이 유지되며, 사용하지 않은 크레딧은 새 플랜으로 이월되고 구매한 크레딧 팩은 항상 유지됩니다.",
+        "toggle_weekly": "주간",
+        "per_week": "/주",
+        "plan_subtitle_weekly": "매주 {{credits}} 크레딧 · 미사용분 이월(최대 {{cap}})",
+        "row_weekly_credits": "주간 크레딧"
     },
     "credits": {
         "title": "크레딧",
@@ -533,7 +537,8 @@
         "empty_cta": "디자인 시작",
         "empty_filtered_title": "이 보기에 없음",
         "empty_filtered_subtitle": "다른 필터로 전환하거나 다음 활동 후 다시 오세요.",
-        "ref_outdoor": "아웃도어 디자인"
+        "ref_outdoor": "아웃도어 디자인",
+        "ledger.weekly_renewal": "주간 크레딧 +{{count}}"
     },
     "credit_packs": {
         "title": "크레딧 팩",
@@ -801,9 +806,9 @@
         "help_mail_subject": "Interior AI — 지원 요청",
         "help_mail_body": "Interior AI 팀께,\n\n[여기에 문의 내용을 적어주세요]\n\n---\n버전: {{version}}\n플랜: {{plan}}\n사용자 ID: {{userId}}",
         "help_faq_q1_q": "크레딧은 어떻게 작동하나요?",
-        "help_faq_q1_a": "생성마다 크레딧이 소모됩니다: 표준 리디자인 3, HD 4, 빈 방 4(HD 5), Magic Edit 4(HD 5), 스타일 전송 6(HD 7), 4× 울트라 HD 업스케일 3(Pro). 플랜: Free는 체험용 15크레딧으로 시작해 이후 매일 1크레딧까지 충전되며, Base는 월 150크레딧, Pro는 월 400크레딧을 제공합니다.",
+        "help_faq_q1_a": "각 렌더링은 크레딧을 소모합니다: 표준 리디자인 3, HD 4, 빈 방 4(HD 5), 매직 편집 4(HD 5), 스타일 전송 6(HD 7), 확장 2, 4× Ultra HD 업스케일 3. 플랜: Free는 10 크레딧으로 시작해 매일 1개씩 충전(최대 5); Base는 주 50, Pro는 주 100 — 미사용분은 주간 지급량의 2배까지 이월됩니다.",
         "help_faq_q2_q": "플랜 간 차이는?",
-        "help_faq_q2_a": "모든 플랜이 최고의 AI 모델을 사용합니다. Free는 15크레딧(워터마크 포함)으로 시작 — 모두 사용하거나 첫 주가 끝나면 플랜을 선택해 계속하세요. Base(월 150)는 워터마크를 제거하고 리디자인·빈 방·HD를 포함합니다. Pro(월 400)는 Magic Edit, 스타일 전송, 4× 업스케일을 잠금 해제합니다.",
+        "help_faq_q2_a": "모든 플랜은 최고의 AI 모델로 작동합니다. Free는 10 크레딧(워터마크 포함)으로 시작 — 남은 크레딧은 그대로, 매일 무료 1 크레딧 추가. Base(주 50)는 워터마크를 없애고 스타일 전송을 제외한 모든 기능 제공. Pro(주 100)는 스타일 전송까지 전부 해제합니다.",
         "help_faq_q3_q": "스타일 전송 사용 방법은?",
         "help_faq_q3_a": "Pro 플랜에서 스튜디오 홈에서 스타일 전송을 선택하고 방을 업로드한 뒤 참조 사진을 추가하세요. 참조의 미학으로 방이 리디자인됩니다.",
         "help_faq_q4_q": "생성물을 상업적으로 사용할 수 있나요?",

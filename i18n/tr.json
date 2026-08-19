@@ -274,7 +274,7 @@
         "choose_palette": "Renk Paleti Seç",
         "palette_helper": "Odanın atmosferini belirlemek için hazırlanmış bir palet seç. Boş bırakırsan model kendi tonunu seçer.",
         "welcome_banner_title": "Roomframe AI'a hoş geldin",
-        "welcome_banner_body": "15 kredi + 7 gün PRO erişim — Stil Transferi, HD, Magic Edit açık.",
+        "welcome_banner_body": "10 kredi + 7 gün PRO erişimi — Stil Aktarımı, HD, Sihirli Düzenleme hepsi açık.",
         "welcome_banner_cta": "Tasarlamaya başla",
         "trial_countdown_label": "PRO deneme",
         "trial_countdown_days": "{{days}}g kaldı",
@@ -471,7 +471,7 @@
         "toggle_annual_hint": "En iyi değer — yıllık öde, %30'a varan tasarruf",
         "per_year": "/ yıl",
         "plan_subtitle_yearly": "Ayda {{credits}} kredi · yıllık faturalanır",
-        "plan_subtitle_daily": "Her şeyi denemen için 15 kredi — kart gerekmez",
+        "plan_subtitle_daily": "Her şeyi denemen için 10 kredi — kart gerekmez",
         "annual_savings_basic": "Aylığa göre %27 tasarruf",
         "annual_savings_pro": "Aylığa göre %29 tasarruf",
         "annual_savings_max": "Aylığa göre %30 tasarruf",
@@ -483,7 +483,11 @@
         "change_scheduled_title": "Plan değişikliği planlandı",
         "change_scheduled_description": "Apple bu değişikliği mevcut fatura döneminin sonunda uygular. {{plan}} {{date}} tarihinde başlayacak — o zamana kadar mevcut planın aktif kalır.",
         "scheduled_banner": "Planlandı: {{date}} tarihinde {{plan}} planına geçilecek.",
-        "deferred_notice": "Bu değişiklik mevcut dönemin sonunda ({{date}}) uygulanır. O güne kadar mevcut planın aktif kalır; kullanılmamış kredilerin yeni planına devrolur, satın aldığın kredi paketleri her zaman senindir."
+        "deferred_notice": "Bu değişiklik mevcut dönemin sonunda ({{date}}) uygulanır. O güne kadar mevcut planın aktif kalır; kullanılmamış kredilerin yeni planına devrolur, satın aldığın kredi paketleri her zaman senindir.",
+        "toggle_weekly": "HAFTALIK",
+        "per_week": "/hafta",
+        "plan_subtitle_weekly": "Haftada {{credits}} kredi · kullanılmayan birikir (en çok {{cap}})",
+        "row_weekly_credits": "Haftalık kredi"
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"
@@ -536,7 +540,8 @@
         "empty_cta": "Tasarlamaya başla",
         "empty_filtered_title": "Bu görünümde bir şey yok",
         "empty_filtered_subtitle": "Başka bir filtreye geç veya bir sonraki hareketinden sonra dön.",
-        "ref_outdoor": "Dış Mekân Tasarımı"
+        "ref_outdoor": "Dış Mekân Tasarımı",
+        "ledger.weekly_renewal": "Haftalık kredi +{{count}}"
     },
     "credit_packs": {
         "title": "Kredi Paketleri",
@@ -801,9 +806,9 @@
         "help_mail_subject": "Interior AI — Destek Talebi",
         "help_mail_body": "Merhaba Interior AI ekibi,\n\n[Sorununuzu burada açıklayın]\n\n---\nUygulama sürümü: {{version}}\nPlan: {{plan}}\nKullanıcı ID: {{userId}}",
         "help_faq_q1_q": "Krediler nasıl çalışır?",
-        "help_faq_q1_a": "Her üretim kredi harcar: Standart yeniden tasarım 3, HD 4, Boş Oda 4 (HD 5), Magic Edit 4 (HD 5), Stil Transferi 6 (HD 7), 4× Ultra HD Upscale 3 kredi (Pro). Paketler: Free her şeyi denemen için 15 kredi ile başlar, sonra günde 1 krediye tamamlanır; Base ayda 150, Pro ayda 400 kredi içerir.",
+        "help_faq_q1_a": "Her üretim kredi harcar: Standart redesign 3, HD 4, Boş Oda 4 (HD 5), Sihirli Düzenleme 4 (HD 5), Stil Aktarımı 6 (HD 7), Genişlet 2, 4× Ultra HD Büyütme 3. Planlar: Free her şeyi denemen için 10 krediyle başlar, sonra günde 1 kredi dolar (en çok 5); Base haftada 50, Pro haftada 100 kredi içerir — kullanılmayan krediler haftalık miktarın 2 katına kadar birikir.",
         "help_faq_q2_q": "Planlar arasındaki fark nedir?",
-        "help_faq_q2_a": "Her paket en iyi AI modellerimizle çalışır. Free, 15 kredi ile başlatır (filigranlı) — krediler bitince ya da ilk hafta dolunca devam etmek için bir paket seçersin. Base (ayda 150) filigranı kaldırır; Redesign, Boş Oda ve HD dahildir. Pro (ayda 400) Magic Edit, Stil Transferi ve 4× Ultra HD Upscale'i açar.",
+        "help_faq_q2_a": "Her plan en iyi yapay zekâ modellerimizle çalışır. Free 10 krediyle başlar (filigranlı) — kalan kredin sende kalır, üstüne günde 1 ücretsiz kredi. Base (haftada 50 kredi) filigranı kaldırır ve Stil Aktarımı dışında her şeyi kapsar. Pro (haftada 100 kredi) Stil Aktarımı dâhil hepsini açar.",
         "help_faq_q3_q": "Style Transfer'ı nasıl kullanırım?",
         "help_faq_q3_a": "Pro pakette Studio ana ekranından Stil Transferi'ni seç, odanı yükle, ardından bir referans fotoğrafı ekle. Odan, referansın estetiğiyle yeniden tasarlanır.",
         "help_faq_q4_q": "Üretimlerimi ticari kullanabilir miyim?",
