@@ -52,6 +52,11 @@ export const SUBSCRIPTION_PACKAGE_IDS: Record<string, string> = {
     PRO: "monthly_pro2",
     BASE_ANNUAL: "annual_base",
     PRO_ANNUAL: "annual_pro2",
+    // Pricing V4 (V59, 2026-08-19). Purchase resolution matches on the
+    // PRODUCT identifier first, so these package ids only matter as the
+    // offline-cache fallback — but they must exist for that path to work.
+    BASE_WEEKLY: "weekly_base",
+    PRO_WEEKLY: "weekly_pro",
 };
 
 /**
