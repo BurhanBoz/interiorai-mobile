@@ -1,13 +1,26 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
+import Constants from "expo-constants";
 import env, { isDev } from "@/config/environment";
+
+/**
+ * Build version, sent on every request as `X-App-Version`.
+ *
+ * The server uses it to withhold anything this binary can't render: 1.2.1
+ * splits the paywall on `code.endsWith("_ANNUAL")`, so weekly plans reached
+ * its monthly tab labelled "/month". A shipped app can't learn new billing
+ * periods, so the filtering has to happen server-side — and that only works
+ * if every build announces what it is.
+ */
+const APP_VERSION = Constants.expoConfig?.version ?? "0.0.0";
 
 const api = axios.create({
     baseURL: env.apiUrl,
     timeout: 180000,
     headers: {
         "Content-Type": "application/json",
+        "X-App-Version": APP_VERSION,
     },
 });
 
