@@ -486,7 +486,7 @@
         "deferred_notice": "이 변경은 현재 기간이 끝나는 시점({{date}})에 적용됩니다. 그때까지 현재 플랜이 유지되며, 사용하지 않은 크레딧은 새 플랜으로 이월되고 구매한 크레딧 팩은 항상 유지됩니다.",
         "toggle_weekly": "주간",
         "per_week": "/주",
-        "plan_subtitle_weekly": "매주 {{credits}} 크레딧 · 미사용분 이월(최대 {{cap}})",
+        "plan_subtitle_weekly": "매주 {{credits}} 크레딧 · 미사용분 이월",
         "row_weekly_credits": "주간 크레딧"
     },
     "credits": {

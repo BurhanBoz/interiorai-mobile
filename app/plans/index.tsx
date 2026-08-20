@@ -430,10 +430,7 @@ function PlanCard({
             : plan.billingPeriod === "YEARLY"
             ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits })
             : plan.billingPeriod === "WEEKLY"
-            ? t("plans.plan_subtitle_weekly", {
-                  credits: plan.monthlyCredits,
-                  cap: plan.monthlyCredits * 2,
-              })
+            ? t("plans.plan_subtitle_weekly", { credits: plan.monthlyCredits })
             : t("plans.plan_subtitle", { credits: plan.monthlyCredits });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");

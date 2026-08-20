@@ -486,7 +486,7 @@
         "deferred_notice": "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours.",
         "toggle_weekly": "WEEKLY",
         "per_week": "/week",
-        "plan_subtitle_weekly": "{{credits}} credits every week · unused roll over (up to {{cap}})",
+        "plan_subtitle_weekly": "{{credits}} credits every week · unused roll over",
         "row_weekly_credits": "Weekly credits"
     },
     "credits_bridge": {

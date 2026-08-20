@@ -486,7 +486,7 @@
         "deferred_notice": "Bu değişiklik mevcut dönemin sonunda ({{date}}) uygulanır. O güne kadar mevcut planın aktif kalır; kullanılmamış kredilerin yeni planına devrolur, satın aldığın kredi paketleri her zaman senindir.",
         "toggle_weekly": "HAFTALIK",
         "per_week": "/hafta",
-        "plan_subtitle_weekly": "Haftada {{credits}} kredi · kullanılmayan birikir (en çok {{cap}})",
+        "plan_subtitle_weekly": "Haftada {{credits}} kredi · kullanılmayan birikir",
         "row_weekly_credits": "Haftalık kredi"
     },
     "credits_bridge": {

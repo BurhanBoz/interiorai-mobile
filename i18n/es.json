@@ -486,7 +486,7 @@
         "deferred_notice": "Este cambio se aplica al final de tu período actual ({{date}}). Hasta entonces tu plan actual sigue activo; los créditos no usados pasan al nuevo plan y los packs comprados siempre son tuyos.",
         "toggle_weekly": "SEMANAL",
         "per_week": "/semana",
-        "plan_subtitle_weekly": "{{credits}} créditos por semana · los no usados se acumulan (hasta {{cap}})",
+        "plan_subtitle_weekly": "{{credits}} créditos por semana · los no usados se acumulan",
         "row_weekly_credits": "Créditos semanales"
     },
     "credits": {

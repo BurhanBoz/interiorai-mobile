@@ -486,7 +486,7 @@
         "deferred_notice": "Diese Änderung wird am Ende deiner aktuellen Periode ({{date}}) wirksam. Bis dahin bleibt dein aktueller Plan aktiv; ungenutzte Credits werden in den neuen Plan übernommen, gekaufte Credit-Pakete bleiben immer erhalten.",
         "toggle_weekly": "WÖCHENTLICH",
         "per_week": "/Woche",
-        "plan_subtitle_weekly": "{{credits}} Credits pro Woche · ungenutzte bleiben (bis {{cap}})",
+        "plan_subtitle_weekly": "{{credits}} Credits pro Woche · ungenutzte bleiben",
         "row_weekly_credits": "Wöchentliche Credits"
     },
     "credits": {

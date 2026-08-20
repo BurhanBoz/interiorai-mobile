@@ -486,7 +486,7 @@
         "deferred_notice": "この変更は現在の期間終了時（{{date}}）に適用されます。それまでは現在のプランが有効です。未使用のクレジットは新しいプランに引き継がれ、購入したクレジットパックは常に保持されます。",
         "toggle_weekly": "週額",
         "per_week": "/週",
-        "plan_subtitle_weekly": "毎週{{credits}}クレジット · 未使用分は繰り越し（最大{{cap}}）",
+        "plan_subtitle_weekly": "毎週{{credits}}クレジット · 未使用分は繰り越し",
         "row_weekly_credits": "週間クレジット"
     },
     "credits": {
