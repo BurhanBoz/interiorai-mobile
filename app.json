@@ -87,6 +87,17 @@
       "eas": {
         "projectId": "2dc9b11d-0498-4241-9fb6-d49ae99bfbe9"
       }
+    },
+    "locales": {
+      "en": "./i18n/infoPlist/en.json",
+      "tr": "./i18n/infoPlist/tr.json",
+      "de": "./i18n/infoPlist/de.json",
+      "fr": "./i18n/infoPlist/fr.json",
+      "es": "./i18n/infoPlist/es.json",
+      "it": "./i18n/infoPlist/it.json",
+      "ja": "./i18n/infoPlist/ja.json",
+      "ko": "./i18n/infoPlist/ko.json",
+      "ar": "./i18n/infoPlist/ar.json"
     }
   }
 }
