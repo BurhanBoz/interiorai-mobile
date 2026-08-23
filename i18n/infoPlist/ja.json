@@ -1,0 +1,5 @@
+{
+  "NSPhotoLibraryUsageDescription": "作成したデザインを「写真」に保存します。保存しておいたり、他のアプリで共有したりできます。",
+  "NSPhotoLibraryAddUsageDescription": "作成したデザインを「写真」に保存します。保存しておいたり、他のアプリで共有したりできます。",
+  "NSCameraUsageDescription": "模様替えしたいお部屋を撮影するためにカメラを使用します。"
+}
