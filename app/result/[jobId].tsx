@@ -986,7 +986,17 @@ export default function ResultDetailScreen() {
             title={t("result.new_design")}
             variant="secondary"
             icon="refresh"
+            // `iconLeft` is not a style preference here. The secondary variant
+            // has never been used with a RIGHT-hand icon anywhere in the app —
+            // this was its first use, and it shipped in 1.3.1(40) rendering the
+            // label and the glyph on two lines with no outline. The one proven
+            // secondary+icon path is profile-edit's, and it passes iconLeft.
+            iconLeft
             fullWidth
+            // Belt and braces: the row is re-asserted through `style`, which is
+            // applied after the variant's own container style. Whatever collapsed
+            // the layout, it cannot collapse through an explicit declaration.
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}
             onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
           />
         </View>
