@@ -63,6 +63,7 @@ function TransferTeaser({
 }: {
     media: Extract<FeatureMedia, { kind: "transfer" }>;
 }) {
+    const { t } = useTranslation();
     // Two independent values instead of one multi-segment loop value
     // (2026-07-11 tester flash): with act-interpolation cliffs, a native-
     // driver loop seam could flash the after for a frame right as the
@@ -220,7 +221,7 @@ function TransferTeaser({
                                 opacity: beforeTagOpacity,
                               }}
                         >
-                            BEFORE
+                            {t("result.before")}
                         </Animated.Text>
                         <Animated.Text
                             style={{
@@ -230,7 +231,7 @@ function TransferTeaser({
                                 opacity: afterOpacity,
                               }}
                         >
-                            AFTER
+                            {t("result.after")}
                         </Animated.Text>
                     </View>
                 </View>
@@ -255,6 +256,7 @@ function PaintTeaser({
 }: {
     media: Extract<FeatureMedia, { kind: "paint" }>;
 }) {
+    const { t } = useTranslation();
     const wipe = useRef(new Animated.Value(0)).current;   // 0 unpainted ↔ 1 painted
     const after = useRef(new Animated.Value(0)).current;  // 0 hidden ↔ 1 shown
     const [mediaW, setMediaW] = useState(0);
@@ -372,7 +374,7 @@ function PaintTeaser({
                                 opacity: beforeTagOpacity,
                               }}
                         >
-                            BEFORE
+                            {t("result.before")}
                         </Animated.Text>
                         <Animated.Text
                             style={{
@@ -382,7 +384,7 @@ function PaintTeaser({
                                 opacity: afterOpacity,
                               }}
                         >
-                            AFTER
+                            {t("result.after")}
                         </Animated.Text>
                     </View>
                 </View>
@@ -394,6 +396,7 @@ function PaintTeaser({
 /* ───────── Before/after crossfade teaser ───────── */
 
 function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
+    const { t } = useTranslation();
     const fade = useRef(new Animated.Value(0)).current;
     // Ken Burns — a barely-there push-in that breathes with the crossfade;
     // premium/soft, never busy.
@@ -520,7 +523,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                                 }),
                               }}
                         >
-                            BEFORE
+                            {t("result.before")}
                         </Animated.Text>
                         <Animated.Text
                             style={{
@@ -530,7 +533,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                                 opacity: fade,
                               }}
                         >
-                            AFTER
+                            {t("result.after")}
                         </Animated.Text>
                     </View>
                 </View>
