@@ -711,7 +711,8 @@
         "expand_body": "Usa {{cost}} créditos. Elige cómo extender el encuadre:",
         "expand_zoom_15": "Alejar 1,5×",
         "expand_zoom_2": "Alejar 2×",
-        "expand_square": "Hacer cuadrada"
+        "expand_square": "Hacer cuadrada",
+        "try_another_style": "Probar otro estilo"
     },
     "settings": {
         "notifications_title": "Notificaciones",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "Ofertas especiales",
         "settings_reengagement_label": "Recordatorios de regreso",
         "settings_quiet_hours_label": "Horas silenciosas",
-        "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (auto)",
+        "unsaved_design_title": "Tu diseño sigue esperando",
+        "unsaved_design_body": "Ayer creaste algo: guárdalo antes de que se pierda.",
+        "reengagement_title": "Tu habitación te echa de menos",
+        "reengagement_body": "Hay nuevos estilos. Elige una foto y reimagínala."
     },
     "permissions": {
         "camera_title": "Se necesita acceso a la cámara",

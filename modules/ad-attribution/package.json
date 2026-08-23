@@ -1,0 +1,9 @@
+{
+  "name": "ad-attribution",
+  "version": "1.0.0",
+  "description": "Apple Search Ads attribution token (AdServices) — local Expo module",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Roomframe AI",
+  "homepage": "https://roomframeai.com"
+}

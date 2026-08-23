@@ -711,7 +711,8 @@
         "expand_body": "{{cost}} kredi kullanılır. Kadrajı nasıl genişletelim?",
         "expand_zoom_15": "1,5× uzaklaştır",
         "expand_zoom_2": "2× uzaklaştır",
-        "expand_square": "Kare yap"
+        "expand_square": "Kare yap",
+        "try_another_style": "Başka stil dene"
     },
     "settings": {
         "notifications_title": "Bildirimler",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "Özel teklifler",
         "settings_reengagement_label": "Geri dönüş hatırlatıcıları",
         "settings_quiet_hours_label": "Sessiz saatler",
-        "settings_quiet_hours_value": "22:00 – 08:00 (otomatik)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (otomatik)",
+        "unsaved_design_title": "Tasarımın hâlâ seni bekliyor",
+        "unsaved_design_body": "Dün bir şey yarattın — kaybolmadan önce kaydet.",
+        "reengagement_title": "Odan seni özledi",
+        "reengagement_body": "Yeni stiller hazır. Bir fotoğraf seç, nasıl dönüştüğünü gör."
     },
     "permissions": {
         "camera_title": "Kamera İzni Gerekli",

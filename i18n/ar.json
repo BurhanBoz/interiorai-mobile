@@ -711,7 +711,8 @@
         "expand_body": "سيتم استخدام {{cost}} رصيد. اختر طريقة توسيع الإطار:",
         "expand_zoom_15": "تصغير 1.5×",
         "expand_zoom_2": "تصغير 2×",
-        "expand_square": "جعلها مربعة"
+        "expand_square": "جعلها مربعة",
+        "try_another_style": "جرّب نمطًا آخر"
     },
     "settings": {
         "notifications_title": "الإشعارات",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "عروض خاصة",
         "settings_reengagement_label": "تذكيرات العودة",
         "settings_quiet_hours_label": "ساعات الهدوء",
-        "settings_quiet_hours_value": "22:00 – 08:00 (تلقائي)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (تلقائي)",
+        "unsaved_design_title": "تصميمك ما زال بانتظارك",
+        "unsaved_design_body": "أنشأت شيئًا بالأمس — احفظه قبل أن يضيع.",
+        "reengagement_title": "غرفتك تفتقدك",
+        "reengagement_body": "أنماط جديدة بانتظارك. اختر صورة وشاهدها من جديد."
     },
     "permissions": {
         "camera_title": "يلزم الوصول إلى الكاميرا",

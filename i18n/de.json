@@ -711,7 +711,8 @@
         "expand_body": "Verbraucht {{cost}} Credits. Wie soll der Rahmen erweitert werden?",
         "expand_zoom_15": "1,5× herauszoomen",
         "expand_zoom_2": "2× herauszoomen",
-        "expand_square": "Quadratisch machen"
+        "expand_square": "Quadratisch machen",
+        "try_another_style": "Anderen Stil testen"
     },
     "settings": {
         "notifications_title": "Benachrichtigungen",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "Sonderangebote",
         "settings_reengagement_label": "Komm-zurück-Erinnerungen",
         "settings_quiet_hours_label": "Ruhezeiten",
-        "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (auto)",
+        "unsaved_design_title": "Dein Entwurf wartet noch",
+        "unsaved_design_body": "Du hast gestern etwas erstellt — sichere es, bevor es verloren geht.",
+        "reengagement_title": "Dein Raum vermisst dich",
+        "reengagement_body": "Neue Stile warten. Wähle ein Foto und sieh es neu gedacht."
     },
     "permissions": {
         "camera_title": "Kamerazugriff erforderlich",

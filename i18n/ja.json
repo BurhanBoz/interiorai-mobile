@@ -711,7 +711,8 @@
         "expand_body": "{{cost}}クレジットを使用します。拡張方法を選択してください：",
         "expand_zoom_15": "1.5×ズームアウト",
         "expand_zoom_2": "2×ズームアウト",
-        "expand_square": "正方形にする"
+        "expand_square": "正方形にする",
+        "try_another_style": "別のスタイルを試す"
     },
     "settings": {
         "notifications_title": "通知",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "特別オファー",
         "settings_reengagement_label": "復帰リマインダー",
         "settings_quiet_hours_label": "サイレント時間",
-        "settings_quiet_hours_value": "22:00 – 08:00 (自動)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (自動)",
+        "unsaved_design_title": "デザインがまだ待っています",
+        "unsaved_design_body": "昨日つくったお部屋、消えてしまう前に保存しませんか。",
+        "reengagement_title": "お部屋があなたを待っています",
+        "reengagement_body": "新しいスタイルが登場。写真を選んで生まれ変わらせましょう。"
     },
     "permissions": {
         "camera_title": "カメラへのアクセスが必要です",

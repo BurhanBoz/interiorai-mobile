@@ -21,6 +21,7 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -34,6 +35,7 @@ import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
 import { useReviewPrompt } from "@/hooks/useReviewPrompt";
+import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -100,6 +102,7 @@ export default function ResultDetailScreen() {
   // override in ModelRoutingServiceImpl + JobServiceImpl.validateEntitlement.
   const { enabled: upscaleFeatureEnabled } = useEntitlement("ULTRA_HD_UPSCALE");
   const resetStudio = useStudioStore(s => s.reset);
+  const setDesignStyle = useStudioStore(s => s.setDesignStyle);
   // An "already upscaled" job is one where the feature_code itself is the
   // upscale chain (jobType="UPSCALE" on the backend → featureCode
   // "ULTRA_HD_UPSCALE"). Allowing a second upscale on top of that produces
@@ -161,6 +164,10 @@ export default function ResultDetailScreen() {
   // ASO: single, well-timed rating ask — fires on the user's 2nd successfully
   // viewed result (see useReviewPrompt for the full strategy).
   useReviewPrompt(outputs.length > 0);
+  // Notification permission, asked on the 3rd success — deliberately behind
+  // the rating prompt (2nd success). Two system sheets in one visit gets both
+  // dismissed, and on iOS the push prompt is one-shot forever.
+  usePushPermissionAsk(outputs.length > 0);
   useAccountPrompt(outputs.length > 0);
 
   /**
@@ -954,11 +961,32 @@ export default function ResultDetailScreen() {
           </View>
         )}
 
+        {/* Two ways back into the studio — they are NOT the same journey.
+            "Try another style" keeps the photo the user already uploaded and
+            only clears the style, so a second render is two taps instead of
+            the eight that re-picking a photo costs. That gap is the single
+            biggest reason a session ended at one render. "New design" stays
+            below for a genuinely fresh start. */}
+        <View style={{ marginBottom: 12 }}>
+          <PrimaryButton
+            label={t("result.try_another_style")}
+            icon="color-palette-outline"
+            onPress={() => {
+              // Keep the photo, drop the style: the studio's style step is the
+              // next screen, and everything downstream re-derives from it.
+              setDesignStyle(null);
+              router.push("/studio/style");
+            }}
+          />
+        </View>
+
         {/* Redesign Again CTA */}
         <View style={{ marginBottom: 40 }}>
-          <PrimaryButton
-            label={t("result.new_design")}
+          <Button
+            title={t("result.new_design")}
+            variant="secondary"
             icon="refresh"
+            fullWidth
             onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
           />
         </View>

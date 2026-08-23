@@ -711,7 +711,8 @@
         "expand_body": "Uses {{cost}} credits. Choose how to extend the frame:",
         "expand_zoom_15": "Zoom out 1.5×",
         "expand_zoom_2": "Zoom out 2×",
-        "expand_square": "Make square"
+        "expand_square": "Make square",
+        "try_another_style": "Try another style"
     },
     "settings": {
         "notifications_title": "Notifications",
@@ -950,7 +951,11 @@
         "settings_marketing_offers_label": "Special offers",
         "settings_reengagement_label": "Come back reminders",
         "settings_quiet_hours_label": "Quiet hours",
-        "settings_quiet_hours_value": "22:00 – 08:00 (auto)"
+        "settings_quiet_hours_value": "22:00 – 08:00 (auto)",
+        "unsaved_design_title": "Your design is still waiting",
+        "unsaved_design_body": "You created something yesterday — save it before it slips away.",
+        "reengagement_title": "Your room misses you",
+        "reengagement_body": "New styles are waiting. Pick a photo and see it reimagined."
     },
     "permissions": {
         "camera_title": "Camera Access Needed",

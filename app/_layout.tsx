@@ -13,6 +13,8 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { initializeIAP } from "@/services/iap";
+import { sendHeartbeat, submitAttributionToken } from "@/services/telemetry";
+import { syncPushTokenIfPermitted } from "@/hooks/usePushRegistration";
 import { AppSplash } from "@/components/ui/AppSplash";
 import { AiConsentSheet } from "@/components/ui/AiConsentSheet";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -75,14 +77,40 @@ export default function RootLayout() {
   // first request and get bounced to login. On every return to foreground we
   // silently exchange the token (backend accepts expired ones within a
   // 30-day sliding window), so the session just continues.
+  //
+  // V63: the same foreground event is also the session signal. Ordering is not
+  // incidental — the heartbeat must run AFTER the token refresh, or the first
+  // request of the day races an expired JWT and the session is lost exactly on
+  // the returning-user days that D1/D7 retention is measured from.
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
-        import("@/services/api").then(({ ensureFreshSession }) => ensureFreshSession());
+        import("@/services/api")
+          .then(({ ensureFreshSession }) => ensureFreshSession())
+          .then(() => {
+            if (useAuthStore.getState().isAuthenticated) sendHeartbeat();
+          })
+          .catch(() => {});
       }
     });
     return () => sub.remove();
   }, []);
+
+  // Cold-start telemetry (V63). All three are fire-and-forget: none of them
+  // may delay or break the first screen.
+  //
+  //   • heartbeat   — opens/extends the session that retention is computed from
+  //   • attribution — one-shot per install; without it Search Ads spend is blind
+  //   • push token  — iOS rotates device tokens silently, so it is re-synced on
+  //                   every launch for users who already granted permission
+  //                   (the permission ASK lives on the result screen instead,
+  //                    where the user has just seen something they liked)
+  useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+    sendHeartbeat();
+    submitAttributionToken();
+    syncPushTokenIfPermitted();
+  }, [isAuthenticated, isLoading]);
 
   // Dismiss the branded splash once fonts have loaded AND the dwell timer
   // has elapsed. This runs over the native Expo splash — user sees one

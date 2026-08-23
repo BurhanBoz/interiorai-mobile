@@ -133,5 +133,13 @@ export async function rateOutput(
  * is enjoying their render. Idempotent server-side (append-once).
  */
 export function sendOutputSignal(outputId: string, type: "FAVORITE" | "DOWNLOAD"): void {
-    api.post(`/api/jobs/outputs/${outputId}/signals`, { type }).catch(() => {});
+    api.post(`/api/jobs/outputs/${outputId}/signals`, { type }).catch((e) => {
+        // Still fire-and-forget for the USER — nothing is surfaced, nothing is
+        // retried. But swallowing the error completely made a real question
+        // unanswerable: `output_signals` was empty in production and there was
+        // no way to tell "nobody saved anything" from "the call has been
+        // failing since launch". One dev-mode line closes that gap, and the
+        // unsaved-design reminder depends on this table being trustworthy.
+        if (__DEV__) console.warn("[SIGNAL] not recorded:", type, e?.message ?? e);
+    });
 }
