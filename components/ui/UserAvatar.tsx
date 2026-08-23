@@ -1,4 +1,5 @@
 import { View, Text, ViewStyle, Pressable } from "react-native";
+import { theme } from "@/config/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { router } from "expo-router";
@@ -37,29 +38,29 @@ interface UserAvatarProps {
 
 const SIZE_MAP = {
     sm: {
+        ...theme.text.caption,
         width: 32,
         height: 32,
-        borderRadius: 16,
+        borderRadius: theme.radius.md,
         iconSize: 14,
-        fontSize: 11,
-    },
+      },
     md: {
+        ...theme.text.body,
         width: 48,
         height: 48,
-        borderRadius: 24,
+        borderRadius: theme.radius.lg,
         iconSize: 20,
-        fontSize: 14,
-    },
+      },
     // Hero is now a circle with sans-serif initials — the previous 108×108
     // serif "MT" at letterSpacing 2 read as a brand logo, not user
     // identity. A plain circle at 80 says "this is you" immediately.
     hero: {
+        ...theme.text.headline,
         width: 80,
         height: 80,
         borderRadius: 40,
         iconSize: 32,
-        fontSize: 22,
-    },
+      },
 } as const;
 
 export function UserAvatar({ size = "sm", initialsOverride, style, onPress }: UserAvatarProps) {

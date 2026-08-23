@@ -15,6 +15,19 @@ const TERMINAL_STATUSES: JobStatus[] = ["COMPLETED", "FAILED", "CANCELLED"];
 export const DEFAULT_JOB_TIMEOUT_MS = 3 * 60 * 1000;
 
 /**
+ * Adaptive cadence (P2-10). A flat 3s tick made every generation feel ~1.5s
+ * slower than it was: the fast ones finish inside the first interval and then
+ * sit there, finished, waiting for a timer. Poll tightly while the user is
+ * still watching the progress screen with fresh attention, then back off to
+ * the steady rate — completion normally arrives by webhook anyway, so this
+ * loop is a fallback, not the primary signal.
+ *
+ * Cost: ~12 extra requests per job, all of them cheap reads.
+ */
+const EAGER_INTERVAL_MS = 1200;
+const EAGER_WINDOW_MS = 15 * 1000;
+
+/**
  * Poll a job until it terminates or the {@code timeoutMs} ceiling is hit.
  *
  * @param onUpdate  fired on every successful fetch with the latest snapshot
@@ -69,13 +82,26 @@ export function useJobPolling(
         };
 
         poll();
-        timerRef.current = setInterval(poll, intervalMs);
+        // Start eager, then step down once. The step-down replaces the
+        // interval rather than layering a second one — two live intervals
+        // would double the request rate for the rest of the job.
+        const eager = Math.min(EAGER_INTERVAL_MS, intervalMs);
+        timerRef.current = setInterval(poll, eager);
+        const stepDown = setTimeout(() => {
+            if (!timerRef.current) return; // already terminal
+            clearInterval(timerRef.current);
+            timerRef.current = setInterval(poll, intervalMs);
+        }, EAGER_WINDOW_MS);
+
         timeoutRef.current = setTimeout(() => {
             stop();
             onTimeoutRef.current?.();
         }, timeoutMs);
 
-        return stop;
+        return () => {
+            clearTimeout(stepDown);
+            stop();
+        };
     }, [jobId, intervalMs, timeoutMs, stop]);
 
     return { stop };

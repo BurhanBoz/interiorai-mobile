@@ -27,13 +27,11 @@ export function LegalFooter() {
         >
             <Text
                 style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    lineHeight: 16,
+                    ...theme.text.caption,
                     textAlign: "center",
                     color: theme.color.onSurfaceVariant,
                     opacity: 0.7,
-                }}
+                  }}
             >
                 {t("auth.legal_agreement")}{" "}
                 <Text

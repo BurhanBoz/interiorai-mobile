@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { theme } from "@/config/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -20,10 +21,14 @@ import { useCreditStore } from "@/stores/creditStore";
  * {@link TrialCountdownBadge}; this is the full announcement card
  * shown on studio first-render only.
  */
-export function WelcomeTrialBanner() {
+export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
     const { t } = useTranslation();
     const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
     const expiresAt = useCreditStore((s) => s.welcomeBonusExpiresAt);
+    // Visibility lifecycle is owned by the PARENT (studio first-visit intro,
+    // 2026-07 review round 2) — this card only checks trial state and
+    // forwards the X to onClose. The compact TrialCountdownBadge in the
+    // header stays as the persistent reminder until expiry.
 
     if (!welcomeBonusActive || !expiresAt) return null;
 
@@ -32,7 +37,7 @@ export function WelcomeTrialBanner() {
             style={{
                 marginHorizontal: 24,
                 marginBottom: 16,
-                borderRadius: 16,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.4)",
@@ -53,14 +58,32 @@ export function WelcomeTrialBanner() {
                     <Ionicons name="sparkles" size={18} color="#E0C29A" />
                     <Text
                         className="font-headline"
-                        style={{ fontSize: 18, color: "#E5E2E1" }}
+                        style={{ ...theme.text.title, color: "#E5E2E1", flex: 1 }}
                     >
                         {t("studio.welcome_banner_title")}
                     </Text>
+                    {onClose && (
+                    <Pressable
+                        onPress={onClose}
+                        hitSlop={12}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("common.close")}
+                        style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: theme.radius.md,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(19,19,19,0.35)",
+                        }}
+                    >
+                        <Ionicons name="close" size={16} color="#D0C5B8" />
+                    </Pressable>
+                    )}
                 </View>
                 <Text
                     className="font-body"
-                    style={{ fontSize: 13, lineHeight: 19, color: "#D0C5B8" }}
+                    style={{ ...theme.text.body, color: "#D0C5B8" }}
                 >
                     {t("studio.welcome_banner_body")}
                 </Text>
@@ -103,7 +126,7 @@ export function TrialCountdownBadge() {
                 gap: 6,
                 paddingHorizontal: 10,
                 paddingVertical: 5,
-                borderRadius: 999,
+                borderRadius: theme.radius.pill,
                 backgroundColor: "rgba(225,195,155,0.14)",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.45)",
@@ -113,11 +136,9 @@ export function TrialCountdownBadge() {
             <Text
                 className="font-label"
                 style={{
-                    fontSize: 11,
-                    letterSpacing: 0.6,
+                    ...theme.text.caption,
                     color: "#E0C29A",
-                    fontWeight: "600",
-                }}
+                  }}
             >
                 {t("studio.trial_countdown_label")} · {remainingLabel}
             </Text>

@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { TopBar } from "@/components/layout/TopBar";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 
@@ -26,10 +27,10 @@ export default function ErrorScreen() {
   const { t } = useTranslation();
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       <TopBar
         showBranding
-        rightElement={<UserAvatar size="sm" onPress />}
+        rightElement={<AvatarMenu />}
       />
 
       <View
@@ -57,7 +58,7 @@ export default function ErrorScreen() {
           style={{
             width: 112,
             height: 112,
-            borderRadius: 24,
+            borderRadius: theme.radius.lg,
             backgroundColor: "rgba(225,195,155,0.06)",
             borderWidth: 1,
             borderColor: "rgba(225,195,155,0.22)",
@@ -76,10 +77,7 @@ export default function ErrorScreen() {
 
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 30,
-            lineHeight: 36,
-            letterSpacing: -0.3,
+            ...theme.text.display,
             color: theme.color.onSurface,
             textAlign: "center",
             marginBottom: 14,
@@ -90,9 +88,7 @@ export default function ErrorScreen() {
 
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 14,
-            lineHeight: 22,
+            ...theme.text.body,
             color: theme.color.onSurfaceVariant,
             textAlign: "center",
             maxWidth: 320,

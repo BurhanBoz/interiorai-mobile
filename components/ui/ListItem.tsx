@@ -83,7 +83,7 @@ export function ListItem({
           style={{
             width: 40,
             height: 40,
-            borderRadius: 12,
+            borderRadius: theme.radius.sm,
             backgroundColor: "rgba(225,195,155,0.08)",
             borderWidth: 1,
             borderColor: "rgba(225,195,155,0.12)",
@@ -97,9 +97,7 @@ export function ListItem({
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontFamily: "Inter-Medium",
-            fontSize: 15,
-            letterSpacing: 0.1,
+            ...theme.text.subtitle,
             color: labelColor,
           }}
         >
@@ -108,9 +106,7 @@ export function ListItem({
         {description ? (
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 12,
-              lineHeight: 16,
+              ...theme.text.caption,
               color: theme.color.onSurfaceMuted,
               marginTop: 2,
             }}
@@ -127,10 +123,8 @@ export function ListItem({
           {meta ? (
             <Text
               style={{
-                fontFamily: "Inter-Medium",
-                fontSize: 13,
+                ...theme.text.subtitle,
                 color: theme.color.onSurfaceVariant,
-                letterSpacing: 0.2,
               }}
             >
               {meta}
@@ -175,7 +169,7 @@ export function ListItem({
           backgroundColor: pressed
             ? "rgba(225,195,155,0.04)"
             : "transparent",
-          borderRadius: 8,
+          borderRadius: theme.radius.sm,
         })}
       >
         {content}

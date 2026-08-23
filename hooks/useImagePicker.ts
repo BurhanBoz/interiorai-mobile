@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { uploadImage } from "@/services/files";
+import { useAiConsentStore } from "@/stores/aiConsentStore";
 
 // Upload-side cap: iPhone photos can be 8-12 MB at 4032×3024; S3 PUT is
 // metered and Replicate pulls the image each prediction, so shrinking to
@@ -82,11 +83,24 @@ export function useImagePicker() {
     };
 
     const pickImage = async (source: "camera" | "gallery" = "gallery") => {
+        // App Store 5.1.2(i): before ANY photo leaves the device we must
+        // disclose what is sent and to whom, and get explicit consent.
+        // Every upload flow (redesign, empty room, Magic Edit, Style
+        // Transfer reference) funnels through this hook, so this single
+        // gate covers them all. Asked once, persisted; declining aborts.
+        if (!(await useAiConsentStore.getState().request())) return null;
+
         if (!(await ensurePermission(source))) return null;
 
         const options: ImagePicker.ImagePickerOptions = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
+            // No iOS crop step (2026-07-13 founder call): the frame UI made
+            // users think they had to cut their photo, and the models want
+            // the WHOLE room anyway — aspectRatioFor() already derives the
+            // model ratio from the full image, and generation quality is
+            // higher with more scene context. Camera keeps its native
+            // "Use Photo" confirmation; gallery picks return immediately.
+            allowsEditing: false,
             quality: 1, // keep raw quality from the picker; we downscale ourselves
         };
 

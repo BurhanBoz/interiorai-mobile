@@ -64,10 +64,7 @@ export function SectionHeader({
         {eyebrow ? (
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 1.8,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "rgba(225,195,155,0.62)",
               marginBottom: 8,
             }}
@@ -77,10 +74,7 @@ export function SectionHeader({
         ) : null}
         <Text
           style={{
-            fontFamily: serif ? "NotoSerif" : "Inter-SemiBold",
-            fontSize: serif ? 24 : 18,
-            lineHeight: serif ? 30 : 24,
-            letterSpacing: serif ? -0.2 : 0.1,
+            ...(serif ? theme.text.headline : theme.text.subtitle),
             color: theme.color.onSurface,
             textAlign: isCenter ? "center" : "left",
           }}
@@ -102,9 +96,7 @@ export function SectionHeader({
         {caption ? (
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 13,
-              lineHeight: 18,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               marginTop: 6,
               textAlign: isCenter ? "center" : "left",
@@ -130,10 +122,8 @@ export function SectionHeader({
           >
             <Text
               style={{
-                fontFamily: "Inter-Medium",
-                fontSize: 13,
+                ...theme.text.subtitle,
                 color: theme.color.goldMidday,
-                letterSpacing: 0.2,
               }}
             >
               {action}

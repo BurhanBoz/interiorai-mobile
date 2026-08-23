@@ -1,13 +1,26 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
+import Constants from "expo-constants";
 import env, { isDev } from "@/config/environment";
+
+/**
+ * Build version, sent on every request as `X-App-Version`.
+ *
+ * The server uses it to withhold anything this binary can't render: 1.2.1
+ * splits the paywall on `code.endsWith("_ANNUAL")`, so weekly plans reached
+ * its monthly tab labelled "/month". A shipped app can't learn new billing
+ * periods, so the filtering has to happen server-side — and that only works
+ * if every build announces what it is.
+ */
+const APP_VERSION = Constants.expoConfig?.version ?? "0.0.0";
 
 const api = axios.create({
     baseURL: env.apiUrl,
     timeout: 180000,
     headers: {
         "Content-Type": "application/json",
+        "X-App-Version": APP_VERSION,
     },
 });
 
@@ -99,10 +112,18 @@ api.interceptors.response.use(
                 onTokenRefreshed(newToken);
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
                 return api(originalRequest);
-            } catch {
+            } catch (refreshError: any) {
                 isRefreshing = false;
                 refreshSubscribers = [];
-                await forceLogout();
+                // Only end the session when the SERVER rejected the refresh
+                // (401/403 = token unusable even under the sliding window).
+                // A network failure — airplane mode, flaky cell on resume —
+                // must never log the user out (2026-07-18 founder report:
+                // backgrounded app → reopened → dumped to login).
+                const refreshStatus = refreshError?.response?.status;
+                if (refreshStatus === 401 || refreshStatus === 403) {
+                    await forceLogout();
+                }
                 return Promise.reject(error);
             }
         }
@@ -135,6 +156,24 @@ async function forceLogout() {
         router.replace("/(auth)/onboarding");
     } catch {
         // ignore — root layout will redirect on next render
+    }
+}
+
+/**
+ * Silently refresh the JWT if it is expired or near expiry. Called on app
+ * foreground (root layout AppState hook) so the FIRST request after a long
+ * background period doesn't race an expired token. Backend accepts expired
+ * tokens at /refresh within a 30-day sliding window (2026-07-18), so this
+ * succeeds even days after the 24h token lifetime. All failures are silent —
+ * the interceptor chain remains the authority.
+ */
+export async function ensureFreshSession(): Promise<void> {
+    try {
+        const token = await SecureStore.getItemAsync("auth_token");
+        if (!token) return;
+        await tryRefreshToken(token);
+    } catch {
+        // Silent: network blips on resume are normal; interceptors handle 401s.
     }
 }
 

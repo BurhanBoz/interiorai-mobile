@@ -17,7 +17,7 @@ import { resolveFeatureCode } from "@/utils/featureCode";
  */
 export function useCreditCost() {
     const rules = useEffectiveCreditRules();
-    const { mode, qualityTier, numOutputs } = useStudioStore();
+    const { mode, qualityTier, numOutputs, extraStyleRefs, objectRefs } = useStudioStore();
 
     const featureCode = resolveFeatureCode(mode, qualityTier);
     const rule = rules.find(
@@ -26,5 +26,9 @@ export function useCreditCost() {
             r.qualityTier === qualityTier &&
             r.numOutputs === numOutputs,
     );
-    return { cost: rule?.creditCost ?? 0, featureCode };
+    // IO-2: the backend adds +1 credit per extra reference image on top of
+    // the plan rule (JobServiceImpl step 5) — mirror it so the displayed
+    // price is the charged price.
+    const extraRefCount = extraStyleRefs.length + objectRefs.length;
+    return { cost: (rule?.creditCost ?? 0) + extraRefCount, featureCode };
 }

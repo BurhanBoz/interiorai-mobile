@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,10 +32,7 @@ function HDUpsell() {
         <Text
           className="font-label text-secondary"
           style={{
-            fontSize: 11,
-            fontWeight: "500",
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             marginBottom: 16,
           }}
         >
@@ -42,13 +40,13 @@ function HDUpsell() {
         </Text>
         <Text
           className="font-headline text-on-surface"
-          style={{ fontSize: 32, lineHeight: 40, marginBottom: 16 }}
+          style={{ ...theme.text.display, marginBottom: 16 }}
         >
           HD Quality{"\n"}requires Basic.
         </Text>
         <Text
           className="font-body text-secondary"
-          style={{ fontSize: 14, lineHeight: 22, maxWidth: "85%" }}
+          style={{ ...theme.text.body, maxWidth: "85%" }}
         >
           Experience your architectural visions in surgical detail. HD rendering
           unlocks texture fidelity and professional-grade exports.
@@ -84,10 +82,7 @@ function HDUpsell() {
                 <Text
                   className="font-label"
                   style={{
-                    fontSize: 10,
-                    fontWeight: "500",
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                     color: "rgba(229,226,225,0.7)",
                   }}
                 >
@@ -98,9 +93,7 @@ function HDUpsell() {
             <Text
               className="font-label text-secondary"
               style={{
-                fontSize: 12,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 textAlign: "center",
               }}
             >
@@ -143,10 +136,7 @@ function HDUpsell() {
                   <Text
                     className="font-label"
                     style={{
-                      fontSize: 10,
-                      fontWeight: "700",
-                      letterSpacing: 2,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                       color: "#3F2D11",
                     }}
                   >
@@ -158,10 +148,7 @@ function HDUpsell() {
             <Text
               className="font-label text-secondary"
               style={{
-                fontSize: 12,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 textAlign: "center",
               }}
             >
@@ -178,13 +165,13 @@ function HDUpsell() {
       >
         <Text
           className="font-headline text-on-surface"
-          style={{ fontSize: 24, marginBottom: 12 }}
+          style={{ ...theme.text.headline, marginBottom: 12 }}
         >
           Uncompromising.
         </Text>
         <Text
           className="font-body text-secondary"
-          style={{ fontSize: 14, lineHeight: 22 }}
+          style={{ ...theme.text.body }}
         >
           Get crystal-clear 2048px renders that capture every material texture
           and light reflection.
@@ -203,13 +190,13 @@ function HDUpsell() {
           <View className="flex-1">
             <Text
               className="font-body text-on-surface"
-              style={{ fontSize: 14, fontWeight: "600", marginBottom: 4 }}
+              style={{ ...theme.text.body, marginBottom: 4 }}
             >
               Advanced Texturing
             </Text>
             <Text
               className="font-body text-secondary"
-              style={{ fontSize: 12, lineHeight: 20 }}
+              style={{ ...theme.text.caption }}
             >
               Deep-learning material refinement for photorealistic surfaces.
             </Text>
@@ -226,13 +213,13 @@ function HDUpsell() {
           <View className="flex-1">
             <Text
               className="font-body text-on-surface"
-              style={{ fontSize: 14, fontWeight: "600", marginBottom: 4 }}
+              style={{ ...theme.text.body, marginBottom: 4 }}
             >
               Export Ready
             </Text>
             <Text
               className="font-body text-secondary"
-              style={{ fontSize: 12, lineHeight: 20 }}
+              style={{ ...theme.text.caption }}
             >
               Professional formats for presentations and client deliverables.
             </Text>
@@ -254,23 +241,20 @@ function StyleTransferUpsell() {
         <Text
           className="font-label font-medium text-primary mb-2"
           style={{
-            fontSize: 11,
-            letterSpacing: 1.1,
-            textTransform: "uppercase",
+            ...theme.text.caption,
           }}
         >
           Exclusive Feature
         </Text>
         <Text
           className="font-headline font-medium text-[#F5F0EB] mb-4"
-          style={{ fontSize: 40, lineHeight: 44 }}
+          style={{ ...theme.text.hero }}
         >
           Style Transfer
         </Text>
         <Text
           style={{
-            fontSize: 14,
-            lineHeight: 22,
+            ...theme.text.body,
             color: "rgba(245,240,235,0.6)",
             maxWidth: "80%",
           }}
@@ -303,9 +287,7 @@ function StyleTransferUpsell() {
             />
             <Text
               style={{
-                fontSize: 10,
-                letterSpacing: 1.1,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "rgba(245,240,235,0.4)",
               }}
             >
@@ -347,9 +329,7 @@ function StyleTransferUpsell() {
             </View>
             <Text
               style={{
-                fontSize: 10,
-                letterSpacing: 1.1,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "rgba(245,240,235,0.4)",
                 textAlign: "right",
                 marginTop: 8,
@@ -391,9 +371,7 @@ function StyleTransferUpsell() {
             <Text
               className="font-label font-medium text-[#F5F0EB]"
               style={{
-                fontSize: 11,
-                letterSpacing: 1.7,
-                textTransform: "uppercase",
+                ...theme.text.caption,
               }}
             >
               Unlock Visual Preview
@@ -412,8 +390,7 @@ function StyleTransferUpsell() {
             </Text>
             <Text
               style={{
-                fontSize: 13,
-                lineHeight: 20,
+                ...theme.text.body,
                 color: "rgba(245,240,235,0.5)",
               }}
             >
@@ -483,13 +460,13 @@ function SmartEditUpsell() {
           {/* Headline */}
           <Text
             className="font-headline text-on-surface font-bold mb-4"
-            style={{ fontSize: 44, lineHeight: 48, letterSpacing: -0.5 }}
+            style={{ ...theme.text.hero }}
           >
             Smart Edit requires Pro
           </Text>
           <Text
             className="font-body text-on-surface-variant font-light leading-relaxed"
-            style={{ fontSize: 18 }}
+            style={{ ...theme.text.subtitle }}
           >
             Edit specific areas with AI. Perfect your vision with surgical
             precision.
@@ -570,14 +547,12 @@ function SmartEditUpsell() {
                 backgroundColor: "rgba(19,19,19,0.8)",
                 paddingHorizontal: 12,
                 paddingVertical: 4,
-                borderRadius: 9999,
+                borderRadius: theme.radius.pill,
               }}
             >
               <Text
                 style={{
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "rgba(229,226,225,0.6)",
                 }}
               >
@@ -593,16 +568,13 @@ function SmartEditUpsell() {
                 backgroundColor: "#E1C39B",
                 paddingHorizontal: 12,
                 paddingVertical: 4,
-                borderRadius: 9999,
+                borderRadius: theme.radius.pill,
               }}
             >
               <Text
                 style={{
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#3F2D11",
-                  fontWeight: "bold",
                 }}
               >
                 Pro Edit
@@ -633,16 +605,14 @@ function SmartEditUpsell() {
                   <Text
                     className="font-label text-primary mb-1"
                     style={{
-                      fontSize: 11,
-                      letterSpacing: 1.1,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {f.title}
                   </Text>
                   <Text
                     className="font-body text-on-surface-variant leading-relaxed"
-                    style={{ fontSize: 14 }}
+                    style={{ ...theme.text.body }}
                   >
                     {f.desc}
                   </Text>
@@ -678,8 +648,8 @@ function SmartEditUpsell() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: theme.space.gutter,
                 borderWidth: 1,
                 borderColor: "rgba(196,168,130,0.3)",
               }}
@@ -687,10 +657,7 @@ function SmartEditUpsell() {
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#3F2D11",
                 }}
               >
@@ -706,9 +673,7 @@ function SmartEditUpsell() {
             <Text
               className="font-label"
               style={{
-                fontSize: 11,
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "rgba(208,197,184,0.8)",
               }}
             >
@@ -778,7 +743,7 @@ export default function UpsellScreen() {
         {/* Scrollable Content */}
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}
+          contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
         >
           {isStyleTransfer ? <StyleTransferUpsell /> : <HDUpsell />}
@@ -787,7 +752,7 @@ export default function UpsellScreen() {
         {/* Fixed Footer */}
         <View
           style={{
-            paddingHorizontal: 24,
+            paddingHorizontal: theme.space.gutter,
             paddingTop: 16,
             paddingBottom: 8,
           }}
@@ -801,9 +766,7 @@ export default function UpsellScreen() {
             <Text
               className="text-center font-label font-medium"
               style={{
-                fontSize: 11,
-                letterSpacing: 1.1,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "rgba(245,240,235,0.3)",
                 paddingVertical: 16,
               }}
@@ -819,9 +782,7 @@ export default function UpsellScreen() {
               <Text
                 className="font-label text-secondary"
                 style={{
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                 }}
               >
                 Review Plan Details

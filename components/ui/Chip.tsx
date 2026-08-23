@@ -75,7 +75,7 @@ export function Chip({
           gap: 6,
           height,
           paddingHorizontal: paddingX,
-          borderRadius: 999,
+          borderRadius: theme.radius.pill,
           backgroundColor: bg,
           borderWidth: 1,
           borderColor,

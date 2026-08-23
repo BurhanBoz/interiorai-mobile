@@ -8,6 +8,9 @@ import {
   Alert,
   Modal,
   FlatList,
+  LayoutAnimation,
+  ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,9 +35,12 @@ import { resolveFeatureCode } from "@/utils/featureCode";
 import type { DesignMode, QualityTier } from "@/types/api";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import { AdvancedSettings } from "@/components/studio/AdvancedSettings";
+import { useGenerate } from "@/hooks/useGenerate";
+import { useImagePicker } from "@/hooks/useImagePicker";
 import { theme } from "@/config/theme";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
@@ -42,19 +48,38 @@ const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   EMPTY_ROOM: "EMPTY_ROOM",
   INPAINT: "INPAINT",
   STYLE_TRANSFER: "STYLE_TRANSFER",
+  OUTDOOR: "OUTDOOR_DESIGN",
 };
 
-const MODES: {
-  key: DesignMode;
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  planBadge?: string;
-}[] = [
-  { key: "REDESIGN", labelKey: "studio.mode_redesign", icon: "sparkles" },
-  { key: "EMPTY_ROOM", labelKey: "studio.mode_empty_room", icon: "home-outline" },
-  { key: "INPAINT", labelKey: "studio.mode_inpaint", icon: "image-outline", planBadge: "PRO" },
-  { key: "STYLE_TRANSFER", labelKey: "studio.mode_style_transfer", icon: "color-palette-outline", planBadge: "MAX" },
-];
+/* Reference-tile row (IO-2).
+ *
+ * Vertical air is responsive for the same reason BottomBar's BREATHING is: a
+ * fixed 24 reads as a proper section break on a 6.7" screen but eats a
+ * meaningful slice of an SE, where vertical space is the scarce resource. The
+ * row had no top margin at all, so it sat welded to the Quality card above it
+ * (founder screenshot, 2026-08-11) — clamped both ends so it never welds and
+ * never floats away.
+ *
+ * The caption is the smallest thing that removes ambiguity: a bare dashed tile
+ * in a screen full of controls could just as easily mean "another photo of the
+ * room". One or two words under the tile — share-sheet grammar, not a section
+ * heading — and only while the tile is empty, because a thumbnail explains
+ * itself and the caption would turn into noise.
+ */
+const TILE_ROW_SPACING = Math.round(
+  Math.min(32, Math.max(20, Dimensions.get("window").height * 0.028)),
+);
+const TILE_SIZE = 76;
+const TILE_CAPTION = {
+  fontFamily: "Inter",
+  fontSize: 10,
+  lineHeight: 13,
+  letterSpacing: 0.2,
+  textAlign: "center" as const,
+  color: "#8C8378",
+  width: TILE_SIZE,
+};
+
 
 /**
  * Curated three-color interior palette themes — 2025-2026 trend-aligned.
@@ -110,14 +135,19 @@ const PALETTE_THEMES: readonly PaletteTheme[] = [
 /** Encode a palette theme to the wire format the backend expects. */
 const encodePalette = (colors: readonly string[]) => colors.join(";");
 
+// ULTRA_HD removed from the picker (2026-07-11 founder call): print-grade
+// sharpness is sold AFTER generation via the 4x Upscale action (PRO/MAX),
+// where the user upscales the render they actually like — better economics
+// and no dead tier (ST had no ULTRA_HD credit rule, so even MAX saw it
+// locked here). The backend keeps accepting ULTRA_HD for compatibility.
 const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
   { key: "STANDARD", labelKey: "studio.quality_standard" },
   { key: "HD", labelKey: "studio.quality_hd" },
-  { key: "ULTRA_HD", labelKey: "studio.quality_ultra_hd" },
 ];
 
 export default function OptionsScreen() {
   const { t } = useTranslation();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const mode = useStudioStore(s => s.mode);
   const qualityTier = useStudioStore(s => s.qualityTier);
   const numOutputs = useStudioStore(s => s.numOutputs);
@@ -125,7 +155,6 @@ export default function OptionsScreen() {
   const prompt = useStudioStore(s => s.prompt);
   const colorPalette = useStudioStore(s => s.colorPalette);
   const strength = useStudioStore(s => s.strength);
-  const setMode = useStudioStore(s => s.setMode);
   const setQualityTier = useStudioStore(s => s.setQualityTier);
   const setNumOutputs = useStudioStore(s => s.setNumOutputs);
   const setPreserveLayout = useStudioStore(s => s.setPreserveLayout);
@@ -133,20 +162,20 @@ export default function OptionsScreen() {
   const setColorPalette = useStudioStore(s => s.setColorPalette);
   const setStrength = useStudioStore(s => s.setStrength);
 
-  const seed = useStudioStore(s => s.seed);
-  const setSeed = useStudioStore(s => s.setSeed);
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
   const roomType = useStudioStore(s => s.roomType);
   const designStyle = useStudioStore(s => s.designStyle);
 
-  // Contextual chip suggestions — backend ranks by specificity (style+room
-  // beats style alone beats wildcard). Falls back to [] on network error.
-  const { suggestions: promptSuggestions } = usePromptSuggestions({
-    style: designStyle?.code,
-    room: roomType?.code,
-    mode,
-  });
+  // Parked with the Custom Prompt block (2026-08-07). Left running, this
+  // fired a suggestions request on every entry to Step 3 for chips nothing
+  // renders any more — a backend call per screen visit, paid for by the user's
+  // battery and our rate limit. Restore together with the prompt UI below.
+  // const { suggestions: promptSuggestions } = usePromptSuggestions({
+  //   style: designStyle?.code,
+  //   room: roomType?.code,
+  //   mode,
+  // });
   const stripChip = (source: string, text: string): string => {
     let next = source;
     if (next.includes(`, ${text}`)) next = next.replace(`, ${text}`, "");
@@ -179,8 +208,27 @@ export default function OptionsScreen() {
   // Plan-level permission checks — these reflect the current plan's
   // permissions_json and are the single source of truth for fine-grained locks.
   const { allowed: strengthAllowed } = usePlanPermission("allow_strength");
-  const { allowed: seedControlEnabled } = usePlanPermission("allow_seed");
   const { allowed: negativePromptAllowed } = usePlanPermission("allow_negative_prompt");
+  // IO-2 object insertion — same permission flag that gates Style Transfer's
+  // reference image; the backend enforces it hard-fail on job creation.
+  const { allowed: referenceImageAllowed } = usePlanPermission("allow_reference_image");
+  const objectRefs = useStudioStore(s => s.objectRefs);
+  const addObjectRef = useStudioStore(s => s.addObjectRef);
+  const removeObjectRef = useStudioStore(s => s.removeObjectRef);
+  const { pickImage: pickObjectImage, isUploading: isObjectUploading } = useImagePicker();
+
+  const handlePickObject = async () => {
+    if (!referenceImageAllowed) {
+      router.push("/plans");
+      return;
+    }
+    if (isObjectUploading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await pickObjectImage();
+    if (result?.fileId) {
+      addObjectRef({ uri: result.uri, fileId: result.fileId });
+    }
+  };
   const { cost } = useCreditCost();
   // EFFECTIVE values — welcome bonus trial users get MAX plan's rules + features
   // + plan code. Without this override, trial users see STYLE_TRANSFER + INPAINT
@@ -208,7 +256,7 @@ export default function OptionsScreen() {
     FREE: ["STANDARD"],
     BASIC: ["STANDARD", "HD"],
     PRO: ["STANDARD", "HD"],
-    MAX: ["STANDARD", "HD", "ULTRA_HD"],
+    MAX: ["STANDARD", "HD"],
   };
   const isTierLocked = (tierKey: QualityTier) => {
     const allowed = PLAN_TIER_ALLOWLIST[planCode] ?? ["STANDARD"];
@@ -220,21 +268,17 @@ export default function OptionsScreen() {
     return !availableQualityTiers.some(t => t.key === tierKey);
   };
 
-  const { allowed: maskEditingAllowed } = usePlanPermission("allow_mask_editing");
-
-  const isModeAvailable = (modeKey: DesignMode) => {
-    const fc = FEATURE_CODE_MAP[modeKey];
-    if (!fc || !(features.find(f => f.featureCode === fc)?.enabled ?? false)) return false;
-    // Hard plan-code guards so feature-flag loading delays can't briefly
-    // surface a locked mode as available.
-    if (modeKey === "STYLE_TRANSFER" && planCode !== "MAX") return false;
-    if (modeKey === "INPAINT" && planCode !== "PRO" && planCode !== "MAX") return false;
-    return true;
-  };
-
   // Determine max variants from credit rules. Must use the tier-aware
   // feature_code so HD jobs look up HD_REDESIGN rules (not INTERIOR_REDESIGN)
   // — same V25-split gotcha as availableQualityTiers above.
+  // STYLE_TRANSFER always renders a single faithful result — the stepper
+  // shows a locked 01 (2026-07-11 founder call) and the store is coerced so
+  // a value carried over from another mode can never leak into the payload.
+  const outputsLocked = mode === "STYLE_TRANSFER";
+  useEffect(() => {
+    if (outputsLocked && numOutputs !== 1) setNumOutputs(1);
+  }, [outputsLocked, numOutputs, setNumOutputs]);
+
   const maxVariants = (() => {
     const resolvedFc = resolveFeatureCode(mode, qualityTier);
     const rulesForMode = creditRules.filter(
@@ -246,7 +290,14 @@ export default function OptionsScreen() {
 
   const [promptFocused, setPromptFocused] = useState(false);
   const [promptChipsExpanded, setPromptChipsExpanded] = useState(false);
-  const [seedExpanded, setSeedExpanded] = useState(false);
+  // Custom prompt accordion (2026-07 UX): collapsed by default — most users
+  // never touch it. Opens pre-expanded when a prompt already exists.
+  const [promptOpen, setPromptOpen] = useState(() => prompt.trim().length > 0);
+  const togglePromptOpen = () => {
+    Haptics.selectionAsync();
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setPromptOpen(v => !v);
+  };
   const [hintChipId, setHintChipId] = useState<string | null>(null);
   const [paletteSheetOpen, setPaletteSheetOpen] = useState(false);
 
@@ -254,7 +305,10 @@ export default function OptionsScreen() {
   // Used by the trigger row to render the swatch + label without keeping
   // a duplicate piece of state around.
   const selectedPaletteTheme = PALETTE_THEMES.find(
-    (theme) => encodePalette(theme.colors) === colorPalette,
+    // NOT `theme` — that identifier is the design system import, and
+    // shadowing it here would silently redirect any future `theme.color`
+    // written inside this callback to a palette object.
+    (palette) => encodePalette(palette.colors) === colorPalette,
   );
 
   // Auto-downgrade if current selection is locked
@@ -272,6 +326,34 @@ export default function OptionsScreen() {
 
   const aiStrengthPercent = Math.round(strength * 100);
 
+  // One line standing in for four folded controls. Only the parts that apply
+  // to this mode appear — a Style Transfer run has no strength slider and a
+  // non-redesign mode has no layout toggle, so listing them would describe a
+  // screen the user cannot see.
+  // `cost` already comes from useCreditCost() above — the hook exposes it
+  // too, but one binding per screen keeps the price unambiguous.
+  const { generate, isSubmitting } = useGenerate();
+
+  // What Review used to show as four summary cards, in one line above the
+  // button: the resolved selections the user is about to pay for.
+  const generationSummary = [
+    designStyle?.name,
+    roomType?.name,
+    qualityTier === "HD" ? t("studio.quality_hd") : t("studio.quality_standard"),
+    numOutputs > 1 ? `×${numOutputs}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const advancedSummary = [
+    mode !== "STYLE_TRANSFER" && strengthAllowed ? `${aiStrengthPercent}%` : null,
+    selectedPaletteTheme ? t(selectedPaletteTheme.labelKey) : null,
+    numOutputs > 1 ? `×${numOutputs}` : null,
+    mode === "REDESIGN" && preserveLayout ? t("studio.preserve_layout") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
       {/* App Header */}
@@ -282,7 +364,7 @@ export default function OptionsScreen() {
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: theme.radius.lg,
             backgroundColor: "rgba(42,42,42,0.8)",
             borderWidth: 1,
             borderColor: "rgba(77,70,60,0.15)",
@@ -293,7 +375,7 @@ export default function OptionsScreen() {
           <Ionicons name="chevron-back" size={22} color="#E1C39B" />
         </Pressable>
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView
@@ -303,161 +385,41 @@ export default function OptionsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Step Indicator & Headline */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 32 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 32 }}>
           <Text
             className="font-label text-secondary mb-2"
             style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              fontWeight: "500",
+              ...theme.text.label,
             }}
           >
             {t("studio.step_3_of_4")}
           </Text>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 30, lineHeight: 34, fontWeight: "700" }}
+            style={{ ...theme.text.display }}
           >
             {t("studio.step3_title")}
           </Text>
         </View>
 
-        {/* Design Mode Chips */}
-        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
-          <Text
-            className="font-label text-on-surface-variant"
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              marginBottom: 16,
-            }}
-          >
-            {t("studio.design_mode")}
-          </Text>
-          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {MODES.map(m => {
-              const locked = !isModeAvailable(m.key);
-              const isActive = mode === m.key && !locked;
-              return (
-                <Pressable
-                  key={m.key}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    if (locked) {
-                      router.push("/plans");
-                      return;
-                    }
-                    // Smart Edit's mask-drawing canvas hasn't shipped yet —
-                    // selecting it as a generation mode would submit a
-                    // mask-less INPAINT job that the backend rejects (V37).
-                    // Route to the branded Coming Soon screen instead and
-                    // keep the previous mode selected.
-                    if (m.key === "INPAINT") {
-                      router.push("/studio/smart-edit");
-                      return;
-                    }
-                    setMode(m.key);
-                    // Style Transfer needs a reference image; kick the user
-                    // into the dedicated capture screen. They return to
-                    // Review (not here) once the reference is set.
-                    if (m.key === "STYLE_TRANSFER") {
-                      router.push("/studio/style-transfer");
-                    }
-                  }}
-                  style={({ pressed }) => ({
-                    borderRadius: 12,
-                    backgroundColor: isActive
-                      ? "#E1C39B"
-                      : locked
-                        ? "rgba(28,27,27,0.6)"
-                        : "#2A2A2A",
-                    borderWidth: 1,
-                    borderColor: isActive
-                      ? "rgba(225,195,155,0.85)"
-                      : locked
-                        ? "rgba(153,143,132,0.3)"
-                        : "rgba(225,195,155,0.35)",
-                    borderStyle: locked ? "dashed" : "solid",
-                    overflow: "hidden",
-                    transform: [{ scale: pressed ? 0.96 : 1 }],
-                  })}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                    }}
-                  >
-                    <Ionicons
-                      name={locked ? "lock-closed" : (m.icon as any)}
-                      size={locked ? 12 : 14}
-                      color={isActive ? "#3F2D11" : locked ? "#998F84" : "#E0C29A"}
-                    />
-                    <Text
-                      className="font-body"
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: isActive
-                          ? "#3F2D11"
-                          : locked
-                            ? "#998F84"
-                            : "#E0C29A",
-                      }}
-                    >
-                      {t(m.labelKey)}
-                    </Text>
-                    {locked && m.planBadge && (
-                      <View
-                        style={{
-                          paddingHorizontal: 6,
-                          paddingVertical: 2,
-                          borderRadius: 4,
-                          backgroundColor: "rgba(225,195,155,0.12)",
-                          borderWidth: 1,
-                          borderColor: "rgba(225,195,155,0.28)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 9,
-                            letterSpacing: 1,
-                            color: "rgba(225,195,155,0.55)",
-                          }}
-                        >
-                          {m.planBadge}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+        {/* Design mode is chosen on the studio home (2026-07 IA rework) —
+            the chips that lived here are gone; `mode` arrives via the store
+            and mode-specific steps (mask/reference) run right after upload. */}
 
         {/* Quality & AI Strength Bento Layout */}
-        <View style={{ marginTop: 48, paddingHorizontal: 24, gap: 16 }}>
+        <View style={{ marginTop: 48, paddingHorizontal: theme.space.gutter, gap: 16 }}>
           {/* Quality Segmented Control */}
           <View
             style={{
               padding: 24,
-              borderRadius: 12,
+              borderRadius: theme.radius.sm,
               backgroundColor: "#1C1B1B",
             }}
           >
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 marginBottom: 24,
               }}
             >
@@ -467,7 +429,7 @@ export default function OptionsScreen() {
               className="flex-row"
               style={{
                 backgroundColor: "#131313",
-                borderRadius: 8,
+                borderRadius: theme.radius.sm,
                 padding: 4,
               }}
             >
@@ -506,15 +468,12 @@ export default function OptionsScreen() {
                     <Text
                       className="font-label"
                       style={{
-                        fontSize: 12,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
+                        ...theme.text.caption,
                         color: locked
                           ? "#998F84"
                           : isSelected
                             ? "#E1C39B"
                             : "#998F84",
-                        fontWeight: isSelected ? "700" : "500",
                       }}
                     >
                       {t(tier.labelKey)}
@@ -531,13 +490,11 @@ export default function OptionsScreen() {
                       >
                         <Text
                           style={{
-                            fontSize: 8,
-                            fontWeight: "700",
-                            letterSpacing: 1,
+                            ...theme.text.caption,
                             color: "#E0C29A",
                           }}
                         >
-                          {tier.key === "ULTRA_HD" ? "MAX" : "PRO"}
+                          {"BASE"}
                         </Text>
                       </View>
                     )}
@@ -546,8 +503,115 @@ export default function OptionsScreen() {
               })}
             </View>
           </View>
+        </View>
 
-          {/* AI Strength — gated by plan permission */}
+        {/* IO-2 — object insertion "+" row (2026-08-11). Free-form modes
+            only: the depth (preserve) route has no input_images channel, so
+            the row disappears when preserve is on — and the store clears any
+            attached objects on that toggle. Each object bills +1 credit
+            (mirrored in useCreditCost). Plan-gated by allow_reference_image;
+            unentitled taps route to the paywall like the strength slider. */}
+        {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM")
+          && !preserveLayout && (
+          <View style={{
+            paddingHorizontal: theme.space.gutter,
+            marginTop: TILE_ROW_SPACING,
+            marginBottom: TILE_ROW_SPACING,
+          }}>
+            {/* Top-aligned: only the empty tile carries a caption, so the
+                thumbnails must hang from the same edge rather than centre
+                themselves against a taller neighbour. */}
+            <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
+              {objectRefs.map((ref) => (
+                <View key={ref.fileId} style={{ position: "relative", width: TILE_SIZE, height: TILE_SIZE }}>
+                  <View className="rounded-xl overflow-hidden" style={{ width: TILE_SIZE, height: TILE_SIZE }}>
+                    <Image
+                      source={{ uri: ref.uri }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      removeObjectRef(ref.fileId);
+                    }}
+                    hitSlop={8}
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -6,
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: "rgba(19,19,19,0.92)",
+                      borderWidth: 1,
+                      borderColor: "rgba(225,195,155,0.30)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="close" size={12} color="#F5F0EB" />
+                  </Pressable>
+                </View>
+              ))}
+              {objectRefs.length < 2 && (
+                <Pressable onPress={handlePickObject} disabled={isObjectUploading}>
+                  <View style={{ alignItems: "center", gap: 7 }}>
+                    <View
+                      className="rounded-xl items-center justify-center bg-surface-container-low"
+                      style={{
+                        width: TILE_SIZE,
+                        height: TILE_SIZE,
+                        borderWidth: 1.5,
+                        borderColor: "rgba(225,195,155,0.32)",
+                        borderStyle: "dashed",
+                        gap: 3,
+                      }}
+                    >
+                      {isObjectUploading ? (
+                        <ActivityIndicator size="small" color="#E1C39B" />
+                      ) : referenceImageAllowed ? (
+                        <>
+                          <Ionicons name="bed-outline" size={22} color="#8C8378" />
+                          <Ionicons name="add" size={14} color="#A79C8E" />
+                        </>
+                      ) : (
+                        <Ionicons name="lock-closed-outline" size={18} color="#8C8378" />
+                      )}
+                    </View>
+                    <Text
+                      style={TILE_CAPTION}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                    >
+                      {t("studio.add_furniture")}
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Everything below is folded by default (P1-4). Each of these four
+            controls already had the right default, so as a permanent wall
+            they only slowed down the generation the user actually came for.
+            The header carries their current values, so nothing is hidden. */}
+        <AdvancedSettings
+          open={advancedOpen}
+          onToggle={() => setAdvancedOpen((v) => !v)}
+          summary={advancedSummary}
+        >
+        <View style={{ paddingHorizontal: theme.space.gutter, gap: 16 }}>
+
+          {/* AI Strength — gated by plan permission. Hidden for
+              STYLE_TRANSFER: the reference screen already owns the
+              influence percentage; a second slider here was a duplicate
+              control for the same store value (2026-07 founder call). */}
+          {mode !== "STYLE_TRANSFER" && (
           <Pressable
             onPress={() => {
               if (!strengthAllowed) router.push("/plans");
@@ -555,7 +619,7 @@ export default function OptionsScreen() {
             disabled={strengthAllowed}
             style={{
               padding: 24,
-              borderRadius: 12,
+              borderRadius: theme.radius.sm,
               backgroundColor: "#1C1B1B",
               opacity: strengthAllowed ? 1 : 0.55,
             }}
@@ -571,9 +635,7 @@ export default function OptionsScreen() {
                 <Text
                   className="font-label text-on-surface-variant"
                   style={{
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {t("studio.strength")}
@@ -582,8 +644,8 @@ export default function OptionsScreen() {
               <Text
                 className="font-headline"
                 style={{
+                  ...theme.text.title,
                   color: strengthAllowed ? "#E0C29A" : "#998F84",
-                  fontSize: 16,
                 }}
               >
                 {strengthAllowed ? `${aiStrengthPercent}%` : "PRO+"}
@@ -620,7 +682,7 @@ export default function OptionsScreen() {
             <View className="flex-row justify-between" style={{ marginTop: 4 }}>
               <Text
                 className="font-label"
-                style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
+                style={{ ...theme.text.caption, color: "#998F84" }}
               >
                 {t(`studio.strength_min_${mode.toLowerCase()}`, {
                   defaultValue: t("studio.strength_subtle"),
@@ -628,7 +690,7 @@ export default function OptionsScreen() {
               </Text>
               <Text
                 className="font-label"
-                style={{ fontSize: 10, color: "#998F84", letterSpacing: 1.5 }}
+                style={{ ...theme.text.caption, color: "#998F84" }}
               >
                 {t(`studio.strength_max_${mode.toLowerCase()}`, {
                   defaultValue: t("studio.strength_dramatic"),
@@ -642,19 +704,17 @@ export default function OptionsScreen() {
               <Text
                 className="font-body"
                 style={{
-                  fontSize: 12,
+                  ...theme.text.caption,
                   color: "#998F84",
-                  lineHeight: 18,
                   marginTop: 14,
                   fontStyle: "italic",
                 }}
               >
-                {mode === "STYLE_TRANSFER"
-                  ? t("studio.strength_helper_style_transfer")
-                  : t("studio.strength_helper_generic")}
+                {t("studio.strength_helper_generic")}
               </Text>
             )}
           </Pressable>
+          )}
         </View>
 
         {/* Color Palette — Strength-card sibling.
@@ -677,7 +737,7 @@ export default function OptionsScreen() {
             }}
             style={({ pressed }) => ({
               padding: 24,
-              borderRadius: 12,
+              borderRadius: theme.radius.sm,
               backgroundColor: "#1C1B1B",
               transform: [{ scale: pressed ? 0.995 : 1 }],
               // Subtle gold halo when a palette is active — mirrors the
@@ -701,9 +761,7 @@ export default function OptionsScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                 }}
               >
                 {t("studio.color_palette")}
@@ -716,7 +774,7 @@ export default function OptionsScreen() {
                   numberOfLines={1}
                   className="font-headline"
                   style={{
-                    fontSize: 16,
+                    ...theme.text.title,
                     color: selectedPaletteTheme ? "#E0C29A" : "#998F84",
                   }}
                 >
@@ -746,7 +804,7 @@ export default function OptionsScreen() {
                 style={{
                   height: 36,
                   width: "100%",
-                  borderRadius: 10,
+                  borderRadius: theme.radius.sm,
                   borderWidth: 1,
                   borderColor: "rgba(225,195,155,0.35)",
                 }}
@@ -756,7 +814,7 @@ export default function OptionsScreen() {
                 style={{
                   height: 36,
                   width: "100%",
-                  borderRadius: 10,
+                  borderRadius: theme.radius.sm,
                   borderWidth: 1,
                   borderColor: "rgba(77,70,60,0.4)",
                   borderStyle: "dashed",
@@ -769,7 +827,7 @@ export default function OptionsScreen() {
                 <Ionicons name="color-palette-outline" size={14} color="#998F84" />
                 <Text
                   className="font-label"
-                  style={{ fontSize: 11, color: "#998F84", letterSpacing: 1.2 }}
+                  style={{ ...theme.text.caption, color: "#998F84" }}
                 >
                   {t("studio.palette_placeholder")}
                 </Text>
@@ -783,10 +841,8 @@ export default function OptionsScreen() {
             <Text
               className="font-label"
               style={{
-                fontSize: 11,
-                letterSpacing: 0.8,
+                ...theme.text.caption,
                 fontStyle: "italic",
-                lineHeight: 18,
                 color: "#998F84",
                 marginTop: 12,
               }}
@@ -797,33 +853,42 @@ export default function OptionsScreen() {
         </View>
 
         {/* Variants & Preserve Layout */}
-        <View style={{ marginTop: 48, paddingHorizontal: 24, gap: 16 }}>
+        <View style={{ marginTop: 16, paddingHorizontal: theme.space.gutter, gap: 16 }}>
           {/* Variants Stepper */}
           <View
             className="flex-row items-center justify-between"
             style={{
               padding: 24,
-              borderRadius: 12,
+              borderRadius: theme.radius.sm,
               backgroundColor: "#1C1B1B",
             }}
           >
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
               }}
             >
               {t("studio.number_of_outputs")}
             </Text>
+            {outputsLocked ? (
+              <View className="flex-row items-center" style={{ gap: 10 }}>
+                <Ionicons name="lock-closed" size={13} color="#998F84" />
+                <Text
+                  className="font-headline text-on-surface"
+                  style={{ ...theme.text.headline }}
+                >
+                  01
+                </Text>
+              </View>
+            ) : (
             <View className="flex-row items-center" style={{ gap: 24 }}>
               <Pressable
                 onPress={() => setNumOutputs(Math.max(1, numOutputs - 1))}
                 style={({ pressed }) => ({
                   width: 32,
                   height: 32,
-                  borderRadius: 16,
+                  borderRadius: theme.radius.md,
                   borderWidth: 1,
                   borderColor: "#4D463C",
                   alignItems: "center",
@@ -835,7 +900,7 @@ export default function OptionsScreen() {
               </Pressable>
               <Text
                 className="font-headline text-on-surface"
-                style={{ fontSize: 20, fontWeight: "700" }}
+                style={{ ...theme.text.headline }}
               >
                 {String(numOutputs).padStart(2, "0")}
               </Text>
@@ -846,7 +911,7 @@ export default function OptionsScreen() {
                 style={({ pressed }) => ({
                   width: 32,
                   height: 32,
-                  borderRadius: 16,
+                  borderRadius: theme.radius.md,
                   borderWidth: 1,
                   borderColor: "#4D463C",
                   alignItems: "center",
@@ -857,7 +922,20 @@ export default function OptionsScreen() {
                 <Ionicons name="add" size={16} color="#E0C29A" />
               </Pressable>
             </View>
+            )}
           </View>
+          {outputsLocked && (
+            <Text
+              style={{
+                ...theme.text.caption,
+                color: "#998F84",
+                paddingHorizontal: 4,
+                marginTop: -6,
+              }}
+            >
+              {t("studio.outputs_locked_style_transfer")}
+            </Text>
+          )}
 
           {/* Preserve Layout Toggle — only meaningful for REDESIGN mode.
               EMPTY_ROOM (emptying conflicts with "keep furniture" directive),
@@ -866,11 +944,16 @@ export default function OptionsScreen() {
               preserve_layout → disabled + helper text to avoid confusion. */}
           {(() => {
             const preserveLayoutApplicable = mode === "REDESIGN";
+            // Founder rule (2026-08-03): a mode that never uses preserve must not
+            // show the row AT ALL — a disabled toggle only confuses. Today only
+            // REDESIGN offers preserve; if a future mode adopts it, extend
+            // preserveLayoutApplicable and the row returns with the same rules.
+            if (!preserveLayoutApplicable) return null;
             return (
               <View
                 style={{
                   padding: 24,
-                  borderRadius: 12,
+                  borderRadius: theme.radius.sm,
                   backgroundColor: "#1C1B1B",
                   opacity: preserveLayoutApplicable ? 1 : 0.5,
                 }}
@@ -887,9 +970,7 @@ export default function OptionsScreen() {
                     <Text
                       className="font-label text-on-surface-variant"
                       style={{
-                        fontSize: 11,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
+                        ...theme.text.caption,
                       }}
                     >
                       {t("studio.preserve_layout")}
@@ -910,9 +991,8 @@ export default function OptionsScreen() {
                   <Text
                     className="font-body"
                     style={{
-                      fontSize: 12,
+                      ...theme.text.caption,
                       color: "#998F84",
-                      lineHeight: 18,
                       marginTop: 12,
                       fontStyle: "italic",
                     }}
@@ -924,579 +1004,430 @@ export default function OptionsScreen() {
             );
           })()}
         </View>
+        </AdvancedSettings>
 
-        {/* Preview Card */}
-        <View
-          style={{
-            marginTop: 48,
-            marginHorizontal: 24,
-            aspectRatio: 16 / 10,
-            borderRadius: 16,
-            overflow: "hidden",
-            backgroundColor: "#111110",
-            borderWidth: 1,
-            borderColor: "rgba(225,195,155,0.12)",
-          }}
-        >
-          <Image
-            source={photo ? { uri: photo.uri } : undefined}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="contain"
-          />
-          {/* Gradient overlay */}
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.6)"]}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "60%",
-            }}
-          />
-          {/* Glass label */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 24,
-              left: 24,
-              backgroundColor: "rgba(19,19,19,0.7)",
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.1)",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Ionicons name="sparkles" size={14} color="#FDDEB4" />
-            <Text
-              className="font-label text-on-surface"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("studio.realtime_preview")}
-            </Text>
-          </View>
-        </View>
+        {/* ── Custom Prompt — PARKED (founder call, 2026-08-07) ─────────
+            Hidden from the UI, kept in source rather than deleted: the
+            prompt pipeline still ACCEPTS `studioStore.prompt` end to end
+            (JobServiceImpl → TemplateInputResolver), so this is a display
+            decision, not a feature removal. Un-comment the block below to
+            bring it back — no other file needs touching.
 
-        {/* Material Narrative (Prompt) */}
-        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
-          {/* Section label — above the container */}
-          <Text
-            className="font-label"
-            style={{
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: theme.color.goldMidday,
-              marginBottom: 14,
-            }}
-          >
-            {t("studio.custom_prompt")}
-          </Text>
+            Why it went: with the four advanced controls folded away, a
+            second collapsible directly beneath them made Step 3 read as a
+            screen full of drawers. The prompt is also the one control a
+            first-time user is least equipped to use well.
 
-          {/* Outer gold-bordered container */}
-          {(() => {
-            const categoryOrder = ["LIGHT", "MATERIAL", "MOOD", "STYLE_DETAIL", "COLOR", "ERA", "OBJECT"];
-            const selectedChips = promptSuggestions.filter(c =>
-              prompt.toLowerCase().includes(c.text.toLowerCase()),
-            );
-            const isActive = selectedChips.length > 0;
-            const hasSuggestions = promptSuggestions.length > 0;
-            const accentBorder = isActive
-              ? "rgba(143,227,161,0.38)"
-              : promptFocused
-                ? "rgba(225,195,155,0.40)"
-                : "rgba(225,195,155,0.20)";
+            Store field, i18n keys (studio.custom_prompt*) and the backend
+            path all stay live.
 
-            return (
-              <View
-                style={{
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: accentBorder,
-                  backgroundColor: "rgba(14,13,12,0.60)",
-                  padding: 16,
-                  gap: 14,
-                }}
-              >
-                {/* Inner label */}
-                <Text
-                  style={{
-                    fontFamily: "Inter",
-                    fontSize: 12,
-                    color: isActive
-                      ? "rgba(143,227,161,0.55)"
-                      : "rgba(225,195,155,0.45)",
-                    fontStyle: "italic",
-                  }}
-                >
-                  {t("studio.custom_prompt_hint")}
-                </Text>
-
-                {/* Selected chips strip — premium summary of active suggestions
-                    with one-tap removal. Hidden until at least one is selected. */}
-                {isActive && (
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                    {selectedChips.map(chip => (
-                      <Pressable
-                        key={chip.id}
-                        onPress={() => removeSuggestion(chip.text)}
-                        style={({ pressed }) => ({
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                          paddingLeft: 10,
-                          paddingRight: 7,
-                          paddingVertical: 5,
-                          borderRadius: 999,
-                          backgroundColor: "rgba(143,227,161,0.10)",
-                          borderWidth: 0.5,
-                          borderColor: "rgba(143,227,161,0.32)",
-                          opacity: pressed ? 0.65 : 1,
-                        })}
-                      >
-                        <Text
+                    {/\* Material Narrative (Prompt) — collapsible. Hidden for INPAINT:
+                        the mask screen already asks what belongs in the painted region,
+                        and that writes this same store field (one owner per control,
+                        same rule as STYLE_TRANSFER's influence slider). *\/}
+                    {mode !== "INPAINT" && (
+                    <View style={{ marginTop: 40, paddingHorizontal: theme.space.gutter }}>
+                      <Pressable onPress={togglePromptOpen} accessibilityRole="button">
+                        <View
                           style={{
-                            fontFamily: "Inter-Medium",
-                            fontSize: 11,
-                            color: "#8FE3A1",
-                            letterSpacing: 0.2,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: promptOpen ? 14 : 0,
                           }}
-                          numberOfLines={1}
                         >
-                          {chip.text}
-                        </Text>
-                        <Ionicons name="close" size={12} color="rgba(143,227,161,0.70)" />
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-
-                {/* Full-width text input */}
-                <TextInput
-                  className="font-body text-on-surface"
-                  style={{
-                    padding: 14,
-                    fontSize: 14,
-                    lineHeight: 21,
-                    textAlignVertical: "top",
-                    minHeight: 92,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: promptFocused
-                      ? "rgba(225,195,155,0.45)"
-                      : "rgba(225,195,155,0.16)",
-                    backgroundColor: promptFocused
-                      ? "rgba(225,195,155,0.04)"
-                      : "rgba(225,195,155,0.02)",
-                  }}
-                  placeholder={t("studio.custom_prompt")}
-                  placeholderTextColor="rgba(225,195,155,0.30)"
-                  value={prompt}
-                  onChangeText={setPrompt}
-                  onFocus={() => setPromptFocused(true)}
-                  onBlur={() => setPromptFocused(false)}
-                  multiline
-                />
-
-                {/* Suggestions accordion — full-width row, properly aligned
-                    leading sparkle + label + trailing count badge + chevron. */}
-                {hasSuggestions && (
-                  <View
-                    style={{
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: isActive
-                        ? "rgba(143,227,161,0.28)"
-                        : "rgba(225,195,155,0.18)",
-                      backgroundColor: "rgba(225,195,155,0.025)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Pressable
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        setPromptChipsExpanded(v => !v);
-                      }}
-                      style={({ pressed }) => ({
-                        borderBottomWidth: promptChipsExpanded ? 1 : 0,
-                        borderBottomColor: "rgba(225,195,155,0.10)",
-                        backgroundColor: isActive
-                          ? "rgba(143,227,161,0.04)"
-                          : "rgba(225,195,155,0.03)",
-                        opacity: pressed ? 0.7 : 1,
-                      })}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          paddingHorizontal: 14,
-                          paddingVertical: 13,
-                        }}
-                      >
-                        <Ionicons
-                          name="sparkles-outline"
-                          size={14}
-                          color={isActive ? "rgba(143,227,161,0.85)" : theme.color.goldMidday}
-                        />
-                        <Text
-                          style={{
-                            flex: 1,
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 11,
-                            lineHeight: 16,
-                            letterSpacing: 1.6,
-                            textTransform: "uppercase",
-                            color: isActive
-                              ? "rgba(143,227,161,0.90)"
-                              : "rgba(225,195,155,0.75)",
-                            marginHorizontal: 8,
-                          }}
-                          numberOfLines={1}
-                        >
-                          {t("studio.prompt_suggestions_label").split(" —")[0]}
-                          {isActive ? `  ·  ${selectedChips.length}` : ""}
-                        </Text>
-                        <Ionicons
-                          name={promptChipsExpanded ? "chevron-up" : "chevron-down"}
-                          size={16}
-                          color={isActive ? "rgba(143,227,161,0.70)" : "rgba(225,195,155,0.55)"}
-                        />
-                      </View>
-                    </Pressable>
-
-                    {promptChipsExpanded && (
-                      <ScrollView
-                        style={{ maxHeight: 280 }}
-                        showsVerticalScrollIndicator={false}
-                        keyboardShouldPersistTaps="handled"
-                      >
-                        {isActive && (
-                          <Pressable
-                            onPress={() => clearAllSuggestions(selectedChips.map(c => c.text))}
-                            style={({ pressed }) => ({
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 6,
-                              paddingHorizontal: 14,
-                              paddingVertical: 10,
-                              borderBottomWidth: 0.5,
-                              borderBottomColor: "rgba(229,140,130,0.18)",
-                              backgroundColor: pressed
-                                ? "rgba(229,140,130,0.10)"
-                                : "rgba(229,140,130,0.04)",
-                            })}
+                          <Text
+                            className="font-label"
+                            style={{
+                              ...theme.text.caption,
+                              color: theme.color.goldMidday,
+                            }}
                           >
-                            <Ionicons name="close-circle-outline" size={13} color="rgba(229,140,130,0.80)" />
-                            <Text
-                              style={{
-                                fontFamily: "Inter-Medium",
-                                fontSize: 11,
-                                letterSpacing: 0.3,
-                                color: "rgba(229,140,130,0.80)",
-                              }}
-                            >
-                              {t("studio.prompt_clear_all")}
-                            </Text>
-                          </Pressable>
-                        )}
-
-                        {categoryOrder.map(cat => {
-                          const catChips = promptSuggestions.filter(c => c.category === cat);
-                          if (catChips.length === 0) return null;
-                          return (
-                            <View key={cat}>
-                              <Text
-                                style={{
-                                  fontFamily: "Inter-SemiBold",
-                                  fontSize: 9,
-                                  letterSpacing: 1.6,
-                                  textTransform: "uppercase",
-                                  color: isActive
-                                    ? "rgba(143,227,161,0.55)"
-                                    : "rgba(225,195,155,0.55)",
-                                  paddingHorizontal: 14,
-                                  paddingTop: 12,
-                                  paddingBottom: 6,
-                                }}
-                              >
-                                {cat.replace(/_/g, " ")}
-                              </Text>
+                            {t("studio.custom_prompt")}
+                          </Text>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            {!promptOpen && prompt.trim().length > 0 && (
                               <View
                                 style={{
-                                  flexDirection: "row",
-                                  flexWrap: "wrap",
-                                  gap: 6,
-                                  paddingHorizontal: 14,
-                                  paddingBottom: 10,
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: 3,
+                                  backgroundColor: theme.color.goldMidday,
+                                }}
+                              />
+                            )}
+                            <Ionicons
+                              name={promptOpen ? "chevron-up" : "chevron-down"}
+                              size={16}
+                              color={theme.color.goldMidday}
+                            />
+                          </View>
+                        </View>
+                      </Pressable>
+                      {!promptOpen && prompt.trim().length > 0 && (
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            ...theme.text.caption,
+                            marginTop: 10,
+                            color: "#998F84",
+                          }}
+                        >
+                          {prompt.trim()}
+                        </Text>
+                      )}
+                      {promptOpen && (
+                      <>
+                      {/\* Outer gold-bordered container *\/}
+                      {(() => {
+                        const categoryOrder = ["LIGHT", "MATERIAL", "MOOD", "STYLE_DETAIL", "COLOR", "ERA", "OBJECT"];
+                        const selectedChips = promptSuggestions.filter(c =>
+                          prompt.toLowerCase().includes(c.text.toLowerCase()),
+                        );
+                        const isActive = selectedChips.length > 0;
+                        const hasSuggestions = promptSuggestions.length > 0;
+                        const accentBorder = isActive
+                          ? "rgba(143,227,161,0.38)"
+                          : promptFocused
+                            ? "rgba(225,195,155,0.40)"
+                            : "rgba(225,195,155,0.20)";
+
+                        return (
+                          <View
+                            style={{
+                              borderRadius: theme.radius.md,
+                              borderWidth: 1,
+                              borderColor: accentBorder,
+                              backgroundColor: "rgba(14,13,12,0.60)",
+                              padding: 16,
+                              gap: 14,
+                            }}
+                          >
+                            {/\* Inner label *\/}
+                            <Text
+                              style={{
+                                ...theme.text.caption,
+                                color: isActive
+                                  ? "rgba(143,227,161,0.55)"
+                                  : "rgba(225,195,155,0.45)",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              {t("studio.custom_prompt_hint")}
+                            </Text>
+
+                            {/\* Selected chips strip — premium summary of active suggestions
+                                with one-tap removal. Hidden until at least one is selected. *\/}
+                            {isActive && (
+                              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                                {selectedChips.map(chip => (
+                                  <Pressable
+                                    key={chip.id}
+                                    onPress={() => removeSuggestion(chip.text)}
+                                    style={({ pressed }) => ({
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      paddingLeft: 10,
+                                      paddingRight: 7,
+                                      paddingVertical: 5,
+                                      borderRadius: theme.radius.pill,
+                                      backgroundColor: "rgba(143,227,161,0.10)",
+                                      borderWidth: 0.5,
+                                      borderColor: "rgba(143,227,161,0.32)",
+                                      opacity: pressed ? 0.65 : 1,
+                                    })}
+                                  >
+                                    <Text
+                                      style={{
+                                        ...theme.text.caption,
+                                        color: "#8FE3A1",
+                                      }}
+                                      numberOfLines={1}
+                                    >
+                                      {chip.text}
+                                    </Text>
+                                    <Ionicons name="close" size={12} color="rgba(143,227,161,0.70)" />
+                                  </Pressable>
+                                ))}
+                              </View>
+                            )}
+
+                            {/\* Full-width text input *\/}
+                            <TextInput
+                              className="font-body text-on-surface"
+                              style={{
+                                ...theme.text.body,
+                                padding: 14,
+                                textAlignVertical: "top",
+                                minHeight: 92,
+                                borderRadius: theme.radius.sm,
+                                borderWidth: 1,
+                                borderColor: promptFocused
+                                  ? "rgba(225,195,155,0.45)"
+                                  : "rgba(225,195,155,0.16)",
+                                backgroundColor: promptFocused
+                                  ? "rgba(225,195,155,0.04)"
+                                  : "rgba(225,195,155,0.02)",
+                              }}
+                              placeholder={t("studio.custom_prompt")}
+                              placeholderTextColor="rgba(225,195,155,0.30)"
+                              value={prompt}
+                              onChangeText={setPrompt}
+                              onFocus={() => setPromptFocused(true)}
+                              onBlur={() => setPromptFocused(false)}
+                              multiline
+                            />
+
+                            {/\* Suggestions accordion — full-width row, properly aligned
+                                leading sparkle + label + trailing count badge + chevron. *\/}
+                            {hasSuggestions && (
+                              <View
+                                style={{
+                                  borderRadius: theme.radius.sm,
+                                  borderWidth: 1,
+                                  borderColor: isActive
+                                    ? "rgba(143,227,161,0.28)"
+                                    : "rgba(225,195,155,0.18)",
+                                  backgroundColor: "rgba(225,195,155,0.025)",
+                                  overflow: "hidden",
                                 }}
                               >
-                                {catChips.map(chip => {
-                                  const isSelected = prompt.toLowerCase().includes(chip.text.toLowerCase());
-                                  return (
-                                    <Pressable
-                                      key={chip.id}
-                                      onPress={() => {
-                                        isSelected
-                                          ? removeSuggestion(chip.text)
-                                          : appendSuggestion(chip.text);
+                                <Pressable
+                                  onPress={() => {
+                                    Haptics.selectionAsync();
+                                    setPromptChipsExpanded(v => !v);
+                                  }}
+                                  style={({ pressed }) => ({
+                                    borderBottomWidth: promptChipsExpanded ? 1 : 0,
+                                    borderBottomColor: "rgba(225,195,155,0.10)",
+                                    backgroundColor: isActive
+                                      ? "rgba(143,227,161,0.04)"
+                                      : "rgba(225,195,155,0.03)",
+                                    opacity: pressed ? 0.7 : 1,
+                                  })}
+                                >
+                                  <View
+                                    style={{
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      paddingHorizontal: 14,
+                                      paddingVertical: 13,
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name="sparkles-outline"
+                                      size={14}
+                                      color={isActive ? "rgba(143,227,161,0.85)" : theme.color.goldMidday}
+                                    />
+                                    <Text
+                                      style={{
+                                        ...theme.text.caption,
+                                        flex: 1,
+                                        color: isActive
+                                          ? "rgba(143,227,161,0.90)"
+                                          : "rgba(225,195,155,0.75)",
+                                        marginHorizontal: 8,
                                       }}
-                                      style={({ pressed }) => ({
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 6,
-                                        paddingLeft: 11,
-                                        paddingRight: 9,
-                                        paddingVertical: 7,
-                                        borderRadius: 999,
-                                        borderWidth: 0.5,
-                                        borderColor: isSelected
-                                          ? "rgba(143,227,161,0.35)"
-                                          : "rgba(225,195,155,0.22)",
-                                        backgroundColor: isSelected
-                                          ? "rgba(143,227,161,0.10)"
-                                          : pressed
-                                            ? "rgba(225,195,155,0.06)"
-                                            : "rgba(225,195,155,0.02)",
-                                      })}
+                                      numberOfLines={1}
                                     >
-                                      <Text
-                                        style={{
-                                          fontFamily: "Inter",
-                                          fontSize: 12,
-                                          lineHeight: 16,
-                                          color: isSelected
-                                            ? "#8FE3A1"
-                                            : "rgba(229,226,225,0.78)",
-                                        }}
+                                      {t("studio.prompt_suggestions_label").split(" —")[0]}
+                                      {isActive ? `  ·  ${selectedChips.length}` : ""}
+                                    </Text>
+                                    <Ionicons
+                                      name={promptChipsExpanded ? "chevron-up" : "chevron-down"}
+                                      size={16}
+                                      color={isActive ? "rgba(143,227,161,0.70)" : "rgba(225,195,155,0.55)"}
+                                    />
+                                  </View>
+                                </Pressable>
+
+                                {promptChipsExpanded && (
+                                  <ScrollView
+                                    style={{ maxHeight: 280 }}
+                                    showsVerticalScrollIndicator={false}
+                                    keyboardShouldPersistTaps="handled"
+                                  >
+                                    {isActive && (
+                                      <Pressable
+                                        onPress={() => clearAllSuggestions(selectedChips.map(c => c.text))}
+                                        style={({ pressed }) => ({
+                                          flexDirection: "row",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 6,
+                                          paddingHorizontal: 14,
+                                          paddingVertical: 10,
+                                          borderBottomWidth: 0.5,
+                                          borderBottomColor: "rgba(229,140,130,0.18)",
+                                          backgroundColor: pressed
+                                            ? "rgba(229,140,130,0.10)"
+                                            : "rgba(229,140,130,0.04)",
+                                        })}
                                       >
-                                        {chip.text}
-                                      </Text>
-                                      <Ionicons
-                                        name={isSelected ? "checkmark" : "add"}
-                                        size={13}
-                                        color={isSelected ? "#8FE3A1" : "rgba(225,195,155,0.65)"}
-                                      />
-                                    </Pressable>
-                                  );
-                                })}
+                                        <Ionicons name="close-circle-outline" size={13} color="rgba(229,140,130,0.80)" />
+                                        <Text
+                                          style={{
+                                            ...theme.text.caption,
+                                            color: "rgba(229,140,130,0.80)",
+                                          }}
+                                        >
+                                          {t("studio.prompt_clear_all")}
+                                        </Text>
+                                      </Pressable>
+                                    )}
+
+                                    {categoryOrder.map(cat => {
+                                      const catChips = promptSuggestions.filter(c => c.category === cat);
+                                      if (catChips.length === 0) return null;
+                                      return (
+                                        <View key={cat}>
+                                          <Text
+                                            style={{
+                                              ...theme.text.caption,
+                                              color: isActive
+                                                ? "rgba(143,227,161,0.55)"
+                                                : "rgba(225,195,155,0.55)",
+                                              paddingHorizontal: 14,
+                                              paddingTop: 12,
+                                              paddingBottom: 6,
+                                            }}
+                                          >
+                                            {cat.replace(/_/g, " ")}
+                                          </Text>
+                                          <View
+                                            style={{
+                                              flexDirection: "row",
+                                              flexWrap: "wrap",
+                                              gap: 6,
+                                              paddingHorizontal: 14,
+                                              paddingBottom: 10,
+                                            }}
+                                          >
+                                            {catChips.map(chip => {
+                                              const isSelected = prompt.toLowerCase().includes(chip.text.toLowerCase());
+                                              return (
+                                                <Pressable
+                                                  key={chip.id}
+                                                  onPress={() => {
+                                                    isSelected
+                                                      ? removeSuggestion(chip.text)
+                                                      : appendSuggestion(chip.text);
+                                                  }}
+                                                  style={({ pressed }) => ({
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    paddingLeft: 11,
+                                                    paddingRight: 9,
+                                                    paddingVertical: 7,
+                                                    borderRadius: theme.radius.pill,
+                                                    borderWidth: 0.5,
+                                                    borderColor: isSelected
+                                                      ? "rgba(143,227,161,0.35)"
+                                                      : "rgba(225,195,155,0.22)",
+                                                    backgroundColor: isSelected
+                                                      ? "rgba(143,227,161,0.10)"
+                                                      : pressed
+                                                        ? "rgba(225,195,155,0.06)"
+                                                        : "rgba(225,195,155,0.02)",
+                                                  })}
+                                                >
+                                                  <Text
+                                                    style={{
+                                                      ...theme.text.caption,
+                                                      color: isSelected
+                                                        ? "#8FE3A1"
+                                                        : "rgba(229,226,225,0.78)",
+                                                    }}
+                                                  >
+                                                    {chip.text}
+                                                  </Text>
+                                                  <Ionicons
+                                                    name={isSelected ? "checkmark" : "add"}
+                                                    size={13}
+                                                    color={isSelected ? "#8FE3A1" : "rgba(225,195,155,0.65)"}
+                                                  />
+                                                </Pressable>
+                                              );
+                                            })}
+                                          </View>
+                                        </View>
+                                      );
+                                    })}
+                                  </ScrollView>
+                                )}
                               </View>
-                            </View>
-                          );
-                        })}
-                      </ScrollView>
+                            )}
+                          </View>
+                        );
+                      })()}
+                      </>
+                      )}
+                    </View>
                     )}
-                  </View>
-                )}
-              </View>
-            );
-          })()}
-        </View>
+        ─────────────────────────────────────────────────────────── */}
 
-        {/* Advanced Seed Controls — gated by plan.allow_seed */}
-        <View style={{ paddingHorizontal: 24, marginTop: 12 }}>
-          <Pressable
-            onPress={() => {
-              if (!seedControlEnabled) {
-                router.push("/plans");
-                return;
-              }
-              setSeedExpanded(!seedExpanded);
-            }}
-            className="flex-row items-center justify-between"
-            style={({ pressed }) => ({
-              marginTop: 32,
-              opacity: !seedControlEnabled ? 0.55 : pressed ? 0.8 : 1,
-            })}
-          >
-            <View className="flex-row items-center" style={{ gap: 10 }}>
-              <Ionicons
-                name={seedControlEnabled ? "options" : "lock-closed"}
-                size={seedControlEnabled ? 20 : 16}
-                color={seedControlEnabled ? "#E5E2E1" : "#998F84"}
-              />
-              <Text
-                className="font-body text-on-surface"
-                style={{ fontSize: 15 }}
-              >
-                {t("studio.seed")}
-              </Text>
-              {!seedControlEnabled && (
-                <Text
-                  className="font-label"
-                  style={{
-                    fontSize: 10,
-                    color: "#E0C29A",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  PRO+
-                </Text>
-              )}
-            </View>
-            <Ionicons
-              name={seedExpanded ? "chevron-down" : "chevron-forward"}
-              size={18}
-              color="#998F84"
-            />
-          </Pressable>
+        {/* Seed controls removed (2026-07): the backend omits `seed`
+            entirely when unset (TemplateInputResolver only sends it if
+            non-null), so Replicate randomizes every run — which is the
+            behavior users actually want. Power-user seed pinning can
+            return post-launch if data asks for it. */}
 
-          {seedExpanded && seedControlEnabled && (
-            <View style={{ marginTop: 12 }}>
-              <Text
-                className="font-body text-on-surface-variant"
-                style={{ fontSize: 12, marginBottom: 10, lineHeight: 18 }}
-              >
-                {t("studio.seed_help_long")}
-              </Text>
-              <View className="flex-row items-center" style={{ gap: 8 }}>
-                <TextInput
-                  className="font-body text-on-surface"
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#1C1B1B",
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 14,
-                    borderWidth: 1,
-                    borderColor: seed !== undefined
-                      ? "rgba(225,195,155,0.35)"
-                      : "rgba(255,255,255,0.08)",
-                  }}
-                  placeholder={t("studio.seed_placeholder_long")}
-                  placeholderTextColor="#998F84"
-                  keyboardType="number-pad"
-                  returnKeyType="done"
-                  maxLength={10}
-                  value={seed !== undefined ? String(seed) : ""}
-                  onChangeText={text => {
-                    const trimmed = text.trim();
-                    if (!trimmed) {
-                      setSeed(undefined);
-                      return;
-                    }
-                    // Strip non-digits defensively (number-pad on Android can
-                    // still surface locale separators on some devices).
-                    const digits = trimmed.replace(/[^0-9]/g, "");
-                    if (!digits) return;
-                    const n = parseInt(digits, 10);
-                    if (!isNaN(n) && n >= 0 && n <= 2147483647) setSeed(n);
-                  }}
-                />
-                {/* Random button — generates a fresh 32-bit positive int. */}
-                <Pressable
-                  onPress={() => {
-                    const random = Math.floor(Math.random() * 2147483647);
-                    setSeed(random);
-                  }}
-                  hitSlop={8}
-                  style={({ pressed }) => ({
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(225,195,155,0.1)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.35)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Ionicons name="dice" size={20} color="#E0C29A" />
-                </Pressable>
-                {seed !== undefined && (
-                  <Pressable
-                    onPress={() => setSeed(undefined)}
-                    hitSlop={8}
-                    style={({ pressed }) => ({
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: pressed ? 0.5 : 1,
-                    })}
-                  >
-                    <Ionicons name="close-circle" size={22} color="#998F84" />
-                  </Pressable>
-                )}
-              </View>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{ fontSize: 10, marginTop: 8, letterSpacing: 0.3 }}
-              >
-                {seed !== undefined
-                  ? t("studio.seed_locked_hint", { seed })
-                  : t("studio.seed_empty_hint")}
-              </Text>
-            </View>
-          )}
-
-          {/* Generation Cost */}
-          <View
-            className="flex-row items-center justify-between"
-            style={{
-              marginTop: 32,
-              padding: 24,
-              borderRadius: 12,
-              backgroundColor: "#1C1B1B",
-            }}
-          >
-            <View>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.credits")}
-              </Text>
-              <Text
-                className="font-headline text-on-surface"
-                style={{ fontSize: 20, fontWeight: "700", marginTop: 4 }}
-              >
-                {t("studio.cost_credits", { count: cost })}
-              </Text>
-            </View>
-            <Ionicons name="wallet-outline" size={24} color="#E0C29A" />
-          </View>
-        </View>
       </ScrollView>
 
       {/* Floating CTA — BottomBar handles the safe-area + tab-bar math so
           the Next button always sits a breathing-cushion above the blurred
           tab bar pill. */}
+      {/* Generate lives here now (P2-8). The Review screen this used to lead
+          to re-stated Style / Room / Quality / Outputs — choices the user had
+          made seconds earlier on this very screen and the one before it — so
+          it read as a confirmation of a confirmation. What Review genuinely
+          carried is kept: the photo about to be sent, the resolved selections,
+          and the price, all in the strip below the button. Every gate and the
+          idempotency-key lifecycle moved into useGenerate() unchanged. */}
       <BottomBar overTabBar>
-        <PrimaryButton
-          label={t("common.next")}
-          onPress={() => {
-            // STYLE_TRANSFER requires a reference image. If the user hasn't
-            // picked one yet, bounce them back instead of letting Review
-            // proceed to a guaranteed backend 400.
-            if (mode === "STYLE_TRANSFER" && !referencePhoto?.fileId) {
-              Alert.alert(
-                t("studio.mode_style_transfer"),
-                t("studio.style_transfer_requires_reference"),
-              );
-              router.push("/studio/style-transfer");
-              return;
-            }
-            router.push("/(tabs)/studio/review");
-          }}
-        />
+        <View style={{ gap: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              paddingHorizontal: 4,
+            }}
+          >
+            {photo?.uri ? (
+              <Image
+                source={{ uri: photo.uri }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: theme.radius.sm,
+                }}
+                contentFit="cover"
+              />
+            ) : null}
+            <Text
+              numberOfLines={1}
+              style={{
+                ...theme.text.caption,
+                color: theme.color.onSurfaceMuted,
+                flex: 1,
+              }}
+            >
+              {generationSummary}
+            </Text>
+            <Text style={{ ...theme.text.subtitle, color: theme.color.goldMidday }}>
+              {t("studio.cost_credits", { count: cost })}
+            </Text>
+          </View>
+          <PrimaryButton
+            label={t("studio.generate")}
+            onPress={generate}
+            disabled={isSubmitting}
+            loading={isSubmitting}
+          />
+        </View>
       </BottomBar>
 
       {/* ─── Palette Picker Sheet ─────────────────────────────────────
@@ -1517,7 +1448,7 @@ export default function OptionsScreen() {
               height: 64,
               flexDirection: "row",
               alignItems: "center",
-              paddingHorizontal: 20,
+              paddingHorizontal: theme.space.gutter,
               borderBottomWidth: 1,
               borderBottomColor: "rgba(77,70,60,0.15)",
             }}
@@ -1528,7 +1459,7 @@ export default function OptionsScreen() {
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 18,
+                borderRadius: theme.radius.md,
                 backgroundColor: "rgba(255,255,255,0.08)",
                 alignItems: "center",
                 justifyContent: "center",
@@ -1539,14 +1470,12 @@ export default function OptionsScreen() {
             </Pressable>
             <Text
               style={{
+                ...theme.text.headline,
                 position: "absolute",
                 left: 0,
                 right: 0,
                 textAlign: "center",
-                fontSize: 22,
-                fontWeight: "700",
                 color: "#E5E2E1",
-                fontFamily: "NotoSerif",
               }}
             >
               {t("studio.choose_palette")}
@@ -1574,7 +1503,7 @@ export default function OptionsScreen() {
               marginTop: 16,
               marginHorizontal: 20,
               padding: 18,
-              borderRadius: 14,
+              borderRadius: theme.radius.md,
               backgroundColor: "#1C1B1B",
               borderWidth: colorPalette === "" ? 1.5 : 1,
               borderColor:
@@ -1598,7 +1527,7 @@ export default function OptionsScreen() {
               <Text
                 className="font-headline"
                 style={{
-                  fontSize: 16,
+                  ...theme.text.title,
                   color: colorPalette === "" ? "#E0C29A" : "#D0C5B8",
                 }}
               >
@@ -1612,7 +1541,7 @@ export default function OptionsScreen() {
               style={{
                 height: 36,
                 width: "100%",
-                borderRadius: 10,
+                borderRadius: theme.radius.sm,
                 borderWidth: 1,
                 borderColor: "rgba(77,70,60,0.4)",
                 borderStyle: "dashed",
@@ -1625,7 +1554,7 @@ export default function OptionsScreen() {
               <Ionicons name="color-palette-outline" size={14} color="#998F84" />
               <Text
                 className="font-label"
-                style={{ fontSize: 11, color: "#998F84", letterSpacing: 1.2 }}
+                style={{ ...theme.text.caption, color: "#998F84" }}
               >
                 {t("studio.palette_placeholder")}
               </Text>
@@ -1634,16 +1563,18 @@ export default function OptionsScreen() {
 
           <FlatList
             data={PALETTE_THEMES}
-            keyExtractor={(theme) => theme.id}
+            keyExtractor={(palette) => palette.id}
             contentContainerStyle={{
-              paddingHorizontal: 20,
+              paddingHorizontal: theme.space.gutter,
               paddingTop: 12,
-              paddingBottom: 60,
+              // The bar here stacks a summary strip on top of the button, so
+              // it needs more clearance than a lone CTA would.
+              paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true, 120),
               gap: 12,
             }}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item: theme }) => {
-              const encoded = encodePalette(theme.colors);
+            renderItem={({ item: palette }) => {
+              const encoded = encodePalette(palette.colors);
               const isSelected = colorPalette === encoded;
               return (
                 <Pressable
@@ -1654,7 +1585,7 @@ export default function OptionsScreen() {
                   }}
                   style={({ pressed }) => ({
                     padding: 18,
-                    borderRadius: 14,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "#1C1B1B",
                     borderWidth: isSelected ? 1.5 : 1,
                     borderColor: isSelected
@@ -1678,27 +1609,27 @@ export default function OptionsScreen() {
                       numberOfLines={1}
                       className="font-headline"
                       style={{
+                        ...theme.text.title,
                         flex: 1,
-                        fontSize: 16,
                         color: isSelected ? "#E0C29A" : "#D0C5B8",
                         marginRight: 12,
                       }}
                     >
-                      {t(theme.labelKey)}
+                      {t(palette.labelKey)}
                     </Text>
                     {isSelected ? (
                       <Ionicons name="checkmark-circle" size={20} color="#E0C29A" />
                     ) : null}
                   </View>
                   <LinearGradient
-                    colors={theme.colors as unknown as [string, string, string]}
+                    colors={palette.colors as unknown as [string, string, string]}
                     locations={[0, 0.5, 1]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
                     style={{
                       height: 36,
                       width: "100%",
-                      borderRadius: 10,
+                      borderRadius: theme.radius.sm,
                       borderWidth: 1,
                       borderColor: "rgba(225,195,155,0.35)",
                     }}

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { I18nManager } from "react-native";
-import i18n, { RTL_LANGUAGES } from "@/i18n";
+import i18n, { RTL_LANGUAGES, isSupportedLanguage, resolveInitialLanguage } from "@/i18n";
 
 function applyRTL(language: string) {
     const isRTL = RTL_LANGUAGES.has(language);
@@ -23,7 +23,12 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
     persist(
         (set) => ({
-            language: "en",
+            // First launch: follow the device language when we ship it,
+            // English otherwise — matches what i18n itself booted with
+            // (i18n/index.ts lng). A hardcoded "en" here would get persisted
+            // by the first unrelated settings write and force English on
+            // every later launch for non-English devices.
+            language: resolveInitialLanguage(),
             theme: "dark",
             notificationsEnabled: true,
             setLanguage: (language) => {
@@ -39,10 +44,16 @@ export const useSettingsStore = create<SettingsState>()(
             storage: createJSONStorage(() => AsyncStorage),
             version: 1,
             onRehydrateStorage: () => (state) => {
-                if (state?.language) {
-                    try { i18n.changeLanguage(state.language); } catch { /* ignore */ }
-                    applyRTL(state.language);
-                }
+                // Guard against a stale/corrupt persisted code (e.g. a locale
+                // we later drop): fall back to the device-or-English default
+                // instead of feeding i18n an unknown language.
+                const persisted = state?.language;
+                const language =
+                    persisted && isSupportedLanguage(persisted)
+                        ? persisted
+                        : resolveInitialLanguage();
+                try { i18n.changeLanguage(language); } catch { /* ignore */ }
+                applyRTL(language);
             },
         }
     )

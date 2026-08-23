@@ -162,17 +162,37 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Brand mark */}
-          <View style={{ marginBottom: 48 }}>
+          {/* Same dismiss affordance as register: reached from the register
+              screen or from a deep link inside the app, this was a one-way
+              door. Hidden when it IS the first route (onboarding), where
+              there is nothing behind it. */}
+          <View style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 40,
+          }}>
             <Brand variant="inline" size="sm" tone="gold" />
+            {router.canGoBack() ? (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel")}
+                style={{
+                  width: 36, height: 36, borderRadius: 18,
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: "rgba(225,195,155,0.08)",
+                  borderWidth: 1, borderColor: "rgba(225,195,155,0.22)",
+                }}
+              >
+                <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Editorial hero — eyebrow + display serif + sub-headline */}
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
               marginBottom: 12,
             }}
@@ -181,10 +201,7 @@ export default function LoginScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.3,
+              ...theme.text.display,
               color: theme.color.onSurface,
               marginBottom: 10,
             }}
@@ -193,9 +210,7 @@ export default function LoginScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 15,
-              lineHeight: 22,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               marginBottom: 36,
             }}
@@ -288,10 +303,7 @@ export default function LoginScreen() {
             />
             <Text
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2.2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: theme.color.onSurfaceMuted,
               }}
             >
@@ -338,8 +350,7 @@ export default function LoginScreen() {
           >
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 14,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
               }}
             >
@@ -348,10 +359,8 @@ export default function LoginScreen() {
             <Pressable onPress={() => router.push("/register")} hitSlop={6}>
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 14,
+                  ...theme.text.subtitle,
                   color: theme.color.goldMidday,
-                  letterSpacing: 0.2,
                 }}
               >
                 {t("auth.register_link")}
@@ -407,8 +416,8 @@ function SocialButton({
           justifyContent: "center",
           gap: 10,
           minHeight: 56,
-          paddingHorizontal: 20,
-          borderRadius: 14,
+          paddingHorizontal: theme.space.gutter,
+          borderRadius: theme.radius.md,
           borderWidth: 1,
           borderColor: "rgba(63,45,17,0.18)",
         }}
@@ -421,9 +430,7 @@ function SocialButton({
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 14,
-                letterSpacing: 0.3,
+                ...theme.text.subtitle,
                 color: theme.color.onGold,
               }}
             >

@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  LayoutAnimation,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
@@ -20,7 +22,7 @@ import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitl
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { CreditLedgerEntry } from "@/types/api";
@@ -40,6 +42,7 @@ const REFERENCE_FEATURES: {
   { code: "INPAINT",           tier: "STANDARD", labelKey: "credits.ref_inpaint" },
   { code: "STYLE_TRANSFER",    tier: "STANDARD", labelKey: "credits.ref_style_transfer" },
   { code: "EMPTY_ROOM",        tier: "STANDARD", labelKey: "credits.ref_empty_room" },
+  { code: "OUTDOOR_DESIGN",    tier: "STANDARD", labelKey: "credits.ref_outdoor" },
   { code: "ULTRA_HD_UPSCALE",  tier: null,       labelKey: "credits.ref_upscale" },
 ];
 
@@ -89,7 +92,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
       }}
       className="flex-row items-center bg-surface-container-low rounded-xl"
       style={({ pressed }) => ({
-        marginBottom: 10,
+        marginBottom: 12,
         padding: 14,
         opacity: pressed ? 0.85 : 1,
         borderWidth: 1,
@@ -130,9 +133,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
             <Text
               className="font-label"
               style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 1.2,
+                ...theme.text.caption,
                 color: "#E0C29A",
               }}
             >
@@ -142,9 +143,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
           <Text
             className="font-label"
             style={{
-              fontSize: 10,
-              fontWeight: "500",
-              letterSpacing: 0.8,
+              ...theme.text.caption,
               color: "#998F84",
             }}
           >
@@ -153,7 +152,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
         </View>
         <Text
           className="font-body text-on-surface"
-          style={{ fontSize: 14, fontWeight: "500" }}
+          style={{ ...theme.text.body }}
           numberOfLines={1}
         >
           {item.reason}
@@ -165,9 +164,11 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
         <Text
           className="font-headline"
           style={{
-            fontSize: 17,
+            ...theme.text.title,
             color: amountColor,
-            letterSpacing: 0.5,
+            fontVariant: ["tabular-nums"],
+            minWidth: 56,
+            textAlign: "right",
           }}
         >
           {isPositive ? "+" : ""}
@@ -200,6 +201,7 @@ export default function CreditsScreen() {
   const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
   const fetchPlans = useSubscriptionStore(s => s.fetchPlans);
 
+  const [referenceOpen, setReferenceOpen] = useState(false);
   const [ledger, setLedger] = useState<CreditLedgerEntry[]>([]);
   const [page, setPage] = useState(0);
   const [isLast, setIsLast] = useState(false);
@@ -331,7 +333,7 @@ export default function CreditsScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       {/* Billing-history header — brand mark + quick-access avatar.
           Back button behavior routes through useBackHandler so the
           "profile → credits → back" loop lands on Profile, not the
@@ -340,7 +342,7 @@ export default function CreditsScreen() {
         showBranding
         onBack={handleBack}
         showBack
-        rightElement={<UserAvatar size="sm" onPress />}
+        rightElement={<AvatarMenu />}
       />
 
       <FlatList
@@ -349,22 +351,19 @@ export default function CreditsScreen() {
         renderItem={({ item }) => <LedgerRow item={item} t={t} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
             {/* ── Hero Balance Section ── */}
             <View
               className="items-center"
-              style={{ paddingTop: 32, paddingBottom: 32 }}
+              style={{ paddingTop: 16, paddingBottom: 24 }}
             >
               <Text
                 className="font-label text-secondary"
                 style={{
-                  fontSize: 11,
-                  fontWeight: "500",
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   marginBottom: 8,
                 }}
               >
@@ -372,13 +371,13 @@ export default function CreditsScreen() {
               </Text>
               <Text
                 className="font-headline text-on-surface"
-                style={{ fontSize: 72, lineHeight: 80, marginBottom: 16 }}
+                style={{ ...theme.text.hero, marginBottom: 16 }}
               >
                 {balance}
               </Text>
               <Text
                 className="font-body text-on-surface-variant"
-                style={{ fontSize: 14, fontWeight: "300", fontStyle: "italic" }}
+                style={{ ...theme.text.body, fontStyle: "italic" }}
               >
                 {t("credits.credits_in_vault")}
               </Text>
@@ -398,8 +397,8 @@ export default function CreditsScreen() {
                   alignItems: "center",
                   justifyContent: "space-between",
                   height: 56,
-                  borderRadius: 16,
-                  paddingHorizontal: 24,
+                  borderRadius: theme.radius.md,
+                  paddingHorizontal: theme.space.gutter,
                   borderWidth: 1,
                   borderColor: "rgba(196,168,130,0.3)",
                 }}
@@ -407,10 +406,7 @@ export default function CreditsScreen() {
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                     color: "#3F2D11",
                   }}
                 >
@@ -423,7 +419,7 @@ export default function CreditsScreen() {
             {/* ── One-time Credit Pack Banner ── */}
             <Pressable
               onPress={() => router.push("/credits/packs")}
-              style={{ marginBottom: 48 }}
+              style={{ marginBottom: 28 }}
             >
               <View
                 style={{
@@ -431,8 +427,8 @@ export default function CreditsScreen() {
                   alignItems: "center",
                   justifyContent: "space-between",
                   height: 56,
-                  borderRadius: 16,
-                  paddingHorizontal: 24,
+                  borderRadius: theme.radius.md,
+                  paddingHorizontal: theme.space.gutter,
                   borderWidth: 1,
                   borderColor: "#4D463C",
                   backgroundColor: "transparent",
@@ -442,10 +438,7 @@ export default function CreditsScreen() {
                   numberOfLines={1}
                   className="font-label text-secondary"
                   style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    letterSpacing: 1.5,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {t("credits.one_time_banner")}
@@ -458,44 +451,66 @@ export default function CreditsScreen() {
             {referenceItems.length > 0 && (
               <View
                 className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 48 }}
+                style={{ padding: 24, marginBottom: 28 }}
               >
-                <View
-                  className="flex-row items-center justify-between"
-                  style={{ marginBottom: 8 }}
+                {/* Collapsible (2026-08-07). Six priced rows is a table, and a
+                    table permanently open above the Next Cycle card pushed the
+                    thing users actually came for below the fold. Closed by
+                    default: this is a lookup, not a headline. */}
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    LayoutAnimation.configureNext(
+                      LayoutAnimation.create(
+                        theme.motion.duration.base,
+                        LayoutAnimation.Types.easeInEaseOut,
+                        LayoutAnimation.Properties.opacity,
+                      ),
+                    );
+                    setReferenceOpen((v) => !v);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: referenceOpen }}
                 >
-                  <Text
-                    className="font-label text-secondary"
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "700",
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
-                    }}
+                  <View
+                    className="flex-row items-center justify-between"
+                    style={{ marginBottom: 8 }}
                   >
-                    {t("credits.reference_guide")}
-                  </Text>
-                  {subscription?.planName && (
                     <Text
-                      className="font-label"
+                      className="font-label text-secondary"
                       style={{
-                        fontSize: 10,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
-                        color: "#E0C29A",
+                        ...theme.text.caption,
                       }}
                     >
-                      {subscription.planName}
+                      {t("credits.reference_guide")}
                     </Text>
-                  )}
-                </View>
-                <Text
-                  className="font-body text-on-surface-variant"
-                  style={{ fontSize: 12, marginBottom: 16 }}
-                >
-                  {t("credits.reference_guide_subtitle")}
-                </Text>
-                {referenceItems.map((item, i) => (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      {subscription?.planName && (
+                        <Text
+                          className="font-label"
+                          style={{
+                            ...theme.text.caption,
+                            color: "#E0C29A",
+                          }}
+                        >
+                          {subscription.planName}
+                        </Text>
+                      )}
+                      <Ionicons
+                        name={referenceOpen ? "chevron-up" : "chevron-down"}
+                        size={theme.iconSize.md}
+                        color={theme.color.goldMidday}
+                      />
+                    </View>
+                  </View>
+                  <Text
+                    className="font-body text-on-surface-variant"
+                    style={{ ...theme.text.caption, marginBottom: referenceOpen ? 16 : 0 }}
+                  >
+                    {t("credits.reference_guide_subtitle")}
+                  </Text>
+                </Pressable>
+                {referenceOpen && referenceItems.map((item, i) => (
                   <View key={item.labelKey}>
                     <View
                       className="flex-row items-center justify-between"
@@ -503,13 +518,13 @@ export default function CreditsScreen() {
                     >
                       <Text
                         className="font-body text-on-surface"
-                        style={{ fontSize: 14, fontWeight: "500" }}
+                        style={{ ...theme.text.body }}
                       >
                         {t(item.labelKey)}
                       </Text>
                       <Text
                         className="font-headline text-secondary"
-                        style={{ fontSize: 14 }}
+                        style={{ ...theme.text.title }}
                       >
                         {t("credits.credit_count", { count: item.cost })}
                       </Text>
@@ -532,16 +547,13 @@ export default function CreditsScreen() {
             {subscription?.currentPeriodEnd && (
               <View
                 className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 48 }}
+                style={{ padding: 24, marginBottom: 28 }}
               >
                 <View style={{ marginBottom: 24 }}>
                   <Text
                     className="font-label text-secondary"
                     style={{
-                      fontSize: 11,
-                      fontWeight: "700",
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                       marginBottom: 8,
                     }}
                   >
@@ -549,7 +561,7 @@ export default function CreditsScreen() {
                   </Text>
                   <Text
                     className="font-body text-on-surface-variant"
-                    style={{ fontSize: 14 }}
+                    style={{ ...theme.text.body }}
                   >
                     {t("credits.balance_reset_on", { date: resetDateFormatted })}
                   </Text>
@@ -567,7 +579,7 @@ export default function CreditsScreen() {
                     style={{
                       width: `${Math.round(progressPct * 100)}%`,
                       height: "100%",
-                      borderRadius: 9999,
+                      borderRadius: theme.radius.pill,
                     }}
                   />
                 </View>
@@ -575,10 +587,7 @@ export default function CreditsScreen() {
                   <Text
                     className="font-label text-secondary"
                     style={{
-                      fontSize: 11,
-                      fontWeight: "500",
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {t("credits.days_remaining", { count: daysRemaining })}
@@ -607,10 +616,7 @@ export default function CreditsScreen() {
               <Text
                 className="font-label"
                 style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#E0C29A",
                 }}
               >
@@ -621,7 +627,7 @@ export default function CreditsScreen() {
                   style={{
                     paddingHorizontal: 10,
                     paddingVertical: 4,
-                    borderRadius: 999,
+                    borderRadius: theme.radius.pill,
                     backgroundColor: "rgba(225,195,155,0.10)",
                     borderWidth: 0.5,
                     borderColor: "rgba(225,195,155,0.25)",
@@ -630,9 +636,7 @@ export default function CreditsScreen() {
                   <Text
                     className="font-label"
                     style={{
-                      fontSize: 10.5,
-                      fontWeight: "600",
-                      letterSpacing: 1,
+                      ...theme.text.caption,
                       color: "#E0C29A",
                     }}
                   >
@@ -658,7 +662,7 @@ export default function CreditsScreen() {
                     style={{
                       paddingHorizontal: 14,
                       paddingVertical: 7,
-                      borderRadius: 999,
+                      borderRadius: theme.radius.pill,
                       borderWidth: 1,
                       borderColor: active
                         ? "rgba(254,223,181,0.6)"
@@ -670,11 +674,8 @@ export default function CreditsScreen() {
                   >
                     <Text
                       style={{
-                        fontSize: 11,
-                        fontWeight: active ? "700" : "500",
+                        ...theme.text.caption,
                         color: active ? "#E0C29A" : "#E5E2E1",
-                        letterSpacing: 1.2,
-                        textTransform: "uppercase",
                       }}
                     >
                       {t(`credits.filter_${f.toLowerCase()}`)}
@@ -696,7 +697,7 @@ export default function CreditsScreen() {
               />
               <Text
                 className="font-headline text-on-surface text-center"
-                style={{ fontSize: 16, marginBottom: 6 }}
+                style={{ ...theme.text.title, marginBottom: 6 }}
               >
                 {t(
                   activityFilter === "ALL"
@@ -707,9 +708,8 @@ export default function CreditsScreen() {
               <Text
                 className="font-body text-on-surface-variant text-center"
                 style={{
-                  fontSize: 13,
+                  ...theme.text.body,
                   maxWidth: 280,
-                  lineHeight: 20,
                   marginBottom: 18,
                 }}
               >
@@ -725,18 +725,15 @@ export default function CreditsScreen() {
                   style={{
                     paddingHorizontal: 22,
                     paddingVertical: 10,
-                    borderRadius: 999,
+                    borderRadius: theme.radius.pill,
                     borderWidth: 1,
                     borderColor: "#C4A882",
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 11,
-                      fontWeight: "700",
+                      ...theme.text.caption,
                       color: "#C4A882",
-                      letterSpacing: 2,
-                      textTransform: "uppercase",
                     }}
                   >
                     {t("credits.empty_cta")}
@@ -772,10 +769,7 @@ export default function CreditsScreen() {
                 <Text
                   className="font-label text-secondary"
                   style={{
-                    fontSize: 11,
-                    fontWeight: "700",
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {t("credits.promo_code_label")}
@@ -798,19 +792,18 @@ export default function CreditsScreen() {
                     editable={!promoLoading}
                     className="flex-1 bg-surface-container-high rounded-lg text-on-surface"
                     style={{
+                      ...theme.text.body,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
-                      fontSize: 14,
-                      letterSpacing: 3,
                     }}
                   />
                   <Pressable
                     onPress={handleRedeemPromo}
                     disabled={promoLoading}
                     style={{
-                      paddingHorizontal: 24,
+                      paddingHorizontal: theme.space.gutter,
                       paddingVertical: 12,
-                      borderRadius: 8,
+                      borderRadius: theme.radius.sm,
                       borderWidth: 1,
                       borderColor: "#C4A882",
                       justifyContent: "center",
@@ -823,11 +816,8 @@ export default function CreditsScreen() {
                     ) : (
                       <Text
                         style={{
-                          fontSize: 11,
-                          fontWeight: "700",
+                          ...theme.text.caption,
                           color: "#C4A882",
-                          letterSpacing: 3,
-                          textTransform: "uppercase",
                         }}
                       >
                         {t("credits.promo_apply")}
@@ -841,7 +831,7 @@ export default function CreditsScreen() {
                 <Text
                   className="font-body"
                   style={{
-                    fontSize: 12,
+                    ...theme.text.caption,
                     color: "#ffb4ab",
                     marginTop: 8,
                   }}

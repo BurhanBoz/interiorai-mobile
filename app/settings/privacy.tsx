@@ -52,14 +52,14 @@ export default function PrivacyScreen() {
   const handleBack = useBackHandler("/(tabs)/profile");
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={[]}
       style={{ flex: 1, backgroundColor: theme.color.surface }}
     >
       <TopBar title={t("settings.privacy_title")} showBack onBack={handleBack} />
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 64 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 64 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero — ONE editorial eyebrow, display serif, sub-headline bridge,
@@ -67,10 +67,7 @@ export default function PrivacyScreen() {
         <View style={{ marginTop: 24, gap: 16 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
             }}
           >
@@ -78,10 +75,7 @@ export default function PrivacyScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 42,
-              lineHeight: 48,
-              letterSpacing: -0.5,
+              ...theme.text.hero,
               color: theme.color.onSurface,
             }}
           >
@@ -89,10 +83,7 @@ export default function PrivacyScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 18,
-              lineHeight: 26,
-              letterSpacing: -0.1,
+              ...theme.text.title,
               color: theme.color.onSurfaceVariant,
               marginTop: 4,
             }}
@@ -133,10 +124,7 @@ export default function PrivacyScreen() {
                 />
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 10,
-                    letterSpacing: 1.8,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                     color: theme.color.goldMidday,
                   }}
                 >
@@ -145,10 +133,7 @@ export default function PrivacyScreen() {
               </View>
               <Text
                 style={{
-                  fontFamily: "NotoSerif",
-                  fontSize: 22,
-                  lineHeight: 28,
-                  letterSpacing: -0.1,
+                  ...theme.text.headline,
                   color: theme.color.onSurface,
                   marginBottom: 10,
                 }}
@@ -157,9 +142,7 @@ export default function PrivacyScreen() {
               </Text>
               <Text
                 style={{
-                  fontFamily: "Inter",
-                  fontSize: 14,
-                  lineHeight: 22,
+                  ...theme.text.body,
                   color: theme.color.onSurfaceVariant,
                 }}
               >

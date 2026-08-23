@@ -14,8 +14,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useState } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
 import { useBackHandler } from "@/utils/navigation";
 import { planTier } from "@/utils/planTier";
+import { formatProductPrice, type StorePriceMap } from "@/utils/price";
 import { openManageSubscriptions } from "@/services/iap";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
@@ -29,11 +31,9 @@ const { height: SCREEN_H } = Dimensions.get("window");
 
 type FeatureRowType =
     | "credits"
-    | "tier"
     | "feature"
     | "permission"
     | "watermark"
-    | "outputs"
     | "queue"
     | "combo";
 
@@ -47,9 +47,7 @@ interface FeatureRow {
 
 const FEATURE_ROWS: FeatureRow[] = [
     { labelKey: "plans.row_monthly_credits",   key: "monthlyCredits",           type: "credits",    groupLabelKey: "plans.group_allowance" },
-    { labelKey: "plans.row_variants",          key: "max_outputs",              type: "outputs" },
-    { labelKey: "plans.row_model_quality",     key: "modelTier",                type: "tier",       groupLabelKey: "plans.group_quality" },
-    { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark" },
+    { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark",  groupLabelKey: "plans.group_quality" },
     { labelKey: "plans.row_queue_priority",    key: "queuePriority",            type: "queue" },
     { labelKey: "plans.row_hd",                key: "HD_REDESIGN",              type: "feature",    groupLabelKey: "plans.group_capabilities" },
     { labelKey: "plans.row_upscale",           key: "ULTRA_HD_UPSCALE",         type: "feature" },
@@ -65,27 +63,18 @@ const FEATURE_ROWS: FeatureRow[] = [
 // Frontend truth table — which features each tier definitively introduces.
 // Overrides backend "—" for features we know belong to a tier.
 const TIER_HIGHLIGHTS: Record<string, string[]> = {
-    BASIC: ["allow_custom_prompt", "max_outputs"],
-    PRO:   ["ULTRA_HD_UPSCALE", "INPAINT", "allow_commercial_spaces", "advanced_controls"],
-    MAX:   ["STYLE_TRANSFER", "allow_quality_mode"],
+    BASE: ["HD_REDESIGN", "allow_custom_prompt", "allow_commercial_spaces"],
+    PRO:  ["INPAINT", "STYLE_TRANSFER", "ULTRA_HD_UPSCALE", "advanced_controls"],
 };
 
 function resolveCell(plan: PlanResponse, row: FeatureRow): string {
     switch (row.type) {
         case "credits":
-            if (plan.code === "FREE") return "1/day";
+            // V41: FREE has no recurring credits — a one-time 15-credit
+            // welcome grant lives in the subtitle copy, not this row.
+            if (plan.code === "FREE") return "—";
             if (plan.billingPeriod === "YEARLY") return String(plan.monthlyCredits * 12);
             return String(plan.monthlyCredits);
-        case "tier":
-            return plan.modelTier ?? "—";
-        case "outputs": {
-            const feat = plan.features?.find((f) => f.featureCode === "INTERIOR_REDESIGN");
-            if (!feat?.limitsJson) return "1";
-            try {
-                const l = typeof feat.limitsJson === "string" ? JSON.parse(feat.limitsJson) : feat.limitsJson;
-                return String(l?.max_outputs ?? 1);
-            } catch { return "1"; }
-        }
         case "queue":
             return (plan.queuePriority ?? 0) > 0 ? "✓" : "—";
         case "feature": {
@@ -112,10 +101,19 @@ function resolveSource(plan: PlanResponse, allPlans: PlanResponse[]): PlanRespon
     return monthly ?? plan;
 }
 
-function formatPrice(plan: PlanResponse): string {
-    if (plan.priceCents === 0) return "$0";
-    const amount = (plan.priceCents / 100).toFixed(2);
-    return plan.currency === "USD" ? `$${amount}` : `${amount} ${plan.currency}`;
+/**
+ * StoreKit-first price label: the storefront-localized string when store
+ * prices are loaded (₺/€/¥ — what Apple's payment sheet will show), backend
+ * USD until then. FREE has no store product → localized "Free" word instead
+ * of a currency-claiming "$0".
+ */
+function priceLabel(
+    plan: PlanResponse,
+    storePrices: StorePriceMap,
+    t: (key: string) => string,
+): string {
+    if (plan.priceCents === 0) return t("plans.free");
+    return formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency);
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,13 +136,14 @@ function PlanFeatureSheet({
     onConfirm: () => void;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
 
     // Derived — no hooks needed
     const src       = plan ? resolveSource(plan, allPlans) : null;
     const tierLabel = plan ? plan.code.replace("_ANNUAL", "") : "";
 
     const tierColor: Record<string, string> = {
-        MAX: "#FDDEB4", PRO: "#E0C29A", BASIC: "#B4C8DC", FREE: "#998F84",
+        PRO: "#FDDEB4", BASE: "#E0C29A", FREE: "#998F84",
     };
     const accentColor = tierColor[tierLabel] ?? "#998F84";
 
@@ -196,26 +195,32 @@ function PlanFeatureSheet({
                         <>
                             {/* Header */}
                             <View style={{
-                                paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16,
+                                paddingHorizontal: theme.space.gutter, paddingTop: 10, paddingBottom: 16,
                                 borderBottomWidth: 1, borderBottomColor: "rgba(77,70,60,0.3)",
                             }}>
                                 <Text style={{
-                                    fontFamily: "Inter-SemiBold", fontSize: 10,
-                                    letterSpacing: 2.4, textTransform: "uppercase",
-                                    color: accentColor, marginBottom: 4,
-                                }}>
+                                    ...theme.text.label,
+                                    color: accentColor,
+ marginBottom: 4,
+                                  }}>
                                     {plan.name}
                                 </Text>
                                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
                                     <Text style={{
-                                        fontFamily: "NotoSerif", fontSize: 32, lineHeight: 38,
-                                        color: "#E5E2E1", letterSpacing: -0.5,
-                                    }}>
-                                        {formatPrice(plan)}
+                                        ...theme.text.display,
+                                        color: "#E5E2E1",
+                                      }}>
+                                        {priceLabel(plan, storePrices, t)}
                                     </Text>
-                                    <Text style={{ fontFamily: "Inter", fontSize: 12, color: "rgba(209,197,184,0.5)" }}>
-                                        {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
-                                    </Text>
+                                    {plan.priceCents > 0 && (
+                                        <Text style={{ ...theme.text.caption, color: "rgba(209,197,184,0.5)" }}>
+                                            {plan.billingPeriod === "YEARLY"
+                                                ? t("plans.per_year")
+                                                : plan.billingPeriod === "WEEKLY"
+                                                ? t("plans.per_week")
+                                                : t("plans.per_month")}
+                                        </Text>
+                                    )}
                                 </View>
                             </View>
 
@@ -240,8 +245,12 @@ function PlanFeatureSheet({
                                         const isNew   = isCheck && isHighlight;
 
                                         const labelKey =
-                                            plan.billingPeriod === "YEARLY" && row.labelKey === "plans.row_monthly_credits"
-                                                ? "plans.row_yearly_credits"
+                                            row.labelKey === "plans.row_monthly_credits"
+                                                ? plan.billingPeriod === "YEARLY"
+                                                    ? "plans.row_yearly_credits"
+                                                    : plan.billingPeriod === "WEEKLY"
+                                                    ? "plans.row_weekly_credits"
+                                                    : row.labelKey
                                                 : row.labelKey;
 
                                         const showGroupHeader = row.groupLabelKey && row.groupLabelKey !== lastGroup;
@@ -251,15 +260,14 @@ function PlanFeatureSheet({
                                             <View key={row.key}>
                                                 {showGroupHeader && row.groupLabelKey ? (
                                                     <View style={{
-                                                        paddingHorizontal: 24, paddingTop: 16, paddingBottom: 6,
+                                                        paddingHorizontal: theme.space.gutter, paddingTop: 16, paddingBottom: 6,
                                                         borderTopWidth: lastGroup !== row.groupLabelKey ? 0 : 1,
                                                         borderTopColor: "rgba(77,70,60,0.2)",
                                                     }}>
                                                         <Text style={{
-                                                            fontFamily: "Inter-SemiBold", fontSize: 10,
-                                                            letterSpacing: 1.8, textTransform: "uppercase",
+                                                            ...theme.text.caption,
                                                             color: "rgba(225,195,155,0.5)",
-                                                        }}>
+                                                          }}>
                                                             {t(row.groupLabelKey)}
                                                         </Text>
                                                     </View>
@@ -296,12 +304,12 @@ function PlanFeatureSheet({
                                                     )}
 
                                                     <Text style={{
-                                                        flex: 1, fontFamily: isNew ? "Inter-SemiBold" : "Inter",
-                                                        fontSize: 13, lineHeight: 18,
+                                                        ...theme.text.body,
+                                                        flex: 1,
                                                         color: isDash
                                                             ? "rgba(209,197,184,0.32)"
                                                             : isNew ? "#EDE8E2" : "#C8C0B8",
-                                                    }}>
+                                                      }}>
                                                         {t(labelKey)}
                                                     </Text>
 
@@ -315,18 +323,18 @@ function PlanFeatureSheet({
                                                             marginLeft: 10, flexShrink: 0,
                                                         }}>
                                                             <Text style={{
-                                                                fontFamily: "Inter-SemiBold", fontSize: 10,
-                                                                letterSpacing: 1.2, textTransform: "uppercase",
+                                                                ...theme.text.label,
                                                                 color: accentColor,
-                                                            }}>
+                                                              }}>
                                                                 {tierLabel}
                                                             </Text>
                                                         </View>
                                                     ) : (!isCheck && !isDash) ? (
                                                         <Text style={{
-                                                            fontFamily: "Inter-SemiBold",
-                                                            fontSize: 13, color: "#E0C29A", marginLeft: 8,
-                                                        }}>
+                                                            ...theme.text.subtitle,
+ color: "#E0C29A",
+ marginLeft: 8,
+                                                          }}>
                                                             {val}
                                                         </Text>
                                                     ) : null}
@@ -339,19 +347,19 @@ function PlanFeatureSheet({
 
                             {/* CTA */}
                             <View style={{
-                                paddingHorizontal: 20, paddingTop: 14, paddingBottom: 36,
+                                paddingHorizontal: theme.space.gutter, paddingTop: 14, paddingBottom: 36,
                                 borderTopWidth: 1, borderTopColor: "rgba(77,70,60,0.2)",
                             }}>
                                 {isCurrent ? (
                                     <View style={{
-                                        height: 56, borderRadius: 16, backgroundColor: "#2A2A2A",
+                                        height: 56, borderRadius: theme.radius.md, backgroundColor: "#2A2A2A",
                                         alignItems: "center", justifyContent: "center",
                                         borderWidth: 1, borderColor: "rgba(77,70,60,0.4)",
                                     }}>
                                         <Text style={{
-                                            fontFamily: "Inter-SemiBold", fontSize: 14,
-                                            color: "#998F84", letterSpacing: 0.3,
-                                        }}>
+                                            ...theme.text.subtitle,
+                                            color: "#998F84",
+                                          }}>
                                             {t("plans.current_plan")}
                                         </Text>
                                     </View>
@@ -364,15 +372,15 @@ function PlanFeatureSheet({
                                             colors={["#C4A882", "#A68A62"]}
                                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                                             style={{
-                                                height: 56, borderRadius: 16,
+                                                height: 56, borderRadius: theme.radius.md,
                                                 flexDirection: "row", alignItems: "center",
-                                                justifyContent: "space-between", paddingHorizontal: 24,
+                                                justifyContent: "space-between", paddingHorizontal: theme.space.gutter,
                                             }}
                                         >
                                             <Text style={{
-                                                fontFamily: "Inter-SemiBold", fontSize: 14,
-                                                color: "#3F2D11", letterSpacing: 0.3,
-                                            }}>
+                                                ...theme.text.subtitle,
+                                                color: "#3F2D11",
+                                              }}>
                                                 {t("plans.confirm")}
                                             </Text>
                                             <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
@@ -410,6 +418,7 @@ function PlanCard({
     onExpand: () => void;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
 
     const tier = plan.modelTier ?? "ENTRY";
     // Annual plans grant the SAME monthly allocation every month for the
@@ -417,13 +426,15 @@ function PlanCard({
     // · billed yearly" rather than a misleading "1,800 credits/year".
     const subtitle =
         plan.code === "FREE"
-            ? t("plans.plan_subtitle_daily", { tier })
+            ? t("plans.plan_subtitle_daily")
             : plan.billingPeriod === "YEARLY"
-            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits, tier })
-            : t("plans.plan_subtitle", { credits: plan.monthlyCredits, tier });
+            ? t("plans.plan_subtitle_yearly", { credits: plan.monthlyCredits })
+            : plan.billingPeriod === "WEEKLY"
+            ? t("plans.plan_subtitle_weekly", { credits: plan.monthlyCredits })
+            : t("plans.plan_subtitle", { credits: plan.monthlyCredits });
 
     const cta = isCurrent ? t("plans.current_plan") : t("plans.confirm");
-    const isMaxTier = planTier(plan.code) === "MAX";
+    const isTopTier = planTier(plan.code) === "PRO";
 
     // ONE wrapper for every card: a single Pressable with a PLAIN OBJECT
     // style. The previous View-vs-Pressable + function-returning-array
@@ -433,20 +444,22 @@ function PlanCard({
     // matches that working path everywhere. The active plan is conveyed by
     // the disabled "Current Plan" button — not by the frame.
     const baseStyle = {
-        paddingVertical: 20,
-        paddingHorizontal: 24,
-        borderRadius: 18,
+        paddingVertical: 22,
+        paddingHorizontal: theme.space.gutter,
+        // Softer premium frame (2026-07-11 polish): larger radius + a
+        // hairline border reads calmer than the previous 1.5px/18.
+        borderRadius: theme.radius.lg,
         backgroundColor: theme.color.surfaceContainerLow,
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderColor: theme.color.goldDusk,
     };
 
     // Corner badge ONLY for PRO (Most Popular) and MAX (Best Value).
     // BASIC / FREE get no badge at all (no empty pill).
     const badge =
-        planTier(plan.code) === "PRO"
+        planTier(plan.code) === "BASE"
             ? t("plans.most_popular")
-            : planTier(plan.code) === "MAX"
+            : planTier(plan.code) === "PRO"
                 ? t("plans.best_value", { defaultValue: "Best Value" })
                 : null;
 
@@ -456,12 +469,12 @@ function PlanCard({
             disabled={isCurrent}
             style={baseStyle}
         >
-            {isMaxTier ? (
+            {isTopTier ? (
                 <LinearGradient
                     colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.02)", "rgba(253,222,181,0.08)"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     pointerEvents="none"
-                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: theme.radius.lg }}
                 />
             ) : null}
 
@@ -470,9 +483,9 @@ function PlanCard({
                     <LinearGradient
                         colors={[theme.color.goldMidday, theme.color.goldDusk]}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 0.5, borderColor: "rgba(63,45,17,0.2)" }}
+                        style={{ borderRadius: theme.radius.pill, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 0.5, borderColor: "rgba(63,45,17,0.2)" }}
                     >
-                        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: theme.color.onGold, textTransform: "uppercase", letterSpacing: 1.6 }}>
+                        <Text style={{ ...theme.text.label, color: theme.color.onGold }}>
                             {badge}
                         </Text>
                     </LinearGradient>
@@ -482,15 +495,15 @@ function PlanCard({
             {/* Header row — tier label left, ⓘ button right, both in flow.
                 No absolute positioning: every card has identical structure
                 so labels land at the same Y position regardless of border. */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <Text className="font-label text-secondary" style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <Text className="font-label text-secondary" style={{ ...theme.text.label }}>
                     {plan.name}
                 </Text>
                 <Pressable
                     onPress={onExpand}
                     hitSlop={12}
                     style={{
-                        width: 28, height: 28, borderRadius: 14,
+                        width: 28, height: 28, borderRadius: theme.radius.md,
                         borderWidth: 1, borderColor: "rgba(225,195,155,0.3)",
                         backgroundColor: "rgba(225,195,155,0.07)",
                         alignItems: "center", justifyContent: "center",
@@ -500,36 +513,42 @@ function PlanCard({
                 </Pressable>
             </View>
 
-            <Text className="font-body" style={{ fontSize: 13, lineHeight: 18, color: "#E0C29A", marginBottom: 16 }}>
+            <Text className="font-body" style={{ ...theme.text.caption, color: "#E0C29A", marginBottom: 18 }}>
                 {subtitle}
             </Text>
 
-            <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 20 }}>
-                <Text className="font-headline text-on-surface" style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.4 }}>
-                    {formatPrice(plan)}
+            <View className="flex-row items-baseline" style={{ gap: 6, marginBottom: 22 }}>
+                <Text className="font-headline text-on-surface" style={{ ...theme.text.headline }}>
+                    {priceLabel(plan, storePrices, t)}
                 </Text>
-                <Text className="text-secondary" style={{ fontSize: 11.5 }}>
-                    {plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month")}
-                </Text>
+                {plan.priceCents > 0 && (
+                    <Text className="text-secondary" style={{ ...theme.text.caption }}>
+                        {plan.billingPeriod === "YEARLY"
+                                                ? t("plans.per_year")
+                                                : plan.billingPeriod === "WEEKLY"
+                                                ? t("plans.per_week")
+                                                : t("plans.per_month")}
+                    </Text>
+                )}
             </View>
 
             {isCurrent ? (
-                <View style={{ height: 50, borderRadius: 12, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#998F84", letterSpacing: 0.3 }}>{cta}</Text>
+                <View style={{ height: 48, borderRadius: theme.radius.md, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#998F84" }}>{cta}</Text>
                 </View>
             ) : isPopular ? (
                 // Visual only — the whole card Pressable handles navigation.
                 <LinearGradient
                     colors={["#C4A882", "#A68A62"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={{ height: 50, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 }}
+                    style={{ height: 48, borderRadius: theme.radius.md, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: theme.space.gutter }}
                 >
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#3F2D11", letterSpacing: 0.2 }}>{cta}</Text>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#3F2D11" }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
                 </LinearGradient>
             ) : (
-                <View style={{ height: 50, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
-                    <Text className="font-body" style={{ fontSize: 14, fontWeight: "600", color: "#E0C29A", letterSpacing: 0.3 }}>{cta}</Text>
+                <View style={{ height: 48, borderRadius: theme.radius.md, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#E0C29A" }}>{cta}</Text>
                     <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
                 </View>
             )}
@@ -541,17 +560,58 @@ function PlanCard({
 /*  Screen                                                              */
 /* ------------------------------------------------------------------ */
 
+/** Half the toggle track, minus the gap. Static so nothing can drop it. */
+const PILL_SLOT = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } as const;
+
+/* Segmented control sizing.
+ *
+ * The annual pill carries TWO pieces of text — the period label plus the
+ * savings badge — and both grow with the locale ("YILLIK" + "%30 TASARRUF",
+ * "ANNUALE" + "RISPARMIA 30%"). At 12px each they no longer fit half a
+ * 390pt-wide track, and because the badge had no line limit it WRAPPED:
+ * the annual pill then grew taller than the monthly one and its content ran
+ * to the track edge (founder screenshot, iPhone 13, 2026-08-11).
+ *
+ * The fix is sizing, not per-device tweaking: a smaller type scale for this
+ * control, one enforced line each with auto-fit as the shrink valve, and a
+ * fixed min height so the two pills are identical whatever they hold. That
+ * holds for every locale and every width, not just the phone that showed it.
+ */
+const SEGMENT_MIN_HEIGHT = 46;
+const SEGMENT_LABEL_TEXT = {
+    ...theme.text.caption,
+    fontSize: 11.5,
+    lineHeight: 15,
+} as const;
+const SEGMENT_BADGE_TEXT = {
+    ...theme.text.caption,
+    fontSize: 9.5,
+    lineHeight: 12,
+    letterSpacing: 0.2,
+} as const;
+
 export default function PlansScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const plans = useSubscriptionStore((s) => s.plans);
     const subscription = useSubscriptionStore((s) => s.subscription);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
+
+    // Localized store prices — normally already hydrated at boot; this is
+    // the retry path (offline boot, RC hiccup). Idempotent.
+    useEffect(() => {
+        hydrateStorePrices();
+    }, [hydrateStorePrices]);
     const handleBack = useBackHandler("/(tabs)/profile");
     const [sheetPlan, setSheetPlan] = useState<PlanResponse | null>(null);
     const isUserOnAnnual = (subscription?.planCode ?? "").endsWith("_ANNUAL");
-    const [billingMode, setBillingMode] = useState<"MONTHLY" | "ANNUAL">(
-        isUserOnAnnual ? "ANNUAL" : "MONTHLY",
+    // Pricing V4 (2026-08-11): the storefront sells WEEKLY + ANNUAL. The
+    // first segment falls back to MONTHLY only while the backend has no
+    // weekly SKUs yet (transition safety — an empty paywall is worse than a
+    // stale one).
+    const [billingMode, setBillingMode] = useState<"PERIODIC" | "ANNUAL">(
+        isUserOnAnnual ? "ANNUAL" : "PERIODIC",
     );
 
     useEffect(() => {
@@ -564,75 +624,181 @@ export default function PlansScreen() {
 
     const currentCode = subscription?.planCode ?? "FREE";
 
+    const hasAnnualPlans = useMemo(
+        () => (plans ?? []).some((p) => p.code.endsWith("_ANNUAL")),
+        [plans],
+    );
+    // V4: weekly SKUs exist once V59 is live. Until then the first segment
+    // keeps selling the monthly rows so 1.2.1-era backends never render an
+    // empty paywall.
+    const hasWeeklyPlans = useMemo(
+        () => (plans ?? []).some((p) => p.billingPeriod === "WEEKLY"),
+        [plans],
+    );
+
     const sortedPlans = useMemo(() => {
         if (!plans) return [];
+        const mode = hasAnnualPlans ? billingMode : "PERIODIC";
         return [...plans]
             .filter((p) => {
-                if (p.code === "FREE") return billingMode === "MONTHLY";
-                const isAnnual = p.code.endsWith("_ANNUAL");
-                return billingMode === "ANNUAL" ? isAnnual : !isAnnual;
+                // FREE is auto-assigned at signup and never purchasable —
+                // showing it on the paywall only dilutes the Base/Pro choice.
+                // The user's balance/trial state lives on Profile & Settings.
+                if (p.code === "FREE") return false;
+                if (mode === "ANNUAL") return p.code.endsWith("_ANNUAL");
+                // Periodic segment: weekly when available, else legacy monthly.
+                return hasWeeklyPlans
+                    ? p.billingPeriod === "WEEKLY"
+                    : p.billingPeriod === "MONTHLY";
             })
             .sort((a, b) => a.sortOrder - b.sortOrder);
-    }, [plans, billingMode]);
+    }, [plans, billingMode, hasAnnualPlans, hasWeeklyPlans]);
 
     return (
-        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
+        <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
             <TopBar title={t("plans.title")} showBack onBack={handleBack} />
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+                contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Headline */}
                 <View style={{ marginTop: 24, marginBottom: 24 }}>
-                    <Text className="font-headline text-on-surface" style={{ fontSize: 36, lineHeight: 42, marginBottom: 12 }}>
+                    <Text className="font-headline text-on-surface" style={{ ...theme.text.display, marginBottom: 12 }}>
                         {t("plans.title")}
                     </Text>
-                    <Text className="font-body text-secondary" style={{ fontSize: 14 }}>
+                    <Text className="font-body text-secondary" style={{ ...theme.text.body }}>
                         {t("plans.subtitle")}
                     </Text>
                 </View>
 
-                {/* Monthly / Annual toggle */}
-                <View style={{ marginBottom: 28 }}>
+                {/* Apple-deferred change in flight — say WHEN the new plan
+                    starts, or the successful purchase reads as a silent
+                    failure (founder bug 2026-07-16). */}
+                {subscription?.scheduledPlanCode
+                    && subscription.scheduledPlanCode !== subscription.planCode && (
                     <View style={{
-                        flexDirection: "row", padding: 5, borderRadius: 16,
+                        flexDirection: "row", alignItems: "center", gap: 10,
+                        marginBottom: 24, paddingVertical: 14, paddingHorizontal: 16,
+                        borderRadius: theme.radius.md, borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.35)",
+                        backgroundColor: "rgba(225,195,155,0.07)",
+                    }}>
+                        <Ionicons name="time-outline" size={18} color={theme.color.goldMidday} />
+                        <Text className="font-body" style={{ ...theme.text.body, flex: 1, color: "#EDE4D7" }}>
+                            {t("plans.scheduled_banner", {
+                                plan: (plans ?? []).find(
+                                    (p) => p.code === subscription.scheduledPlanCode,
+                                )?.name ?? subscription.scheduledPlanCode,
+                                date: (() => {
+                                    const iso = subscription.scheduledChangeAt
+                                        ?? subscription.currentPeriodEnd;
+                                    try {
+                                        return new Date(iso).toLocaleDateString(i18n.language, {
+                                            day: "numeric", month: "long", year: "numeric",
+                                        });
+                                    } catch {
+                                        return (iso ?? "").slice(0, 10);
+                                    }
+                                })(),
+                            })}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Monthly / Annual toggle — hidden until annual SKUs exist */}
+                {hasAnnualPlans && (
+                <View style={{ marginBottom: 28 }}>
+                    {/* The two pills split this track evenly. They used to hug
+                        their labels on the left with dead space to the right
+                        (founder screenshot 2026-08-07): `flex: 1` alone lets a
+                        child fall back to content width, so the share is stated
+                        explicitly on both the Pressable and the pill below. */}
+                    <View style={{
+                        flexDirection: "row", alignSelf: "stretch", gap: 6,
+                        padding: 5, borderRadius: theme.radius.md,
                         backgroundColor: "rgba(20,19,19,0.85)",
                         borderWidth: 1, borderColor: "rgba(77,70,60,0.28)",
                         ...theme.elevation.sm,
                     }}>
-                        {(["MONTHLY", "ANNUAL"] as const).map((mode) => {
+                        {(["PERIODIC", "ANNUAL"] as const).map((mode) => {
                             const active = billingMode === mode;
                             const isAnnual = mode === "ANNUAL";
                             const PillWrapper: any = active ? LinearGradient : View;
+                            // Identical box metrics in both states — only the
+                            // fill and border change. Equal min height keeps
+                            // the two pills the same size even when one holds
+                            // a badge and the other doesn't.
+                            const pillBox = {
+                                alignSelf: "stretch" as const,
+                                minHeight: SEGMENT_MIN_HEIGHT,
+                                paddingVertical: 10,
+                                paddingHorizontal: 10,
+                                borderRadius: theme.radius.sm,
+                                flexDirection: "row" as const,
+                                alignItems: "center" as const,
+                                justifyContent: "center" as const,
+                                gap: 6,
+                            };
                             const pillProps = active
                                 ? {
                                     colors: ["rgba(253,222,181,0.18)", "rgba(225,195,155,0.10)"],
                                     start: { x: 0, y: 0 }, end: { x: 1, y: 1 },
-                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)", flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
+                                    style: { ...pillBox, borderWidth: 1, borderColor: "rgba(225,195,155,0.55)" },
                                 }
-                                : {
-                                    style: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, borderRadius: 12, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 8 },
-                                };
+                                : { style: pillBox };
                             return (
                                 <Pressable
                                     key={mode}
                                     onPress={() => setBillingMode(mode)}
-                                    style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}
+                                    // STATIC, not a style callback: the callback
+                                    // form is being dropped somewhere in this app's
+                                    // render path, which left the Pressable sized to
+                                    // its content — so the 100%-wide pill inside it
+                                    // ran off the right edge and clipped "SAVE 30%"
+                                    // (founder screenshot, 2026-08-07).
+                                    style={PILL_SLOT}
                                 >
                                     <PillWrapper {...pillProps}>
-                                        <Text className="font-body" style={{ fontSize: 12.5, fontWeight: active ? "700" : "500", letterSpacing: 1.6, color: active ? "#F4DDB6" : "#998F84" }}>
-                                            {isAnnual ? t("plans.toggle_annual_label") : t("plans.toggle_monthly")}
+                                        {/* flexShrink + single-line auto-fit: the TR strings
+                                            ("YILLIK" + "%30 TASARRUF" badge) overflowed the
+                                            pill on narrower screens and clipped mid-word
+                                            (founder report 2026-07-18). The label yields
+                                            first; the badge never shrinks. */}
+                                        <Text
+                                            className="font-body"
+                                            numberOfLines={1}
+                                            adjustsFontSizeToFit
+                                            minimumFontScale={0.8}
+                                            style={{ ...SEGMENT_LABEL_TEXT, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
+                                        >
+                                            {isAnnual
+                                                ? t("plans.toggle_annual_label")
+                                                : hasWeeklyPlans
+                                                ? t("plans.toggle_weekly")
+                                                : t("plans.toggle_monthly")}
                                         </Text>
                                         {isAnnual ? (
                                             <View style={{
-                                                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+                                                // minWidth:0 is what actually lets the badge shrink:
+                                                // without it a flex child is floored at its content
+                                                // width, so flexShrink alone changed nothing and the
+                                                // text wrapped instead of narrowing.
+                                                flexShrink: 1,
+                                                minWidth: 0,
+                                                paddingHorizontal: 6, paddingVertical: 2.5,
+                                                borderRadius: theme.radius.pill,
                                                 backgroundColor: active ? "rgba(63,45,17,0.85)" : "rgba(225,195,155,0.14)",
                                                 borderWidth: 0.5,
                                                 borderColor: active ? "rgba(244,221,182,0.3)" : "rgba(225,195,155,0.35)",
                                             }}>
-                                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: 1.1, color: active ? "#F4DDB6" : "#E0C29A" }}>
+                                                <Text
+                                                    numberOfLines={1}
+                                                    adjustsFontSizeToFit
+                                                    minimumFontScale={0.75}
+                                                    style={{ ...SEGMENT_BADGE_TEXT, color: active ? "#F4DDB6" : "#E0C29A" }}
+                                                >
                                                     {t("plans.toggle_save_badge")}
                                                 </Text>
                                             </View>
@@ -642,12 +808,13 @@ export default function PlansScreen() {
                             );
                         })}
                     </View>
-                    {billingMode === "ANNUAL" ? (
-                        <Text style={{ marginTop: 10, fontSize: 11.5, letterSpacing: 0.3, textAlign: "center", color: "rgba(225,195,155,0.7)", fontFamily: "Inter" }}>
-                            {t("plans.toggle_annual_hint")}
-                        </Text>
-                    ) : null}
+                    {/* The "save up to 30%" hint under the toggle is gone
+                        (founder call, 2026-08-07): the ANNUAL pill already
+                        carries a SAVE 30% badge, so the line repeated itself
+                        — and because it only appeared on one of the two
+                        states, switching tabs shifted every card below it. */}
                 </View>
+                )}
 
                 {/* Plan cards */}
                 {sortedPlans.length === 0 ? (
@@ -655,14 +822,14 @@ export default function PlansScreen() {
                 ) : (
                     <View style={{ gap: 0, marginBottom: 36 }}>
                         {sortedPlans.map((plan) => (
-                            <View key={plan.code} style={{ marginTop: 16 }}>
+                            <View key={plan.code} style={{ marginTop: 20 }}>
                             <PlanCard
                                 plan={plan}
                                 isCurrent={plan.code === currentCode}
                                 // PRO (monthly & annual) always gets the
                                 // premium gradient CTA — unless it's the
                                 // user's current plan (then it's disabled).
-                                isPopular={planTier(plan.code) === "PRO" && plan.code !== currentCode}
+                                isPopular={planTier(plan.code) === "BASE" && plan.code !== currentCode}
                                 onPress={() => router.push({ pathname: "/plans/confirm", params: { planCode: plan.code } })}
                                 onExpand={() => setSheetPlan(plan)}
                             />
@@ -674,14 +841,14 @@ export default function PlansScreen() {
                 {/* Credit pack bridge */}
                 <Pressable onPress={() => router.push("/credits/packs")} style={{ marginBottom: 48 }}>
                     <View className="bg-surface-container-low rounded-xl flex-row items-center" style={{ padding: 20, borderWidth: 1, borderColor: "rgba(77,70,60,0.3)" }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(224,194,154,0.1)", alignItems: "center", justifyContent: "center", marginRight: 16 }}>
+                        <View style={{ width: 40, height: 40, borderRadius: theme.radius.lg, backgroundColor: "rgba(224,194,154,0.1)", alignItems: "center", justifyContent: "center", marginRight: 16 }}>
                             <Ionicons name="flash-outline" size={20} color="#E0C29A" />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text className="font-body text-on-surface" style={{ fontSize: 14, fontWeight: "600", marginBottom: 2 }}>
+                            <Text className="font-body text-on-surface" style={{ ...theme.text.body, marginBottom: 2 }}>
                                 {t("plans.credit_pack_bridge_title")}
                             </Text>
-                            <Text className="font-body text-on-surface-variant" style={{ fontSize: 12 }}>
+                            <Text className="font-body text-on-surface-variant" style={{ ...theme.text.caption }}>
                                 {t("plans.credit_pack_bridge_subtitle")}
                             </Text>
                         </View>
@@ -713,11 +880,9 @@ export default function PlansScreen() {
                             <Ionicons name="settings-outline" size={15} color="#998F84" />
                             <Text
                                 style={{
-                                    fontFamily: "Inter-Medium",
-                                    fontSize: 13,
-                                    letterSpacing: 0.2,
+                                    ...theme.text.subtitle,
                                     color: "#998F84",
-                                }}
+                                  }}
                             >
                                 {t("plans.manage_subscription", {
                                     defaultValue: "Manage or cancel subscription",

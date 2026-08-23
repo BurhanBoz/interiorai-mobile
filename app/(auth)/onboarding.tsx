@@ -10,6 +10,8 @@ import {
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useAuthStore } from "@/stores/authStore";
 import * as Haptics from "expo-haptics";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -95,6 +97,39 @@ function PaginationDot({ active }: { active: boolean }) {
 }
 
 export default function OnboardingScreen() {
+  const guestLogin = useAuthStore((st) => st.guestLogin);
+  const [guestBusy, setGuestBusy] = useState(false);
+
+  // R1 companion (2026-08-09). The 2026-08-03 removal of the Sign-In link
+  // was right for NEW users — but it left returning ACCOUNT HOLDERS (session
+  // dead past the 30-day refresh window, or after a logout) with only Get
+  // Started, which silently forks them into a fresh empty guest. This link
+  // renders ONLY when a registered account has actually lived on this device
+  // (Keychain hint written by persistAuth), so the guest-first funnel for
+  // new installs is untouched.
+  const [hadRegisteredAccount, setHadRegisteredAccount] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    SecureStore.getItemAsync("last_registered_email")
+      .then((v) => { if (alive) setHadRegisteredAccount(!!v); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  // V53 guest-first — Get Started creates a silent device account and lands
+  // straight in the Studio. Register/Sign In stay reachable (tertiary + settings).
+  const handleGetStarted = async () => {
+    if (guestBusy) return;
+    setGuestBusy(true);
+    try {
+      await guestLogin();
+      router.replace("/(tabs)/studio");
+    } catch {
+      // Fail-open: fall back to the old register flow rather than stranding.
+      router.push("/register");
+    } finally {
+      setGuestBusy(false);
+    }
+  };
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -210,14 +245,16 @@ export default function OnboardingScreen() {
             ))}
           </View>
 
-          {/* Headline + Description */}
+          {/* Headline + Description — single line since 2026-08-03 (the \n
+              breaks were stripped from all 8 locales); long translations
+              (German) shrink to fit instead of wrapping back to two lines. */}
           <View style={{ maxWidth: 300 }}>
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
               style={{
-                fontFamily: "NotoSerif",
-                fontSize: 28,
-                lineHeight: 34,
-                letterSpacing: -0.3,
+                ...theme.text.display,
                 color: theme.color.onSurface,
               }}
             >
@@ -225,9 +262,7 @@ export default function OnboardingScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 14,
-                lineHeight: 20,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
                 marginTop: 10,
               }}
@@ -255,7 +290,7 @@ export default function OnboardingScreen() {
               title={t("onboarding.get_started")}
               variant="primary"
               size="lg"
-              onPress={() => router.push("/register")}
+              onPress={handleGetStarted}
               icon="arrow-forward"
             />
 
@@ -279,40 +314,16 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            <View style={{ marginTop: 14, alignItems: "center" }}>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  router.push("/login");
-                }}
-                hitSlop={12}
-                style={({ pressed }) => ({
-                  paddingVertical: 6,
-                  opacity: pressed ? 0.55 : 1,
-                })}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontFamily: "Inter",
-                    fontSize: 12.5,
-                    lineHeight: 16,
-                    letterSpacing: 0.1,
-                    color: theme.color.onSurfaceMuted,
-                  }}
-                >
-                  {t("auth.already_have_account")}{" "}
-                  <Text
-                    style={{
-                      fontFamily: "Inter-SemiBold",
-                      color: theme.color.goldMidday,
-                    }}
-                  >
-                    {t("auth.sign_in_link")}
-                  </Text>
-                </Text>
-              </Pressable>
-            </View>
+            {hadRegisteredAccount ? (
+              <View style={{ marginTop: 12, alignItems: "center" }}>
+                <Button
+                  title={t("auth.sign_in")}
+                  variant="tertiary"
+                  size="sm"
+                  onPress={() => router.push("/login")}
+                />
+              </View>
+            ) : null}
 
             <View style={{ marginTop: 10 }}>
               <LegalFooter />

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { sendOutputSignal } from "@/services/jobs";
 
 interface FavoritesState {
   ids: string[];
@@ -15,11 +16,16 @@ export const useFavoritesStore = create<FavoritesState>()(
       ids: [],
       toggle: (outputId) => {
         const current = get().ids;
+        const adding = !current.includes(outputId);
         set({
-          ids: current.includes(outputId)
-            ? current.filter((id) => id !== outputId)
-            : [outputId, ...current],
+          ids: adding
+            ? [outputId, ...current]
+            : current.filter((id) => id !== outputId),
         });
+        // C1: only the ADD is a quality signal — "this was ever worth
+        // keeping". Unfavorite stays local; the backend record is a fact
+        // about the render's quality, not the user's current shortlist.
+        if (adding) sendOutputSignal(outputId, "FAVORITE");
       },
       isFavorite: (outputId) => get().ids.includes(outputId),
       clear: () => set({ ids: [] }),

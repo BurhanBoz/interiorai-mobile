@@ -51,7 +51,7 @@ export function Card({
 
   const baseStyle: ViewStyle = {
     padding,
-    borderRadius: 16,
+    borderRadius: theme.radius.md,
   };
 
   let variantStyle: ViewStyle = {};

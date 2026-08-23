@@ -81,10 +81,7 @@ export function Input({
       {label ? (
         <Text
           style={{
-            fontFamily: "Inter-SemiBold",
-            fontSize: 11,
-            letterSpacing: 1.65,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: error
               ? theme.color.danger
               : "rgba(208,197,184,0.72)",
@@ -102,7 +99,7 @@ export function Input({
           gap: 12,
           paddingHorizontal: 16,
           paddingVertical: multiline ? 12 : 14,
-          borderRadius: 14,
+          borderRadius: theme.radius.md,
           borderWidth: 1,
           borderColor,
           backgroundColor: disabled
@@ -126,10 +123,8 @@ export function Input({
         ) : null}
         <TextInput
           style={{
+            ...theme.text.body,
             flex: 1,
-            fontFamily: "Inter",
-            fontSize: 15,
-            lineHeight: 22,
             color: theme.color.onSurface,
             padding: 0,
             minHeight: multiline ? 20 * numberOfLines : undefined,
@@ -154,9 +149,7 @@ export function Input({
       {error ? (
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 12,
-            lineHeight: 16,
+            ...theme.text.caption,
             color: theme.color.danger,
             paddingLeft: 2,
           }}
@@ -166,9 +159,7 @@ export function Input({
       ) : helper ? (
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 12,
-            lineHeight: 16,
+            ...theme.text.caption,
             color: theme.color.onSurfaceMuted,
             paddingLeft: 2,
           }}

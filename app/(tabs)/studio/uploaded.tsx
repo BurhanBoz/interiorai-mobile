@@ -5,12 +5,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { useImagePicker } from "@/hooks/useImagePicker";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { useDismissible } from "@/hooks/useDismissible";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Button } from "@/components/ui/Button";
 import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
+import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { theme } from "@/config/theme";
 
 /**
@@ -28,12 +29,26 @@ import { theme } from "@/config/theme";
  */
 export default function UploadedScreen() {
   const { t } = useTranslation();
+  // One-shot photo-quality tip — shown on the very first visit only.
+  const [tipVisible, dismissTip] = useDismissible("studio_best_results_seen");
   const photo = useStudioStore((s) => s.photo);
   const setPhoto = useStudioStore((s) => s.setPhoto);
-  const { openDrawer } = useDrawer();
   const { pickImage } = useImagePicker();
 
+  const mode = useStudioStore((s) => s.mode);
   const handleNext = () => {
+    // 2026-07 IA rework: the flow was chosen on the studio home, so the
+    // specialty step (mask drawing / reference photo) comes RIGHT after
+    // the photo. Both land back on the shared chain (style → options →
+    // review) via wizard=1; review's guards stay as safety nets.
+    if (mode === "INPAINT") {
+      router.push({ pathname: "/studio/smart-edit", params: { wizard: "1" } });
+      return;
+    }
+    if (mode === "STYLE_TRANSFER") {
+      router.push({ pathname: "/studio/style-transfer", params: { wizard: "1" } });
+      return;
+    }
     router.push("/studio/style");
   };
 
@@ -53,30 +68,26 @@ export default function UploadedScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
-        <Pressable
-          onPress={openDrawer}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        {/* Spacer keeps the brand centered — the hamburger is retired
+            (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
+          // Fill the viewport so the photo block can center itself in the
+          // space between the headline and the CTA — with the old inline
+          // tip gone, top-anchored content left a dead gap above the button
+          // (2026-07-15 founder screenshot).
+          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -84,10 +95,7 @@ export default function UploadedScreen() {
         <View style={{ marginTop: 16, marginBottom: 10 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
+              ...theme.text.label,
               color: theme.color.goldMidday,
             }}
           >
@@ -98,21 +106,22 @@ export default function UploadedScreen() {
         {/* Headline */}
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 34,
-            lineHeight: 40,
-            letterSpacing: -0.4,
+            ...theme.text.display,
             color: theme.color.onSurface,
-            marginBottom: 32,
+            marginBottom: 24,
           }}
         >
           {t("studio.step1_title")}
         </Text>
 
+        {/* Photo + change-photo, vertically centered in the remaining
+            space — the screen reads balanced with or without hints. */}
+        <View style={{ flex: 1, justifyContent: "center" }}>
+
         {/* Uploaded photo preview */}
         <View
           style={{
-            borderRadius: 18,
+            borderRadius: theme.radius.md,
             overflow: "hidden",
             marginBottom: 20,
             ...theme.elevation.lg,
@@ -138,14 +147,20 @@ export default function UploadedScreen() {
                 so the glyph stays legible on both white and dark
                 photographs. */}
             <Pressable
-              onPress={() => setPhoto(null)}
+              onPress={() => {
+                // Clearing the photo returns to the capture step — before,
+                // this left the user stranded on an empty preview (the X
+                // "did nothing" from their point of view).
+                setPhoto(null);
+                router.back();
+              }}
               style={{
                 position: "absolute",
                 top: 14,
                 right: 14,
                 width: 40,
                 height: 40,
-                borderRadius: 20,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: "rgba(19,19,19,0.78)",
@@ -164,7 +179,7 @@ export default function UploadedScreen() {
         {/* Change photo — bordered action card, icon + label on one row.
             Wrapper View owns the bottom margin so layout is not inside
             the Pressable callback (which can drop layout props in RN). */}
-        <View style={{ marginBottom: 20 }}>
+        <View style={{ marginBottom: 0 }}>
           <Pressable
             onPress={handleChangePhoto}
             accessibilityRole="button"
@@ -177,10 +192,10 @@ export default function UploadedScreen() {
             <View
               style={{
                 paddingVertical: 18,
-                paddingHorizontal: 20,
+                paddingHorizontal: theme.space.gutter,
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.55)",
-                borderRadius: 18,
+                borderRadius: theme.radius.md,
                 backgroundColor: "rgba(225,195,155,0.04)",
                 flexDirection: "row",
                 alignItems: "center",
@@ -195,9 +210,7 @@ export default function UploadedScreen() {
               />
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 15,
-                  letterSpacing: 0.2,
+                  ...theme.text.subtitle,
                   color: theme.color.onSurface,
                 }}
               >
@@ -207,38 +220,18 @@ export default function UploadedScreen() {
           </Pressable>
         </View>
 
-        {/* Info hint — sentence-case, warm card */}
-        <View
-          style={{
-            padding: 16,
-            borderRadius: 14,
-            backgroundColor: "rgba(225,195,155,0.05)",
-            borderWidth: 1,
-            borderColor: "rgba(225,195,155,0.18)",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-          }}
-        >
-          <Ionicons
-            name="bulb-outline"
-            size={18}
-            color={theme.color.goldMidday}
-            style={{ marginTop: 2 }}
-          />
-          <Text
-            style={{
-              flex: 1,
-              fontFamily: "Inter",
-              fontSize: 13,
-              lineHeight: 20,
-              color: theme.color.onSurfaceVariant,
-            }}
-          >
-            {t("studio.tip_best_results")}
-          </Text>
         </View>
       </ScrollView>
+
+      {/* Photo-quality tip — one-shot SPOTLIGHT (2026-07-15 founder spec:
+          all first-time hints use the dimmed-backdrop prompt pattern).
+          Gone forever on X or any tap; the screen itself stays pure. */}
+      <OneShotSpotlight
+        visible={tipVisible}
+        onDismiss={dismissTip}
+        icon="bulb-outline"
+        text={t("studio.tip_best_results")}
+      />
 
       {/* Fixed CTA — tab-bar-aware via BottomBar */}
       <BottomBar overTabBar>

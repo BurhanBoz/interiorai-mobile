@@ -92,6 +92,28 @@ export async function upscaleJob(
 }
 
 /**
+ * IO-1 (2026-08-11) — Expand a completed output beyond its frame via
+ * flux-fill outpaint. Mirrors upscaleJob's chain-job contract: backend
+ * returns the new child job in PENDING state; poll it to completion.
+ * Blocked server-side on upscaled/expanded parents (expand first, then
+ * upscale). Costs 2 credits on every plan.
+ */
+export type ExpandMode = "ZOOM_OUT_15" | "ZOOM_OUT_2" | "MAKE_SQUARE";
+
+export async function expandJob(
+    parentJobId: string,
+    mode: ExpandMode,
+    outputId?: string,
+): Promise<JobResponse> {
+    const { data } = await api.post<JobResponse>(
+        `/api/jobs/${parentJobId}/expand`,
+        null,
+        { params: { mode, ...(outputId ? { outputId } : {}) } },
+    );
+    return data;
+}
+
+/**
  * Record user feedback on a specific generated output.
  * Rating: -1 (dislike), 0 (neutral / clear), 1 (like).
  * Feeds per-tier / per-style quality analytics on the backend.
@@ -102,4 +124,22 @@ export async function rateOutput(
     rating: -1 | 0 | 1,
 ): Promise<void> {
     await api.patch(`/api/jobs/${jobId}/outputs/${outputId}/rating`, { rating });
+}
+
+/**
+ * C1 learning loop — tell the backend this output was worth keeping
+ * (favorited) or taking away (downloaded). Fire-and-forget BY CONTRACT:
+ * a quality signal must never surface an error into the moment the user
+ * is enjoying their render. Idempotent server-side (append-once).
+ */
+export function sendOutputSignal(outputId: string, type: "FAVORITE" | "DOWNLOAD"): void {
+    api.post(`/api/jobs/outputs/${outputId}/signals`, { type }).catch((e) => {
+        // Still fire-and-forget for the USER — nothing is surfaced, nothing is
+        // retried. But swallowing the error completely made a real question
+        // unanswerable: `output_signals` was empty in production and there was
+        // no way to tell "nobody saved anything" from "the call has been
+        // failing since launch". One dev-mode line closes that gap, and the
+        // unsaved-design reminder depends on this table being trustworthy.
+        if (__DEV__) console.warn("[SIGNAL] not recorded:", type, e?.message ?? e);
+    });
 }

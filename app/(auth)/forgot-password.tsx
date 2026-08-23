@@ -121,7 +121,7 @@ export default function ForgotPasswordScreen() {
               style={{
                 width: 88,
                 height: 88,
-                borderRadius: 24,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: "rgba(225,195,155,0.06)",
@@ -196,10 +196,7 @@ function FormStage({
     <>
       <Text
         style={{
-          fontFamily: "Inter-SemiBold",
-          fontSize: 10,
-          letterSpacing: 2.2,
-          textTransform: "uppercase",
+          ...theme.text.caption,
           color: theme.color.goldMidday,
           textAlign: "center",
           marginBottom: 10,
@@ -209,10 +206,7 @@ function FormStage({
       </Text>
       <Text
         style={{
-          fontFamily: "NotoSerif",
-          fontSize: 30,
-          lineHeight: 36,
-          letterSpacing: -0.3,
+          ...theme.text.display,
           color: theme.color.onSurface,
           textAlign: "center",
           marginBottom: 12,
@@ -222,9 +216,7 @@ function FormStage({
       </Text>
       <Text
         style={{
-          fontFamily: "Inter",
-          fontSize: 14,
-          lineHeight: 22,
+          ...theme.text.body,
           color: theme.color.onSurfaceVariant,
           textAlign: "center",
           maxWidth: 320,
@@ -280,10 +272,7 @@ function SuccessStage({
     <>
       <Text
         style={{
-          fontFamily: "Inter-SemiBold",
-          fontSize: 10,
-          letterSpacing: 2.2,
-          textTransform: "uppercase",
+          ...theme.text.caption,
           color: theme.color.goldMidday,
           textAlign: "center",
           marginBottom: 10,
@@ -293,10 +282,7 @@ function SuccessStage({
       </Text>
       <Text
         style={{
-          fontFamily: "NotoSerif",
-          fontSize: 28,
-          lineHeight: 34,
-          letterSpacing: -0.3,
+          ...theme.text.display,
           color: theme.color.onSurface,
           textAlign: "center",
           marginBottom: 14,
@@ -306,9 +292,7 @@ function SuccessStage({
       </Text>
       <Text
         style={{
-          fontFamily: "Inter",
-          fontSize: 14,
-          lineHeight: 22,
+          ...theme.text.body,
           color: theme.color.onSurfaceVariant,
           textAlign: "center",
           maxWidth: 340,

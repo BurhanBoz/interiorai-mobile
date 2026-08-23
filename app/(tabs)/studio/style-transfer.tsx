@@ -1,22 +1,23 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useStudioStore } from "@/stores/studioStore";
+import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useCreditCost } from "@/hooks/useCreditCost";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import Slider from "@react-native-community/slider";
 
 // Height of the global GlassNavBar (icon row + label + home-indicator pad).
 // Sticky wizard footers must sit above this so the CTA stays tappable.
-const TAB_BAR_HEIGHT = 96;
 
 // Fallback hero when the user lands here without a source photo (e.g. via
 // deep link). Editorial interior shot, matches the dark-luxe aesthetic.
@@ -25,23 +26,18 @@ const PLACEHOLDER_ROOM =
 
 // Label-only mapping. The product calls ULTRA_HD "4K" in the UI — the
 // underlying enum stays the same.
-const QUALITY_DISPLAY: Record<string, string> = {
-  STANDARD: "Standard",
-  HD: "HD",
-  ULTRA_HD: "4K",
-};
-
 export default function StyleTransferScreen() {
   const { t } = useTranslation();
   const photo = useStudioStore(s => s.photo);
   const referencePhoto = useStudioStore(s => s.referencePhoto);
+  const extraStyleRefs = useStudioStore(s => s.extraStyleRefs);
+  const addExtraStyleRef = useStudioStore(s => s.addExtraStyleRef);
+  const removeExtraStyleRef = useStudioStore(s => s.removeExtraStyleRef);
   const strength = useStudioStore(s => s.strength);
-  const qualityTier = useStudioStore(s => s.qualityTier);
-  const numOutputs = useStudioStore(s => s.numOutputs);
   const setStrength = useStudioStore(s => s.setStrength);
   const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
   const { cost } = useCreditCost();
-  const { pickImage } = useImagePicker();
+  const { pickImage, isUploading } = useImagePicker();
   const subscription = useSubscriptionStore(s => s.subscription);
   const planLabel = subscription?.planName ?? "Max";
 
@@ -49,10 +45,22 @@ export default function StyleTransferScreen() {
   const strengthPercent = Math.round(strength * 100);
 
   const handlePickReference = async () => {
+    if (isUploading) return; // one in-flight upload at a time
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage();
     if (result) {
       setReferencePhoto({ uri: result.uri, fileId: result.fileId ?? "" });
+    }
+  };
+
+  // IO-2 — extra style reference for the "+" tile (max 2, store-capped;
+  // each bills +1 credit, mirrored in useCreditCost).
+  const handlePickExtraRef = async () => {
+    if (isUploading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await pickImage();
+    if (result?.fileId) {
+      addExtraStyleRef({ uri: result.uri, fileId: result.fileId });
     }
   };
 
@@ -61,10 +69,16 @@ export default function StyleTransferScreen() {
   // a plain redesign. Gate the Next CTA until one is uploaded.
   const canProceed = !!referencePhoto?.fileId;
 
+  // wizard=1 → entered right after photo upload (2026-07 IA rework):
+  // continue the shared chain (style → options). Otherwise this screen was
+  // opened from Options to (re)pick the reference, so go back there —
+  // Options owns Generate since the Review step was folded into it (P2-8).
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const handleNext = () => {
     if (!canProceed) return;
     Haptics.selectionAsync();
-    router.push("/studio/review");
+    if (wizard === "1") router.push("/studio/style");
+    else router.replace("/(tabs)/studio/options");
   };
 
   return (
@@ -80,7 +94,7 @@ export default function StyleTransferScreen() {
             style={{
               width: 40,
               height: 40,
-              borderRadius: 20,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(42,42,42,0.8)",
               borderWidth: 1,
               borderColor: "rgba(77,70,60,0.15)",
@@ -93,21 +107,19 @@ export default function StyleTransferScreen() {
           <Text
             className="font-headline text-on-surface"
             style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             Roomframe AI
           </Text>
         </View>
-        <UserAvatar size="sm" onPress />
+        <AvatarMenu />
       </View>
 
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           // Footer (~120px) sits at bottom: TAB_BAR_HEIGHT (96px). Add a
           // 60px buffer on top of those so the last visible content is
           // never hidden behind the glass bar.
@@ -132,10 +144,7 @@ export default function StyleTransferScreen() {
               <Text
                 className="font-label"
                 style={{
-                  fontSize: 10,
-                  fontWeight: "700",
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#FEDFB5",
                 }}
               >
@@ -145,10 +154,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
-                fontSize: 10,
-                fontWeight: "500",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.label,
               }}
             >
               {planLabel}
@@ -156,7 +162,7 @@ export default function StyleTransferScreen() {
           </View>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 36, lineHeight: 42 }}
+            style={{ ...theme.text.display }}
           >
             {t("studio.style_transfer_headline")}
           </Text>
@@ -166,30 +172,15 @@ export default function StyleTransferScreen() {
         <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
           {/* Your Room */}
           <View style={{ flex: 1, gap: 16 }}>
-            <View className="flex-row items-end justify-between">
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.style_transfer_subject_label")}
-              </Text>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#998F84",
-                }}
-              >
-                {t("studio.style_transfer_subject_badge")}
-              </Text>
-            </View>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                ...theme.text.caption,
+                textAlign: "center",
+              }}
+            >
+              {t("studio.style_transfer_subject_label")}
+            </Text>
             <View
               className="rounded-xl overflow-hidden bg-surface-container-low"
               style={{ aspectRatio: 4 / 5 }}
@@ -210,30 +201,15 @@ export default function StyleTransferScreen() {
 
           {/* Ref. Style */}
           <View style={{ flex: 1, gap: 16 }}>
-            <View className="flex-row items-end justify-between">
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("studio.style_transfer_reference_label")}
-              </Text>
-              <Text
-                className="font-label"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: "#FEDFB5",
-                }}
-              >
-                {t("studio.style_transfer_reference_badge")}
-              </Text>
-            </View>
+            <Text
+              className="font-label text-on-surface-variant"
+              style={{
+                ...theme.text.caption,
+                textAlign: "center",
+              }}
+            >
+              {t("studio.style_transfer_reference_label")}
+            </Text>
             {referencePhoto?.uri ? (
               <View style={{ position: "relative" }}>
                 <Pressable onPress={handlePickReference}>
@@ -262,7 +238,7 @@ export default function StyleTransferScreen() {
                     right: 10,
                     width: 32,
                     height: 32,
-                    borderRadius: 16,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "rgba(19,19,19,0.80)",
                     borderWidth: 1,
                     borderColor: "rgba(225,195,155,0.30)",
@@ -284,26 +260,118 @@ export default function StyleTransferScreen() {
                     borderStyle: "dashed",
                   }}
                 >
-                  <Ionicons
-                    name="cloud-upload-outline"
-                    size={36}
-                    color="#998F84"
-                    style={{ marginBottom: 16 }}
-                  />
+                  {isUploading ? (
+                    <ActivityIndicator size="small" color="#E1C39B" style={{ marginBottom: 16 }} />
+                  ) : (
+                    <Ionicons
+                      name="cloud-upload-outline"
+                      size={36}
+                      color="#998F84"
+                      style={{ marginBottom: 16 }}
+                    />
+                  )}
                   <Text
                     className="font-label"
                     style={{
-                      fontSize: 11,
-                      letterSpacing: 2,
-                      textTransform: "uppercase",
-                      color: "#998F84",
+                      ...theme.text.caption,
+                      color: isUploading ? "#E1C39B" : "#998F84",
                     }}
                   >
-                    {t("studio.upload_reference")}
+                    {isUploading
+                      ? t("studio.uploading")
+                      : t("studio.upload_reference")}
                   </Text>
                 </View>
               </Pressable>
             )}
+
+            {/* IO-2 — extra style reference "+" tiles (max 2, +1 credit each).
+                Only offered once the primary reference exists: the extras are
+                "more of the same aesthetic", not a substitute for it. */}
+            {referencePhoto?.uri ? (
+              <View style={{ marginTop: 16 }}>
+                {/* Top-aligned so the captioned empty tile doesn't push the
+                    thumbnails off the shared edge. */}
+                <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
+                  {extraStyleRefs.map((ref) => (
+                    <View key={ref.fileId} style={{ position: "relative", width: 76, height: 76 }}>
+                      <View className="rounded-xl overflow-hidden" style={{ width: 76, height: 76 }}>
+                        <Image
+                          source={{ uri: ref.uri }}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      </View>
+                      <Pressable
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          removeExtraStyleRef(ref.fileId);
+                        }}
+                        hitSlop={8}
+                        style={{
+                          position: "absolute",
+                          top: -6,
+                          right: -6,
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          backgroundColor: "rgba(19,19,19,0.92)",
+                          borderWidth: 1,
+                          borderColor: "rgba(225,195,155,0.30)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Ionicons name="close" size={12} color="#F5F0EB" />
+                      </Pressable>
+                    </View>
+                  ))}
+                  {extraStyleRefs.length < 2 ? (
+                    <Pressable onPress={handlePickExtraRef} disabled={isUploading}>
+                      <View style={{ alignItems: "center", gap: 7 }}>
+                        <View
+                          className="rounded-xl items-center justify-center bg-surface-container-low"
+                          style={{
+                            width: 76,
+                            height: 76,
+                            borderWidth: 1.5,
+                            borderColor: "rgba(225,195,155,0.32)",
+                            borderStyle: "dashed",
+                            gap: 3,
+                          }}
+                        >
+                          {isUploading ? (
+                            <ActivityIndicator size="small" color="#E1C39B" />
+                          ) : (
+                            <>
+                              <Ionicons name="images-outline" size={22} color="#8C8378" />
+                              <Ionicons name="add" size={14} color="#A79C8E" />
+                            </>
+                          )}
+                        </View>
+                        <Text
+                          style={{
+                            fontFamily: "Inter",
+                            fontSize: 10,
+                            lineHeight: 13,
+                            letterSpacing: 0.2,
+                            textAlign: "center",
+                            color: "#8C8378",
+                            width: 76,
+                          }}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.8}
+                        >
+                          {t("studio.add_reference")}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -313,10 +381,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label text-on-surface"
               style={{
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
               }}
             >
               {t("studio.reference_influence")}
@@ -324,8 +389,7 @@ export default function StyleTransferScreen() {
             <Text
               className="font-headline text-primary"
               style={{
-                fontSize: 24,
-                letterSpacing: -0.5,
+                ...theme.text.headline,
                 fontStyle: "italic",
               }}
             >
@@ -357,66 +421,14 @@ export default function StyleTransferScreen() {
           <Text
             className="font-label"
             style={{
-              fontSize: 11,
-              letterSpacing: 0.8,
+              ...theme.text.caption,
               fontStyle: "italic",
-              lineHeight: 18,
               color: "#998F84",
               marginTop: 8,
             }}
           >
             {t("studio.reference_influence_hint")}
           </Text>
-        </View>
-
-        {/* Quality & Variants */}
-        <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
-          <View
-            className="flex-1 rounded-xl p-6 bg-surface-container-low"
-            style={{ gap: 8 }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: "#998F84",
-              }}
-            >
-              {t("result.quality")}
-            </Text>
-            <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 20 }}
-            >
-              {QUALITY_DISPLAY[qualityTier] ?? qualityTier}
-            </Text>
-          </View>
-          <View
-            className="flex-1 rounded-xl p-6 bg-surface-container-low"
-            style={{ gap: 8 }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                fontSize: 9,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: "#998F84",
-              }}
-            >
-              {t("studio.number_of_outputs")}
-            </Text>
-            <Text
-              className="font-headline text-on-surface"
-              style={{ fontSize: 20 }}
-            >
-              {String(numOutputs).padStart(2, "0")}
-            </Text>
-          </View>
         </View>
 
       </ScrollView>
@@ -446,7 +458,7 @@ export default function StyleTransferScreen() {
           intensity={55}
           tint="dark"
           style={{
-            paddingHorizontal: 20,
+            paddingHorizontal: theme.space.gutter,
             paddingTop: 14,
             paddingBottom: 18,
             backgroundColor: "rgba(19,19,19,0.55)",
@@ -462,11 +474,8 @@ export default function StyleTransferScreen() {
             <Text
               className="font-label"
               style={{
-                fontSize: 10,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                ...theme.text.caption,
                 color: "#998F84",
-                fontWeight: "600",
               }}
             >
               {t("studio.style_transfer_cost_label")}
@@ -476,9 +485,8 @@ export default function StyleTransferScreen() {
               <Text
                 className="font-headline"
                 style={{
-                  fontSize: 17,
+                  ...theme.text.title,
                   fontStyle: "italic",
-                  letterSpacing: -0.3,
                   color: "#E5E2E1",
                 }}
               >
@@ -490,7 +498,7 @@ export default function StyleTransferScreen() {
           {/* CTA Button */}
           <Pressable
             onPress={handleNext}
-            disabled={!canProceed}
+            disabled={!canProceed || isUploading}
             style={({ pressed }) => ({
               transform: [{ scale: pressed && canProceed ? 0.98 : 1 }],
               opacity: canProceed ? 1 : 0.55,
@@ -505,7 +513,7 @@ export default function StyleTransferScreen() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 height: 54,
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 paddingHorizontal: 22,
                 borderWidth: 1,
                 borderColor: "rgba(254,223,181,0.35)",
@@ -519,10 +527,7 @@ export default function StyleTransferScreen() {
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  letterSpacing: 1.8,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#3F2D11",
                 }}
               >

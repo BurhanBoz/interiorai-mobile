@@ -2,12 +2,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as SecureStore from "expo-secure-store";
 import api from "./api";
 import env from "@/config/environment";
-import type {
-    UserResponse,
-    UpdateProfileRequest,
-    NotificationPreferences,
-    UpdateNotificationPreferencesRequest,
-} from "@/types/api";
+import type { AuthResponse, UserResponse, UpdateProfileRequest, NotificationPreferences, UpdateNotificationPreferencesRequest } from "@/types/api";
 
 export async function getMe(): Promise<UserResponse> {
     const { data } = await api.get<UserResponse>("/api/users/me");
@@ -66,4 +61,21 @@ export async function downloadDataExport(): Promise<string> {
         throw Object.assign(new Error("export_failed"), { status: result.status });
     }
     return result.uri;
+}
+
+/**
+ * Change the sign-in email of a password account. Requires the CURRENT
+ * password — a live JWT is possession of the phone, not proof of ownership.
+ * Returns a fresh AuthResponse: the JWT embeds the email claim, so the
+ * caller MUST swap the stored token for the returned one.
+ */
+export async function changeEmail(
+    email: string,
+    currentPassword: string,
+): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/users/me/change-email", {
+        email,
+        currentPassword,
+    });
+    return data;
 }

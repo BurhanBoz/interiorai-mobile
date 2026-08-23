@@ -115,10 +115,7 @@ export default function ResetPasswordScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2.2,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: theme.color.goldMidday,
               marginBottom: 12,
             }}
@@ -127,10 +124,7 @@ export default function ResetPasswordScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 32,
-              lineHeight: 38,
-              letterSpacing: -0.3,
+              ...theme.text.display,
               color: theme.color.onSurface,
               marginBottom: 10,
             }}
@@ -139,9 +133,7 @@ export default function ResetPasswordScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 15,
-              lineHeight: 22,
+              ...theme.text.body,
               color: theme.color.onSurfaceVariant,
               marginBottom: 32,
             }}
@@ -197,8 +189,7 @@ export default function ResetPasswordScreen() {
           {formError ? (
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 13,
+                ...theme.text.body,
                 color: theme.color.danger,
                 marginTop: 16,
               }}

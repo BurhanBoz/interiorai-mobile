@@ -8,14 +8,17 @@ import {
   FlatList,
   Dimensions,
 } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import * as Haptics from "expo-haptics";
+import { catalogName } from "@/utils/catalogI18n";
 import { useStudioStore } from "@/stores/studioStore";
-import { getRoomTypes, getDesignStyles } from "@/services/catalog";
+import { useCatalogStore } from "@/stores/catalogStore";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Brand } from "@/components/brand/Brand";
 import {
@@ -50,6 +53,11 @@ const ROOM_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   PATIO: "umbrella-outline",
   BALCONY: "sunny-outline",
   GARDEN: "leaf-outline",
+  COURTYARD: "apps-outline",
+  OUTDOOR_MAJLIS: "people-outline",
+  ROOFTOP: "business-outline",
+  POOL_AREA: "water-outline",
+  FACADE: "home-outline",
   POOL: "water-outline",
   STUDIO: "color-palette-outline",
   LIBRARY: "library-outline",
@@ -166,42 +174,30 @@ function getStyleImage(code: string): ImageSource | null {
 
 export default function StyleScreen() {
   const { t } = useTranslation();
-  const { roomType, designStyle, setRoomType, setDesignStyle } =
+  const { roomType, designStyle, setRoomType, setDesignStyle, mode } =
     useStudioStore();
 
-  const [roomTypes, setRoomTypes] = useState<CatalogItemResponse[]>([]);
-  const [designStyles, setDesignStyles] = useState<CatalogItemResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Catalogue comes from a persisted store (P2-9): the lists only change on
+  // deploy, so the screen paints from cache instantly and refreshes in the
+  // background instead of holding a spinner in front of every generation.
+  const roomTypes = useCatalogStore((s) => s.roomTypes);
+  const designStyles = useCatalogStore((s) => s.designStyles);
+  const isLoading = useCatalogStore((s) => s.isLoading);
+  const ensureCatalogLoaded = useCatalogStore((s) => s.ensureLoaded);
   const [roomPickerVisible, setRoomPickerVisible] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [rooms, styles] = await Promise.all([
-          getRoomTypes(),
-          getDesignStyles(),
-        ]);
-        if (!cancelled) {
-          setRoomTypes(rooms);
-          setDesignStyles(styles);
-        }
-      } catch {
-        // silently fail — lists will be empty
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void ensureCatalogLoaded();
+  }, [ensureCatalogLoaded]);
 
   // Group room types by category
   const groupedRoomTypes = useMemo(() => {
     const map = new Map<string, CatalogItemResponse[]>();
     for (const r of roomTypes) {
       const cat = r.category || "Other";
+      // V52 — OUTDOOR mode lists ONLY outdoor spaces; every other mode hides
+      // them (BALCONY moved under the Outdoor card with 1.1).
+      if (mode === "OUTDOOR" ? cat !== "OUTDOOR" : cat === "OUTDOOR") continue;
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(r);
     }
@@ -209,13 +205,28 @@ export default function StyleScreen() {
       category,
       items,
     }));
-  }, [roomTypes]);
+  }, [roomTypes, mode]);
+
+  // Required-field feedback (2026-07 tester finding): a silently-disabled
+  // CTA reads as "the app is broken". The button always responds — a
+  // blocked press marks what's missing (inline error + warning haptic)
+  // and scrolls the offending section into view.
+  const scrollRef = useRef<ScrollView>(null);
+  const styleSectionY = useRef(0);
+  const [attempted, setAttempted] = useState(false);
 
   const handleNext = () => {
+    if (!roomType || !designStyle) {
+      setAttempted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      scrollRef.current?.scrollTo({
+        y: !roomType ? 0 : Math.max(styleSectionY.current - 72, 0),
+        animated: true,
+      });
+      return;
+    }
     router.push("/studio/options");
   };
-
-  const canProceed = roomType !== null && designStyle !== null;
 
   /* ─── Room Type Picker Modal ─── */
   const RoomPickerModal = () => (
@@ -232,7 +243,7 @@ export default function StyleScreen() {
             height: 64,
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 20,
+            paddingHorizontal: theme.space.gutter,
             borderBottomWidth: 1,
             borderBottomColor: "rgba(77,70,60,0.15)",
           }}
@@ -243,7 +254,7 @@ export default function StyleScreen() {
             style={{
               width: 36,
               height: 36,
-              borderRadius: 18,
+              borderRadius: theme.radius.md,
               backgroundColor: "rgba(255,255,255,0.08)",
               alignItems: "center",
               justifyContent: "center",
@@ -254,14 +265,12 @@ export default function StyleScreen() {
           </Pressable>
           <Text
             style={{
+              ...theme.text.headline,
               position: "absolute",
               left: 0,
               right: 0,
               textAlign: "center",
-              fontSize: 22,
-              fontWeight: "700",
               color: "#E5E2E1",
-              fontFamily: "NotoSerif",
             }}
           >
             {t("studio.select_space")}
@@ -271,7 +280,10 @@ export default function StyleScreen() {
         <FlatList
           data={groupedRoomTypes}
           keyExtractor={g => g.category}
-          contentContainerStyle={{ paddingBottom: 60 }}
+          // 60 reserved less than a third of what the floating CTA occupies,
+          // so the last style tile sat behind it (founder: "itemler üst üste
+          // binmesin"). One shared helper keeps every wizard step honest.
+          contentContainerStyle={{ paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true) }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item: group }) => (
             <View style={{ marginTop: 28 }}>
@@ -280,7 +292,7 @@ export default function StyleScreen() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 24,
+                  paddingHorizontal: theme.space.gutter,
                   marginBottom: 16,
                   gap: 8,
                 }}
@@ -295,10 +307,7 @@ export default function StyleScreen() {
                 />
                 <Text
                   style={{
-                    fontSize: 11,
-                    letterSpacing: 2.5,
-                    textTransform: "uppercase",
-                    fontWeight: "700",
+                    ...theme.text.caption,
                     color: "#E0C29A",
                   }}
                 >
@@ -321,7 +330,7 @@ export default function StyleScreen() {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          paddingHorizontal: 24,
+                          paddingHorizontal: theme.space.gutter,
                           paddingVertical: 20,
                           backgroundColor: isSelected
                             ? "rgba(224,194,154,0.06)"
@@ -358,21 +367,18 @@ export default function StyleScreen() {
                         >
                           <Text
                             style={{
-                              fontSize: 18,
-                              fontWeight: "700",
+                              ...theme.text.title,
                               color: isSelected ? "#E1C39B" : "#E5E2E1",
-                              fontFamily: "NotoSerif",
                             }}
                           >
-                            {room.name}
+                            {catalogName(t, "room", room)}
                           </Text>
                           {room.description ? (
                             <Text
                               style={{
-                                fontSize: 14,
+                                ...theme.text.body,
                                 color: "#7A7268",
                                 marginTop: 4,
-                                lineHeight: 20,
                               }}
                               numberOfLines={2}
                             >
@@ -422,7 +428,7 @@ export default function StyleScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 24,
+          paddingHorizontal: theme.space.gutter,
           paddingVertical: 16,
         }}
       >
@@ -432,7 +438,7 @@ export default function StyleScreen() {
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: theme.radius.lg,
             backgroundColor: "rgba(42,42,42,0.8)",
             borderWidth: 1,
             borderColor: "rgba(77,70,60,0.15)",
@@ -448,6 +454,7 @@ export default function StyleScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingBottom: BOTTOM_BAR_SCROLL_PADDING(true),
@@ -455,13 +462,10 @@ export default function StyleScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Step Indicator & Headline */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 32 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 32 }}>
           <Text
             style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              fontWeight: "500",
+              ...theme.text.label,
               color: "#998F84",
               marginBottom: 8,
             }}
@@ -470,11 +474,8 @@ export default function StyleScreen() {
           </Text>
           <Text
             style={{
-              fontSize: 30,
-              lineHeight: 34,
-              fontWeight: "700",
+              ...theme.text.display,
               color: "#E5E2E1",
-              fontFamily: "NotoSerif",
             }}
           >
             {t("studio.step2_title")}
@@ -486,10 +487,8 @@ export default function StyleScreen() {
             <ActivityIndicator size="large" color="#C4A882" />
             <Text
               style={{
+                ...theme.text.caption,
                 marginTop: 16,
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
                 color: "#998F84",
               }}
             >
@@ -499,14 +498,11 @@ export default function StyleScreen() {
         ) : (
           <>
             {/* ── Room Type Select Box ── */}
-            <View style={{ marginTop: 32, paddingHorizontal: 24 }}>
+            <View style={{ marginTop: 32, paddingHorizontal: theme.space.gutter }}>
               <Text
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   marginBottom: 12,
-                  fontWeight: "500",
                   color: "#998F84",
                 }}
               >
@@ -520,11 +516,13 @@ export default function StyleScreen() {
                     backgroundColor: roomType
                       ? "rgba(42,42,42,0.6)"
                       : "rgba(28,27,27,0.8)",
-                    borderRadius: 14,
+                    borderRadius: theme.radius.md,
                     borderWidth: 1,
                     borderColor: roomType
                       ? "rgba(224,194,154,0.4)"
-                      : "rgba(224,194,154,0.15)",
+                      : attempted
+                        ? "rgba(217,138,123,0.75)"
+                        : "rgba(224,194,154,0.15)",
                     paddingHorizontal: 16,
                     height: 56,
                   }}
@@ -534,7 +532,7 @@ export default function StyleScreen() {
                       style={{
                         width: 32,
                         height: 32,
-                        borderRadius: 8,
+                        borderRadius: theme.radius.sm,
                         backgroundColor: "rgba(224,194,154,0.12)",
                         alignItems: "center",
                         justifyContent: "center",
@@ -550,17 +548,14 @@ export default function StyleScreen() {
                   )}
                   <Text
                     style={{
+                      ...theme.text.caption,
                       flex: 1,
-                      fontSize: 14,
-                      fontWeight: "600",
-                      letterSpacing: roomType ? 1 : 0,
-                      textTransform: roomType ? "uppercase" : "none",
                       color: roomType ? "#E1C39B" : "#998F84",
                     }}
                     numberOfLines={1}
                   >
                     {roomType
-                      ? roomType.name
+                      ? catalogName(t, "room", roomType)
                       : t("studio.select_room_placeholder")}
                   </Text>
                   <Ionicons
@@ -570,22 +565,47 @@ export default function StyleScreen() {
                   />
                 </View>
               </Pressable>
+              {attempted && !roomType && (
+                <Text
+                  style={{
+                    ...theme.text.caption,
+                    marginTop: 8,
+                    color: "#D98A7B",
+                  }}
+                >
+                  {t("studio.room_type_required")}
+                </Text>
+              )}
             </View>
 
             {/* ── Design Style Section ── */}
-            <View style={{ marginTop: 36, paddingHorizontal: 24 }}>
+            <View
+              style={{ marginTop: 36, paddingHorizontal: theme.space.gutter }}
+              onLayout={(e) => {
+                styleSectionY.current = e.nativeEvent.layout.y;
+              }}
+            >
               <Text
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   marginBottom: 20,
-                  fontWeight: "500",
                   color: "#998F84",
                 }}
               >
                 {t("studio.design_style")}
               </Text>
+              {attempted && !designStyle && (
+                <Text
+                  style={{
+                    ...theme.text.caption,
+                    marginTop: -12,
+                    marginBottom: 16,
+                    color: "#D98A7B",
+                  }}
+                >
+                  {t("studio.style_required")}
+                </Text>
+              )}
               <View
                 style={{
                   flexDirection: "row",
@@ -613,7 +633,7 @@ export default function StyleScreen() {
                           style={{
                             width: CARD_WIDTH,
                             height: CARD_WIDTH * 1.15,
-                            borderRadius: 16,
+                            borderRadius: theme.radius.md,
                             overflow: "hidden",
                             borderWidth: isSelected ? 2 : 1,
                             borderColor: isSelected
@@ -662,11 +682,8 @@ export default function StyleScreen() {
                             >
                               <Text
                                 style={{
-                                  fontSize: 10,
-                                  fontWeight: "800",
-                                  letterSpacing: 1.2,
+                                  ...theme.text.caption,
                                   color: "#E1C39B",
-                                  textTransform: "uppercase",
                                 }}
                               >
                                 {t("common.selected")}
@@ -686,14 +703,13 @@ export default function StyleScreen() {
                         >
                           <Text
                             style={{
-                              fontSize: 14,
-                              fontWeight: "600",
+                              ...theme.text.body,
                               color: isSelected ? "#E5E2E1" : "#E5E2E1",
                               flex: 1,
                             }}
                             numberOfLines={1}
                           >
-                            {style.name}
+                            {catalogName(t, "style", style)}
                           </Text>
                           {isSelected && (
                             <Ionicons
@@ -722,7 +738,6 @@ export default function StyleScreen() {
         <PrimaryButton
           label={t("common.next_step")}
           onPress={handleNext}
-          disabled={!canProceed}
         />
       </BottomBar>
     </SafeAreaView>

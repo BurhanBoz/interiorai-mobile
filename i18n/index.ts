@@ -56,8 +56,15 @@ const resources: Record<string, { translation: Record<string, unknown> }> = {
     ar: { translation: ar },
 };
 
-/** Device locale → supported code (falls back to DEFAULT_LANGUAGE). */
-function resolveInitialLanguage(): string {
+/**
+ * Device locale → supported code (falls back to DEFAULT_LANGUAGE).
+ *
+ * <p>Exported because settingsStore seeds its persisted `language` default
+ * from this — the store default MUST match what i18n booted with, otherwise
+ * the first persist write (any settings change) would silently pin the app
+ * to a hardcoded "en" and override the device language on the next launch.
+ */
+export function resolveInitialLanguage(): string {
     const deviceCode = Localization.getLocales()[0]?.languageCode ?? DEFAULT_LANGUAGE;
     const supported = SUPPORTED_LANGUAGES.some((l) => l.code === deviceCode);
     return supported ? deviceCode : DEFAULT_LANGUAGE;

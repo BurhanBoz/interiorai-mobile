@@ -1,34 +1,38 @@
 import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
-import { useImagePicker } from "@/hooks/useImagePicker";
-import { useDrawer } from "@/components/layout/DrawerProvider";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { useDismissible } from "@/hooks/useDismissible";
+import { useEffectivePlanCode } from "@/hooks/useEntitlement";
+import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
 import { Brand } from "@/components/brand/Brand";
+import { FeatureCard } from "@/components/studio/FeatureCard";
+import { STUDIO_FEATURES, isFeatureLocked } from "@/components/studio/featureCatalog";
+import type { StudioFeature } from "@/components/studio/featureCatalog";
 import { theme } from "@/config/theme";
 import type { ComponentProps } from "react";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
 /**
- * Studio Step 1 — "Analyse Your Space". The user's first meaningful
- * decision in the flow: upload a photo, or take one. Everything on this
- * screen optimises for that decision.
+ * Studio home — the flow picker (2026-07 IA rework).
  *
- * Changes from the previous version:
- *   - Unified brand mark (SVG) replaces the hardcoded "ARCHITECTURAL\nLENS"
- *   - Tips icon tiles are warm gold-tinted, not cold grey (#353534 was
- *     breaking the editorial palette)
- *   - Tip section headers are sentence-case, not a second eyebrow
- *     fighting the first one
- *   - Avatar tap explicitly routes to Profile (previously `onPress` was a
- *     boolean that did nothing visible)
+ * <p>The user chooses WHAT to do first (Redesign / Empty Room / Smart Edit
+ * / Style Transfer as rich feature cards with live before/after teasers),
+ * THEN uploads the photo (/studio/upload). Mode lands in the store here,
+ * and the wizard chain (uploaded → style → options → review) stays fully
+ * mode-agnostic — review's INPAINT/STYLE_TRANSFER guards pull the user
+ * into the mask / reference steps exactly when they're needed.
+ *
+ * <p>Locked features (plan-gated) still show — tapping routes to /plans
+ * (conversion surface), mirroring options.tsx chip behavior.
  */
 
 const tips: Array<{
@@ -54,53 +58,73 @@ const tips: Array<{
 ];
 
 export default function StudioScreen() {
-  const { t } = useTranslation();
-  const { pickImage, isUploading } = useImagePicker();
-  const { openDrawer } = useDrawer();
-  const setPhoto = useStudioStore((s) => s.setPhoto);
+  // First-visit intro (2026-07 review round 2): the trial banner + tips form
+  // ONE spotlight moment floating over a blurred, dimmed backdrop. ANY exit —
+  // either X, a tap outside the cards, or leaving the screen — dismisses BOTH
+  // permanently, revealing the feature list behind.
+  const [introVisible, markIntroSeen] = useDismissible("studio_intro_seen");
+  const introVisibleRef = useRef(false);
+  introVisibleRef.current = introVisible;
 
-  const handleUpload = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await pickImage("gallery");
-    if (result) {
-      setPhoto(result);
-      router.push("/studio/uploaded");
-    }
-  };
-
-  const handleCamera = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await pickImage("camera");
-    if (result) {
-      setPhoto(result);
-      router.push("/studio/uploaded");
-    }
-  };
-
-  // Breathing animation on the idle upload glyph — a quiet "this is alive"
-  // cue. Stopped on unmount so the app doesn't keep animating in the
-  // background.
-  const uploadPulse = useRef(new Animated.Value(1)).current;
+  const introAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(uploadPulse, {
-          toValue: 0.55,
-          duration: 1800,
-          easing: theme.motion.easing.standard,
-          useNativeDriver: true,
-        }),
-        Animated.timing(uploadPulse, {
-          toValue: 1,
-          duration: 1800,
-          easing: theme.motion.easing.standard,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [uploadPulse]);
+    if (introVisible) {
+      Animated.timing(introAnim, {
+        toValue: 1,
+        duration: 520,
+        easing: theme.motion.easing.standard,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [introVisible, introAnim]);
+
+  /** Any explicit exit (either X, backdrop tap): fade the spotlight out,
+      then persist "seen" so it never returns. */
+  const dismissingRef = useRef(false);
+  const dismissIntro = useCallback(() => {
+    if (dismissingRef.current) return;
+    dismissingRef.current = true;
+    Animated.timing(introAnim, {
+      toValue: 0,
+      duration: 220,
+      easing: theme.motion.easing.standard,
+      useNativeDriver: true,
+    }).start(() => markIntroSeen());
+  }, [introAnim, markIntroSeen]);
+
+  // Leaving the screen while the intro is up also counts as "seen" — next
+  // visit opens clean.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (introVisibleRef.current) markIntroSeen();
+      };
+    }, [markIntroSeen]),
+  );
+
+  const { t } = useTranslation();
+  const setMode = useStudioStore((s) => s.setMode);
+
+  // Coming back to the tab always opens at the top (2026-07 finding:
+  // a stale scroll position made the home feel "stuck mid-list").
+  const scrollRef = useRef<ScrollView>(null);
+  useFocusEffect(
+    useCallback(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, []),
+  );
+  const planCode = useEffectivePlanCode();
+
+  const handleFeaturePress = (feature: StudioFeature, locked: boolean) => {
+    Haptics.selectionAsync();
+    if (locked) {
+      // Same conversion route as options.tsx locked chips.
+      router.push("/plans");
+      return;
+    }
+    setMode(feature.key);
+    router.push("/studio/upload");
+  };
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
@@ -111,285 +135,201 @@ export default function StudioScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
-        <Pressable
-          onPress={openDrawer}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        {/* Spacer keeps the brand centered — the hamburger is retired
+            (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TrialCountdownBadge />
-          <UserAvatar size="sm" onPress />
+          <AvatarMenu />
         </View>
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 128 }}
+        contentContainerStyle={{
+          paddingHorizontal: theme.space.gutter,
+          paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        {/*
-          Welcome trial banner (V20) — only renders when the user is
-          inside their 7-day MAX trial. Sits above the step indicator
-          so it's the first thing post-header content; absent when
-          the trial is inactive (no empty-state shell). Negative
-          horizontal margin breaks out of the parent's 24px padding
-          since the banner has its own breathing room baked in.
-        */}
-        <View style={{ marginHorizontal: -24 }}>
-          <WelcomeTrialBanner />
-        </View>
-
-        {/* Step indicator — the ONE uppercase eyebrow allowed on this screen */}
-        <View style={{ marginTop: 12, marginBottom: 10 }}>
-          <Text
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: theme.color.goldMidday,
-            }}
-          >
-            {t("studio.step_1_of_4")}
-          </Text>
-        </View>
-
-        {/* Headline */}
+        {/* Headline. The eyebrow above it ("AI STUDIO") was removed
+            2026-08-07: it said what the headline already says, in 10pt
+            uppercase, and cost 35pt of the only 544pt this screen has for
+            the five feature cards — on a product whose entire pitch is the
+            before/after imagery inside them. */}
         <Text
           style={{
-            fontFamily: "NotoSerif",
-            fontSize: 34,
-            lineHeight: 40,
-            letterSpacing: -0.4,
+            ...theme.text.display,
             color: theme.color.onSurface,
-            marginBottom: 36,
+            marginTop: 12,
+            marginBottom: 16,
+            textAlign: "center",
           }}
         >
-          {t("studio.step1_title")}
+          {t("studio.home_title")}
         </Text>
 
-        {/* Two bordered action cards separated by an "OR" divider.
-            Upload = primary (dashed, taller, centered column).
-            Camera = secondary (solid, row layout). Layout lives in
-            inner Views so Pressable callbacks only handle interaction
-            styles (scale / opacity / background). */}
-        <View style={{ width: "100%", marginBottom: 40 }}>
-
-          {/* ── Primary: gallery upload ── */}
-          <Pressable
-            onPress={handleUpload}
-            disabled={isUploading}
-            accessibilityRole="button"
-            accessibilityLabel={t("studio.tap_to_upload")}
-            style={({ pressed }) => ({
-              opacity: isUploading ? 0.55 : pressed ? 0.82 : 1,
-              transform: [{ scale: pressed ? 0.975 : 1 }],
-            })}
-          >
-            <View
-              style={{
-                width: "100%",
-                paddingVertical: 36,
-                paddingHorizontal: 24,
-                borderWidth: 1.5,
-                borderStyle: "dashed",
-                borderColor: "rgba(225,195,155,0.72)",
-                borderRadius: 20,
-                backgroundColor: "rgba(225,195,155,0.05)",
-                alignItems: "center",
-                ...theme.elevation.goldGlowSoft,
-              }}
-            >
-              <Animated.View style={{ opacity: uploadPulse, marginBottom: 16 }}>
-                <Ionicons
-                  name="cloud-upload-outline"
-                  size={40}
-                  color={theme.color.goldMidday}
-                />
-              </Animated.View>
-              <Text
-                style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 15,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  color: theme.color.onSurface,
-                  marginBottom: 6,
-                }}
-              >
-                {isUploading ? t("studio.uploading") : t("studio.tap_to_upload")}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 13,
-                  color: theme.color.onSurfaceMuted,
-                  letterSpacing: 0.2,
-                }}
-              >
-                JPEG · HEIC · PNG
-              </Text>
-            </View>
-          </Pressable>
-
-          {/* ── OR divider ── */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 14,
-              marginVertical: 16,
-              paddingHorizontal: 4,
-            }}
-          >
-            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(77,70,60,0.35)" }} />
-            <Text
-              style={{
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                color: theme.color.onSurfaceMuted,
-              }}
-            >
-              {t("common.or")}
-            </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(77,70,60,0.35)" }} />
-          </View>
-
-          {/* ── Secondary: camera ── */}
-          <Pressable
-            onPress={handleCamera}
-            disabled={isUploading}
-            accessibilityRole="button"
-            accessibilityLabel={t("studio.take_a_photo")}
-            style={({ pressed }) => ({
-              opacity: isUploading ? 0.35 : pressed ? 0.72 : 1,
-              transform: [{ scale: pressed ? 0.975 : 1 }],
-            })}
-          >
-            <View
-              style={{
-                width: "100%",
-                paddingVertical: 22,
-                paddingHorizontal: 24,
-                borderWidth: 1,
-                borderColor: "rgba(225,195,155,0.45)",
-                borderRadius: 20,
-                backgroundColor: "rgba(225,195,155,0.03)",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 12,
-              }}
-            >
-              <Ionicons
-                name="camera-outline"
-                size={24}
-                color={theme.color.goldMidday}
+        {/* Feature cards — one per generation flow, registry-driven */}
+        <View style={{ gap: 20 }}>
+          {STUDIO_FEATURES.map((feature) => {
+            const locked = isFeatureLocked(feature.key, planCode);
+            return (
+              <FeatureCard
+                key={feature.key}
+                feature={feature}
+                locked={locked}
+                onPress={() => handleFeaturePress(feature, locked)}
               />
-              <Text
-                style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 15,
-                  letterSpacing: 0.3,
-                  color: theme.color.onSurface,
-                }}
-              >
-                {t("studio.take_a_photo")}
-              </Text>
-            </View>
-          </Pressable>
-
-        </View>
-
-        {/* Professional tips — sentence-case section title, warm icon tiles */}
-        <View style={{ gap: 18 }}>
-          <Text
-            style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 14,
-              letterSpacing: 0.2,
-              color: theme.color.onSurfaceVariant,
-            }}
-          >
-            {t("studio.professional_tips")}
-          </Text>
-
-          <View style={{ gap: 12 }}>
-            {tips.map((tip) => (
-              <View
-                key={tip.icon}
-                style={{
-                  padding: 18,
-                  borderRadius: 16,
-                  backgroundColor: theme.color.surfaceContainerLow,
-                  borderWidth: 1,
-                  borderColor: "rgba(77,70,60,0.25)",
-                  flexDirection: "row",
-                  alignItems: "flex-start",
-                  gap: 16,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(225,195,155,0.08)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.18)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Ionicons
-                    name={tip.icon}
-                    size={20}
-                    color={theme.color.goldMidday}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Inter-SemiBold",
-                      fontSize: 13,
-                      letterSpacing: 1.4,
-                      textTransform: "uppercase",
-                      color: theme.color.goldMidday,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {t(tip.titleKey)}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Inter",
-                      fontSize: 13,
-                      lineHeight: 19,
-                      color: theme.color.onSurfaceVariant,
-                    }}
-                  >
-                    {t(tip.textKey)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
+            );
+          })}
         </View>
       </ScrollView>
+
+      {/* ── First-visit spotlight (2026-07 review round 2) ──────────────
+          Trial banner + tips float above a blurred, dimmed backdrop so
+          they read as THE thing on screen. The backdrop itself is a
+          dismiss target (tap anywhere outside the cards); both X buttons
+          route here too. The tab bar renders above this overlay, and
+          switching tabs also dismisses via the focus-loss hook. */}
+      {introVisible && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: introAnim,
+          }}
+        >
+          <Pressable
+            onPress={dismissIntro}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <BlurView
+              intensity={34}
+              tint="dark"
+              style={{ flex: 1, backgroundColor: "rgba(12,11,10,0.55)" }}
+            />
+          </Pressable>
+
+          {/* box-none: empty space between/around cards falls through to
+              the dismiss backdrop; the cards themselves stay inert. */}
+          <Animated.View
+            pointerEvents="box-none"
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              paddingBottom: 32,
+              transform: [
+                {
+                  translateY: introAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [24, 0],
+                  }),
+                },
+              ],
+            }}
+          >
+            <WelcomeTrialBanner onClose={dismissIntro} />
+
+            {/* Professional tips — same one-shot intro, second card group. */}
+            <View
+              pointerEvents="box-none"
+              style={{ paddingHorizontal: theme.space.gutter, gap: 18, marginTop: 8 }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text
+                  style={{
+                    ...theme.text.subtitle,
+                    color: theme.color.onSurfaceVariant,
+                  }}
+                >
+                  {t("studio.professional_tips")}
+                </Text>
+                <Pressable
+                  onPress={dismissIntro}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("common.close")}
+                >
+                  <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
+                </Pressable>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                {tips.map((tip) => (
+                  <View
+                    key={tip.icon}
+                    style={{
+                      padding: 18,
+                      borderRadius: theme.radius.md,
+                      backgroundColor: theme.color.surfaceContainerLow,
+                      borderWidth: 1,
+                      borderColor: "rgba(77,70,60,0.25)",
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      gap: 16,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: theme.radius.sm,
+                        backgroundColor: "rgba(225,195,155,0.08)",
+                        borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.18)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Ionicons
+                        name={tip.icon}
+                        size={20}
+                        color={theme.color.goldMidday}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          ...theme.text.caption,
+                          color: theme.color.goldMidday,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {t(tip.titleKey)}
+                      </Text>
+                      <Text
+                        style={{
+                          ...theme.text.body,
+                          color: theme.color.onSurfaceVariant,
+                        }}
+                      >
+                        {t(tip.textKey)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }

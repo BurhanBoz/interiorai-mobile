@@ -16,7 +16,7 @@
 
 set -uo pipefail
 
-BUNDLE_ID="com.thearchitecturallens.mobile"
+BUNDLE_ID="com.roomframeai.mobile"
 TMP="${TMPDIR:-/tmp}"
 
 echo "🧹 [1/6] Killing Metro / Node / Watchman…"

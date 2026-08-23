@@ -10,6 +10,7 @@ import {
   StatusBar,
   Alert,
 } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef } from "react";
@@ -20,8 +21,9 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 import { TopBar } from "@/components/layout/TopBar";
-import { getJob } from "@/services/jobs";
+import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useImageActions } from "@/hooks/useImageActions";
@@ -31,8 +33,10 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
-import { VariationSheet } from "@/components/result/VariationSheet";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
+import { useReviewPrompt } from "@/hooks/useReviewPrompt";
+import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
+import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
@@ -84,8 +88,6 @@ export default function ResultDetailScreen() {
   const [seedCopied, setSeedCopied] = useState(false);
   // Tap on a generated image → fullscreen modal. Null = closed.
   const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
-  // V20 / Pricing Strategy V2 — variation picker sheet.
-  const [variationSheetOpen, setVariationSheetOpen] = useState(false);
 
   // Gate the upscale button by plan. CRITICAL: must use the EFFECTIVE
   // credit rules — during the 7-day welcome bonus the user is MAX-tier
@@ -100,6 +102,7 @@ export default function ResultDetailScreen() {
   // override in ModelRoutingServiceImpl + JobServiceImpl.validateEntitlement.
   const { enabled: upscaleFeatureEnabled } = useEntitlement("ULTRA_HD_UPSCALE");
   const resetStudio = useStudioStore(s => s.reset);
+  const setDesignStyle = useStudioStore(s => s.setDesignStyle);
   // An "already upscaled" job is one where the feature_code itself is the
   // upscale chain (jobType="UPSCALE" on the backend → featureCode
   // "ULTRA_HD_UPSCALE"). Allowing a second upscale on top of that produces
@@ -118,11 +121,20 @@ export default function ResultDetailScreen() {
     creditRules.find(r => r.featureCode === "ULTRA_HD_UPSCALE")?.creditCost ?? null;
   const canUpscale =
     !isAlreadyUpscaled && upscaleFeatureEnabled && upscaleCost != null;
-  // Resolution the upscale delivers, by tier: MAX = 4K (Topaz 4x), others = 2K
-  // (Clarity ~2x). Surfaced in the confirm dialog + button so the user sees
-  // the real target before spending credits.
+  // IO-1 Expand (V57) — enabled on every active plan; hidden on chain jobs
+  // (jobType UPSCALE/EXPAND → featureCode tells us) because the backend
+  // rejects chain-of-chain in both directions.
+  const { enabled: expandFeatureEnabled } = useEntitlement("EXPAND_VIEW");
+  const isChainJob =
+    job?.featureCode === "ULTRA_HD_UPSCALE" || job?.featureCode === "EXPAND_VIEW";
+  const expandCost =
+    creditRules.find(r => r.featureCode === "EXPAND_VIEW")?.creditCost ?? null;
+  const canExpand = !isChainJob && expandFeatureEnabled && expandCost != null;
+  // Resolution the upscale delivers: PRO (top tier) = 4K Topaz 4x; the 2K
+  // branch only serves legacy sandbox tiers. Surfaced in the confirm dialog
+  // + button so the user sees the real target before spending credits.
   const effectiveTier = useEffectivePlanCode();
-  const upscaleResolution = effectiveTier === "MAX" ? "4K" : "2K";
+  const upscaleResolution = effectiveTier === "PRO" ? "4K" : "2K";
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -148,6 +160,15 @@ export default function ResultDetailScreen() {
 
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
+
+  // ASO: single, well-timed rating ask — fires on the user's 2nd successfully
+  // viewed result (see useReviewPrompt for the full strategy).
+  useReviewPrompt(outputs.length > 0);
+  // Notification permission, asked on the 3rd success — deliberately behind
+  // the rating prompt (2nd success). Two system sheets in one visit gets both
+  // dismissed, and on iOS the push prompt is one-shot forever.
+  usePushPermissionAsk(outputs.length > 0);
+  useAccountPrompt(outputs.length > 0);
 
   /**
    * Build the image source for expo-image.
@@ -183,6 +204,9 @@ export default function ResultDetailScreen() {
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
+    // C1: a download is the strongest quality vote we have — the user is
+    // taking this render OUT of the app. Fire-and-forget by contract.
+    if (currentOutput?.id) sendOutputSignal(currentOutput.id, "DOWNLOAD");
     // No auth headers — see getOutputImageUrl.
     await saveToPhotos(url, {
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
@@ -220,7 +244,7 @@ export default function ResultDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView
-        edges={["top"]}
+        edges={[]}
         className="flex-1 bg-surface items-center justify-center"
       >
         <ActivityIndicator size="large" color="#C4A882" />
@@ -231,13 +255,13 @@ export default function ResultDetailScreen() {
   if (!job) {
     return (
       <SafeAreaView
-        edges={["top"]}
+        edges={[]}
         className="flex-1 bg-surface items-center justify-center px-8"
       >
         <Ionicons name="alert-circle-outline" size={48} color="#998F84" />
         <Text
           className="font-headline text-on-surface mt-4"
-          style={{ fontSize: 20 }}
+          style={{ ...theme.text.headline }}
         >
           {t("errors.generic")}
         </Text>
@@ -245,9 +269,7 @@ export default function ResultDetailScreen() {
           <Text
             className="font-label text-secondary"
             style={{
-              fontSize: 13,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
+              ...theme.text.label,
             }}
           >
             {t("common.back")}
@@ -268,12 +290,12 @@ export default function ResultDetailScreen() {
   ];
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
+    <SafeAreaView edges={[]} className="flex-1 bg-surface">
       <TopBar showBack showBranding />
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Main Image Stage */}
@@ -290,10 +312,8 @@ export default function ResultDetailScreen() {
             <Text
               className="font-label text-on-surface-variant"
               style={{
+                ...theme.text.caption,
                 marginTop: 12,
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
               }}
             >
               {t("common.loading")}
@@ -376,9 +396,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-primary font-semibold"
                 style={{
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                 }}
               >
                 {t("studio.cost_credits", { count: job.creditsConsumed })}
@@ -424,8 +442,10 @@ export default function ResultDetailScreen() {
             Two-row layout fixes the "5 buttons in one row" overflow
             (UPSCALE was getting clipped to "U P S(") and elevates
             Upscale to a deliberate "Pro action" tier:
-              • Top row — 4 utility actions (Compare/Download/Share/
-                Variation) as evenly-spaced icon-circles
+              • Top row — 3 utility actions (Compare/Download/Share)
+                as evenly-spaced icon-circles. Variation is PARKED
+                (2026-07-10 founder call) — backend + VariationSheet
+                stay intact in git history for an easy return.
               • Bottom row — Upscale as a full-width premium pill,
                 gold-bordered with sparkles + arrow affordance
             Premium tone is intentional — Upscale costs extra credits
@@ -450,9 +470,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.compare")}
@@ -476,9 +494,7 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.download")}
@@ -502,39 +518,10 @@ export default function ResultDetailScreen() {
               <Text
                 className="font-label text-on-surface-variant"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.label,
                 }}
               >
                 {t("result.share")}
-              </Text>
-            </View>
-
-            {/* Variation — V20 / Pricing Strategy V2 §4. Opens the
-                Subtle/Bold/Wild picker sheet; tap on a preset spawns a
-                new variation job (1 credit) and routes to the progress
-                screen. Disabled if the job isn't COMPLETED so retry/
-                cancel paths don't lead here. */}
-            <View className="items-center" style={{ gap: 8 }}>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setVariationSheetOpen(true);
-                }}
-                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-              >
-                <Ionicons name="refresh-outline" size={22} color="#D1C5B8" />
-              </Pressable>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("result.variation_button")}
               </Text>
             </View>
           </View>
@@ -562,7 +549,7 @@ export default function ResultDetailScreen() {
             // Android and would suggest tappability.
             <View
               style={{
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 borderWidth: 1,
                 borderColor: "rgba(143,227,161,0.22)",
                 flexDirection: "row",
@@ -577,7 +564,7 @@ export default function ResultDetailScreen() {
                 style={{
                   width: 32,
                   height: 32,
-                  borderRadius: 16,
+                  borderRadius: theme.radius.md,
                   backgroundColor: "rgba(143,227,161,0.12)",
                   alignItems: "center",
                   justifyContent: "center",
@@ -588,11 +575,8 @@ export default function ResultDetailScreen() {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 13,
+                    ...theme.text.caption,
                     color: "#8FE3A1",
-                    letterSpacing: 0.4,
-                    textTransform: "uppercase",
                   }}
                 >
                   {t("result.already_upscaled", {
@@ -601,11 +585,9 @@ export default function ResultDetailScreen() {
                 </Text>
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
+                    ...theme.text.caption,
                     color: "rgba(143,227,161,0.65)",
                     marginTop: 2,
-                    letterSpacing: 0.2,
                   }}
                   numberOfLines={1}
                 >
@@ -645,7 +627,7 @@ export default function ResultDetailScreen() {
                 );
               }}
               style={({ pressed }) => ({
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: pressed
@@ -670,7 +652,7 @@ export default function ResultDetailScreen() {
                   style={{
                     width: 32,
                     height: 32,
-                    borderRadius: 16,
+                    borderRadius: theme.radius.md,
                     backgroundColor: "rgba(253,222,181,0.14)",
                     alignItems: "center",
                     justifyContent: "center",
@@ -681,22 +663,17 @@ export default function ResultDetailScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontFamily: "Inter-SemiBold",
-                      fontSize: 13,
+                      ...theme.text.label,
                       color: "#F4DDB6",
-                      letterSpacing: 0.4,
-                      textTransform: "uppercase",
                     }}
                   >
                     {t("result.upscale")}
                   </Text>
                   <Text
                     style={{
-                      fontFamily: "Inter",
-                      fontSize: 11,
+                      ...theme.text.caption,
                       color: "rgba(225,195,155,0.65)",
                       marginTop: 2,
-                      letterSpacing: 0.2,
                     }}
                     numberOfLines={1}
                   >
@@ -714,7 +691,7 @@ export default function ResultDetailScreen() {
             <Pressable
               onPress={() => router.push("/plans")}
               style={({ pressed }) => ({
-                borderRadius: 14,
+                borderRadius: theme.radius.md,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: pressed
@@ -729,150 +706,151 @@ export default function ResultDetailScreen() {
                 backgroundColor: "rgba(225,195,155,0.04)",
               })}
             >
+              {/* Deterministic inner row (2026-07-15 founder screenshot:
+                  the lock/title/subtitle/arrow rendered stacked). The inner
+                  View owns the row layout with explicit full width so no
+                  outer-style interaction can collapse it into a column. */}
               <View
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "rgba(225,195,155,0.10)",
+                  width: "100%",
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 12,
                 }}
               >
-                <Ionicons name="lock-closed" size={14} color="#E0C29A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
+                <View
                   style={{
-                    fontFamily: "Inter-SemiBold",
-                    fontSize: 13,
-                    color: "#E0C29A",
-                    letterSpacing: 0.4,
-                    textTransform: "uppercase",
+                    width: 32,
+                    height: 32,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: "rgba(225,195,155,0.10)",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  {t("result.upscale_locked")}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter",
-                    fontSize: 11,
-                    color: "rgba(225,195,155,0.55)",
-                    marginTop: 2,
-                  }}
-                  numberOfLines={1}
-                >
-                  {t("result.upscale_locked_subtitle", {
-                    defaultValue: "Upgrade to unlock 2K upscaling",
-                  })}
-                </Text>
+                  <Ionicons name="lock-closed" size={14} color="#E0C29A" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={{
+                      ...theme.text.label,
+                      color: "#E0C29A",
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("result.upscale_locked")}
+                  </Text>
+                  <Text
+                    style={{
+                      ...theme.text.caption,
+                      color: "rgba(225,195,155,0.55)",
+                      marginTop: 2,
+                    }}
+                    numberOfLines={2}
+                  >
+                    {t("result.upscale_locked_subtitle", {
+                      defaultValue: "Unlock 4× Ultra HD upscaling with Pro",
+                    })}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
               </View>
-              <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
+            </Pressable>
+          )}
+
+          {/* IO-1 — Expand pill (2026-08-11). Same premium-pill grammar as
+              Upscale, one step quieter (no gradient wash). Hidden on chain
+              jobs (backend rejects expand-of-upscale/expand — the right
+              order is expand first, then upscale). Single alert carries
+              both the mode choice and the cost consent. */}
+          {canExpand && (
+            <Pressable
+              onPress={() => {
+                if (!currentOutput?.id) return;
+                Haptics.selectionAsync();
+                Alert.alert(
+                  t("result.expand_title"),
+                  t("result.expand_body", { cost: expandCost }),
+                  [
+                    {
+                      text: t("result.expand_zoom_15"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_15` as any,
+                        ),
+                    },
+                    {
+                      text: t("result.expand_zoom_2"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_2` as any,
+                        ),
+                    },
+                    {
+                      text: t("result.expand_square"),
+                      onPress: () =>
+                        router.push(
+                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=MAKE_SQUARE` as any,
+                        ),
+                    },
+                    { text: t("common.cancel"), style: "cancel" },
+                  ],
+                );
+              }}
+              style={({ pressed }) => ({
+                marginTop: 10,
+                borderRadius: theme.radius.md,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: pressed
+                  ? "rgba(225,195,155,0.45)"
+                  : "rgba(225,195,155,0.22)",
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+                backgroundColor: "rgba(225,195,155,0.04)",
+              })}
+            >
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 18,
+                  paddingVertical: 14,
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: "rgba(225,195,155,0.10)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="expand-outline" size={16} color="#E0C29A" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ ...theme.text.label, color: "#F4DDB6" }} numberOfLines={1}>
+                    {t("result.expand")}
+                  </Text>
+                  <Text
+                    style={{
+                      ...theme.text.caption,
+                      color: "rgba(225,195,155,0.65)",
+                      marginTop: 2,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t("result.expand_subtitle", { cost: expandCost })}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
+              </View>
             </Pressable>
           )}
         </View>
-
-        {/* Auto-saved reassurance + History quick-jump.
-            Every generation/upscale/variation is persisted to S3 and
-            indexed in History — but users don't know that, so a chain
-            like "render → upscale → variation" without intermediate
-            downloads triggers the "did I lose my work?" anxiety. This
-            pill is the explicit guarantee: nothing's lost, and there's
-            a single tap to find every render in your library. Subtle
-            visual weight (12px font, faint divider above) keeps it out
-            of the action hierarchy. */}
-        <Pressable
-          onPress={() => router.push("/(tabs)/history" as never)}
-          style={({ pressed }) => ({
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: pressed
-              ? "rgba(143,227,161,0.3)"
-              : "rgba(143,227,161,0.14)",
-            backgroundColor: pressed
-              ? "rgba(143,227,161,0.06)"
-              : "rgba(143,227,161,0.03)",
-            marginBottom: 24,
-            transform: [{ scale: pressed ? 0.99 : 1 }],
-          })}
-        >
-          {/* Inner row — explicit View so flexDirection never depends
-              on the Pressable style function resolving correctly. */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              gap: 10,
-            }}
-          >
-            {/* Cloud icon badge — left anchor */}
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: "rgba(143,227,161,0.12)",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Ionicons name="cloud-done-outline" size={14} color="#8FE3A1" />
-            </View>
-
-            {/* Text block — flex:1 fills remaining space */}
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 12,
-                  color: "#E5E2E1",
-                  letterSpacing: 0.4,
-                }}
-                numberOfLines={1}
-              >
-                {t("result.auto_saved_label", {
-                  defaultValue: "Auto-saved to your history",
-                })}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 10.5,
-                  color: "rgba(208,197,184,0.55)",
-                  marginTop: 1,
-                  letterSpacing: 0.2,
-                }}
-                numberOfLines={1}
-              >
-                {t("result.auto_saved_subtitle", {
-                  defaultValue: "Every render is kept — view all designs",
-                })}
-              </Text>
-            </View>
-
-            {/* Chevron badge — far right, vertically centered via
-                alignItems:"center" on parent. flexShrink:0 prevents
-                it from collapsing when subtitle text is long. */}
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "rgba(143,227,161,0.35)",
-                backgroundColor: "rgba(143,227,161,0.1)",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Ionicons name="chevron-forward" size={13} color="#8FE3A1" />
-            </View>
-          </View>
-        </Pressable>
 
         {/* Metadata Card */}
         <View className="bg-surface-container-low rounded-xl p-6 mb-8">
@@ -882,16 +860,14 @@ export default function ResultDetailScreen() {
                 <Text
                   className="font-label text-on-surface-variant mb-1"
                   style={{
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {item.label}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
-                  style={{ fontSize: 14 }}
+                  style={{ ...theme.text.title }}
                 >
                   {item.value}
                 </Text>
@@ -908,16 +884,14 @@ export default function ResultDetailScreen() {
                 <Text
                   className="font-label text-on-surface-variant mb-1"
                   style={{
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
+                    ...theme.text.caption,
                   }}
                 >
                   {t("result.generation_time")}
                 </Text>
                 <Text
                   className="font-headline text-on-surface"
-                  style={{ fontSize: 14 }}
+                  style={{ ...theme.text.title }}
                 >
                   {(currentOutput.generationTimeMs / 1000).toFixed(1)}s
                 </Text>
@@ -927,9 +901,7 @@ export default function ResultDetailScreen() {
                   <Text
                     className="font-label text-on-surface-variant mb-1"
                     style={{
-                      fontSize: 10,
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {t("result.seed")}
@@ -953,8 +925,7 @@ export default function ResultDetailScreen() {
                     <Text
                       className="font-headline text-on-surface"
                       style={{
-                        fontSize: 14,
-                        letterSpacing: 0.5,
+                        ...theme.text.title,
                         fontVariant: ["tabular-nums"],
                       }}
                     >
@@ -973,16 +944,14 @@ export default function ResultDetailScreen() {
                   <Text
                     className="font-label text-on-surface-variant mb-1"
                     style={{
-                      fontSize: 10,
-                      letterSpacing: 3,
-                      textTransform: "uppercase",
+                      ...theme.text.caption,
                     }}
                   >
                     {t("result.resolution")}
                   </Text>
                   <Text
                     className="font-headline text-on-surface"
-                    style={{ fontSize: 14 }}
+                    style={{ ...theme.text.title }}
                   >
                     {currentOutput.width}×{currentOutput.height}
                   </Text>
@@ -992,11 +961,32 @@ export default function ResultDetailScreen() {
           </View>
         )}
 
+        {/* Two ways back into the studio — they are NOT the same journey.
+            "Try another style" keeps the photo the user already uploaded and
+            only clears the style, so a second render is two taps instead of
+            the eight that re-picking a photo costs. That gap is the single
+            biggest reason a session ended at one render. "New design" stays
+            below for a genuinely fresh start. */}
+        <View style={{ marginBottom: 12 }}>
+          <PrimaryButton
+            label={t("result.try_another_style")}
+            icon="color-palette-outline"
+            onPress={() => {
+              // Keep the photo, drop the style: the studio's style step is the
+              // next screen, and everything downstream re-derives from it.
+              setDesignStyle(null);
+              router.push("/studio/style");
+            }}
+          />
+        </View>
+
         {/* Redesign Again CTA */}
         <View style={{ marginBottom: 40 }}>
-          <PrimaryButton
-            label={t("result.new_design")}
+          <Button
+            title={t("result.new_design")}
+            variant="secondary"
             icon="refresh"
+            fullWidth
             onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
           />
         </View>
@@ -1038,7 +1028,7 @@ export default function ResultDetailScreen() {
               right: 20,
               width: 44,
               height: 44,
-              borderRadius: 22,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(0,0,0,0.55)",
               justifyContent: "center",
               alignItems: "center",
@@ -1049,18 +1039,6 @@ export default function ResultDetailScreen() {
           </Pressable>
         </View>
       </Modal>
-
-      {/* V20 / Pricing Strategy V2 — Variation picker. Lives at the
-          screen root so the full pageSheet can slide over the result
-          UI without inheriting any padding from the scroll container. */}
-      <VariationSheet
-        visible={variationSheetOpen}
-        onClose={() => setVariationSheetOpen(false)}
-        sourceJobId={job.id}
-        // Pass the carousel-active output so the backend mints a fresh
-        // variation per-image when the source produced multiple outputs.
-        activeOutputId={currentOutput?.id}
-      />
     </SafeAreaView>
   );
 }

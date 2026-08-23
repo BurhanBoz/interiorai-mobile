@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Platform, Animated } from "react-native";
+import { View, Text, Pressable, Platform, Animated, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef } from "react";
 import { BlurView } from "expo-blur";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -19,8 +20,10 @@ interface TabConfig {
 const TAB_CONFIG: TabConfig[] = [
     { name: "studio", labelKey: "tabs.studio", icon: "color-palette" },
     { name: "gallery", labelKey: "tabs.gallery", icon: "images" },
-    { name: "history", labelKey: "tabs.history", icon: "time" },
-    { name: "profile", labelKey: "tabs.profile", icon: "person" },
+    // Route stays "profile" (renaming the folder would churn every deep
+    // link); the SLOT is presented as Settings — the account hub. Quick
+    // personal actions live in the top-right AvatarMenu instead.
+    { name: "profile", labelKey: "drawer.settings", icon: "settings" },
 ];
 
 /**
@@ -36,9 +39,33 @@ const TAB_CONFIG: TabConfig[] = [
  *   - Icon + indicator animate together (spring) so selection feels
  *     tactile, not abrupt.
  */
+/**
+ * Total vertical space the dock claims at the screen bottom (row ~62px +
+ * home-indicator inset ~34px on notch devices). Scrollable tab screens must
+ * pad their content by at least this much — import it instead of hardcoding.
+ */
+export const TAB_BAR_HEIGHT = 96;
+
+/**
+ * Extra room a scrolling screen leaves under its last row, on top of the tab
+ * bar itself. Screens were each inventing a number (128, 120, 136, 60…), so
+ * some ended with their final control tucked behind the bar. Responsive for
+ * the same reason the CTA gap is: a fixed 40 is generous on a 6.7" phone and
+ * expensive on an SE.
+ */
+export const BOTTOM_SAFE_GAP = Math.round(
+  Math.min(48, Math.max(32, Dimensions.get("window").height * 0.05)),
+);
+
 export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
 
+    // Edge-to-edge dock seated on the very bottom (2026-07 founder call —
+    // the floating pill read as "hovering"; mainstream consumer apps dock
+    // the tab bar flush). The blur extends UNDER the home indicator; a
+    // hairline top border separates it from content. No transparent
+    // gutters anymore, so no box-none dance is needed either.
     return (
         <View
             style={{
@@ -46,8 +73,6 @@ export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                paddingHorizontal: 16,
-                paddingBottom: 32,
             }}
         >
             <BlurView
@@ -57,16 +82,17 @@ export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-around",
-                    borderRadius: 20,
                     overflow: "hidden",
-                    backgroundColor: "rgba(19,19,19,0.62)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.10)",
+                    backgroundColor: "rgba(19,19,19,0.72)",
+                    borderTopWidth: 1,
+                    borderTopColor: "rgba(225,195,155,0.10)",
+                    paddingTop: 4,
+                    paddingBottom: Math.max(insets.bottom, 10),
                     ...(Platform.OS === "ios" && {
-                        shadowColor: "#F5F0EB",
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 40,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: -6 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 16,
                     }),
                 }}
             >
@@ -141,11 +167,9 @@ function TabItem({ tab, isActive, label, onPress }: TabItemProps) {
             </Animated.View>
             <Text
                 style={{
-                    fontFamily: isActive ? "Inter-SemiBold" : "Inter-Medium",
-                    fontSize: 10,
-                    letterSpacing: 0.2,
+                    ...theme.text.caption,
                     color,
-                }}
+                  }}
             >
                 {label}
             </Text>

@@ -1,5 +1,5 @@
 // ── Enums ──────────────────────────────────────
-export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER";
+export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR";
 export type QualityTier = "STANDARD" | "HD" | "ULTRA_HD";
 export type JobStatus = "PENDING" | "SUBMITTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type StorageStatus = "PENDING" | "UPLOADED" | "FAILED";
@@ -12,6 +12,10 @@ export interface UserResponse {
     displayName: string;
     status: string;
     createdAt: string;
+    /** V53 guest-first — anonymous device account */
+    guest?: boolean;
+    /** "APPLE" / "GOOGLE" when the provider owns the account; absent otherwise. */
+    externalProvider?: string | null;
 }
 
 export interface AuthResponse {
@@ -84,7 +88,15 @@ export interface CreateJobRequest {
     speedMode?: SpeedMode;
     referenceFileId?: string;
     maskFileId?: string;
+    /**
+     * IO-2 (V58) — "+" tile additions. STYLE extras: Style Transfer only.
+     * OBJECT insertions: free-form REDESIGN/OUTDOOR/EMPTY_ROOM (preserve
+     * layout off). Max 3 total; each bills +1 credit on the backend.
+     */
+    extraReferences?: { fileId: string; role: ExtraReferenceRole }[];
 }
+
+export type ExtraReferenceRole = "STYLE" | "OBJECT";
 
 export interface JobOutputResponse {
     id: string;
@@ -202,6 +214,10 @@ export interface SubscriptionResponse {
     currentPeriodStart: string;
     currentPeriodEnd: string;
     createdAt: string;
+    /** Apple-deferred plan change target — null/absent when none pending. */
+    scheduledPlanCode?: string | null;
+    /** ISO instant when the scheduled change takes effect. */
+    scheduledChangeAt?: string | null;
 }
 
 // ── Credits ────────────────────────────────────

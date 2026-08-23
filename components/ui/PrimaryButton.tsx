@@ -1,4 +1,5 @@
 import { Pressable, Text, View, ActivityIndicator, ViewStyle } from "react-native";
+import { theme } from "@/config/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import type { ComponentProps, ReactNode } from "react";
@@ -70,8 +71,8 @@ export function PrimaryButton({
                     alignItems: "center",
                     justifyContent: "space-between",
                     height: 56,
-                    borderRadius: 16,
-                    paddingHorizontal: 24,
+                    borderRadius: theme.radius.md,
+                    paddingHorizontal: theme.space.gutter,
                     borderWidth: 1,
                     borderColor: "rgba(196,168,130,0.3)",
                 }}
@@ -83,12 +84,9 @@ export function PrimaryButton({
                         <Text
                             numberOfLines={1}
                             style={{
-                                fontSize: 14,
-                                fontWeight: "700",
-                                letterSpacing: 1.5,
-                                textTransform: "uppercase",
+                                ...theme.text.label,
                                 color: "#3F2D11",
-                            }}
+                              }}
                         >
                             {label}
                         </Text>

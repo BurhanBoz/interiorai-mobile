@@ -7,6 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDismissible } from "@/hooks/useDismissible";
+import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -102,8 +104,14 @@ export default function GenerationProgressScreen() {
         // Briefly show the "ready" phase before navigating so the transition feels finished.
         setTimeout(() => router.replace(`/result/${polled.id}` as any), 700);
       } else if (polled.status === "FAILED") {
+        // Backend releases the reserved credits on failure — refresh the
+        // wallet HERE too, or the header keeps showing the pre-refund
+        // balance and users read it as "it failed AND ate my credits"
+        // (2026-07-07 tester report).
+        fetchBalance();
         setErrorMessage(polled.errorMessage || t("generation.failed"));
       } else if (polled.status === "CANCELLED") {
+        fetchBalance();
         setErrorMessage(t("history.status_cancelled"));
       }
     },
@@ -192,11 +200,37 @@ export default function GenerationProgressScreen() {
   };
 
   const handleRetry = () => {
+    // Options is where Generate lives since P2-8 folded Review into it. The
+    // studio store still holds every selection, so the user lands on a filled
+    // screen and can retap Generate — not restart the wizard.
     router.replace({
-      pathname: "/(tabs)/studio/review" as any,
+      pathname: "/(tabs)/studio/options" as any,
       params: errorMessage ? { error: errorMessage } : {},
     });
   };
+
+  // "About this style" is a first-generation teaching card (2026-07 tester
+  // ask): show once, dismissible via its X, never again after — the spinner
+  // block then centers in the freed space on every later run.
+  // Keyed PER STYLE (2026-07 founder spec): the first Modern run teaches
+  // Modern once; the next Modern shows nothing, while a first Japandi run
+  // still gets its own card. The key follows the style, not the screen.
+  const styleSlug = (styleName ?? "generic").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const [styleHintVisible, dismissStyleHint] = useDismissible(
+    `generation_style_hint_seen_${styleSlug}`,
+  );
+  // Seen-once semantics (2026-07 founder spec): the card counting as "seen"
+  // must not depend on the user finding the X — once it has been SHOWN for
+  // a style, leaving the screen marks it permanently. X remains the early
+  // hide within the same run.
+  const shownRef = useRef(false);
+  if (!errorMessage && !!styleName && styleHintVisible) shownRef.current = true;
+  useEffect(() => {
+    return () => {
+      if (shownRef.current) dismissStyleHint();
+    };
+  }, [dismissStyleHint]);
+  const showStyleHint = !errorMessage && !!styleName && styleHintVisible;
 
   const phaseLabel = t(`generation.phase_${phase === "error" ? "ready" : phase}`);
   const title = errorMessage ? t("generation.failed") : t("generation.creating");
@@ -221,7 +255,14 @@ export default function GenerationProgressScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: theme.space.gutter,
+          paddingBottom: 40,
+          flexGrow: 1,
+          // The style card is a spotlight overlay now — the spinner block
+          // owns the center on every run.
+          justifyContent: "center",
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero spinner */}
@@ -277,7 +318,7 @@ export default function GenerationProgressScreen() {
         {/* Title */}
         <Text
           className="font-headline text-on-background text-center mt-10"
-          style={{ fontSize: 28, letterSpacing: -0.3, fontStyle: "italic" }}
+          style={{ ...theme.text.display, fontStyle: "italic" }}
         >
           {title}
         </Text>
@@ -286,10 +327,7 @@ export default function GenerationProgressScreen() {
         <Text
           className="text-center mt-4"
           style={{
-            fontFamily: "Inter",
-            fontSize: 11,
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: phase === "error" ? "#FFB4AB" : "#E0C29A",
           }}
         >
@@ -311,7 +349,7 @@ export default function GenerationProgressScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{
                   flex: 1,
-                  borderRadius: 9999,
+                  borderRadius: theme.radius.pill,
                   shadowColor: "#FEDFB5",
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.6,
@@ -326,10 +364,8 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-label"
               style={{
-                fontSize: 10,
+                ...theme.text.caption,
                 color: "rgba(209,197,184,0.6)",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
               }}
             >
               {t("generation.elapsed_label")} · {formatElapsed(elapsedMs, t)}
@@ -337,7 +373,7 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-headline"
               style={{
-                fontSize: 14,
+                ...theme.text.title,
                 color: phase === "error" ? "#FFB4AB" : "#FEDFB5",
               }}
             >
@@ -352,7 +388,7 @@ export default function GenerationProgressScreen() {
             onPress={handleRetry}
             className="mt-8 self-center rounded-xl"
             style={{
-              paddingHorizontal: 24,
+              paddingHorizontal: theme.space.gutter,
               paddingVertical: 14,
               backgroundColor: "#2A2A2A",
               borderWidth: 1,
@@ -362,10 +398,7 @@ export default function GenerationProgressScreen() {
             <Text
               className="font-label text-secondary"
               style={{
-                fontSize: 12,
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                fontWeight: "600",
+                ...theme.text.caption,
               }}
             >
               {t("common.try_again")}
@@ -373,15 +406,51 @@ export default function GenerationProgressScreen() {
           </Pressable>
         )}
 
-        {/* Style info card */}
-        {!errorMessage && styleName && (
-          <StyleInfoCard
-            title={t("generation.about_this_style")}
-            styleName={styleName}
-            description={styleDescription}
-          />
-        )}
       </ScrollView>
+
+      {/* "About this style" — one-shot SPOTLIGHT (2026-07-15 founder spec).
+          Shown once per style; X or any tap dismisses, leaving the screen
+          gets the same seen-once marking via shownRef above. */}
+      <OneShotSpotlight
+        visible={showStyleHint}
+        onDismiss={dismissStyleHint}
+        align="stretch"
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingBottom: 14,
+            marginBottom: 4,
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(77,70,60,0.18)",
+            marginRight: 26,
+          }}
+        >
+          <Text
+            style={{
+              ...theme.text.caption,
+              color: "#E0C29A",
+            }}
+          >
+            {t("generation.about_this_style")}
+          </Text>
+          <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
+        </View>
+        <Text
+          className="font-headline text-on-surface"
+          style={{ ...theme.text.headline }}
+        >
+          {styleName}
+        </Text>
+        <Text
+          className="font-body text-on-surface-variant"
+          style={{ ...theme.text.body, fontStyle: "italic" }}
+        >
+          {styleDescription}
+        </Text>
+      </OneShotSpotlight>
     </SafeAreaView>
   );
 }
@@ -404,51 +473,6 @@ function PhaseIcon({ phase }: { phase: Phase }) {
     case "error":
       return <Ionicons name="alert-circle" size={base.size} color="#FFB4AB" />;
   }
-}
-
-function StyleInfoCard(props: {
-  title: string;
-  styleName: string;
-  description: string;
-}) {
-  return (
-    <View
-      className="rounded-xl overflow-hidden mt-10"
-      style={{ backgroundColor: "#1C1B1B", padding: 28 }}
-    >
-      <View
-        className="flex-row items-center justify-between pb-4 mb-5"
-        style={{ borderBottomWidth: 1, borderBottomColor: "rgba(77,70,60,0.18)" }}
-      >
-        <Text
-          style={{
-            fontFamily: "Inter",
-            fontSize: 11,
-            letterSpacing: 2.2,
-            textTransform: "uppercase",
-            color: "#E0C29A",
-          }}
-        >
-          {props.title}
-        </Text>
-        <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
-      </View>
-
-      <Text
-        className="font-headline text-on-surface"
-        style={{ fontSize: 22, lineHeight: 28, marginBottom: 12 }}
-      >
-        {props.styleName}
-      </Text>
-
-      <Text
-        className="font-body text-on-surface-variant"
-        style={{ fontSize: 14, lineHeight: 22, fontStyle: "italic" }}
-      >
-        {props.description}
-      </Text>
-    </View>
-  );
 }
 
 /**

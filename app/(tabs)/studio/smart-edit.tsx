@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { theme } from "@/config/theme";
 import {
   View,
   Text,
@@ -6,27 +7,35 @@ import {
   Alert,
   Dimensions,
   PanResponder,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 import Svg, { Polyline, Circle } from "react-native-svg";
 
 import { useStudioStore } from "@/stores/studioStore";
+import { useDismissible } from "@/hooks/useDismissible";
+import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
+import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
 import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 /**
  * Smart Edit (INPAINT) — mask drawing screen.
  *
  * The user paints the areas they want the AI to CHANGE; everything left
- * unpainted is preserved pixel-perfect by flux-fill-pro (V37). Strokes are
- * captured in resolution-independent normalized coordinates and rasterized
- * SERVER-SIDE at the photo's original dimensions (the model requires
- * mask size == image size), so this screen never touches pixel data.
+ * unpainted is preserved pixel-perfect by flux-fill-pro (V37). In PROTECT
+ * mode the backend routes to an instruction-edit model instead (V49) — the
+ * painted object is kept via the prompt while the rest is redesigned
+ * coherently. Strokes are captured in resolution-independent normalized
+ * coordinates and rasterized SERVER-SIDE at the photo's original dimensions
+ * (the model requires mask size == image size), so this screen never
+ * touches pixel data.
  */
 
 const BRUSHES = [
@@ -35,9 +44,6 @@ const BRUSHES = [
   { key: "L", ratio: 0.12 },
 ] as const;
 
-/** Same convention as style-transfer.tsx / gallery — the (tabs) bar overlays
- *  screen bottoms, so CTAs must clear it or they render underneath, untappable. */
-const TAB_BAR_HEIGHT = 96;
 
 /** Skip move-points closer than this many view-px to the previous one. */
 const MIN_POINT_DISTANCE = 3;
@@ -50,15 +56,38 @@ const PROTECT_GREEN = "#9CC5B0";
 
 export default function SmartEditScreen() {
   const { t } = useTranslation();
+  // wizard=1 → entered right after photo upload (2026-07 IA rework):
+  // saving continues the chain forward instead of popping back.
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const photo = useStudioStore(s => s.photo);
   const setMode = useStudioStore(s => s.setMode);
   const setMask = useStudioStore(s => s.setMask);
+  // Re-entering (e.g. back from the style step) restores the saved mask so
+  // the user edits what they drew instead of starting from a blank canvas.
+  const savedStrokes = useStudioStore(s => s.maskStrokes);
+  const savedMaskMode = useStudioStore(s => s.maskMode);
+  // In CHANGE mode the region content is genuinely ambiguous ("the user
+  // painted a sofa — and wants WHAT there?"). Asking here, where the intent
+  // lives, beats guessing downstream. Writes the SAME store field the options
+  // screen's custom prompt uses, so there is exactly one owner (options hides
+  // its accordion for INPAINT, mirroring the Style Transfer strength rule).
+  const prompt = useStudioStore(s => s.prompt);
+  const setPrompt = useStudioStore(s => s.setPrompt);
 
-  const [strokes, setStrokes] = useState<MaskStroke[]>([]);
+  const [strokes, setStrokes] = useState<MaskStroke[]>(() => savedStrokes ?? []);
   const [livePoints, setLivePoints] = useState<{ x: number; y: number }[]>([]);
   const [brushRatio, setBrushRatio] = useState<number>(BRUSHES[1].ratio);
-  const [maskMode, setMaskMode] = useState<MaskMode>("CHANGE");
+  const [maskMode, setMaskMode] = useState<MaskMode>(() => savedMaskMode ?? "CHANGE");
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+  // Drawing and scrolling share the same finger — the ScrollView yields
+  // while a stroke is in progress (classic canvas-in-scroll contract).
+  const [isDrawing, setIsDrawing] = useState(false);
+  // First-visit teaching overlay (2026-07 founder call): the how-to line
+  // shows ONCE as a spotlight card — X or a tap anywhere dismisses it for
+  // good. The persistent inline hint is gone; the mode toggle's own labels
+  // carry the semantics afterwards.
+  const [introVisible, dismissIntro] = useDismissible("magic_edit_intro_seen");
 
   const strokeColor = maskMode === "PROTECT" ? PROTECT_GREEN : GOLD;
 
@@ -71,7 +100,10 @@ export default function SmartEditScreen() {
     // hint 40 + controls 62 + save 50 + tab bar 96 + margins ~60) ≈ 430px —
     // size the canvas to the REMAINING space so the save button never
     // slides under the tab bar, even on small devices.
-    const maxH = Math.max(200, screen.height - 430);
+    // CHANGE mode carries the extra "what belongs here?" field — shrink the
+    // canvas so toggle + hint + input + canvas + brushes + Save all breathe
+    // inside one scrollable column.
+    const maxH = Math.max(200, screen.height - (maskMode === "CHANGE" ? 545 : 430));
     const aspect =
       photo?.width && photo?.height ? photo.width / photo.height : 3 / 4;
     let w = maxW;
@@ -81,7 +113,7 @@ export default function SmartEditScreen() {
       w = h * aspect;
     }
     return { canvasW: w, canvasH: h };
-  }, [photo?.width, photo?.height]);
+  }, [photo?.width, photo?.height, maskMode]);
 
   // Refs mirror the live stroke for the PanResponder closure (created once).
   const livePointsRef = useRef<{ x: number; y: number }[]>([]);
@@ -90,11 +122,43 @@ export default function SmartEditScreen() {
   const canvasRef = useRef({ w: canvasW, h: canvasH });
   canvasRef.current = { w: canvasW, h: canvasH };
 
+  // Commits whatever is in the live buffer as a stroke. Shared by release
+  // AND terminate: since the canvas moved inside a ScrollView (2026-07 IA
+  // rework), the scroll container could steal the responder mid-stroke —
+  // scrollEnabled={!isDrawing} lags a frame behind the gesture, so a fast
+  // vertical stroke was TERMINATED and its points silently discarded
+  // ("çizilen yer kayboluyor", 2026-07-20). Termination now (a) is refused
+  // while drawing, (b) still commits the stroke if the OS forces it.
+  const commitLiveStroke = () => {
+    const pts = livePointsRef.current;
+    if (pts.length > 0) {
+      const { w, h } = canvasRef.current;
+      const normalized = pts.map(p => ({
+        x: +(p.x / w).toFixed(4),
+        y: +(p.y / h).toFixed(4),
+      }));
+      setStrokes(prev => [
+        ...prev,
+        { brush: brushRef.current, points: normalized },
+      ]);
+      Haptics.selectionAsync();
+    }
+    livePointsRef.current = [];
+    setLivePoints([]);
+    setIsDrawing(false);
+  };
+  const commitRef = useRef(commitLiveStroke);
+  commitRef.current = commitLiveStroke;
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      // Never yield the responder mid-stroke — the enclosing ScrollView
+      // asks for it on vertical movement before scrollEnabled updates.
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: evt => {
+        setIsDrawing(true);
         const { locationX, locationY } = evt.nativeEvent;
         const p = clampToCanvas(locationX, locationY, canvasRef.current);
         livePointsRef.current = [p];
@@ -115,45 +179,36 @@ export default function SmartEditScreen() {
         pts.push(p);
         setLivePoints([...pts]);
       },
-      onPanResponderRelease: () => {
-        const pts = livePointsRef.current;
-        if (pts.length > 0) {
-          const { w, h } = canvasRef.current;
-          const normalized = pts.map(p => ({
-            x: +(p.x / w).toFixed(4),
-            y: +(p.y / h).toFixed(4),
-          }));
-          setStrokes(prev => [
-            ...prev,
-            { brush: brushRef.current, points: normalized },
-          ]);
-          Haptics.selectionAsync();
-        }
-        livePointsRef.current = [];
-        setLivePoints([]);
-      },
-      onPanResponderTerminate: () => {
-        livePointsRef.current = [];
-        setLivePoints([]);
-      },
+      onPanResponderRelease: () => commitRef.current(),
+      // Forced termination (incoming call, OS gesture): keep the work —
+      // committing beats discarding, and isDrawing must reset or the
+      // ScrollView stays locked forever.
+      onPanResponderTerminate: () => commitRef.current(),
     }),
   ).current;
 
   const handleSave = async () => {
     if (!photo?.fileId) return;
     if (strokes.length === 0) {
-      Alert.alert(t("studio.smart_edit_title"), t("studio.smart_edit_min_stroke"));
+      // Premium feedback (2026-07): no popup — warning haptic + inline
+      // hint above the CTA; clears itself as soon as a stroke lands.
+      setAttempted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
     setSaving(true);
     try {
-      const mask = await createMask(photo.fileId, strokes, maskMode);
+      const mask = await createMask(
+        photo.fileId, strokes, maskMode,
+        maskMode === "CHANGE" && prompt.trim().length > 0,
+      );
       setMode("INPAINT");
       // Keep the strokes too — Review renders them over the photo preview
       // so the user SEES what will change before generating.
       setMask(mask.id, strokes, maskMode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+      if (wizard === "1") router.push("/studio/style");
+      else router.back();
     } catch (e: any) {
       const msg = e?.response?.data?.message;
       Alert.alert(
@@ -172,7 +227,7 @@ export default function SmartEditScreen() {
         <Header title={t("studio.smart_edit_title")} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Ionicons name="image-outline" size={40} color={GOLD} />
-          <Text style={{ color: "#EDE4D7", fontSize: 16, textAlign: "center", marginTop: 16 }}>
+          <Text style={{ ...theme.text.subtitle, color: "#EDE4D7", textAlign: "center", marginTop: 16 }}>
             {t("studio.smart_edit_no_photo")}
           </Text>
         </View>
@@ -184,6 +239,13 @@ export default function SmartEditScreen() {
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#131313" }}>
       <Header title={t("studio.smart_edit_title")} />
 
+      <ScrollView
+        style={{ flex: 1 }}
+        scrollEnabled={!isDrawing}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 24 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
       {/* Mode: paint-to-change vs paint-to-protect. Both mental models are
           valid (a tester painted the sofa meaning "keep this"); make the
           semantic an explicit choice instead of a footnote. */}
@@ -192,7 +254,7 @@ export default function SmartEditScreen() {
           flexDirection: "row",
           marginHorizontal: 24,
           marginBottom: 10,
-          borderRadius: 12,
+          borderRadius: theme.radius.sm,
           backgroundColor: "rgba(42,42,42,0.8)",
           borderWidth: 1,
           borderColor: "rgba(77,70,60,0.15)",
@@ -212,14 +274,14 @@ export default function SmartEditScreen() {
               style={{
                 flex: 1,
                 paddingVertical: 9,
-                borderRadius: 9,
+                borderRadius: theme.radius.sm,
                 alignItems: "center",
                 backgroundColor: active ? "rgba(225,195,155,0.14)" : "transparent",
                 borderWidth: active ? 1 : 0,
                 borderColor: tint,
               }}
             >
-              <Text style={{ color: active ? tint : "#8D8271", fontSize: 13, fontWeight: "600" }}>
+              <Text style={{ ...theme.text.body, color: active ? tint : "#8D8271" }}>
                 {t(m === "CHANGE" ? "studio.smart_edit_mode_change" : "studio.smart_edit_mode_protect")}
               </Text>
             </Pressable>
@@ -227,17 +289,22 @@ export default function SmartEditScreen() {
         })}
       </View>
 
-      <Text
-        style={{
-          color: "#B8AC9C",
-          fontSize: 13,
-          textAlign: "center",
-          paddingHorizontal: 32,
-          marginBottom: 12,
-        }}
-      >
-        {t(maskMode === "PROTECT" ? "studio.smart_edit_hint_protect" : "studio.smart_edit_hint")}
-      </Text>
+
+      {/* Region content — CHANGE only. Optional: left blank the backend
+          repaints the same kind of furniture, restyled by the strength
+          slider. Filled in, it becomes the region's description verbatim. */}
+      {maskMode === "CHANGE" && (
+        <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 16 }}>
+          <Input
+            label={t("studio.smart_edit_content_label")}
+            placeholder={t("studio.smart_edit_content_placeholder")}
+            value={prompt}
+            onChangeText={setPrompt}
+            icon="color-wand-outline"
+            autoCapitalize="sentences"
+          />
+        </View>
+      )}
 
       {/* Canvas */}
       <View style={{ alignItems: "center" }}>
@@ -245,7 +312,7 @@ export default function SmartEditScreen() {
           style={{
             width: canvasW,
             height: canvasH,
-            borderRadius: 16,
+            borderRadius: theme.radius.md,
             overflow: "hidden",
             backgroundColor: "#1C1C1C",
           }}
@@ -304,7 +371,7 @@ export default function SmartEditScreen() {
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: 22,
+                borderRadius: theme.radius.lg,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: active ? "rgba(225,195,155,0.18)" : "rgba(42,42,42,0.8)",
@@ -340,21 +407,41 @@ export default function SmartEditScreen() {
         />
       </View>
 
-      {/* Save — cleared above the (tabs) bar; see TAB_BAR_HEIGHT. */}
+      {/* Save — inside the scroll column; the container's bottom padding
+          already clears the tab bar. */}
       <View
         style={{
-          paddingHorizontal: 24,
-          marginTop: "auto",
-          marginBottom: TAB_BAR_HEIGHT + 16,
+          paddingHorizontal: theme.space.gutter,
+          marginTop: 24,
         }}
       >
+        {attempted && strokes.length === 0 && (
+          <Text
+            style={{
+              ...theme.text.caption,
+              marginBottom: 10,
+              textAlign: "center",
+              color: "#D98A7B",
+            }}
+          >
+            {t("studio.smart_edit_mask_required")}
+          </Text>
+        )}
         <Button
           title={saving ? t("studio.smart_edit_saving") : t("studio.smart_edit_save")}
           onPress={handleSave}
           loading={saving}
-          disabled={strokes.length === 0}
         />
       </View>
+      </ScrollView>
+
+      {/* One-shot teaching spotlight — shared pattern (OneShotSpotlight). */}
+      <OneShotSpotlight
+        visible={introVisible}
+        onDismiss={dismissIntro}
+        icon="color-wand-outline"
+        text={t("studio.smart_edit_hint")}
+      />
     </SafeAreaView>
   );
 }
@@ -393,7 +480,7 @@ function ControlButton({
         justifyContent: "center",
         paddingHorizontal: 12,
         height: 44,
-        borderRadius: 22,
+        borderRadius: theme.radius.lg,
         backgroundColor: "rgba(42,42,42,0.8)",
         borderWidth: 1,
         borderColor: "rgba(77,70,60,0.15)",
@@ -403,7 +490,7 @@ function ControlButton({
       }}
     >
       <Ionicons name={icon} size={16} color={GOLD} />
-      <Text style={{ color: "#EDE4D7", fontSize: 13 }}>{label}</Text>
+      <Text style={{ ...theme.text.body, color: "#EDE4D7" }}>{label}</Text>
     </Pressable>
   );
 }
@@ -448,7 +535,7 @@ function Header({ title }: { title: string }) {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 24,
+        paddingHorizontal: theme.space.gutter,
         paddingVertical: 16,
       }}
     >
@@ -458,7 +545,7 @@ function Header({ title }: { title: string }) {
         style={{
           width: 40,
           height: 40,
-          borderRadius: 20,
+          borderRadius: theme.radius.lg,
           backgroundColor: "rgba(42,42,42,0.8)",
           borderWidth: 1,
           borderColor: "rgba(77,70,60,0.15)",
@@ -470,9 +557,8 @@ function Header({ title }: { title: string }) {
       </Pressable>
       <Text
         style={{
+          ...theme.text.subtitle,
           color: "#EDE4D7",
-          fontSize: 18,
-          fontWeight: "600",
           marginLeft: 16,
         }}
       >

@@ -98,7 +98,7 @@ export default function RestoreAccountScreen() {
         [
           {
             text: t("common.ok", { defaultValue: "OK" }),
-            onPress: () => router.replace("/(tabs)/gallery"),
+            onPress: () => router.replace("/(tabs)/studio"),
           },
         ],
       );
@@ -182,10 +182,7 @@ export default function RestoreAccountScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 11,
-              letterSpacing: 2.4,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "rgba(225,195,155,0.6)",
               textAlign: "center",
               marginBottom: 10,
@@ -195,12 +192,9 @@ export default function RestoreAccountScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "NotoSerif",
-              fontSize: 28,
-              lineHeight: 34,
+              ...theme.text.display,
               color: "#E5E2E1",
               textAlign: "center",
-              letterSpacing: -0.4,
               marginBottom: 12,
             }}
           >
@@ -208,9 +202,7 @@ export default function RestoreAccountScreen() {
           </Text>
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 14,
-              lineHeight: 21,
+              ...theme.text.body,
               color: "rgba(209,197,184,0.72)",
               textAlign: "center",
             }}
@@ -252,9 +244,7 @@ export default function RestoreAccountScreen() {
 
           <Text
             style={{
-              fontFamily: "Inter",
-              fontSize: 12,
-              lineHeight: 18,
+              ...theme.text.caption,
               color: "rgba(209,197,184,0.55)",
               textAlign: "center",
               marginTop: 24,

@@ -12,14 +12,13 @@ import { planTier } from "@/utils/planTier";
  * same concept look like three different features. Now every surface routes
  * through <TierBadge tier="max" /> and the look stays coherent.
  *
- * Tier tone map:
- *   - free  → muted neutral on dark
- *   - basic → cool silver
- *   - pro   → gold pill
- *   - max   → gradient gold with subtle glow
+ * Tier tone map (Pricing V3):
+ *   - free → muted neutral on dark
+ *   - base → gold pill
+ *   - pro  → gradient gold with subtle glow (the top tier)
  */
 
-export type TierCode = "FREE" | "BASIC" | "PRO" | "MAX";
+export type TierCode = "FREE" | "BASE" | "PRO";
 export type TierSize = "xs" | "sm" | "md";
 
 interface TierBadgeProps {
@@ -30,10 +29,11 @@ interface TierBadgeProps {
   style?: ViewStyle;
 }
 
-const SIZE_MAP: Record<TierSize, { px: number; py: number; font: number; gap: number; tracking: number }> = {
-  xs: { px: 7, py: 2, font: 9, gap: 4, tracking: 1.5 },
-  sm: { px: 9, py: 3, font: 10, gap: 5, tracking: 1.8 },
-  md: { px: 12, py: 4, font: 11, gap: 6, tracking: 2 },
+// Padding is what `size` controls; the text is always `theme.text.label`.
+const SIZE_MAP: Record<TierSize, { px: number; py: number; gap: number }> = {
+  xs: { px: 7, py: 2, gap: 4 },
+  sm: { px: 9, py: 3, gap: 5 },
+  md: { px: 12, py: 4, gap: 6 },
 };
 
 // Shared normalization — maps annual SKUs (e.g. PRO_ANNUAL) to their base
@@ -45,23 +45,18 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
   const dims = SIZE_MAP[size];
   const text = (label ?? code).toUpperCase();
 
-  const textStyle: TextStyle = {
-    fontFamily: "Inter-SemiBold",
-    fontSize: dims.font,
-    letterSpacing: dims.tracking,
-    textTransform: "uppercase",
-  };
+  const textStyle: TextStyle = { ...theme.text.label };
 
   const containerStyle: ViewStyle = {
     paddingHorizontal: dims.px,
     paddingVertical: dims.py,
-    borderRadius: 999,
+    borderRadius: theme.radius.pill,
     alignSelf: "flex-start",
     alignItems: "center",
     justifyContent: "center",
   };
 
-  if (code === "MAX") {
+  if (code === "PRO") {
     return (
       <LinearGradient
         colors={[theme.color.goldDawn, theme.color.goldMidday]}
@@ -82,7 +77,7 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
     );
   }
 
-  if (code === "PRO") {
+  if (code === "BASE") {
     return (
       <View
         style={[
@@ -96,26 +91,6 @@ export function TierBadge({ tier, size = "sm", label, style }: TierBadgeProps) {
         ]}
       >
         <Text style={[textStyle, { color: theme.color.goldMidday }]}>
-          {text}
-        </Text>
-      </View>
-    );
-  }
-
-  if (code === "BASIC") {
-    return (
-      <View
-        style={[
-          containerStyle,
-          {
-            backgroundColor: "rgba(200,198,197,0.12)",
-            borderWidth: 1,
-            borderColor: "rgba(200,198,197,0.25)",
-          },
-          style,
-        ]}
-      >
-        <Text style={[textStyle, { color: theme.color.onSurfaceVariant }]}>
           {text}
         </Text>
       </View>

@@ -3,6 +3,7 @@ import Purchases, {
     PURCHASES_ERROR_CODE,
     type PurchasesError,
     type PurchasesPackage,
+    type PurchasesStoreProduct,
 } from "react-native-purchases";
 import {
     isDummyMode,
@@ -17,6 +18,7 @@ import type {
     CreditPackPurchaseResponse,
     SubscriptionResponse,
 } from "@/types/api";
+import type { StorePrice, StorePriceMap } from "@/utils/price";
 
 /**
  * In-App Purchase orchestrator.
@@ -103,6 +105,56 @@ export async function logoutIAP(): Promise<void> {
 }
 
 /**
+ * Fetch storefront-localized prices for every purchasable product.
+ *
+ * <p>Feeds {@code storePricesStore} so the UI can show the price the user
+ * will ACTUALLY pay (₺/€/¥... — Apple's own per-storefront price points),
+ * instead of our backend's USD reference values. Two sources, merged:
+ * <ul>
+ *   <li>Subscriptions — packages of the current RC offering.</li>
+ *   <li>Credit packs — consumables, NOT in the offering; fetched by product
+ *       id (same {@link Purchases.getProducts} call the purchase flow uses).</li>
+ * </ul>
+ *
+ * <p>Failure semantics: dummy mode returns an empty map (screens keep their
+ * backend-USD fallback — pre-localization behavior). A pack-lookup failure
+ * degrades to subscriptions-only rather than failing the whole map.
+ */
+export async function fetchStorePrices(): Promise<StorePriceMap> {
+    if (isDummyMode) {
+        return {};
+    }
+
+    const toStorePrice = (p: PurchasesStoreProduct): StorePrice => ({
+        priceString: p.priceString,
+        price: p.price,
+        currencyCode: p.currencyCode,
+        pricePerMonthString: p.pricePerMonthString,
+    });
+
+    const map: StorePriceMap = {};
+
+    const offerings = await Purchases.getOfferings();
+    const offering = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID];
+    for (const pkg of offering?.availablePackages ?? []) {
+        map[pkg.product.identifier] = toStorePrice(pkg.product);
+    }
+
+    try {
+        const packProducts = await Purchases.getProducts(
+            Object.values(CREDIT_PACK_PRODUCT_IDS),
+        );
+        for (const product of packProducts) {
+            map[product.identifier] = toStorePrice(product);
+        }
+    } catch (e) {
+        console.warn("[IAP] credit-pack price fetch failed (subscriptions still localized):", e);
+    }
+
+    return map;
+}
+
+/**
  * Purchase a subscription plan via Apple StoreKit (through RevenueCat).
  *
  * <p>Flow:
@@ -122,18 +174,16 @@ export async function logoutIAP(): Promise<void> {
  *                  unverified receipt. Caller should distinguish cancelled
  *                  vs failure via the error code (see {@link isUserCancelled}).
  */
-export async function purchaseSubscription(planCode: string): Promise<SubscriptionResponse> {
+export async function purchaseSubscription(
+    planCode: string,
+    appleProductId?: string | null,
+): Promise<SubscriptionResponse> {
     if (isDummyMode) {
         // Dev flow — bypass StoreKit, call backend's dummy activation endpoint
         // directly. Backend rejects this when `app.allow-dummy-purchases=false`
         // (production). See SubscriptionServiceImpl.activateDummySubscription.
         const { activateDummySubscription } = await import("./plans");
         return activateDummySubscription(planCode);
-    }
-
-    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
-    if (!packageId) {
-        throw new Error(`Unknown plan code: ${planCode}`);
     }
 
     // Fetch the current offering and find the target package.
@@ -143,11 +193,21 @@ export async function purchaseSubscription(planCode: string): Promise<Subscripti
         throw new Error("No RevenueCat offering available");
     }
 
+    // Server-driven resolution first (V3 improvement): the backend already
+    // ships plans.apple_product_id, so matching the offering package by its
+    // PRODUCT identifier makes future plan/price changes binary-free — a
+    // migration updating the plans table is enough. The static package-id
+    // map stays as the fallback for offline-cached plan payloads.
+    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
     const targetPackage = offering.availablePackages.find(
-        (p: PurchasesPackage) => p.identifier === packageId,
+        (p: PurchasesPackage) =>
+            (appleProductId && p.product.identifier === appleProductId) ||
+            (packageId != null && p.identifier === packageId),
     );
     if (!targetPackage) {
-        throw new Error(`Package not found in offering: ${packageId}`);
+        throw new Error(
+            `No RC package matches plan ${planCode} (product ${appleProductId ?? "?"}, package ${packageId ?? "?"})`,
+        );
     }
 
     // Trigger Apple payment sheet. User sees Apple's native UI, enters
@@ -192,14 +252,20 @@ export async function purchaseSubscription(planCode: string): Promise<Subscripti
 /**
  * Purchase a one-time credit pack via Apple StoreKit (through RevenueCat).
  *
- * <p>Different from subscription:
- * <ul>
- *   <li>Credit packs are <b>Consumable</b> IAPs, not subscriptions.</li>
- *   <li>They're NOT inside an RC offering — they're standalone products.</li>
- *   <li>Purchase via {@link Purchases.purchaseStoreProduct} (not purchasePackage).</li>
- * </ul>
+ * <p>Credit packs are <b>Consumable</b> IAPs (not subscriptions, not in an
+ * RC offering) — bought via {@link Purchases.purchaseStoreProduct}.
  *
- * @param packCode  backend pack code (CREDITS_SMALL / CREDITS_MEDIUM / CREDITS_LARGE)
+ * <p><b>Grant path (2026-07-15 fix):</b> the credits are granted SERVER-SIDE
+ * by the RevenueCat webhook — RC validates the receipt with Apple and POSTs
+ * a signed {@code NON_RENEWING_PURCHASE} to our backend, which credits the
+ * wallet. The client does NOT grant (the old direct-post path required a
+ * raw receipt the RC SDK abstracts away, so it always failed with "receipt
+ * required" — matching the founder's "purchase failed" report). Instead we
+ * mirror the subscription flow: after StoreKit confirms, poll our balance
+ * until the webhook lands (~1-3s), then report the delta. This is also the
+ * secure design — a client can never mint credits by forging a call.
+ *
+ * @param packCode  backend pack code (CREDITS_20 / CREDITS_50 / CREDITS_100)
  * @return          CreditPackPurchaseResponse with new balance + credits granted
  */
 export async function purchasePack(packCode: string): Promise<CreditPackPurchaseResponse> {
@@ -209,7 +275,8 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
     }
 
     if (isDummyMode) {
-        // Dev flow — simulate Apple payment with a delay, then call backend.
+        // Dev flow — simulate Apple payment with a delay, then call backend
+        // directly (backend accepts provider=DUMMY when allow-dummy-purchases).
         await new Promise((r) => setTimeout(r, 800));
         const transactionId = `dummy_${Date.now()}_${Crypto.randomUUID()}`;
         return purchaseCreditPack({
@@ -221,28 +288,49 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
         });
     }
 
-    // Real RC flow — fetch the product, trigger purchase.
+    // Real RC flow — fetch the product, trigger the StoreKit purchase.
     const products = await Purchases.getProducts([productId]);
     const product = products.find((p) => p.identifier === productId);
     if (!product) {
         throw new Error(`Product not found in App Store Connect: ${productId}`);
     }
 
-    const { customerInfo, productIdentifier } = await Purchases.purchaseStoreProduct(product);
+    const { useCreditStore } = await import("@/stores/creditStore");
+    const balanceBefore = useCreditStore.getState().balance ?? 0;
 
-    // RC keeps consumable transactions in `nonSubscriptionTransactions`.
-    // Find the most recent one for this product to grab the transaction ID.
-    const tx = customerInfo.nonSubscriptionTransactions
-        .filter((t) => t.productIdentifier === productIdentifier)
-        .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime())[0];
+    // StoreKit purchase — throws on user-cancel (caller maps via isUserCancelled).
+    await Purchases.purchaseStoreProduct(product);
 
-    return purchaseCreditPack({
+    // Poll for the webhook-driven grant. 12 tries × 2s = 24s ceiling — RC
+    // usually delivers in 1-3s, but the founder's 50-credit sandbox purchase
+    // (2026-07-16) landed after the old 12s window, showing the pending
+    // fallback for a purchase that was seconds from reconciling. Each poll
+    // refreshes the authoritative balance from the backend.
+    for (let attempt = 0; attempt < 12; attempt++) {
+        await useCreditStore.getState().fetchBalance();
+        const now = useCreditStore.getState().balance ?? 0;
+        if (now > balanceBefore) {
+            return {
+                packCode,
+                creditsGranted: now - balanceBefore,
+                newBalance: now,
+                provider: "REVENUECAT",
+            } as CreditPackPurchaseResponse;
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+    }
+
+    // Webhook hasn't landed within the window. The purchase DID go through on
+    // Apple's side; the grant will reconcile shortly. Return the current
+    // balance so the UI can reassure rather than show a hard failure.
+    const finalBalance = useCreditStore.getState().balance ?? balanceBefore;
+    return {
         packCode,
+        creditsGranted: Math.max(0, finalBalance - balanceBefore),
+        newBalance: finalBalance,
         provider: "REVENUECAT",
-        transactionId: tx?.transactionIdentifier ?? customerInfo.originalAppUserId,
-        productId: productIdentifier,
-        receiptData: "",
-    });
+        pending: finalBalance <= balanceBefore,
+    } as CreditPackPurchaseResponse & { pending?: boolean };
 }
 
 /**

@@ -47,14 +47,23 @@ async function generateAppleNoncePair(): Promise<{ raw: string; hashed: string }
  *
  * After a successful sign-in the root layout's auth guard redirects to (tabs),
  * so callers don't need to navigate manually.
+ *
+ * `upgrade: true` keeps the identical Apple/Google dance but sends the verified
+ * token to the guest-upgrade endpoint instead: a guest already has credits and
+ * designs on their row, and plain sign-in would hand them a different account
+ * and strand all of it. `onSuccess` replaces the default redirect — the upgrade
+ * caller wants to return where it came from, not jump to the gallery.
  */
-export function useSocialAuth() {
+export function useSocialAuth(options?: { upgrade?: boolean; onSuccess?: () => void }) {
+    const upgradeMode = options?.upgrade === true;
+    const onSuccess = options?.onSuccess;
     const { t } = useTranslation();
     const [loading, setLoading] = useState<null | "apple" | "google">(null);
     const [appleAvailable, setAppleAvailable] = useState(false);
 
     const loginWithAppleStore = useAuthStore((s) => s.loginWithApple);
     const loginWithGoogleStore = useAuthStore((s) => s.loginWithGoogle);
+    const upgradeWithSocial = useAuthStore((s) => s.upgradeWithSocial);
 
     useEffect(() => {
         if (Platform.OS !== "ios") return;
@@ -90,13 +99,18 @@ export function useSocialAuth() {
     const handleGoogleToken = useCallback(
         async (idToken: string) => {
             try {
-                await loginWithGoogleStore({ identityToken: idToken });
-                router.replace("/(tabs)/gallery");
+                if (upgradeMode) {
+                    await upgradeWithSocial({ provider: "GOOGLE", identityToken: idToken });
+                } else {
+                    await loginWithGoogleStore({ identityToken: idToken });
+                }
+                if (onSuccess) onSuccess();
+                else router.replace("/(tabs)/studio");
             } finally {
                 setLoading(null);
             }
         },
-        [loginWithGoogleStore]
+        [loginWithGoogleStore, upgradeWithSocial, upgradeMode, onSuccess]
     );
 
     const signInWithApple = useCallback(async () => {
@@ -125,12 +139,22 @@ export function useSocialAuth() {
                 .filter(Boolean)
                 .join(" ")
                 .trim();
-            await loginWithAppleStore({
-                identityToken: credential.identityToken,
-                fullName: fullName || undefined,
-                nonce: rawNonce,
-            });
-            router.replace("/(tabs)/gallery");
+            if (upgradeMode) {
+                await upgradeWithSocial({
+                    provider: "APPLE",
+                    identityToken: credential.identityToken,
+                    fullName: fullName || undefined,
+                    nonce: rawNonce,
+                });
+            } else {
+                await loginWithAppleStore({
+                    identityToken: credential.identityToken,
+                    fullName: fullName || undefined,
+                    nonce: rawNonce,
+                });
+            }
+            if (onSuccess) onSuccess();
+            else router.replace("/(tabs)/studio");
         } catch (e: any) {
             if (e?.code !== "ERR_REQUEST_CANCELED") {
                 Alert.alert(t("auth.apple_failed_title"), t("auth.social_retry"));
@@ -138,7 +162,7 @@ export function useSocialAuth() {
         } finally {
             setLoading(null);
         }
-    }, [appleAvailable, loginWithAppleStore, t]);
+    }, [appleAvailable, loginWithAppleStore, upgradeWithSocial, upgradeMode, onSuccess, t]);
 
     const signInWithGoogle = useCallback(async () => {
         if (!env.google.iosClientId && !env.google.webClientId) {

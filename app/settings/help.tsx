@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { theme } from "@/config/theme";
 import {
   View,
   Text,
@@ -80,7 +81,7 @@ function ParameterRow({
           style={{
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: theme.radius.sm,
             backgroundColor: "rgba(225,195,155,0.08)",
             alignItems: "center",
             justifyContent: "center",
@@ -95,9 +96,7 @@ function ParameterRow({
         <View style={{ flex: 1 }}>
           <Text
             style={{
-              fontFamily: "Inter-SemiBold",
-              fontSize: 14,
-              letterSpacing: 0.2,
+              ...theme.text.subtitle,
               color: open ? "#E1C39B" : "#E5E2E1",
             }}
           >
@@ -106,11 +105,8 @@ function ParameterRow({
           {gate ? (
             <Text
               style={{
+                ...theme.text.caption,
                 marginTop: 3,
-                fontFamily: "Inter-SemiBold",
-                fontSize: 10,
-                letterSpacing: 1.4,
-                textTransform: "uppercase",
                 color: "rgba(225,195,155,0.55)",
               }}
             >
@@ -127,11 +123,9 @@ function ParameterRow({
       {open ? (
         <Text
           style={{
+            ...theme.text.body,
             marginTop: 14,
             paddingLeft: 50,
-            fontFamily: "Inter",
-            fontSize: 13,
-            lineHeight: 20,
             color: "#D0C5B8",
           }}
         >
@@ -167,7 +161,7 @@ function AccordionItem({
       <View className="flex-row items-center justify-between">
         <Text
           className="font-body font-medium flex-1 mr-3"
-          style={{ fontSize: 16, color: open ? "#E1C39B" : "#E5E2E1" }}
+          style={{ ...theme.text.subtitle, color: open ? "#E1C39B" : "#E5E2E1" }}
         >
           {t(questionKey)}
         </Text>
@@ -180,7 +174,7 @@ function AccordionItem({
       {open && (
         <Text
           className="font-body text-on-surface-variant mt-4"
-          style={{ fontSize: 14, lineHeight: 22, fontWeight: "300" }}
+          style={{ ...theme.text.body }}
         >
           {t(answerKey)}
         </Text>
@@ -240,9 +234,7 @@ export default function HelpScreen() {
         <Text
           className="font-headline flex-1 text-center"
           style={{
-            fontSize: 17,
-            letterSpacing: 3,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: "#E1C39B",
           }}
         >
@@ -261,7 +253,7 @@ export default function HelpScreen() {
         <View className="mb-12 mt-8">
           <Text
             className="font-headline text-on-background mb-4"
-            style={{ fontSize: 48, lineHeight: 54 }}
+            style={{ ...theme.text.hero }}
           >
             {t("settings.help_title")}
           </Text>
@@ -271,7 +263,7 @@ export default function HelpScreen() {
           />
           <Text
             className="font-body text-on-surface-variant"
-            style={{ fontSize: 14, lineHeight: 22, maxWidth: 320 }}
+            style={{ ...theme.text.body, maxWidth: 320 }}
           >
             {t("settings.help_hero_subtitle")}
           </Text>
@@ -282,9 +274,7 @@ export default function HelpScreen() {
           <Text
             className="font-label text-outline mb-3"
             style={{
-              fontSize: 11,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
+              ...theme.text.caption,
             }}
           >
             {t("settings.help_search_label")}
@@ -304,7 +294,7 @@ export default function HelpScreen() {
                 placeholderTextColor="rgba(153,143,132,0.5)"
                 className="flex-1 font-body text-on-surface"
                 style={{
-                  fontSize: 14,
+                  ...theme.text.body,
                   paddingVertical: 16,
                   paddingLeft: 48,
                   paddingRight: 16,
@@ -327,7 +317,7 @@ export default function HelpScreen() {
         <View className="mb-16">
           <Text
             className="font-headline text-on-background mb-8"
-            style={{ fontSize: 20 }}
+            style={{ ...theme.text.headline }}
           >
             {t("settings.help_faq_title")}
           </Text>
@@ -343,7 +333,7 @@ export default function HelpScreen() {
             {filtered.length === 0 && (
               <Text
                 className="font-body text-on-surface-variant text-center py-8"
-                style={{ fontSize: 14 }}
+                style={{ ...theme.text.body }}
               >
                 {t("settings.help_no_results", { query: search })}
               </Text>
@@ -358,13 +348,13 @@ export default function HelpScreen() {
         <View className="mb-16">
           <Text
             className="font-headline text-on-background mb-3"
-            style={{ fontSize: 20 }}
+            style={{ ...theme.text.headline }}
           >
             {t("settings.help_params_title")}
           </Text>
           <Text
             className="font-body text-on-surface-variant mb-8"
-            style={{ fontSize: 13, lineHeight: 20 }}
+            style={{ ...theme.text.body }}
           >
             {t("settings.help_params_intro")}
           </Text>
@@ -385,7 +375,7 @@ export default function HelpScreen() {
         <View className="bg-surface-container-low rounded-xl p-8 mb-16 items-center">
           <Text
             className="font-headline text-on-background mb-6"
-            style={{ fontSize: 20 }}
+            style={{ ...theme.text.headline }}
           >
             {t("settings.help_still_curious")}
           </Text>
@@ -400,9 +390,7 @@ export default function HelpScreen() {
             <Text
               className="font-label text-outline"
               style={{
-                fontSize: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
+                ...theme.text.caption,
               }}
             >
               {t("settings.help_direct_channel")}
@@ -411,9 +399,7 @@ export default function HelpScreen() {
               <Text
                 className="font-label font-bold"
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#C4A882",
                 }}
               >
@@ -428,9 +414,7 @@ export default function HelpScreen() {
           <Text
             className="font-label text-center"
             style={{
-              fontSize: 10,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "#998F84",
               opacity: 0.5,
             }}

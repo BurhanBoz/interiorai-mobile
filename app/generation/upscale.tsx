@@ -7,6 +7,7 @@ import {
   Easing,
   Alert,
 } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -190,9 +191,7 @@ export default function UpscaleScreen() {
           <Text
             className="font-headline"
             style={{
-              fontSize: 14,
-              letterSpacing: 3,
-              textTransform: "uppercase",
+              ...theme.text.label,
               color: "#E1C39B",
             }}
           >
@@ -203,19 +202,19 @@ export default function UpscaleScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 140 }}
+        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-10 mt-4">
           <Text
             className="font-label text-on-surface-variant mb-2"
-            style={{ fontSize: 11, letterSpacing: 3.5, textTransform: "uppercase" }}
+            style={{ ...theme.text.caption }}
           >
             Current Workflow
           </Text>
           <Text
             className="font-headline text-on-surface"
-            style={{ fontSize: 34, lineHeight: 42, fontStyle: "italic" }}
+            style={{ ...theme.text.display, fontStyle: "italic" }}
           >
             {error
               ? t("upscale.failed_title")
@@ -259,9 +258,7 @@ export default function UpscaleScreen() {
               <Text
                 className="font-label text-primary mb-4"
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 3.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   textShadowColor: "rgba(254,223,181,0.6)",
                   textShadowOffset: { width: 0, height: 0 },
                   textShadowRadius: 4,
@@ -281,7 +278,7 @@ export default function UpscaleScreen() {
                   style={{
                     height: "100%",
                     width: `${error || initError ? 100 : progress}%`,
-                    borderRadius: 9999,
+                    borderRadius: theme.radius.pill,
                   }}
                 />
               </View>
@@ -289,11 +286,11 @@ export default function UpscaleScreen() {
               <View className="flex-row items-center justify-between w-full">
                 <Text
                   className="font-label text-on-surface-variant"
-                  style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}
+                  style={{ ...theme.text.caption }}
                 >
                   {statusLabel(status, error, initError)}
                 </Text>
-                <Text className="font-headline text-primary" style={{ fontSize: 14 }}>
+                <Text className="font-headline text-primary" style={{ ...theme.text.title }}>
                   {error || initError ? "—" : `${progress}%`}
                 </Text>
               </View>
@@ -328,10 +325,8 @@ export default function UpscaleScreen() {
               <Text
                 className="font-label text-primary"
                 style={{
+                  ...theme.text.caption,
                   flex: 1,
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
                 }}
               >
                 {status === "COMPLETED"
@@ -361,7 +356,7 @@ export default function UpscaleScreen() {
             >
               <Text
                 className="font-label text-on-surface"
-                style={{ fontSize: 11, letterSpacing: 3.5, textTransform: "uppercase" }}
+                style={{ ...theme.text.caption }}
               >
                 {error || initError ? "Close" : "Cancel"}
               </Text>
@@ -383,9 +378,7 @@ export default function UpscaleScreen() {
               <Text
                 className="font-label"
                 style={{
-                  fontSize: 11,
-                  letterSpacing: 3.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: status === "COMPLETED" ? "#FEDFB5" : "rgba(254,223,181,0.4)",
                 }}
               >
@@ -415,10 +408,8 @@ function LogEntry(props: { done?: boolean; error?: boolean; label: string; time:
         <Text
           className="font-label"
           style={{
+            ...theme.text.caption,
             color: textColor,
-            fontSize: 12,
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
             flex: 1,
           }}
           numberOfLines={2}
@@ -426,7 +417,7 @@ function LogEntry(props: { done?: boolean; error?: boolean; label: string; time:
           {props.label}
         </Text>
       </View>
-      <Text className="font-label" style={{ fontSize: 10, color: "rgba(209,197,184,0.5)" }}>
+      <Text className="font-label" style={{ ...theme.text.caption, color: "rgba(209,197,184,0.5)" }}>
         {props.time}
       </Text>
     </View>

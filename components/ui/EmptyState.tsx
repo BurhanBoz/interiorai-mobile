@@ -81,7 +81,7 @@ export function EmptyState({
         style={{
           width: 88,
           height: 88,
-          borderRadius: 24,
+          borderRadius: theme.radius.lg,
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 24,
@@ -104,10 +104,7 @@ export function EmptyState({
       {eyebrow ? (
         <Text
           style={{
-            fontFamily: "Inter-SemiBold",
-            fontSize: 10,
-            letterSpacing: 1.8,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: "rgba(225,195,155,0.58)",
             marginBottom: 10,
           }}
@@ -118,12 +115,9 @@ export function EmptyState({
 
       <Text
         style={{
-          fontFamily: "NotoSerif",
-          fontSize: 24,
-          lineHeight: 30,
+          ...theme.text.headline,
           color: theme.color.onSurface,
           textAlign: "center",
-          letterSpacing: -0.2,
           marginBottom: description ? 10 : 24,
         }}
       >
@@ -133,9 +127,7 @@ export function EmptyState({
       {description ? (
         <Text
           style={{
-            fontFamily: "Inter",
-            fontSize: 14,
-            lineHeight: 20,
+            ...theme.text.body,
             color: theme.color.onSurfaceVariant,
             textAlign: "center",
             maxWidth: 280,

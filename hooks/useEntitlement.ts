@@ -9,14 +9,14 @@ import { planTier, type PlanTier } from "@/utils/planTier";
  *
  * <h3>Why these hooks exist (V20 / Pricing Strategy V2 §2)</h3>
  *
- * <p>During the 7-day welcome bonus, the backend treats the user as a MAX
+ * <p>During the 7-day welcome bonus, the backend treats the user as a top-plan (PRO)
  * subscriber across FIVE override sites:
  * <ol>
  *   <li>Model routing — FLUX 1.1 Pro Ultra</li>
  *   <li>Permission enforcement — all plan flags ON</li>
  *   <li>Watermark suppression — no overlay</li>
  *   <li>Feature gating — all features enabled (STYLE_TRANSFER, INPAINT, etc.)</li>
- *   <li>Credit pricing — MAX-tier rules</li>
+ *   <li>Credit pricing — top-plan (PRO) rules</li>
  * </ol>
  *
  * <p>The {@code SubscriptionEntity} row still says FREE (welcome bonus is a
@@ -28,7 +28,8 @@ import { planTier, type PlanTier } from "@/utils/planTier";
  * from here, not from {@code subscriptionStore} directly.
  */
 
-const MAX_PLAN_CODE = "MAX" as const;
+/** The TOP plan — the welcome trial impersonates it everywhere. V40: PRO. */
+const TOP_PLAN_CODE = "PRO" as const;
 
 type EffectiveTier = PlanTier;
 
@@ -43,17 +44,16 @@ type EffectiveTier = PlanTier;
 export function useEffectivePlanCode(): EffectiveTier {
     const planCode = useSubscriptionStore((s) => s.subscription?.planCode);
     const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
-    if (welcomeBonusActive) return MAX_PLAN_CODE;
+    if (welcomeBonusActive) return TOP_PLAN_CODE;
     // Normalize through planTier so annual SKUs (PRO_ANNUAL → PRO) keep
     // their tier's entitlements instead of silently degrading to FREE.
     return planTier(planCode);
 }
 
 /**
- * Effective credit-pricing rules. During trial, returns MAX plan's
+ * Effective credit-pricing rules. During trial, returns the top plan's
  * {@code plan_credit_rules} so cost calculations match what backend
- * actually charges (FLUX-tier render = 1cr in MAX rules, not 3-4cr as in
- * FREE/BASIC). The result is memoised so consumers can pass it straight
+ * actually charges (matching what the backend actually bills during trial). The result is memoised so consumers can pass it straight
  * into {@code .find}/{@code .filter} without re-rendering on every keypress.
  */
 export function useEffectiveCreditRules(): PlanCreditRuleResponse[] {
@@ -63,15 +63,15 @@ export function useEffectiveCreditRules(): PlanCreditRuleResponse[] {
 
     return useMemo(() => {
         if (welcomeBonusActive) {
-            const maxPlan = plans?.find((p) => p.code === MAX_PLAN_CODE);
-            return maxPlan?.creditRules ?? ownRules;
+            const topPlan = plans?.find((p) => p.code === TOP_PLAN_CODE);
+            return topPlan?.creditRules ?? ownRules;
         }
         return ownRules;
     }, [welcomeBonusActive, plans, ownRules]);
 }
 
 /**
- * Effective feature list. During trial, returns MAX plan's
+ * Effective feature list. During trial, returns the top plan's
  * {@code plan_features} so every gated feature
  * ({@code HD_REDESIGN}, {@code ULTRA_HD_UPSCALE}, {@code STYLE_TRANSFER},
  * {@code INPAINT}, {@code EMPTY_ROOM}) reads as enabled in the UI.
@@ -83,8 +83,8 @@ export function useEffectiveFeatures(): PlanFeatureResponse[] {
 
     return useMemo(() => {
         if (welcomeBonusActive) {
-            const maxPlan = plans?.find((p) => p.code === MAX_PLAN_CODE);
-            return maxPlan?.features ?? ownFeatures;
+            const topPlan = plans?.find((p) => p.code === TOP_PLAN_CODE);
+            return topPlan?.features ?? ownFeatures;
         }
         return ownFeatures;
     }, [welcomeBonusActive, plans, ownFeatures]);

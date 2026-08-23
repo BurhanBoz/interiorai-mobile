@@ -1,4 +1,5 @@
 import { View, Text } from "react-native";
+import { theme } from "@/config/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 
@@ -24,7 +25,7 @@ export function FreeWatermark({
                 position: "absolute",
                 right: isSmall ? 8 : 12,
                 bottom: isSmall ? 8 : 12,
-                borderRadius: 999,
+                borderRadius: theme.radius.pill,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.45)",

@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@/stores/authStore";
 import * as userService from "@/services/user";
 
@@ -48,6 +49,9 @@ export default function DeleteAccountScreen() {
     try {
       await userService.deleteAccount(password, reason.trim() || undefined);
       await logout();
+      // The deleted account must not keep advertising itself on the
+      // onboarding screen (persistAuth's last_registered_email hint).
+      await SecureStore.deleteItemAsync("last_registered_email").catch(() => {});
       router.replace("/(auth)/login");
     } catch (e: any) {
       const code = e?.response?.data?.errorCode;

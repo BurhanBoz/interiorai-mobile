@@ -1,120 +1,27 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle } from "react-native-svg";
 import Constants from "expo-constants";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useDrawer } from "@/components/layout/DrawerProvider";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { ListItem } from "@/components/ui/ListItem";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Brand } from "@/components/brand/Brand";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ComponentProps } from "react";
 import { planTier, isAnnualPlan, type PlanTier } from "@/utils/planTier";
 import { pushWithReturn } from "@/utils/navigation";
 import { theme } from "@/config/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
-
-/* ─────────────────── Credit Ring ─────────────────── */
-/**
- * The circular progress ring around the balance. When `max` is unknown
- * we draw just the track + center number — no fake-full ring that would
- * mislead a user into thinking they have unlimited credits.
- */
-function CreditRing({
-  value,
-  max,
-  size = 72,
-}: {
-  value: number;
-  max: number | null;
-  size?: number;
-}) {
-  const strokeWidth = 3;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const hasMax = !!max && max > 0;
-  const progress = hasMax ? Math.min(value / max, 1) : 0;
-  const dashOffset = circumference * (1 - progress);
-
-  // Generic fit: the inner diameter must hold the full number. Pick the
-  // font size so the label width stays inside the ring regardless of how
-  // many digits the balance has (1 → bold, 9999 → still clean).
-  const label = value >= 10000 ? `${Math.floor(value / 1000)}k` : String(value);
-  const innerDiameter = size - strokeWidth * 2 - 4;
-  const baseFont = size * 0.46;
-  // Each digit is ≈ 0.58× the font size in tabular-nums; cap the width.
-  const digitWidth = 0.58;
-  const widthBudget = innerDiameter / (label.length * digitWidth);
-  const fontSize = Math.min(baseFont, widthBudget);
-
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Svg
-        width={size}
-        height={size}
-        style={{
-          position: "absolute",
-          transform: [{ rotate: "-90deg" }],
-        }}
-      >
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="rgba(77,70,60,0.3)"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        {hasMax ? (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={theme.color.goldMidday}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-          />
-        ) : null}
-      </Svg>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.5}
-        style={{
-          fontFamily: "NotoSerif",
-          fontSize,
-          lineHeight: fontSize * 1.1,
-          color: theme.color.onSurface,
-          fontVariant: ["tabular-nums"],
-          maxWidth: innerDiameter,
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
 
 /* ─────────────────── Gold Action Button ─────────────────── */
 /**
@@ -123,6 +30,9 @@ function CreditRing({
  * cleanly (flex:1, no width:"100%"). Label auto-shrinks for longer copy so
  * "UPGRADE NOW" doesn't push the card edge off-screen.
  */
+/** Half the CTA row, minus the gap. Static so nothing can drop it. */
+const CTA_SLOT = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } as const;
+
 function GoldActionButton({
   label,
   onPress,
@@ -130,6 +40,7 @@ function GoldActionButton({
   label: string;
   onPress: () => void;
 }) {
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       onPress={() => {
@@ -138,18 +49,25 @@ function GoldActionButton({
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({
-        flex: 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      // STATIC, not a style callback. The pair hugged their labels at ~60% of
+      // the row because the callback form is being dropped somewhere in this
+      // app's render path — the same symptom hit the plan toggle and the
+      // Advanced-settings shell on the same day. A plain object cannot be
+      // dropped; press feedback moves to the gradient below via `pressed`
+      // state, which is a normal re-render.
+      style={CTA_SLOT}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
     >
       <LinearGradient
         colors={theme.gradient.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          height: 42,
-          borderRadius: 12,
+          alignSelf: "stretch",
+          height: 44,
+          opacity: pressed ? 0.9 : 1,
+          borderRadius: theme.radius.sm,
           paddingHorizontal: 14,
           alignItems: "center",
           justifyContent: "center",
@@ -162,10 +80,7 @@ function GoldActionButton({
           adjustsFontSizeToFit
           minimumFontScale={0.7}
           style={{
-            fontFamily: "Inter-SemiBold",
-            fontSize: 12,
-            letterSpacing: 1.2,
-            textTransform: "uppercase",
+            ...theme.text.caption,
             color: theme.color.onGold,
             textAlign: "center",
           }}
@@ -190,13 +105,9 @@ interface MenuItemConfig {
 // All icons are outline-style for consistency — previously "heart" was
 // filled while everything else was outline, which read as an accidental
 // emphasis on one row.
+// Favorites, Language and Sign Out intentionally absent — they are quick
+// personal actions and live in the top-right AvatarMenu (2026-07 round 2c).
 const MENU_ITEMS: MenuItemConfig[] = [
-  {
-    labelKey: "profile.curated_favorites",
-    icon: "heart-outline",
-    route: "/(tabs)/gallery",
-    extraParams: { filter: "favorites" },
-  },
   {
     labelKey: "profile.credit_packs",
     icon: "flash-outline",
@@ -211,6 +122,16 @@ const MENU_ITEMS: MenuItemConfig[] = [
     labelKey: "profile.manage_plan",
     icon: "ribbon-outline",
     route: "/plans",
+  },
+  {
+    labelKey: "profile.notifications",
+    icon: "notifications-outline",
+    route: "/settings/notifications",
+  },
+  {
+    labelKey: "drawer.help",
+    icon: "help-circle-outline",
+    route: "/settings/help",
   },
   {
     labelKey: "profile.privacy_data",
@@ -230,7 +151,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
 /* ─────────────────── Main Screen ─────────────────── */
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { openDrawer } = useDrawer();
   const user = useAuthStore((s) => s.user);
   const balance = useCreditStore((s) => s.balance);
   const monthlyLimit = useCreditStore((s) => s.monthlyLimit);
@@ -251,20 +171,38 @@ export default function ProfileScreen() {
       .catch(() => {});
   }, []);
 
+  // Pull-to-refresh (founder request 2026-07-16): plan changes reconcile
+  // server-side (Apple webhooks), so the Settings screen needs a manual
+  // way to pull the latest subscription + balance without reopening the app.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchBalance(),
+        fetchPlans().then(() => fetchSubscription()),
+      ]);
+    } catch {
+      // Silent — pull-to-refresh failures just leave current data in place.
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchBalance, fetchPlans, fetchSubscription]);
+
   const displayName = user?.displayName ?? null;
   const email = user?.email || "";
 
   // Effective tier — what the user FEELS like, not what the backend record
-  // says. Welcome bonus grants 7-day MAX-tier access on top of the FREE plan,
-  // so the badge + label should read "MAX" during the trial window even
-  // though `planCode === "FREE"` server-side.
+  // says. Welcome bonus grants 7-day top-tier (PRO) access on top of the
+  // FREE plan, so the badge + label should read "PRO" during the trial
+  // window even though `planCode === "FREE"` server-side.
   const isOnTrial = welcomeBonusActive === true;
   // planTier normalizes annual SKUs (PRO_ANNUAL → PRO) so annual subscribers
   // get their real tier's balance UI instead of the FREE drip caption.
-  const effectiveTier: PlanTier = isOnTrial ? "MAX" : planTier(planCode);
+  const effectiveTier: PlanTier = isOnTrial ? "PRO" : planTier(planCode);
   const isFree = effectiveTier === "FREE";
   const planLabel = isOnTrial
-    ? t("profile.max_trial", { defaultValue: "MAX TRIAL" })
+    ? t("profile.pro_trial", { defaultValue: "PRO TRIAL" })
     : (subscription?.planName ?? (isFree ? t("profile.free") : planCode));
 
   // Trial countdown — "7d left", "1d left", "ends today". Replaces the
@@ -324,6 +262,7 @@ export default function ProfileScreen() {
     router.push("/settings/delete-account");
   };
 
+
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       {/* ── Top App Bar ── */}
@@ -333,12 +272,10 @@ export default function ProfileScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
+          paddingHorizontal: theme.space.gutter,
         }}
       >
-        <Pressable onPress={openDrawer} hitSlop={8} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="menu" size={22} color={theme.color.onSurface} />
-        </Pressable>
+        <View style={{ width: 40 }} />
         <Brand variant="inline" size="sm" tone="gold" />
         <View style={{ width: 40 }} />
       </View>
@@ -346,62 +283,91 @@ export default function ProfileScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#E0C29A"
+          />
+        }
       >
-        {/* ── Identity — compact horizontal ── */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-            paddingHorizontal: 24,
-            paddingTop: 24,
-            marginBottom: 32,
-          }}
+        {/* ── Identity — tap to edit profile (iOS "tap your name" pattern).
+            The Pressable owns ONLY the touch target + press-flash; a plain
+            inner View owns the row layout. This mirrors ListItem / AvatarMenu
+            and preserves the original plain-View row (avatar + flex:1 text)
+            that already rendered correctly — the earlier version put the row
+            layout directly on the Pressable and it collapsed into a column. */}
+        {/* Guest 'secure account' banner removed 2026-08-03 (founder call):
+            the single upgrade nudge is now the 3rd-generation prompt
+            (useAccountPrompt). Re-add a settings row here if guest→email
+            conversion needs a persistent surface later. */}
+
+        <Pressable
+          onPress={() => pushWithReturn("/settings/profile-edit", "profile")}
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.profile_edit_title")}
+          style={({ pressed }) => ({
+            marginHorizontal: 12,
+            marginTop: 12,
+            marginBottom: 28,
+            borderRadius: theme.radius.lg,
+            backgroundColor: pressed ? "rgba(225,195,155,0.06)" : "transparent",
+          })}
         >
-          <UserAvatar size="hero" />
-          <View style={{ flex: 1 }}>
-            {displayName ? (
-              <Text
-                style={{
-                  fontFamily: "NotoSerif",
-                  fontSize: 22,
-                  lineHeight: 28,
-                  color: theme.color.onSurface,
-                  letterSpacing: -0.1,
-                }}
-                numberOfLines={1}
-              >
-                {displayName}
-              </Text>
-            ) : null}
-            {email ? (
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 13,
-                  color: theme.color.onSurfaceVariant,
-                  marginTop: 2,
-                  letterSpacing: 0.2,
-                }}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {email}
-              </Text>
-            ) : null}
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+            }}
+          >
+            <UserAvatar size="hero" />
+            <View style={{ flex: 1 }}>
+              {displayName ? (
+                <Text
+                  style={{
+                    ...theme.text.headline,
+                    color: theme.color.onSurface,
+                  }}
+                  numberOfLines={1}
+                >
+                  {displayName}
+                </Text>
+              ) : null}
+              {email ? (
+                <Text
+                  style={{
+                    ...theme.text.body,
+                    color: theme.color.onSurfaceVariant,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {email}
+                </Text>
+              ) : null}
+              <View style={{ flexDirection: "row", marginTop: 10 }}>
+                <TierBadge tier={effectiveTier} size="sm" label={planLabel?.toUpperCase()} />
+              </View>
             </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="rgba(153,143,132,0.55)"
+            />
           </View>
-        </View>
+        </Pressable>
 
         {/* ── Vault — unified balance card ── */}
-        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter, marginBottom: 32 }}>
           <View
             style={{
               padding: 24,
-              borderRadius: 20,
+              borderRadius: theme.radius.lg,
               backgroundColor: "rgba(225,195,155,0.05)",
               borderWidth: 1,
               borderColor: "rgba(225,195,155,0.22)",
@@ -418,24 +384,17 @@ export default function ProfileScreen() {
             >
               <Text
                 style={{
-                  fontFamily: "Inter-SemiBold",
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: theme.color.goldMidday,
                 }}
               >
                 {t("profile.available_balance") ?? "Available Balance"}
               </Text>
-              <CreditRing value={balance} max={showCreditDivisor ? monthlyLimit : null} size={44} />
             </View>
 
             <Text
               style={{
-                fontFamily: "NotoSerif",
-                fontSize: 44,
-                lineHeight: 50,
-                letterSpacing: -0.8,
+                ...theme.text.hero,
                 color: theme.color.onSurface,
                 fontVariant: ["tabular-nums"],
               }}
@@ -444,8 +403,7 @@ export default function ProfileScreen() {
               {showCreditDivisor ? (
                 <Text
                   style={{
-                    fontFamily: "Inter",
-                    fontSize: 18,
+                    ...theme.text.subtitle,
                     color: theme.color.onSurfaceMuted,
                   }}
                 >
@@ -456,9 +414,7 @@ export default function ProfileScreen() {
             </Text>
             <Text
               style={{
-                fontFamily: "Inter",
-                fontSize: 13,
-                lineHeight: 18,
+                ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
                 marginTop: 6,
               }}
@@ -484,6 +440,7 @@ export default function ProfileScreen() {
             <View
               style={{
                 flexDirection: "row",
+                alignSelf: "stretch",
                 gap: 10,
                 marginTop: 20,
               }}
@@ -505,7 +462,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Settings ── */}
-        <View style={{ paddingHorizontal: 24 }}>
+        <View style={{ paddingHorizontal: theme.space.gutter }}>
           <SectionHeader
             title={t("drawer.settings")}
             serif={false}
@@ -513,7 +470,7 @@ export default function ProfileScreen() {
           />
           <View
             style={{
-              borderRadius: 16,
+              borderRadius: theme.radius.md,
               backgroundColor: theme.color.surfaceContainerLow,
               borderWidth: 1,
               borderColor: "rgba(77,70,60,0.18)",
@@ -535,38 +492,40 @@ export default function ProfileScreen() {
             ))}
           </View>
 
-          {/* Sign Out — red, icon + label side-by-side. Reimplemented as a
-              Pressable to guarantee a single horizontal row (the shared
-              destructive Button variant was rendering inconsistently across
-              devices). */}
-          {/* Sign Out intentionally lives only in the side drawer now —
-              Profile already has the identity + plan + settings surface, and
-              a second sign-out affordance duplicated the drawer's. Delete
-              account stays here because it's profile-lifecycle, not session. */}
+          {/* Delete account — the only destructive action on this hub.
+              Session sign-out lives in the top-right AvatarMenu. */}
           <Pressable
             onPress={handleDeleteAccount}
-            hitSlop={10}
+            accessibilityRole="button"
             style={({ pressed }) => ({
-              alignSelf: "center",
-              marginTop: 28,
-              paddingHorizontal: 18,
-              paddingVertical: 10,
+              marginTop: 16,
+              borderRadius: theme.radius.md,
               borderWidth: 1,
-              borderColor: theme.color.danger,
-              borderRadius: 10,
-              opacity: pressed ? 0.6 : 0.9,
+              borderColor: "rgba(217,138,123,0.28)",
+              backgroundColor: pressed
+                ? "rgba(217,138,123,0.08)"
+                : "rgba(217,138,123,0.03)",
             })}
           >
-            <Text
+            <View
               style={{
-                fontFamily: "Inter",
-                fontSize: 12,
-                color: theme.color.danger,
-                letterSpacing: 0.3,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                paddingVertical: 14,
               }}
             >
-              {t("profile.delete_my_account")}
-            </Text>
+              <Ionicons name="trash-outline" size={15} color={theme.color.danger} />
+              <Text
+                style={{
+                  ...theme.text.subtitle,
+                  color: theme.color.danger,
+                }}
+              >
+                {t("profile.delete_my_account")}
+              </Text>
+            </View>
           </Pressable>
         </View>
 

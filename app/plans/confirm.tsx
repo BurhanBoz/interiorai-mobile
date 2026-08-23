@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
+import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import * as iap from "@/services/iap";
 import type { PlanResponse } from "@/types/api";
@@ -21,22 +24,13 @@ interface PlanHighlight {
 
 function highlightsFor(plan: PlanResponse | undefined, t: TFunction): PlanHighlight[] {
     if (!plan) return [];
-    const modelDescKey =
-        plan.modelTier === "FLUX"
-            ? "plans.highlight_flux_desc"
-            : plan.modelTier === "SDXL"
-                ? "plans.highlight_sdxl_desc"
-                : "plans.highlight_entry_desc";
+    // V3: every plan runs the same best-in-class models — a "model tier"
+    // row would be noise, so the highlights lead with credits.
     const rows: PlanHighlight[] = [
         {
             icon: "speedometer-outline",
             title: t("plans.highlight_credits_title", { count: plan.monthlyCredits }),
             description: t("plans.highlight_credits_desc"),
-        },
-        {
-            icon: "sparkles-outline",
-            title: t("plans.highlight_model_title", { tier: plan.modelTier ?? "ENTRY" }),
-            description: t(modelDescKey),
         },
     ];
     if (!plan.watermark) {
@@ -71,16 +65,17 @@ function highlightsFor(plan: PlanResponse | undefined, t: TFunction): PlanHighli
     return rows;
 }
 
-function formatPrice(plan: PlanResponse): string {
-    if (plan.priceCents === 0) return "$0";
-    const amount = (plan.priceCents / 100).toFixed(2);
-    return plan.currency === "USD" ? `$${amount}` : `${amount} ${plan.currency}`;
+/** "/month" or "/ year" — must match the plan actually being confirmed. */
+function periodSuffix(plan: PlanResponse, t: TFunction): string {
+    return plan.billingPeriod === "YEARLY" ? t("plans.per_year") : t("plans.per_month");
 }
 
 export default function PlanConfirmScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const params = useLocalSearchParams<{ planCode?: string }>();
     const plans = useSubscriptionStore((s) => s.plans);
+    const storePrices = useStorePricesStore((s) => s.prices);
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
@@ -88,6 +83,9 @@ export default function PlanConfirmScreen() {
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
+        // Confirmation + Apple disclosure must show the storefront price the
+        // payment sheet will actually charge — retry hydration if boot missed it.
+        hydrateStorePrices();
     }, []);
 
     const plan = useMemo(
@@ -95,6 +93,31 @@ export default function PlanConfirmScreen() {
         [plans, params.planCode],
     );
     const highlights = useMemo(() => highlightsFor(plan, t), [plan, t]);
+
+    // Mirror of the backend's Apple rule (AppleIapServiceImpl PRODUCT_CHANGE):
+    // target quota > current quota → immediate upgrade; anything else between
+    // two PAID plans (downgrade, or duration crossgrade like monthly→annual)
+    // is applied by Apple at the period boundary. Disclose that BEFORE the
+    // payment sheet so the "paid but nothing changed" confusion can't happen.
+    const currentSub = useSubscriptionStore((s) => s.subscription);
+    const isDeferredChange = Boolean(
+        plan
+        && currentSub
+        && currentSub.planCode !== "FREE"
+        && currentSub.planCode !== plan.code
+        && plan.monthlyCredits <= currentSub.monthlyCredits,
+    );
+    const periodEndLabel = useMemo(() => {
+        const iso = currentSub?.currentPeriodEnd;
+        if (!iso) return "";
+        try {
+            return new Date(iso).toLocaleDateString(i18n.language, {
+                day: "numeric", month: "long", year: "numeric",
+            });
+        } catch {
+            return iso.slice(0, 10);
+        }
+    }, [currentSub?.currentPeriodEnd, i18n.language]);
 
     const handleConfirm = async () => {
         if (!plan) return;
@@ -105,7 +128,7 @@ export default function PlanConfirmScreen() {
             // activation happens server-side via the RevenueCat webhook
             // (INITIAL_PURCHASE → AppleIapService), which lands ~1-3s after
             // the payment sheet closes — NOT synchronously here.
-            await iap.purchaseSubscription(plan.code);
+            await iap.purchaseSubscription(plan.code, plan.appleProductId);
 
             await fetchPlans();
 
@@ -118,31 +141,66 @@ export default function PlanConfirmScreen() {
             // Dummy mode reconciles instantly so the first poll exits.
             const targetPlan = plan.code;
             let reconciled = false;
+            let scheduled = false;
             for (let attempt = 0; attempt < 6; attempt++) {
                 await Promise.all([fetchSubscription(), fetchBalance()]);
-                const active = useSubscriptionStore.getState().subscription?.planCode;
-                if (active === targetPlan) {
+                const subNow = useSubscriptionStore.getState().subscription;
+                if (subNow?.planCode === targetPlan) {
                     reconciled = true;
+                    break;
+                }
+                // Apple-deferred downgrade/crossgrade: StoreKit confirmed the
+                // election, but the switch happens at the period boundary.
+                // The webhook records it as scheduledPlanCode ~1-3s after the
+                // sheet closes — recognize it and STOP polling; the plan is
+                // not supposed to flip now (founder bug 2026-07-16: this read
+                // as "payment ok but nothing changed").
+                if (subNow?.scheduledPlanCode === targetPlan) {
+                    scheduled = true;
                     break;
                 }
                 await new Promise((r) => setTimeout(r, 1500));
             }
 
+            const scheduledDate = (() => {
+                const iso = useSubscriptionStore.getState().subscription?.scheduledChangeAt
+                    ?? useSubscriptionStore.getState().subscription?.currentPeriodEnd;
+                if (!iso) return "";
+                try {
+                    return new Date(iso).toLocaleDateString(i18n.language, {
+                        day: "numeric", month: "long", year: "numeric",
+                    });
+                } catch {
+                    return iso.slice(0, 10);
+                }
+            })();
+
             Alert.alert(
                 reconciled
                     ? t("plans.confirm_activated_title")
-                    : t("plans.confirm_activating_title", {
-                        defaultValue: "Purchase received",
-                    }),
+                    : scheduled
+                        ? t("plans.change_scheduled_title", {
+                            defaultValue: "Plan change scheduled",
+                        })
+                        : t("plans.confirm_activating_title", {
+                            defaultValue: "Purchase received",
+                        }),
                 reconciled
                     ? t("plans.confirm_activated_description", {
                         plan: plan.name,
                         credits: plan.monthlyCredits,
                     })
-                    : t("plans.confirm_activating_description", {
-                        defaultValue:
-                            "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
-                    }),
+                    : scheduled
+                        ? t("plans.change_scheduled_description", {
+                            defaultValue:
+                                "Apple applies this change at the end of your current billing period. {{plan}} starts on {{date}} — until then your current plan stays active.",
+                            plan: plan.name,
+                            date: scheduledDate,
+                        })
+                        : t("plans.confirm_activating_description", {
+                            defaultValue:
+                                "Your purchase went through. Your plan will update in a moment — pull to refresh if it doesn't appear shortly.",
+                        }),
                 [
                     {
                         text: "OK",
@@ -199,12 +257,9 @@ export default function PlanConfirmScreen() {
                     <Text
                         className="font-label text-secondary"
                         style={{
-                            fontSize: 11,
-                            fontWeight: "500",
-                            letterSpacing: 2.2,
-                            textTransform: "uppercase",
+                            ...theme.text.label,
                             marginBottom: 16,
-                        }}
+                          }}
                     >
                         {t("plans.confirm_membership_tier")}
                     </Text>
@@ -212,7 +267,7 @@ export default function PlanConfirmScreen() {
                     <View className="flex-row justify-between items-end">
                         <Text
                             className="font-headline text-on-surface"
-                            style={{ fontSize: 36, lineHeight: 42 }}
+                            style={{ ...theme.text.display }}
                         >
                             {t("plans.confirm_upgrade_to")}{"\n"}
                             {plan.name}
@@ -220,19 +275,42 @@ export default function PlanConfirmScreen() {
                         <View style={{ alignItems: "flex-end" }}>
                             <Text
                                 className="font-headline text-secondary"
-                                style={{ fontSize: 32, lineHeight: 38 }}
+                                style={{ ...theme.text.display }}
                             >
-                                {formatPrice(plan)}
+                                {formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}
                             </Text>
                             <Text
                                 className="font-body text-on-surface-variant"
-                                style={{ fontSize: 14, marginTop: 2 }}
+                                style={{ ...theme.text.body, marginTop: 2 }}
                             >
-                                {t("plans.per_month")}
+                                {periodSuffix(plan, t)}
                             </Text>
                         </View>
                     </View>
                 </View>
+
+                {/* Apple-deferred disclosure — shown before the payment sheet
+                    for downgrades/crossgrades so the user consents knowingly:
+                    when it starts, that current credits carry over, and that
+                    packs are never touched. */}
+                {isDeferredChange && (
+                    <View style={{
+                        flexDirection: "row", alignItems: "flex-start", gap: 10,
+                        marginBottom: 28, paddingVertical: 14, paddingHorizontal: 16,
+                        borderRadius: theme.radius.md, borderWidth: 1,
+                        borderColor: "rgba(225,195,155,0.35)",
+                        backgroundColor: "rgba(225,195,155,0.07)",
+                    }}>
+                        <Ionicons name="time-outline" size={18} color="#E0C29A" style={{ marginTop: 1 }} />
+                        <Text className="font-body" style={{ ...theme.text.body, flex: 1, color: "#EDE4D7" }}>
+                            {t("plans.deferred_notice", {
+                                defaultValue:
+                                    "This change takes effect at the end of your current period ({{date}}). Until then your current plan stays active; unused credits carry over to the new plan, and purchased credit packs are always yours.",
+                                date: periodEndLabel,
+                            })}
+                        </Text>
+                    </View>
+                )}
 
                 {/* Feature highlights */}
                 <View style={{ marginBottom: 32 }}>
@@ -256,13 +334,13 @@ export default function PlanConfirmScreen() {
                             <View className="flex-1" style={{ gap: 4 }}>
                                 <Text
                                     className="font-body text-on-surface"
-                                    style={{ fontSize: 16, fontWeight: "500" }}
+                                    style={{ ...theme.text.subtitle }}
                                 >
                                     {feature.title}
                                 </Text>
                                 <Text
                                     className="font-body text-on-surface-variant"
-                                    style={{ fontSize: 13, lineHeight: 20 }}
+                                    style={{ ...theme.text.body }}
                                 >
                                     {feature.description}
                                 </Text>
@@ -287,7 +365,7 @@ export default function PlanConfirmScreen() {
                         <Ionicons name="flask-outline" size={20} color="#E0C29A" />
                         <Text
                             className="flex-1 font-body text-on-surface-variant"
-                            style={{ fontSize: 12, lineHeight: 18 }}
+                            style={{ ...theme.text.caption }}
                         >
                             {t("plans.confirm_dev_notice", { plan: plan.name })}
                         </Text>
@@ -307,13 +385,13 @@ export default function PlanConfirmScreen() {
                     <View className="flex-1">
                         <Text
                             className="font-body text-on-surface"
-                            style={{ fontSize: 13, fontWeight: "600", marginBottom: 2 }}
+                            style={{ ...theme.text.body, marginBottom: 2 }}
                         >
                             {t("plans.confirm_not_ready")}
                         </Text>
                         <Text
                             className="font-body text-on-surface-variant"
-                            style={{ fontSize: 12 }}
+                            style={{ ...theme.text.caption }}
                         >
                             {t("plans.confirm_buy_packs_instead")}
                         </Text>
@@ -342,8 +420,8 @@ export default function PlanConfirmScreen() {
                             justifyContent: "center",
                             gap: 12,
                             height: 56,
-                            borderRadius: 16,
-                            paddingHorizontal: 24,
+                            borderRadius: theme.radius.md,
+                            paddingHorizontal: theme.space.gutter,
                             borderWidth: 1,
                             borderColor: "rgba(196,168,130,0.3)",
                         }}
@@ -355,12 +433,9 @@ export default function PlanConfirmScreen() {
                                 <Text
                                     numberOfLines={1}
                                     style={{
-                                        fontSize: 14,
-                                        fontWeight: "700",
-                                        letterSpacing: 1.5,
-                                        textTransform: "uppercase",
+                                        ...theme.text.label,
                                         color: "#3F2D11",
-                                    }}
+                                      }}
                                 >
                                     {t("plans.confirm")}
                                 </Text>
@@ -376,7 +451,7 @@ export default function PlanConfirmScreen() {
                     Reviewer rejects builds that omit any of these elements. */}
                 <SubscriptionDisclosure
                     planName={plan.name}
-                    pricePerPeriod={`$${((plan.priceCents ?? 0) / 100).toFixed(2)}${t("plans.per_month")}`}
+                    pricePerPeriod={`${formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency)}${periodSuffix(plan, t)}`}
                 />
 
                 <Pressable
@@ -387,11 +462,10 @@ export default function PlanConfirmScreen() {
                     <Text
                         className="font-body text-on-surface-variant"
                         style={{
-                            fontSize: 14,
-                            fontWeight: "500",
+                            ...theme.text.body,
                             textDecorationLine: "underline",
                             textDecorationColor: "rgba(77,70,60,0.3)",
-                        }}
+                          }}
                     >
                         {t("plans.confirm_cancel_return")}
                     </Text>

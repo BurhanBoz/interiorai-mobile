@@ -155,6 +155,48 @@ export const motion = {
   },
 } as const;
 
+/* ───── Corner radii ─────
+ * Four steps, nothing else. The audit (2026-08-07) counted FOURTEEN distinct
+ * radii in use — 8/10/12/14/16/18/20/22/24 all appearing within a few screens
+ * of each other. The eye cannot name that difference but it reads it as
+ * hand-made rather than designed, which is the opposite of the brief.
+ *
+ * Mapping is gentle and upward (softer, never sharper):
+ *   8,10,12 → sm · 14,16,18 → md · 20,22,24 → lg · 999,9999 → pill
+ *
+ * Hairline values (1–4) are deliberately NOT in the scale: they belong to
+ * progress bars and stroke caps, not to surfaces, and rounding those to 10
+ * would visibly deform them.
+ */
+export const radius = {
+  /** Chips, inputs, small controls. */
+  sm: 10,
+  /** Elements inside a card — thumbnails, inline media, nested tiles. */
+  md: 16,
+  /** Cards, sheets, modals — the product's signature softness. */
+  lg: 22,
+  /** Fully round: pills, avatars, badges. */
+  pill: 999,
+} as const;
+
+/* ───── Spacing ─────
+ * The page gutter is the single most visible consistency tell: when it
+ * changes between screens, content shifts sideways during navigation. The
+ * audit found seven different values, including a lone `paddingHorizontal: 25`
+ * that is plainly a typo — and looked exactly like one.
+ */
+export const space = {
+  /** THE page gutter. Every screen's horizontal padding is this value. */
+  gutter: 24,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  "2xl": 32,
+  "3xl": 48,
+} as const;
+
 /* ───── Icon sizes ───── */
 export const iconSize = {
   xs: 12,
@@ -172,104 +214,95 @@ export const tapTarget = {
   comfortable: 48,
 } as const;
 
-/* ───── Typographic mixins ─────
- * Inline style helpers that bundle fontFamily + fontSize + lineHeight + tracking
- * for any component that can't reach into Tailwind classes (e.g. animated text).
+/* ───── Type scale ─────
+ * EIGHT steps. Not nine, not sixteen. Every piece of text in the app resolves
+ * to one of these, and a raw `fontSize:` in a component file is a bug.
+ *
+ * ── Why this was rewritten (audit 2026-08-07) ──
+ * The previous scale had sixteen steps and **zero** references: `theme.text.*`
+ * appeared nowhere in 46 screens. Components carried 447 hand-written
+ * `fontSize` values across 24 distinct sizes — including 9.5, 12.5 and 14.5,
+ * which exist in no design system anywhere and are simply someone nudging a
+ * number until it looked right. The same role rendered at five different
+ * sizes: the screen title was 36pt in review, 34 in upload, 32 in studio, 30
+ * in options, 28 in onboarding. Nobody can name that difference; everybody
+ * feels it, as "hand-made" rather than "designed".
+ *
+ * ── How the anchors were chosen ──
+ * Each step sits at the median of an observed cluster, then rounds DOWN.
+ * Downward is deliberate: shrinking text can never introduce a new line wrap,
+ * so the migration cannot break a layout it wasn't already breaking. It also
+ * serves the compactness half of the brief. The single exception is `caption`,
+ * which pulls 9–11pt body copy UP to 12 — the audit found 48% of all text at
+ * or below 12.5pt, and sub-12 sentence-case copy is where "dense" comes from.
+ *
+ * ── Two voices ──
+ * NotoSerif carries the editorial voice (hero → title). Inter carries the UI
+ * voice (subtitle → label). A step's family is part of the step: overriding
+ * `fontFamily` next to one of these spreads re-opens the exact drift this
+ * scale closes.
+ *
+ * ── Tracking ──
+ * Only `label` is tracked, and at 1.4 rather than the old 1.65–2.0. Wide
+ * tracking on 9pt uppercase reads as an airline boarding pass; the brief is
+ * a design magazine.
+ *
+ * Usage — spread it, never copy values out of it:
+ *   <Text style={{ ...theme.text.body, color: theme.color.onSurfaceVariant }}>
  */
 export const text = {
-  displayXl: {
-    fontFamily: "NotoSerif-Bold",
-    fontSize: 48,
-    lineHeight: 52,
+  /** Hero numerals and landing statements. One per screen, at most. */
+  hero: {
+    fontFamily: "NotoSerif",
+    fontSize: 40,
+    lineHeight: 46,
     letterSpacing: -0.5,
   },
-  displayLg: {
-    fontFamily: "NotoSerif-Bold",
-    fontSize: 40,
-    lineHeight: 44,
-    letterSpacing: -0.4,
-  },
-  displayMd: {
-    fontFamily: "NotoSerif",
-    fontSize: 32,
-    lineHeight: 38,
-    letterSpacing: -0.3,
-  },
-  headlineLg: {
+  /** Screen title. Absorbs the old 28/30/32/34/36 spread. */
+  display: {
     fontFamily: "NotoSerif",
     fontSize: 28,
     lineHeight: 34,
+    letterSpacing: -0.3,
+  },
+  /** Section heading within a screen. Absorbs 20/21/22/24/26. */
+  headline: {
+    fontFamily: "NotoSerif",
+    fontSize: 20,
+    lineHeight: 26,
     letterSpacing: -0.2,
   },
-  headlineMd: {
+  /** Card title in the editorial voice — the FeatureCard register. 17/18/19. */
+  title: {
     fontFamily: "NotoSerif",
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 17,
+    lineHeight: 23,
     letterSpacing: -0.1,
   },
-  titleLg: {
+  /** Emphasised UI text: list-row titles, field labels, button-adjacent. 15–18 sans. */
+  subtitle: {
     fontFamily: "Inter-SemiBold",
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: 0.1,
-  },
-  titleMd: {
-    fontFamily: "Inter-SemiBold",
-    fontSize: 16,
-    lineHeight: 22,
-    letterSpacing: 0.1,
-  },
-  bodyLg: {
-    fontFamily: "Inter",
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  bodyMd: {
-    fontFamily: "Inter",
     fontSize: 15,
-    lineHeight: 22,
+    lineHeight: 21,
   },
-  bodySm: {
+  /** Primary body copy. Line-height is generous on purpose — that IS "soft". */
+  body: {
     fontFamily: "Inter",
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
   },
-  captionMd: {
+  /** Secondary copy, helper text, metadata. The floor for sentence case. */
+  caption: {
     fontFamily: "Inter",
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
   },
-  captionSm: {
-    fontFamily: "Inter",
-    fontSize: 11,
-    lineHeight: 14,
-  },
-  labelMd: {
-    fontFamily: "Inter-SemiBold",
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 1.8,
-    textTransform: "uppercase" as const,
-  },
-  labelSm: {
+  /** THE uppercase label. If a second uppercase style appears, delete it. */
+  label: {
     fontFamily: "Inter-SemiBold",
     fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 1.65,
-    textTransform: "uppercase" as const,
-  },
-  microMd: {
-    fontFamily: "Inter-SemiBold",
-    fontSize: 10,
-    lineHeight: 13,
-    letterSpacing: 1.2,
-    textTransform: "uppercase" as const,
-  },
-  microSm: {
-    fontFamily: "Inter-SemiBold",
-    fontSize: 9,
-    lineHeight: 12,
-    letterSpacing: 1.8,
+    lineHeight: 15,
+    letterSpacing: 1.4,
     textTransform: "uppercase" as const,
   },
 } as const;
@@ -279,6 +312,8 @@ export const theme = {
   gradient,
   elevation,
   motion,
+  radius,
+  space,
   iconSize,
   tapTarget,
   text,

@@ -32,6 +32,13 @@ export function OfflineBanner() {
     const translateY = useRef(new Animated.Value(-bannerHeight)).current;
     const opacity = useRef(new Animated.Value(0)).current;
 
+    // Debounce timer: NetInfo emits a transient `isConnected: false` when the
+    // app returns from background (iOS re-probes the network) — without the
+    // delay the banner flashes "Signal lost" on every resume even though the
+    // connection is fine (2026-07-18 founder report). Real outages persist
+    // past the window; blips never surface.
+    const offlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener((state) => {
             // NetInfo reports `isInternetReachable === null` briefly during
@@ -39,9 +46,23 @@ export function OfflineBanner() {
             const online =
                 state.isConnected !== false &&
                 state.isInternetReachable !== false;
-            setIsOffline(!online);
+            if (online) {
+                if (offlineTimer.current) {
+                    clearTimeout(offlineTimer.current);
+                    offlineTimer.current = null;
+                }
+                setIsOffline(false);           // back online: hide immediately
+            } else if (!offlineTimer.current) {
+                offlineTimer.current = setTimeout(() => {
+                    offlineTimer.current = null;
+                    setIsOffline(true);        // offline for 2.5s: it's real
+                }, 2500);
+            }
         });
-        return unsubscribe;
+        return () => {
+            if (offlineTimer.current) clearTimeout(offlineTimer.current);
+            unsubscribe();
+        };
     }, []);
 
     useEffect(() => {
@@ -89,7 +110,7 @@ export function OfflineBanner() {
                     gap: 10,
                     paddingVertical: 10,
                     paddingHorizontal: 16,
-                    borderRadius: 14,
+                    borderRadius: theme.radius.md,
                     // Warm, desaturated crimson — intrudes less than iOS red
                     backgroundColor: "rgba(122, 28, 25, 0.94)",
                     borderWidth: 1,
@@ -105,11 +126,9 @@ export function OfflineBanner() {
                 <Text
                     numberOfLines={1}
                     style={{
-                        fontFamily: "Inter-SemiBold",
-                        fontSize: 12,
-                        letterSpacing: 0.3,
+                        ...theme.text.caption,
                         color: "#FFE4E0",
-                    }}
+                      }}
                 >
                     {t("common.offline_banner")}
                 </Text>

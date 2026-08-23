@@ -46,12 +46,17 @@ export const DEFAULT_OFFERING_ID = "default";
  * before calling Purchases.purchasePackage().
  */
 export const SUBSCRIPTION_PACKAGE_IDS: Record<string, string> = {
-    BASIC: "monthly_basic",
-    BASIC_ANNUAL: "annual_basic",
-    PRO: "monthly_pro",
-    PRO_ANNUAL: "annual_pro",
-    MAX: "monthly_max",
-    MAX_ANNUAL: "annual_max",
+    // Pricing V3 (V40+V42, 2026-07-14): two paid tiers, monthly + annual.
+    // RC packages to be created in the dashboard alongside the ASC products.
+    BASE: "monthly_base",
+    PRO: "monthly_pro2",
+    BASE_ANNUAL: "annual_base",
+    PRO_ANNUAL: "annual_pro2",
+    // Pricing V4 (V59, 2026-08-19). Purchase resolution matches on the
+    // PRODUCT identifier first, so these package ids only matter as the
+    // offline-cache fallback — but they must exist for that path to work.
+    BASE_WEEKLY: "weekly_base",
+    PRO_WEEKLY: "weekly_pro",
 };
 
 /**
@@ -63,12 +68,12 @@ export const SUBSCRIPTION_PACKAGE_IDS: Record<string, string> = {
  * the migration, the mobile mapping stays stable until the next launch.
  */
 export const SUBSCRIPTION_PRODUCT_IDS: Record<string, string> = {
-    BASIC: "com.roomframeai.subscription.basic",
-    BASIC_ANNUAL: "com.roomframeai.subscription.basic.annual",
-    PRO: "com.roomframeai.subscription.pro",
-    PRO_ANNUAL: "com.roomframeai.subscription.pro.annual",
-    MAX: "com.roomframeai.subscription.max",
-    MAX_ANNUAL: "com.roomframeai.subscription.max.annual",
+    // Pricing V3. ".pro" is burned by the legacy product (ASC ids are not
+    // reusable), hence ".pro2" — the plan CODE stays the clean "PRO".
+    BASE: "com.roomframeai.subscription.base",
+    PRO: "com.roomframeai.subscription.pro2",
+    BASE_ANNUAL: "com.roomframeai.subscription.base.annual",
+    PRO_ANNUAL: "com.roomframeai.subscription.pro2.annual",
 };
 
 /**
@@ -82,7 +87,9 @@ export const SUBSCRIPTION_PRODUCT_IDS: Record<string, string> = {
  * inside an offering. They're standalone consumable IAPs.
  */
 export const CREDIT_PACK_PRODUCT_IDS: Record<string, string> = {
-    CREDITS_SMALL: "com.roomframeai.credits.small",
-    CREDITS_MEDIUM: "com.roomframeai.credits.medium",
-    CREDITS_LARGE: "com.roomframeai.credits.large",
+    // V42 relaunch (20/50/100). Old .small/.medium/.large ids are burned in
+    // ASC and stay on the deactivated legacy pack rows.
+    CREDITS_20: "com.roomframeai.credits.c20",
+    CREDITS_50: "com.roomframeai.credits.c50",
+    CREDITS_100: "com.roomframeai.credits.c100",
 };

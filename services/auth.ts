@@ -1,5 +1,33 @@
+import axios from "axios";
+import env from "@/config/environment";
 import api from "./api";
 import type { AuthResponse, MessageResponse } from "@/types/api";
+
+/**
+ * Device identifiers attached to every call that can CREATE an account and
+ * therefore mint a welcome bonus (guest, register, Apple, Google).
+ *
+ * - `deviceKey` — Keychain UUID. Survives app deletion, so the ordinary
+ *   "reinstall for another free trial" loop is closed. Client-owned, so a
+ *   crafted request can always present a fresh one.
+ * - `deviceCheckToken` — Apple-minted proof. Cannot be forged, and the bits
+ *   Apple stores against it outlive a factory reset. Absent on the Simulator.
+ *
+ * Both are optional on the wire: the backend degrades to whichever it gets.
+ */
+export type DeviceIdentity = {
+    deviceKey?: string | null;
+    deviceCheckToken?: string | null;
+};
+
+/** Only the fields that actually have a value — never send explicit nulls. */
+function deviceBody(device?: DeviceIdentity): Record<string, string> {
+    if (!device) return {};
+    return {
+        ...(device.deviceKey ? { deviceKey: device.deviceKey } : {}),
+        ...(device.deviceCheckToken ? { deviceCheckToken: device.deviceCheckToken } : {}),
+    };
+}
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/login", { email, password });
@@ -9,12 +37,14 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export async function register(
     email: string,
     password: string,
-    displayName?: string
+    displayName?: string,
+    device?: DeviceIdentity,
 ): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/register", {
         email,
         password,
         displayName,
+        ...deviceBody(device),
     });
     return data;
 }
@@ -31,6 +61,26 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function refreshToken(): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/api/auth/refresh");
+    return data;
+}
+
+/**
+ * Sliding-session refresh with an EXPLICIT (possibly expired) token — used by
+ * `authStore.hydrate` on cold start.
+ *
+ * <p>Raw axios on purpose, not the shared `api` instance: the shared
+ * instance's request interceptor reads the stored token and runs its own
+ * refresh dance, which at hydrate time would either recurse or double-refresh.
+ * The backend accepts an expired bearer here for up to
+ * `jwt-refresh-window-days` (30) after expiry — the 2026-07-18 sliding-session
+ * contract built precisely for the "reopened the app days later" case.
+ */
+export async function refreshWithToken(expiredToken: string): Promise<AuthResponse> {
+    const { data } = await axios.post<AuthResponse>(
+        `${env.apiUrl}/api/auth/refresh`,
+        null,
+        { headers: { Authorization: `Bearer ${expiredToken}` }, timeout: 12000 },
+    );
     return data;
 }
 
@@ -58,8 +108,11 @@ export async function loginWithApple(params: {
     identityToken: string;
     fullName?: string;
     nonce?: string;
-}): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>("/api/auth/apple", params);
+}, device?: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/apple", {
+        ...params,
+        ...deviceBody(device),
+    });
     return data;
 }
 
@@ -70,7 +123,47 @@ export async function loginWithApple(params: {
 export async function loginWithGoogle(params: {
     identityToken: string;
     fullName?: string;
+}, device?: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/google", {
+        ...params,
+        ...deviceBody(device),
+    });
+    return data;
+}
+
+/**
+ * V53 guest-first — silent anonymous account for this device.
+ *
+ * `deviceCheckToken` (1.2) is Apple's unforgeable device proof; the backend
+ * uses it to refuse a second welcome bonus to hardware that already had one.
+ * Null on the Simulator and whenever Apple declines to mint one — the
+ * backend then falls back to `deviceKey` alone.
+ */
+export async function guestLogin(device: DeviceIdentity): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/auth/guest", deviceBody(device));
+    return data;
+}
+
+/** V53 — attach email+password to the CURRENT guest (same user id; wallet/jobs kept). */
+export async function upgradeAccount(
+    email: string, password: string, displayName?: string,
+): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/users/me/upgrade", { email, password, displayName });
+    return data;
+}
+
+/**
+ * Social half of the guest upgrade (2026-08-11). Must NOT go through
+ * /api/auth/apple|google: those endpoints don't know who is signed in, so a
+ * guest would get a brand-new account and lose the credits and designs sitting
+ * on their guest row. This one binds the verified identity to the current user.
+ */
+export async function upgradeAccountWithSocial(params: {
+    provider: "APPLE" | "GOOGLE";
+    identityToken: string;
+    nonce?: string;
+    fullName?: string;
 }): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>("/api/auth/google", params);
+    const { data } = await api.post<AuthResponse>("/api/users/me/upgrade/social", params);
     return data;
 }

@@ -15,17 +15,13 @@ import { useTranslation } from "react-i18next";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
+import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { CreditPackResponse } from "@/types/api";
-
-function formatPrice(cents: number, currency: string): string {
-    const amount = (cents / 100).toFixed(2);
-    return currency === "USD" ? `$${amount}` : `${amount} ${currency}`;
-}
-
 
 function PackCard({
     pack,
@@ -56,6 +52,7 @@ function PackCard({
     hdCost: number;
 }) {
     const { t } = useTranslation();
+    const storePrices = useStorePricesStore((s) => s.prices);
     const isFeatured = pack.badgeLabel != null;
 
     // Loyalty bonus is computed on the frontend from the subscriber tier's
@@ -90,17 +87,34 @@ function PackCard({
             onPress={disabled ? undefined : onPress}
             disabled={disabled}
             style={({ pressed }) => ({
-                marginBottom: 12,
-                borderRadius: 14,
-                backgroundColor: theme.color.surfaceContainerLow,
+                // Softer premium frame (2026-07-14 pass): generous air
+                // between cards + a rounder, calmer silhouette. Featured
+                // cards carry a floating badge that hangs 10px ABOVE the
+                // frame — without extra headroom it visually fuses with the
+                // card above (the "nested" look the founder flagged twice).
+                marginTop: pack.badgeLabel ? 14 : 0,
+                marginBottom: 22,
+                borderRadius: theme.radius.lg,
+                // Only the featured card was reading as a card (founder
+                // screenshot 2026-08-07): surfaceContainerLow (#1C1B1B) sits
+                // nine values off the page (#131313), which an OLED panel at
+                // normal brightness simply does not show, and a 26%-gold hairline
+                // disappeared with it. The others therefore looked like three
+                // paragraphs of loose text with prices floating beside them —
+                // on the one screen where the user is choosing what to buy.
+                // Raising the surface one step and the border to 38% gives each
+                // pack a definite edge without turning the list loud.
+                backgroundColor: isFeatured
+                    ? theme.color.surfaceContainerLow
+                    : theme.color.surfaceContainer,
                 borderWidth: 1,
                 borderColor: isFeatured
                     ? pressed
-                        ? "rgba(225,195,155,0.65)"
-                        : "rgba(225,195,155,0.45)"
+                        ? "rgba(225,195,155,0.70)"
+                        : "rgba(225,195,155,0.52)"
                     : pressed
                         ? "rgba(225,195,155,0.55)"
-                        : "rgba(225,195,155,0.26)",
+                        : "rgba(225,195,155,0.38)",
                 opacity: disabled && !isPurchasing ? 0.55 : 1,
                 transform: [{ scale: pressed && !disabled ? 0.99 : 1 }],
                 ...(isFeatured ? theme.elevation.goldGlowSoft : theme.elevation.sm),
@@ -114,7 +128,7 @@ function PackCard({
                     style={{
                         position: "absolute",
                         top: 0, left: 0, right: 0, bottom: 0,
-                        borderRadius: 14,
+                        borderRadius: theme.radius.lg,
                     }}
                     pointerEvents="none"
                 />
@@ -128,7 +142,7 @@ function PackCard({
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
-                            borderRadius: 999,
+                            borderRadius: theme.radius.pill,
                             paddingHorizontal: 10,
                             paddingVertical: 3,
                             borderWidth: 0.5,
@@ -136,12 +150,9 @@ function PackCard({
                         }}
                     >
                         <Text style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 9.5,
+                            ...theme.text.caption,
                             color: theme.color.onGold,
-                            letterSpacing: 1.6,
-                            textTransform: "uppercase",
-                        }}>
+                          }}>
                             {pack.badgeLabel}
                         </Text>
                     </LinearGradient>
@@ -153,45 +164,38 @@ function PackCard({
                 reads in one glance instead of three stacked sections. */}
             <View
                 style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    paddingTop: pack.badgeLabel ? 18 : 14,
+                    paddingHorizontal: theme.space.gutter,
+                    paddingVertical: 18,
+                    paddingTop: pack.badgeLabel ? 22 : 18,
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 14,
+                    gap: 18,
                 }}
             >
                 {/* Left: pack name + credit headline + bonus chip stacked */}
                 <View style={{ flex: 1, minWidth: 0 }}>
                     <Text
                         style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 9.5,
-                            letterSpacing: 1.6,
-                            textTransform: "uppercase",
+                            ...theme.text.caption,
                             color: "rgba(208,197,184,0.55)",
-                            marginBottom: 4,
-                        }}
+                            marginBottom: 7,
+                          }}
                         numberOfLines={1}
                     >
                         {pack.name}
                     </Text>
-                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 6 : 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginBottom: hasBonus ? 8 : 4 }}>
                         <Text style={{
-                            fontFamily: "NotoSerif",
-                            fontSize: 28,
-                            lineHeight: 32,
-                            letterSpacing: -0.5,
+                            ...theme.text.headline,
                             color: theme.color.onSurface,
                             fontVariant: ["tabular-nums"],
-                        }}>
+                          }}>
                             {displayTotal}
                         </Text>
                         <Text style={{
-                            fontFamily: "Inter",
-                            fontSize: 11.5,
+                            ...theme.text.caption,
                             color: theme.color.onSurfaceVariant,
-                        }}>
+                          }}>
                             {t("credit_packs.credits_suffix")}
                         </Text>
                     </View>
@@ -204,7 +208,7 @@ function PackCard({
                                 gap: 4,
                                 paddingHorizontal: 7,
                                 paddingVertical: 2.5,
-                                borderRadius: 6,
+                                borderRadius: theme.radius.sm,
                                 backgroundColor: isPaidPlan
                                     ? "rgba(123,179,138,0.10)"
                                     : "rgba(225,195,155,0.10)",
@@ -212,7 +216,7 @@ function PackCard({
                                 borderColor: isPaidPlan
                                     ? "rgba(123,179,138,0.28)"
                                     : "rgba(225,195,155,0.28)",
-                                marginBottom: 6,
+                                marginBottom: 8,
                             }}
                         >
                             <Ionicons
@@ -222,11 +226,9 @@ function PackCard({
                             />
                             <Text
                                 style={{
-                                    fontFamily: "Inter-SemiBold",
-                                    fontSize: 10,
+                                    ...theme.text.caption,
                                     color: isPaidPlan ? theme.color.success : theme.color.goldMidday,
-                                    letterSpacing: 0.2,
-                                }}
+                                  }}
                             >
                                 {t("credit_packs.bonus_included", { count: loyaltyBonus })}
                             </Text>
@@ -234,11 +236,9 @@ function PackCard({
                     ) : null}
                     <Text
                         style={{
-                            fontFamily: "Inter",
-                            fontSize: 11,
-                            lineHeight: 15,
+                            ...theme.text.caption,
                             color: theme.color.onSurfaceMuted,
-                        }}
+                          }}
                         numberOfLines={1}
                     >
                         {hasHd
@@ -263,7 +263,7 @@ function PackCard({
                             minWidth: 88,
                             paddingHorizontal: 14,
                             paddingVertical: 12,
-                            borderRadius: 10,
+                            borderRadius: theme.radius.sm,
                             alignItems: "center",
                             justifyContent: "center",
                             borderWidth: 1,
@@ -284,7 +284,7 @@ function PackCard({
                         style={{
                             paddingHorizontal: 14,
                             paddingVertical: 11,
-                            borderRadius: 10,
+                            borderRadius: theme.radius.sm,
                             flexDirection: "row",
                             alignItems: "center",
                             gap: 6,
@@ -292,13 +292,11 @@ function PackCard({
                     >
                         <Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 13,
+                                ...theme.text.caption,
                                 color: theme.color.onGold,
-                                letterSpacing: 0.2,
-                            }}
+                              }}
                         >
-                            {formatPrice(pack.priceCents, pack.currency)}
+                            {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
                         </Text>
                         <Ionicons name="arrow-forward" size={14} color={theme.color.onGold} />
                     </LinearGradient>
@@ -307,7 +305,7 @@ function PackCard({
                         style={{
                             paddingHorizontal: 14,
                             paddingVertical: 11,
-                            borderRadius: 10,
+                            borderRadius: theme.radius.sm,
                             flexDirection: "row",
                             alignItems: "center",
                             gap: 6,
@@ -318,13 +316,11 @@ function PackCard({
                     >
                         <Text
                             style={{
-                                fontFamily: "Inter-SemiBold",
-                                fontSize: 13,
+                                ...theme.text.caption,
                                 color: "#E0C29A",
-                                letterSpacing: 0.2,
-                            }}
+                              }}
                         >
-                            {formatPrice(pack.priceCents, pack.currency)}
+                            {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
                         </Text>
                         <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
                     </View>
@@ -351,6 +347,13 @@ export default function CreditPacksScreen() {
     const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
     const hdCost = getCreditCost("HD_REDESIGN", "HD", 1);
     const handleBack = useBackHandler("/(tabs)/profile");
+    const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
+
+    // Localized pack prices — idempotent retry in case boot hydration
+    // raced an offline window.
+    useEffect(() => {
+        hydrateStorePrices();
+    }, [hydrateStorePrices]);
 
     useEffect(() => {
         fetchPacks();
@@ -359,12 +362,22 @@ export default function CreditPacksScreen() {
     const handlePurchase = async (packCode: string) => {
         try {
             const result = await purchase(packCode);
+            // Webhook grant hasn't reconciled within the poll window — the
+            // purchase went through on Apple's side, credits land shortly.
+            const pending = (result as { pending?: boolean }).pending
+                || result.creditsGranted <= 0;
             Alert.alert(
-                t("credit_packs.credits_added_title"),
-                t("credit_packs.credits_added_description", {
-                    credits: result.creditsGranted,
-                    balance: result.newBalance,
-                }),
+                pending
+                    ? t("credit_packs.credits_pending_title", { defaultValue: "Purchase received" })
+                    : t("credit_packs.credits_added_title"),
+                pending
+                    ? t("credit_packs.credits_pending_description", {
+                        defaultValue: "Your purchase went through — the credits will appear in a moment.",
+                    })
+                    : t("credit_packs.credits_added_description", {
+                        credits: result.creditsGranted,
+                        balance: result.newBalance,
+                    }),
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
@@ -386,7 +399,7 @@ export default function CreditPacksScreen() {
 
     return (
         <SafeAreaView
-            edges={["top"]}
+            edges={[]}
             style={{ flex: 1, backgroundColor: theme.color.surface }}
         >
             <TopBar
@@ -397,26 +410,21 @@ export default function CreditPacksScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
+                contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ marginTop: 12, marginBottom: 24 }}>
+                <View style={{ marginBottom: 24 }}>
                     <Text style={{
-                        fontFamily: "NotoSerif",
-                        fontSize: 32,
-                        lineHeight: 38,
-                        letterSpacing: -0.3,
+                        ...theme.text.display,
                         color: theme.color.onSurface,
-                        marginBottom: 10,
-                    }}>
+                        marginBottom: 12,
+                      }}>
                         {t("credit_packs.headline")}
                     </Text>
                     <Text style={{
-                        fontFamily: "Inter",
-                        fontSize: 14,
-                        lineHeight: 20,
+                        ...theme.text.body,
                         color: theme.color.onSurfaceVariant,
-                    }}>
+                      }}>
                         {t("credit_packs.subtitle", { balance })}
                     </Text>
                 </View>
@@ -424,8 +432,8 @@ export default function CreditPacksScreen() {
                 {/* Loyalty bonus banner — shown only for paid plans */}
                 {hasBonusPlan && (
                     <View style={{
-                        marginBottom: 20,
-                        borderRadius: 14,
+                        marginBottom: 24,
+                        borderRadius: theme.radius.md,
                         overflow: "hidden",
                         borderWidth: 1,
                         borderColor: "rgba(123,179,138,0.35)",
@@ -437,14 +445,14 @@ export default function CreditPacksScreen() {
                             style={{
                                 flexDirection: "row",
                                 alignItems: "center",
-                                gap: 12,
-                                padding: 16,
+                                gap: 14,
+                                padding: 18,
                             }}
                         >
                             <View style={{
                                 width: 40,
                                 height: 40,
-                                borderRadius: 20,
+                                borderRadius: theme.radius.lg,
                                 backgroundColor: "rgba(123,179,138,0.18)",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -453,19 +461,16 @@ export default function CreditPacksScreen() {
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={{
-                                    fontFamily: "Inter-SemiBold",
-                                    fontSize: 13,
+                                    ...theme.text.subtitle,
                                     color: theme.color.success,
                                     marginBottom: 2,
-                                }}>
+                                  }}>
                                     {t("credit_packs.subscriber_bonus_title", { plan: planName, pct: creditPackBonusPct })}
                                 </Text>
                                 <Text style={{
-                                    fontFamily: "Inter",
-                                    fontSize: 12,
-                                    lineHeight: 17,
+                                    ...theme.text.caption,
                                     color: "rgba(208,197,184,0.65)",
-                                }}>
+                                  }}>
                                     {t("credit_packs.subscriber_bonus_body", { pct: creditPackBonusPct })}
                                 </Text>
                             </View>
@@ -477,7 +482,7 @@ export default function CreditPacksScreen() {
                     <View style={{
                         padding: 12,
                         marginBottom: 20,
-                        borderRadius: 10,
+                        borderRadius: theme.radius.sm,
                         backgroundColor: "rgba(229,181,103,0.08)",
                         borderWidth: 1,
                         borderColor: "rgba(229,181,103,0.22)",
@@ -487,12 +492,10 @@ export default function CreditPacksScreen() {
                     }}>
                         <Ionicons name="construct-outline" size={14} color={theme.color.warning} />
                         <Text style={{
+                            ...theme.text.caption,
                             flex: 1,
-                            fontFamily: "Inter",
-                            fontSize: 11,
-                            lineHeight: 15,
                             color: theme.color.warning,
-                        }}>
+                          }}>
                             {t("credit_packs.dev_mode_notice")}
                         </Text>
                     </View>
@@ -520,12 +523,11 @@ export default function CreditPacksScreen() {
 
                 {!loading && packs.length === 0 ? (
                     <Text style={{
-                        fontFamily: "Inter",
-                        fontSize: 14,
+                        ...theme.text.body,
                         textAlign: "center",
                         color: theme.color.onSurfaceVariant,
                         marginTop: 48,
-                    }}>
+                      }}>
                         {t("credit_packs.none_available")}
                     </Text>
                 ) : null}
@@ -536,11 +538,9 @@ export default function CreditPacksScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                             <Ionicons name="lock-closed" size={12} color={theme.color.onSurfaceMuted} />
                             <Text style={{
-                                fontFamily: "Inter",
-                                fontSize: 11,
+                                ...theme.text.caption,
                                 color: theme.color.onSurfaceMuted,
-                                letterSpacing: 0.3,
-                            }}>
+                              }}>
                                 {t("credit_packs.payments_secured")}
                             </Text>
                         </View>
@@ -551,10 +551,9 @@ export default function CreditPacksScreen() {
                             >
                                 <Ionicons name="sparkles-outline" size={11} color={theme.color.goldMidday} />
                                 <Text style={{
-                                    fontFamily: "Inter-Medium",
-                                    fontSize: 11,
+                                    ...theme.text.caption,
                                     color: theme.color.goldMidday,
-                                }}>
+                                  }}>
                                     {t("credit_packs.upsell_subscribe")}
                                 </Text>
                             </Pressable>

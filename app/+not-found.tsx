@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,9 +44,7 @@ export default function NotFoundScreen() {
           <Text
             className="font-label font-medium mb-6"
             style={{
-              fontSize: 11,
-              letterSpacing: 3.5,
-              textTransform: "uppercase",
+              ...theme.text.caption,
               color: "#E0C29A",
             }}
           >
@@ -55,7 +54,7 @@ export default function NotFoundScreen() {
           {/* Headline */}
           <Text
             className="font-headline text-on-surface mb-8"
-            style={{ fontSize: 52, lineHeight: 58 }}
+            style={{ ...theme.text.hero }}
           >
             Page Not{"\n"}Found
           </Text>
@@ -63,7 +62,7 @@ export default function NotFoundScreen() {
           {/* Description */}
           <Text
             className="font-body text-on-surface-variant leading-relaxed mb-12"
-            style={{ fontSize: 18, maxWidth: 320, fontWeight: "300" }}
+            style={{ ...theme.text.subtitle, maxWidth: 320 }}
           >
             The space you are looking for has been moved or archived. Our
             digital curators are currently renovating this section.
@@ -85,8 +84,8 @@ export default function NotFoundScreen() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 height: 56,
-                borderRadius: 16,
-                paddingHorizontal: 24,
+                borderRadius: theme.radius.md,
+                paddingHorizontal: theme.space.gutter,
                 borderWidth: 1,
                 borderColor: "rgba(196,168,130,0.3)",
               }}
@@ -94,10 +93,7 @@ export default function NotFoundScreen() {
               <Text
                 numberOfLines={1}
                 style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
+                  ...theme.text.caption,
                   color: "#3F2D11",
                 }}
               >
@@ -117,10 +113,7 @@ export default function NotFoundScreen() {
           <Text
             className="font-label"
             style={{
-              fontSize: 140,
-              fontWeight: "800",
-              textTransform: "uppercase",
-              letterSpacing: 16,
+              ...theme.text.caption,
               color: "#E5E2E1",
             }}
           >

@@ -1,7 +1,8 @@
 import { useFonts } from "expo-font";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,9 +11,12 @@ import { useAuthStore } from "@/stores/authStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useStorePricesStore } from "@/stores/storePricesStore";
 import { initializeIAP } from "@/services/iap";
-import { DrawerProvider } from "@/components/layout/DrawerProvider";
+import { sendHeartbeat, submitAttributionToken } from "@/services/telemetry";
+import { syncPushTokenIfPermitted } from "@/hooks/usePushRegistration";
 import { AppSplash } from "@/components/ui/AppSplash";
+import { AiConsentSheet } from "@/components/ui/AiConsentSheet";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import i18n from "@/i18n";
@@ -34,7 +38,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   // Subscribing to useTranslation here guarantees the entire app tree
   // re-renders when the language changes (via i18n.changeLanguage), because
-  // every child that uses t() is descendant of <Slot /> below.
+  // every child that uses t() is descendant of the root <Stack /> below.
   const { i18n: i18nInstance } = useTranslation();
 
   // Real weight TTFs now land in assets/fonts/ — no more synthesized
@@ -68,6 +72,46 @@ export default function RootLayout() {
     hydrate();
   }, []);
 
+  // Foreground token refresh (2026-07-18): the JWT lives 24h, so a user who
+  // reopens the app the next day used to race an expired token into their
+  // first request and get bounced to login. On every return to foreground we
+  // silently exchange the token (backend accepts expired ones within a
+  // 30-day sliding window), so the session just continues.
+  //
+  // V63: the same foreground event is also the session signal. Ordering is not
+  // incidental — the heartbeat must run AFTER the token refresh, or the first
+  // request of the day races an expired JWT and the session is lost exactly on
+  // the returning-user days that D1/D7 retention is measured from.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        import("@/services/api")
+          .then(({ ensureFreshSession }) => ensureFreshSession())
+          .then(() => {
+            if (useAuthStore.getState().isAuthenticated) sendHeartbeat();
+          })
+          .catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Cold-start telemetry (V63). All three are fire-and-forget: none of them
+  // may delay or break the first screen.
+  //
+  //   • heartbeat   — opens/extends the session that retention is computed from
+  //   • attribution — one-shot per install; without it Search Ads spend is blind
+  //   • push token  — iOS rotates device tokens silently, so it is re-synced on
+  //                   every launch for users who already granted permission
+  //                   (the permission ASK lives on the result screen instead,
+  //                    where the user has just seen something they liked)
+  useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+    sendHeartbeat();
+    submitAttributionToken();
+    syncPushTokenIfPermitted();
+  }, [isAuthenticated, isLoading]);
+
   // Dismiss the branded splash once fonts have loaded AND the dwell timer
   // has elapsed. This runs over the native Expo splash — user sees one
   // continuous brand moment, not a flash of black between the two.
@@ -99,9 +143,14 @@ export default function RootLayout() {
     if (isLoading) return;
     // Pass null for anonymous mode; RC creates an anonymous customer that
     // gets aliased to the real userId on the next initializeIAP call.
-    initializeIAP(user?.id ?? null).catch((e) => {
-      console.warn("[ROOT] initializeIAP failed:", e);
-    });
+    initializeIAP(user?.id ?? null)
+      // Warm the storefront-localized price map right after RC is
+      // configured so the paywall opens with ₺/€/¥ prices already in
+      // memory (screens keep a USD fallback + their own retry).
+      .then(() => useStorePricesStore.getState().hydrate())
+      .catch((e) => {
+        console.warn("[ROOT] initializeIAP failed:", e);
+      });
   }, [user?.id, isLoading]);
 
   // Sync i18next with the persisted language store on mount and on change.
@@ -124,8 +173,17 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === "(auth)";
     // Password reset is reachable even for authed users — a reset email
     // tapped from the same device while still logged in should open the
-    // form, not bounce to Gallery.
+    // form, not bounce to Studio.
     const isPasswordReset = (segments as string[])[1] === "reset-password";
+    // V53 guest-first — a GUEST deliberately routed to register (the
+    // 3rd-generation "secure your account" prompt) must not be bounced:
+    // guests ARE authenticated, so without this exception the upgrade
+    // screen closed itself instantly (founder-reported, 2026-08-03).
+    // login is included so register's "Sign in" link keeps working for
+    // returning account holders. Onboarding/trial screens stay guarded.
+    const isUpgradeReachable =
+      (segments as string[])[1] === "register" ||
+      (segments as string[])[1] === "login";
     // Public legal screens — Terms of Service and Privacy Policy are
     // reachable BEFORE login (Apple §5.1.1(ix), GDPR Art. 13). The
     // LegalFooter on onboarding/login/register routes here, so the
@@ -138,8 +196,8 @@ export default function RootLayout() {
 
     if (!isAuthenticated && !inAuthGroup && !inPublicLegal) {
       router.replace("/(auth)/onboarding");
-    } else if (isAuthenticated && inAuthGroup && !isPasswordReset) {
-      router.replace("/(tabs)/gallery");
+    } else if (isAuthenticated && inAuthGroup && !isPasswordReset && !isUpgradeReachable) {
+      router.replace("/(tabs)/studio");
     }
   }, [isAuthenticated, isLoading, segments, fontsLoaded, fontError]);
 
@@ -159,15 +217,26 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
-            <DrawerProvider>
-              <StatusBar style="light" />
-              {/* `key` forces the whole tree to remount when language changes.
-                  This is a belt-and-suspenders guarantee on top of useTranslation()
-                  — any screen that forgot to hook into t() will still pick up
-                  the new language the next time it mounts. */}
-              <Slot key={i18nInstance.language} />
-              <OfflineBanner />
-            </DrawerProvider>
+            <StatusBar style="light" />
+            {/* `key` forces the whole tree to remount when language changes.
+                This is a belt-and-suspenders guarantee on top of useTranslation()
+                — any screen that forgot to hook into t() will still pick up
+                the new language the next time it mounts. */}
+            {/* Root is a real Stack (was Slot) — gives every pushed screen
+                deterministic back behavior AND native iOS swipe-back
+                (2026-07 tester findings: back from result landed on the
+                wrong tab; no edge-swipe anywhere). */}
+            <Stack
+              key={i18nInstance.language}
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "#131313" },
+              }}
+            />
+            <OfflineBanner />
+            {/* AI-processing consent (5.1.2(i)) — mounted once, shown by
+                aiConsentStore right before the first photo pick. */}
+            <AiConsentSheet />
           </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>

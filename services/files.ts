@@ -46,10 +46,14 @@ export async function createMask(
     inputFileId: string,
     strokes: MaskStroke[],
     mode: MaskMode = "CHANGE",
+    // True when the user described the region's content — the backend widens
+    // the mask (the prompt then carries the object's kind); blank keeps a slim
+    // rim so the silhouette remains the model's kind-hint.
+    contentHinted: boolean = false,
 ): Promise<FileResponse> {
     const { data } = await api.post<FileResponse>(
         `/api/files/${inputFileId}/mask`,
-        { strokes, mode },
+        { strokes, mode, contentHinted },
     );
     return data;
 }
