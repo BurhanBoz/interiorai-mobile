@@ -6,6 +6,7 @@ import tr from "./tr.json";
 import es from "./es.json";
 import it from "./it.json";
 import de from "./de.json";
+import fr from "./fr.json";
 import ja from "./ja.json";
 import ko from "./ko.json";
 import ar from "./ar.json";
@@ -35,6 +36,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
     { code: "es", nativeName: "Español",  englishName: "Spanish" },
     { code: "it", nativeName: "Italiano", englishName: "Italian" },
     { code: "de", nativeName: "Deutsch",  englishName: "German" },
+    { code: "fr", nativeName: "Français", englishName: "French" },
     { code: "ja", nativeName: "日本語",    englishName: "Japanese" },
     { code: "ko", nativeName: "한국어",    englishName: "Korean" },
     { code: "ar", nativeName: "العربية",  englishName: "Arabic" },
@@ -51,6 +53,7 @@ const resources: Record<string, { translation: Record<string, unknown> }> = {
     es: { translation: es },
     it: { translation: it },
     de: { translation: de },
+    fr: { translation: fr },
     ja: { translation: ja },
     ko: { translation: ko },
     ar: { translation: ar },
