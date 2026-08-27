@@ -21,7 +21,6 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { Button } from "@/components/ui/Button";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -980,23 +979,25 @@ export default function ResultDetailScreen() {
           />
         </View>
 
-        {/* Redesign Again CTA */}
+        {/* Redesign Again CTA.
+            Was a `Button variant="secondary"`, which rendered the icon stacked
+            above the label with no container at all. Two attempts to force the
+            row from the outside (`iconLeft`, then an explicit flexDirection in
+            `style`) both shipped and both still came out stacked — the override
+            never reached the element doing the stacking. Pushing on it a third
+            time would have been the same guess again.
+
+            So this stops overriding a component that resists it and uses the one
+            that already renders the exact shape we want, one row above: same 56px
+            row, label left, icon right, identical press feedback. The only thing
+            that changes is the palette. That also removes the last caller of
+            `Button`'s secondary+icon combination from this screen, so the two
+            buttons can no longer drift apart visually. */}
         <View style={{ marginBottom: 40 }}>
-          <Button
-            title={t("result.new_design")}
-            variant="secondary"
+          <PrimaryButton
+            label={t("result.new_design")}
             icon="refresh"
-            // `iconLeft` is not a style preference here. The secondary variant
-            // has never been used with a RIGHT-hand icon anywhere in the app —
-            // this was its first use, and it shipped in 1.3.1(40) rendering the
-            // label and the glyph on two lines with no outline. The one proven
-            // secondary+icon path is profile-edit's, and it passes iconLeft.
-            iconLeft
-            fullWidth
-            // Belt and braces: the row is re-asserted through `style`, which is
-            // applied after the variant's own container style. Whatever collapsed
-            // the layout, it cannot collapse through an explicit declaration.
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}
+            colors={theme.gradient.mutedCta}
             onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
           />
         </View>

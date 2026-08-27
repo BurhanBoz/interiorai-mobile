@@ -75,6 +75,17 @@ export const gradient = {
   ] as const,
   // Destructive — quieter than iOS red for our editorial tone
   destructive: ["#7A4B42", "#552E28"] as const,
+  // Muted CTA — the same button shape as the gold primary, desaturated so two
+  // stacked calls-to-action read as "the main one" and "the other one" rather
+  // than competing. Taupe instead of gold: same value range, chroma pulled out.
+  //
+  // The lightness is constrained, not chosen for taste. PrimaryButton hardcodes
+  // its label to `onGold` (#3F2D11), so a muted palette that merely looks calmer
+  // can quietly fail contrast. Both stops were measured against that label:
+  // 6.0:1 at the top, 4.9:1 at the bottom — clear of WCAG AA (4.5:1) across the
+  // whole gradient, since a 14px label is not "large text". Darken these and the
+  // label goes with them.
+  mutedCta: ["#B8AE9C", "#A69C8A"] as const,
 } as const;
 
 /* ───── Elevation / shadow scale ───── */
