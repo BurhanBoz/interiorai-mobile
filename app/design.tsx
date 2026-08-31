@@ -5,6 +5,8 @@ import { useAuthStore } from "@/stores/authStore";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { useStudioStore } from "@/stores/studioStore";
 import type { DesignMode } from "@/types/api";
+import { isFeatureLocked } from "@/components/studio/featureCatalog";
+import { useEffectivePlanCode } from "@/hooks/useEntitlement";
 
 /**
  * Deep-link entry point (V63).
@@ -37,6 +39,7 @@ export default function DesignDeepLink() {
     // Guard against the effect running twice (fast refresh, remount) and
     // pushing two navigations onto the stack.
     const handled = useRef(false);
+    const planCode = useEffectivePlanCode();
 
     useEffect(() => {
         if (handled.current) return;
@@ -44,8 +47,16 @@ export default function DesignDeepLink() {
 
         // Mode needs no catalogue, so apply it synchronously — before the auth
         // guard in _layout can bounce an unauthenticated arrival to onboarding.
+        // A link can name any mode; the user's plan decides whether it opens.
+        // Without this check a shared roomframeai.com/design?mode=OUTDOOR link
+        // would walk a FREE user past the locked studio card, through photo
+        // upload and style picking, to a refusal at job creation — the worst
+        // possible place to learn a feature is not theirs. Locked modes are
+        // dropped and the studio opens on its default flow, where the card
+        // states the requirement up front.
         const mode = params.mode?.toUpperCase();
-        if (mode && (VALID_MODES as string[]).includes(mode)) {
+        if (mode && (VALID_MODES as string[]).includes(mode)
+            && !isFeatureLocked(mode as DesignMode, planCode)) {
             useStudioStore.getState().setMode(mode as DesignMode);
         }
 

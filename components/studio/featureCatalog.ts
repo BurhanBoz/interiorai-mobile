@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 import type { DesignMode } from "@/types/api";
-import { planTier } from "@/utils/planTier";
+import { tierAtLeast, type PlanTier } from "@/utils/planTier";
 
 /**
  * Studio feature registry — the single source for the studio home screen's
@@ -53,8 +53,18 @@ export interface StudioFeature {
     titleKey: string;
     descKey: string;
     media: FeatureMedia;
-    /** Minimum plan that unlocks the flow — mirrors options.tsx hard guards. */
-    minPlan?: "PRO";
+    /**
+     * Minimum tier that unlocks this flow. Absent = available on every plan.
+     *
+     * <p>This is the ONLY place a flow's plan gate is declared;
+     * {@link isFeatureLocked} derives from it. It used to be decorative — a
+     * hardcoded list did the actual locking — and the two drifted: Outdoor
+     * carried {@code minPlan: "PRO"} while the list never checked it (so it
+     * never locked), and Magic Edit was locked to PRO by the list although the
+     * backend has granted it to BASE since Pricing V4 (so paying BASE users
+     * were refused a feature they owned).
+     */
+    minPlan?: PlanTier;
 }
 
 export const STUDIO_FEATURES: StudioFeature[] = [
@@ -82,7 +92,6 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         key: "INPAINT",
         titleKey: "studio.mode_inpaint",
         descKey: "studio.feature_inpaint_desc",
-        minPlan: "PRO",  // V3: Magic Edit is a PRO feature (BASE = redesign/empty only)
         media: {
             // Authentic run (2026-07-11): brown sofa + wood coffee table →
             // grey patterned sofa + sage glass-top table. `paint` is that
@@ -125,19 +134,30 @@ export const STUDIO_FEATURES: StudioFeature[] = [
 ];
 
 /**
- * Plan gate for a feature — SAME hard plan-code guards as options.tsx's
- * isModeAvailable (kept code-simple so feature-flag loading delays can't
- * briefly surface a locked mode as available). Callers pass the EFFECTIVE
- * plan code (useEffectivePlanCode → welcome-trial users read as PRO).
- * Backend remains the source of truth at job-creation time.
+ * Plan gate for a flow, derived from the feature's own {@code minPlan}.
  *
- * <p>Pricing V3: both premium flows unlock at PRO (BASE = redesign/empty
- * only). planTier normalizes annual/legacy codes so a future PRO_ANNUAL
- * or a legacy MAX sandbox subscriber isn't treated as locked.
+ * <p>Reads the declaration rather than repeating it: the previous version
+ * hardcoded a list of keys, which drifted from the metadata beside it in both
+ * directions at once — Outdoor declared PRO and was never locked, Magic Edit
+ * declared nothing here yet was locked to PRO against a backend that grants it
+ * to BASE. One source now, so a tier change is a one-line metadata edit.
+ *
+ * <p>Callers pass the EFFECTIVE plan code (useEffectivePlanCode). {@link
+ * tierAtLeast} normalises weekly/annual/legacy codes, so PRO_ANNUAL and a
+ * legacy MAX subscriber both read as PRO. Deliberately independent of loaded
+ * feature flags: a flag fetch in flight must not briefly show a locked flow as
+ * open. The backend stays the source of truth at job-creation time.
  */
-export function isFeatureLocked(key: DesignMode, planCode: string): boolean {
-    if (key === "STYLE_TRANSFER" || key === "INPAINT") {
-        return planTier(planCode) !== "PRO";
-    }
-    return false;
+export function isFeatureLocked(
+    key: DesignMode,
+    planCode: string | null | undefined,
+): boolean {
+    const feature = STUDIO_FEATURES.find((f) => f.key === key);
+    if (!feature?.minPlan) return false;
+    return !tierAtLeast(planCode, feature.minPlan);
+}
+
+/** The tier a flow needs, or null when it is open to everyone. */
+export function requiredTier(key: DesignMode): PlanTier | null {
+    return STUDIO_FEATURES.find((f) => f.key === key)?.minPlan ?? null;
 }
