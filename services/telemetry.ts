@@ -98,3 +98,41 @@ export async function unregisterPushToken(token: string): Promise<void> {
         // Silent.
     }
 }
+
+/** Paywall interaction kinds the backend accepts (V65). */
+export type PaywallEvent =
+    | "SHOWN"
+    | "DISMISSED"
+    | "PLAN_SELECTED"
+    | "PURCHASE_STARTED"
+    | "PURCHASED"
+    | "FAILED";
+
+/**
+ * Report one paywall interaction.
+ *
+ * Fire-and-forget by design: this runs on the app's first screen, and the
+ * whole point of the 2026-08-31 change is to measure that moment — an
+ * analytics call that can block or throw would break the thing it exists to
+ * watch. Every failure is swallowed, exactly like the other calls here.
+ *
+ * DISMISSED is as important as PURCHASED: without it the report has a
+ * numerator and no denominator, and "how many of the people who saw it
+ * bought?" stays unanswerable.
+ */
+export async function recordPaywallEvent(
+    event: PaywallEvent,
+    opts?: { source?: string; planCode?: string | null },
+): Promise<void> {
+    try {
+        await api.post("/api/telemetry/paywall", {
+            eventType: event,
+            source: opts?.source ?? "ONBOARDING",
+            planCode: opts?.planCode ?? null,
+            appVersion: APP_VERSION,
+            locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
+        });
+    } catch {
+        // Analytics must never surface to the user.
+    }
+}

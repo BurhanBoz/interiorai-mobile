@@ -122,7 +122,10 @@ export default function OnboardingScreen() {
     setGuestBusy(true);
     try {
       await guestLogin();
-      router.replace("/(tabs)/studio");
+      // 2026-08-31: the welcome bonus is gone and the paywall took its place.
+      // `replace` (not `push`) so the back gesture cannot walk into a
+      // half-created onboarding state behind it.
+      router.replace("/paywall");
     } catch {
       // Fail-open: fall back to the old register flow rather than stranding.
       router.push("/register");
