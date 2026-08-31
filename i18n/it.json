@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "Sblocca Roomframe PRO",
-    "subtitle": "Ogni stile, ogni stanza — senza limiti.",
-    "benefit_credits": "Crediti mensili generosi",
     "benefit_quality": "I nostri modelli IA di qualità massima",
     "benefit_features": "Trasferimento di stile, modifica mirata e 4K",
     "benefit_watermark": "Nessuna filigrana sui tuoi progetti",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "Acquisto non riuscito",
     "purchase_failed": "Non siamo riusciti a completare l'acquisto. Riprova.",
     "restore_failed_title": "Ripristino non riuscito",
-    "restore_failed": "Nessun acquisto da ripristinare."
+    "restore_failed": "Nessun acquisto da ripristinare.",
+    "restore_none_title": "Niente da ripristinare",
+    "restore_none": "Nessun abbonamento attivo trovato su questo ID Apple."
   }
 }

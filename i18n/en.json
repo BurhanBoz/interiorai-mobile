@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "Unlock Roomframe PRO",
-    "subtitle": "Every style, every room — without limits.",
-    "benefit_credits": "Generous monthly credits",
     "benefit_quality": "Our highest-quality AI models",
     "benefit_features": "Style Transfer, Magic Edit and 4K upscale",
     "benefit_watermark": "No watermark on your designs",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "Purchase failed",
     "purchase_failed": "We couldn't complete the purchase. Please try again.",
     "restore_failed_title": "Restore failed",
-    "restore_failed": "We couldn't find a purchase to restore."
+    "restore_failed": "We couldn't find a purchase to restore.",
+    "restore_none_title": "Nothing to restore",
+    "restore_none": "We couldn't find an active subscription on this Apple ID."
   }
 }

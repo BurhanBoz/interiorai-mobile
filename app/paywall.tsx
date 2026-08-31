@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Image, Linking,
+    Animated, Easing, AccessibilityInfo, Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,6 +17,7 @@ import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
 import { setFlag } from "@/utils/oneShotFlag";
+import { planTier } from "@/utils/planTier";
 
 /**
  * First-open paywall (2026-08-31).
@@ -57,6 +59,39 @@ export default function PaywallScreen() {
 
     const [selected, setSelected] = useState<string>(PLAN_ANNUAL);
     const [busy, setBusy] = useState(false);
+
+    // Hero reveal. Width is animated rather than a transform because the
+    // "before" layer has to stay put while its window narrows — translating it
+    // would slide the kitchen instead of wiping between two of them. That rules
+    // out the native driver, which is fine for one 230pt view.
+    const heroWidth = Dimensions.get("window").width;
+    const reveal = useRef(new Animated.Value(1)).current;
+    const revealWidth = reveal.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, heroWidth],
+    });
+
+    useEffect(() => {
+        let loop: Animated.CompositeAnimation | null = null;
+        AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+            if (reduced) {
+                // Still show both rooms — just stop moving between them.
+                reveal.setValue(0.5);
+                return;
+            }
+            const hold = (v: number, ms: number) =>
+                Animated.timing(reveal, { toValue: v, duration: ms, easing: Easing.inOut(Easing.cubic), useNativeDriver: false });
+            loop = Animated.loop(Animated.sequence([
+                Animated.delay(600),
+                hold(0.08, 1500),   // wipe to the redesigned room
+                Animated.delay(1400),
+                hold(0.95, 1500),   // and back to the original
+                Animated.delay(700),
+            ]));
+            loop.start();
+        });
+        return () => loop?.stop();
+    }, []);
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
@@ -121,7 +156,18 @@ export default function PaywallScreen() {
         try {
             await iap.restorePurchases();
             await fetchSubscription().catch(() => {});
-            router.replace("/(tabs)/studio");
+            // Restoring nothing is not an error, but it is not success either.
+            // The call resolves either way (in dummy mode it cannot even fail),
+            // so the only honest signal is whether a paid plan actually arrived.
+            // Navigating on the call alone dismissed the paywall for users who
+            // had nothing to restore — they left thinking it had worked.
+            const restored = useSubscriptionStore.getState().subscription?.planCode;
+            if (restored && planTier(restored) !== "FREE") {
+                await recordPaywallEvent("PURCHASED", { planCode: restored });
+                router.replace("/(tabs)/studio");
+            } else {
+                Alert.alert(t("paywall.restore_none_title"), t("paywall.restore_none"));
+            }
         } catch {
             Alert.alert(t("paywall.restore_failed_title"), t("paywall.restore_failed"));
         } finally {
@@ -130,7 +176,6 @@ export default function PaywallScreen() {
     };
 
     const benefits: { icon: keyof typeof Ionicons.glyphMap; key: string }[] = [
-        { icon: "infinite", key: "paywall.benefit_credits" },
         { icon: "sparkles", key: "paywall.benefit_quality" },
         { icon: "color-wand", key: "paywall.benefit_features" },
         { icon: "water-outline", key: "paywall.benefit_watermark" },
@@ -138,28 +183,39 @@ export default function PaywallScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.surface }} edges={["top", "bottom"]}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 18 }} showsVerticalScrollIndicator={false}>
 
-                {/* ── Hero: the product's own before/after, not a stock promise ── */}
-                <View style={{ height: 260, position: "relative" }}>
-                    <View style={{ flexDirection: "row", flex: 1 }}>
+                {/* ── Hero — the app's own before/after, playing itself ──
+                    Not draggable. A paywall gets a few seconds of attention and
+                    a control the user must discover spends them; the reveal has
+                    to happen whether or not anyone touches the screen. Honours
+                    reduce-motion by holding at the midpoint instead. */}
+                <View style={{ height: 230, position: "relative" }}>
+                    <Image source={require("@/assets/trial/kitchen_After.png")}
+                           style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    <Animated.View style={{
+                        position: "absolute", top: 0, left: 0, bottom: 0,
+                        width: revealWidth, overflow: "hidden",
+                    }}>
                         <Image source={require("@/assets/trial/kitchen_Before.png")}
-                               style={{ flex: 1, height: "100%" }} resizeMode="cover" />
-                        <Image source={require("@/assets/trial/kitchen_After.png")}
-                               style={{ flex: 1, height: "100%" }} resizeMode="cover" />
-                    </View>
+                               style={{ width: heroWidth, height: "100%" }} resizeMode="cover" />
+                    </Animated.View>
+                    <Animated.View style={{
+                        position: "absolute", top: 0, bottom: 0, left: revealWidth,
+                        width: 1.5, backgroundColor: theme.color.goldMidday, opacity: 0.9,
+                    }} />
                     <LinearGradient
                         colors={["transparent", theme.color.surface]}
-                        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 110 }}
+                        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 90 }}
                     />
                     <Text style={{
-                        position: "absolute", top: 14, left: 16, ...theme.text.caption,
+                        position: "absolute", top: 12, left: 16, ...theme.text.caption,
                         color: theme.color.onSurface, backgroundColor: "rgba(19,19,19,0.7)",
                         paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
                         overflow: "hidden",
                     }}>{t("result.before")}</Text>
                     <Text style={{
-                        position: "absolute", top: 14, right: 16, ...theme.text.caption,
+                        position: "absolute", top: 12, right: 58, ...theme.text.caption,
                         color: theme.color.onGold, backgroundColor: theme.color.goldContainer,
                         paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
                         overflow: "hidden",
@@ -170,36 +226,33 @@ export default function PaywallScreen() {
                         hitSlop={12}
                         accessibilityLabel={t("common.close")}
                         style={{
-                            position: "absolute", top: 12, right: 16, width: 34, height: 34,
-                            borderRadius: 17, alignItems: "center", justifyContent: "center",
-                            backgroundColor: "rgba(19,19,19,0.55)",
+                            position: "absolute", top: 10, right: 14, width: 32, height: 32,
+                            borderRadius: 16, alignItems: "center", justifyContent: "center",
+                            backgroundColor: "rgba(19,19,19,0.6)",
                         }}
                     >
-                        <Ionicons name="close" size={20} color={theme.color.onSurface} />
+                        <Ionicons name="close" size={19} color={theme.color.onSurface} />
                     </Pressable>
                 </View>
 
-                <View style={{ paddingHorizontal: theme.space.gutter, marginTop: -18 }}>
-                    <Text style={{ ...theme.text.display, color: theme.color.goldMidday, textAlign: "center" }}>
-                        {t("paywall.title")}
-                    </Text>
+                <View style={{ paddingHorizontal: theme.space.gutter, marginTop: -14 }}>
                     <Text style={{
-                        ...theme.text.body, color: theme.color.onSurfaceMuted,
-                        textAlign: "center", marginTop: 6, marginBottom: 22,
+                        ...theme.text.title, color: theme.color.goldMidday,
+                        textAlign: "center", marginBottom: 18,
                     }}>
-                        {t("paywall.subtitle")}
+                        {t("paywall.title")}
                     </Text>
 
                     {/* ── Benefits ── */}
-                    <View style={{ gap: 12, marginBottom: 26 }}>
+                    <View style={{ gap: 10, marginBottom: 20 }}>
                         {benefits.map((b) => (
                             <View key={b.key} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                                 <View style={{
-                                    width: 32, height: 32, borderRadius: 16,
+                                    width: 28, height: 28, borderRadius: 14,
                                     backgroundColor: theme.color.surfaceContainerHigh,
                                     alignItems: "center", justifyContent: "center",
                                 }}>
-                                    <Ionicons name={b.icon} size={17} color={theme.color.goldContainer} />
+                                    <Ionicons name={b.icon} size={15} color={theme.color.goldContainer} />
                                 </View>
                                 <Text style={{ ...theme.text.body, color: theme.color.onSurface, flex: 1 }}>
                                     {t(b.key)}
@@ -238,7 +291,7 @@ export default function PaywallScreen() {
                         </View>
                     )}
 
-                    <View style={{ marginTop: 22 }}>
+                    <View style={{ marginTop: 18 }}>
                         <PrimaryButton
                             label={t("paywall.continue")}
                             onPress={handleContinue}
@@ -251,14 +304,14 @@ export default function PaywallScreen() {
                         know what recurs before they tap, not after. */}
                     <Text style={{
                         ...theme.text.caption, color: theme.color.onSurfaceMuted,
-                        textAlign: "center", marginTop: 12,
+                        textAlign: "center", marginTop: 10,
                     }}>
                         {t("paywall.renewal_note")}
                     </Text>
 
                     <View style={{
                         flexDirection: "row", justifyContent: "center",
-                        alignItems: "center", gap: 18, marginTop: 18,
+                        alignItems: "center", gap: 18, marginTop: 14,
                     }}>
                         <Pressable onPress={handleRestore} hitSlop={8}>
                             <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceVariant }}>
@@ -277,7 +330,7 @@ export default function PaywallScreen() {
                         </Pressable>
                     </View>
 
-                    <Pressable onPress={() => leave("DISMISSED")} hitSlop={10} style={{ marginTop: 20 }}>
+                    <Pressable onPress={() => leave("DISMISSED")} hitSlop={10} style={{ marginTop: 14 }}>
                         <Text style={{
                             ...theme.text.caption, color: theme.color.onSurfaceMuted, textAlign: "center",
                         }}>

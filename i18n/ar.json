@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "افتح Roomframe PRO",
-    "subtitle": "كل الأنماط، كل الغرف — بلا حدود.",
-    "benefit_credits": "أرصدة شهرية سخية",
     "benefit_quality": "أفضل نماذج الذكاء الاصطناعي لدينا",
     "benefit_features": "نقل النمط، التعديل الذكي، ودقة 4K",
     "benefit_watermark": "بلا علامة مائية على تصاميمك",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "تعذّر إتمام الشراء",
     "purchase_failed": "لم نتمكن من إتمام الشراء. يُرجى المحاولة مرة أخرى.",
     "restore_failed_title": "تعذّرت الاستعادة",
-    "restore_failed": "لم نعثر على عملية شراء لاستعادتها."
+    "restore_failed": "لم نعثر على عملية شراء لاستعادتها.",
+    "restore_none_title": "لا يوجد ما يُستعاد",
+    "restore_none": "لم نعثر على اشتراك نشط على معرّف Apple هذا."
   }
 }

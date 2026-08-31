@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "Roomframe PRO を解除",
-    "subtitle": "すべてのスタイル、すべての部屋を、制限なく。",
-    "benefit_credits": "毎月たっぷりのクレジット",
     "benefit_quality": "最高品質のAIモデル",
     "benefit_features": "スタイル転送・マジック編集・4Kアップスケール",
     "benefit_watermark": "デザインに透かしなし",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "購入できませんでした",
     "purchase_failed": "購入を完了できませんでした。もう一度お試しください。",
     "restore_failed_title": "復元できませんでした",
-    "restore_failed": "復元できる購入が見つかりませんでした。"
+    "restore_failed": "復元できる購入が見つかりませんでした。",
+    "restore_none_title": "復元できるものがありません",
+    "restore_none": "この Apple ID で有効なサブスクリプションが見つかりませんでした。"
   }
 }

@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "Roomframe PRO freischalten",
-    "subtitle": "Jeder Stil, jeder Raum — ohne Grenzen.",
-    "benefit_credits": "Großzügige monatliche Credits",
     "benefit_quality": "Unsere hochwertigsten KI-Modelle",
     "benefit_features": "Stilübertragung, gezielte Bearbeitung und 4K",
     "benefit_watermark": "Kein Wasserzeichen auf deinen Designs",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "Kauf fehlgeschlagen",
     "purchase_failed": "Der Kauf konnte nicht abgeschlossen werden. Bitte erneut versuchen.",
     "restore_failed_title": "Wiederherstellung fehlgeschlagen",
-    "restore_failed": "Es wurde kein Kauf zum Wiederherstellen gefunden."
+    "restore_failed": "Es wurde kein Kauf zum Wiederherstellen gefunden.",
+    "restore_none_title": "Nichts wiederherzustellen",
+    "restore_none": "Auf dieser Apple-ID wurde kein aktives Abo gefunden."
   }
 }

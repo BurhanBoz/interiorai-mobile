@@ -1024,8 +1024,6 @@
   },
   "paywall": {
     "title": "Roomframe PRO'yu aç",
-    "subtitle": "Her stil, her oda — sınır olmadan.",
-    "benefit_credits": "Bol aylık kredi",
     "benefit_quality": "En yüksek kaliteli yapay zekâ modellerimiz",
     "benefit_features": "Stil Aktarımı, Sihirli Düzenleme ve 4K yükseltme",
     "benefit_watermark": "Tasarımlarında filigran yok",
@@ -1043,6 +1041,8 @@
     "purchase_failed_title": "Satın alma tamamlanamadı",
     "purchase_failed": "Satın alma tamamlanamadı. Lütfen tekrar dene.",
     "restore_failed_title": "Geri yükleme başarısız",
-    "restore_failed": "Geri yüklenecek bir satın alma bulunamadı."
+    "restore_failed": "Geri yüklenecek bir satın alma bulunamadı.",
+    "restore_none_title": "Geri yüklenecek bir şey yok",
+    "restore_none": "Bu Apple kimliğinde aktif bir abonelik bulunamadı."
   }
 }
