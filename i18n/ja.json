@@ -161,14 +161,9 @@
     "eyebrow": "アクセスを保護"
   },
   "studio": {
-    "step_1_of_4": "ステップ 1 / 4",
-    "step_2_of_4": "ステップ 2 / 4",
-    "step_3_of_4": "ステップ 3 / 4",
-    "step_4_of_4": "ステップ 4 / 4",
     "step1_title": "空間を分析する",
     "step2_title": "部屋のタイプとスタイル",
     "step3_title": "デザイン仕様",
-    "step4_title": "確認して生成",
     "tap_to_upload": "タップしてアップロード",
     "uploading": "アップロード中…",
     "take_a_photo": "写真を撮る",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "庭・中庭・テラス — 屋外空間をリデザイン",
     "advanced_settings": "詳細設定",
     "add_furniture": "家具を追加",
-    "add_reference": "参考を追加"
+    "add_reference": "参考を追加",
+    "step_of": "ステップ {{current}} / {{total}}"
   },
   "gallery": {
     "title": "ギャラリー",

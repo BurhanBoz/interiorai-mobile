@@ -161,14 +161,9 @@
     "eyebrow": "Accesso sicuro"
   },
   "studio": {
-    "step_1_of_4": "PASSO 1 DI 4",
-    "step_2_of_4": "PASSO 2 DI 4",
-    "step_3_of_4": "PASSO 3 DI 4",
-    "step_4_of_4": "PASSO 4 DI 4",
     "step1_title": "Analizza il Tuo Spazio",
     "step2_title": "Tipo di Stanza e Stile",
     "step3_title": "Specifiche di Design",
-    "step4_title": "Rivedi e Genera",
     "tap_to_upload": "Tocca per Caricare",
     "uploading": "Caricamento…",
     "take_a_photo": "Scatta una Foto",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "Giardini, cortili, terrazze — il tuo spazio esterno, riprogettato",
     "advanced_settings": "Impostazioni avanzate",
     "add_furniture": "Aggiungi mobile",
-    "add_reference": "Riferimento"
+    "add_reference": "Riferimento",
+    "step_of": "PASSO {{current}} / {{total}}"
   },
   "gallery": {
     "title": "Galleria",

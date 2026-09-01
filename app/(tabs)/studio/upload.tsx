@@ -11,6 +11,7 @@ import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
 import { BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import { theme } from "@/config/theme";
+import { STUDIO_STEP, STUDIO_STEP_TOTAL } from "@/constants/studioSteps";
 
 /**
  * Studio Step 1 — "Analyse Your Space" (photo capture).
@@ -126,7 +127,7 @@ export default function UploadScreen() {
                 color: theme.color.goldMidday,
               }}
             >
-              {t("studio.step_1_of_4")}
+              {t("studio.step_of", { current: STUDIO_STEP.UPLOAD, total: STUDIO_STEP_TOTAL })}
             </Text>
           </View>
 

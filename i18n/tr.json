@@ -161,14 +161,9 @@
     "eyebrow": "Erişimi yenile"
   },
   "studio": {
-    "step_1_of_4": "ADIM 1 / 4",
-    "step_2_of_4": "ADIM 2 / 4",
-    "step_3_of_4": "ADIM 3 / 4",
-    "step_4_of_4": "ADIM 4 / 4",
     "step1_title": "Mekânını Analiz Et",
     "step2_title": "Oda Tipi ve Stil",
     "step3_title": "Tasarım Detayları",
-    "step4_title": "İncele ve Oluştur",
     "tap_to_upload": "Yüklemek için Dokun",
     "uploading": "Yükleniyor…",
     "take_a_photo": "Fotoğraf Çek",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "Bahçe, avlu, teras — dış mekânın yeniden tasarlanır",
     "advanced_settings": "Gelişmiş ayarlar",
     "add_furniture": "Mobilya ekle",
-    "add_reference": "Referans ekle"
+    "add_reference": "Referans ekle",
+    "step_of": "ADIM {{current}} / {{total}}"
   },
   "gallery": {
     "title": "Galeri",

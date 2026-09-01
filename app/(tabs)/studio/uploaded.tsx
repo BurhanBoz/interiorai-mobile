@@ -13,6 +13,7 @@ import { Brand } from "@/components/brand/Brand";
 import { BottomBar, BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
 import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { theme } from "@/config/theme";
+import { STUDIO_STEP, STUDIO_STEP_TOTAL } from "@/constants/studioSteps";
 
 /**
  * Studio Step 1 — "photo selected" state. Shows the user's chosen image,
@@ -99,7 +100,7 @@ export default function UploadedScreen() {
               color: theme.color.goldMidday,
             }}
           >
-            {t("studio.step_1_of_4")}
+            {t("studio.step_of", { current: STUDIO_STEP.UPLOAD, total: STUDIO_STEP_TOTAL })}
           </Text>
         </View>
 

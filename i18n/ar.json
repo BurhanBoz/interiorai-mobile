@@ -161,14 +161,9 @@
     "eyebrow": "تأمين الوصول"
   },
   "studio": {
-    "step_1_of_4": "الخطوة 1 من 4",
-    "step_2_of_4": "الخطوة 2 من 4",
-    "step_3_of_4": "الخطوة 3 من 4",
-    "step_4_of_4": "الخطوة 4 من 4",
     "step1_title": "تحليل مساحتك",
     "step2_title": "نوع الغرفة والأسلوب",
     "step3_title": "مواصفات التصميم",
-    "step4_title": "المراجعة والتوليد",
     "tap_to_upload": "اضغط للتحميل",
     "uploading": "جارٍ التحميل…",
     "take_a_photo": "التقاط صورة",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "حدائق، أفنية، تراسات — مساحتك الخارجية بتصميم جديد",
     "advanced_settings": "إعدادات متقدمة",
     "add_furniture": "إضافة أثاث",
-    "add_reference": "إضافة مرجع"
+    "add_reference": "إضافة مرجع",
+    "step_of": "الخطوة {{current}} / {{total}}"
   },
   "gallery": {
     "title": "المعرض",

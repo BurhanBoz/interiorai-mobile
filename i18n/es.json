@@ -161,14 +161,9 @@
     "eyebrow": "Acceso seguro"
   },
   "studio": {
-    "step_1_of_4": "PASO 1 DE 4",
-    "step_2_of_4": "PASO 2 DE 4",
-    "step_3_of_4": "PASO 3 DE 4",
-    "step_4_of_4": "PASO 4 DE 4",
     "step1_title": "Analiza Tu Espacio",
     "step2_title": "Tipo de Habitación y Estilo",
     "step3_title": "Especificaciones del Diseño",
-    "step4_title": "Revisar y Generar",
     "tap_to_upload": "Toca para Subir",
     "uploading": "Subiendo…",
     "take_a_photo": "Tomar una Foto",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "Jardines, patios, terrazas — tu espacio exterior, rediseñado",
     "advanced_settings": "Ajustes avanzados",
     "add_furniture": "Añadir mueble",
-    "add_reference": "Referencia"
+    "add_reference": "Referencia",
+    "step_of": "PASO {{current}} / {{total}}"
   },
   "gallery": {
     "title": "Galería",

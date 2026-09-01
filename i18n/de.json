@@ -161,14 +161,9 @@
     "eyebrow": "Zugang sichern"
   },
   "studio": {
-    "step_1_of_4": "SCHRITT 1 VON 4",
-    "step_2_of_4": "SCHRITT 2 VON 4",
-    "step_3_of_4": "SCHRITT 3 VON 4",
-    "step_4_of_4": "SCHRITT 4 VON 4",
     "step1_title": "Ihren Raum analysieren",
     "step2_title": "Raumtyp & Stil",
     "step3_title": "Designspezifikationen",
-    "step4_title": "Überprüfen & Generieren",
     "tap_to_upload": "Tippen zum Hochladen",
     "uploading": "Wird hochgeladen…",
     "take_a_photo": "Foto aufnehmen",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "Garten, Hof, Terrasse — dein Außenbereich, neu gestaltet",
     "advanced_settings": "Erweiterte Einstellungen",
     "add_furniture": "Möbel",
-    "add_reference": "Referenz"
+    "add_reference": "Referenz",
+    "step_of": "SCHRITT {{current}} / {{total}}"
   },
   "gallery": {
     "title": "Galerie",

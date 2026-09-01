@@ -458,20 +458,16 @@ export default function ResultDetailScreen() {
                 have decided you want, and V69 made the base output 2 MP
                 so upscale is now "print size", not "finally usable". */}
         <View style={{ marginBottom: 24 }}>
-          {/* Primary — saves to Photos. Label says where it goes rather
-              than "Download": on a phone the destination is the whole
-              point, and it is what makes the action feel finished. */}
-          <PrimaryButton
-            label={t("result.save_to_photos", { defaultValue: "Save to Photos" })}
-            leftIcon="download-outline"
-            onPress={handleDownload}
-            loading={isDownloading}
-            style={{ marginBottom: 18 }}
-          />
+          {/* Three actions, one row, equal footing — Compare · Save · Share.
+              A full-width primary for Save was tried on device and read badly:
+              it crowded the two circles beneath it and made the row look like
+              leftovers. Emphasis is carried by TREATMENT instead of size — the
+              Save circle is gold-tinted with a gold glyph while its neighbours
+              stay muted — so keeping the render still reads as the main move
+              without breaking the row's rhythm.
 
-          {/* Utility row — justified for even spacing regardless of
-              screen width (small phones get 60px gaps, Plus models 90px
-              without code branching). */}
+              Justified for even spacing regardless of screen width (small
+              phones get tighter gaps, Plus models wider, no code branching). */}
           <View
             className="flex-row items-start"
             style={{ justifyContent: "space-around", marginBottom: 18 }}
@@ -491,6 +487,38 @@ export default function ResultDetailScreen() {
                 }}
               >
                 {t("result.compare")}
+              </Text>
+            </View>
+
+            {/* Save — same shape as its neighbours, gold-tinted. Keeping the
+                render is the strongest quality signal a user gives us, so it
+                gets the accent; it does not get a different size. */}
+            <View className="items-center" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleDownload}
+                disabled={isDownloading}
+                className="w-12 h-12 rounded-full items-center justify-center"
+                style={{
+                  opacity: isDownloading ? 0.5 : 1,
+                  backgroundColor: "rgba(225,195,155,0.14)",
+                  borderWidth: 1,
+                  borderColor: "rgba(225,195,155,0.32)",
+                }}
+              >
+                {isDownloading ? (
+                  <ActivityIndicator size="small" color="#E1C39B" />
+                ) : (
+                  <Ionicons name="download-outline" size={22} color="#E1C39B" />
+                )}
+              </Pressable>
+              <Text
+                className="font-label"
+                style={{
+                  ...theme.text.label,
+                  color: "#E1C39B",
+                }}
+              >
+                {t("result.download")}
               </Text>
             </View>
 

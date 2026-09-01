@@ -27,6 +27,7 @@ import {
 } from "@/components/layout/BottomBar";
 import type { CatalogItemResponse } from "@/types/api";
 import type { ImageSource } from "expo-image";
+import { STUDIO_STEP, STUDIO_STEP_TOTAL } from "@/constants/studioSteps";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_GAP = 16;
@@ -470,7 +471,7 @@ export default function StyleScreen() {
               marginBottom: 8,
             }}
           >
-            {t("studio.step_2_of_4")}
+            {t("studio.step_of", { current: STUDIO_STEP.STYLE, total: STUDIO_STEP_TOTAL })}
           </Text>
           <Text
             style={{

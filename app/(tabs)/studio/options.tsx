@@ -42,6 +42,7 @@ import { AdvancedSettings } from "@/components/studio/AdvancedSettings";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { theme } from "@/config/theme";
+import { STUDIO_STEP, STUDIO_STEP_TOTAL } from "@/constants/studioSteps";
 
 const FEATURE_CODE_MAP: Record<DesignMode, string> = {
   REDESIGN: "INTERIOR_REDESIGN",
@@ -69,7 +70,31 @@ const FEATURE_CODE_MAP: Record<DesignMode, string> = {
 const TILE_ROW_SPACING = Math.round(
   Math.min(32, Math.max(20, Dimensions.get("window").height * 0.028)),
 );
-const TILE_SIZE = 76;
+/**
+ * Tile size, derived rather than fixed.
+ *
+ * <p>76 was a magic number that left the row looking abandoned in the corner of
+ * an otherwise empty screen (found on device, 2026-09-01) — the details step
+ * has very little on it once the quality selector was retired, so a small tile
+ * pinned to the left edge reads as an afterthought rather than an invitation.
+ *
+ * <p>The tile now takes a third of the usable width, so three of them always
+ * fit on any phone with the gaps between them, and is clamped: never smaller
+ * than the old 76 (a tile has to stay tappable and its caption legible) and
+ * never larger than 112 (past that a single dashed square starts to look like
+ * an upload dropzone for the room photo itself). Bigger screens get a bigger
+ * tile without a branch; a 320pt phone still fits the full row.
+ */
+const TILE_GAP = 12;
+const TILE_SIZE = Math.round(
+  Math.min(
+    112,
+    Math.max(
+      76,
+      (Dimensions.get("window").width - theme.space.gutter * 2 - TILE_GAP * 2) / 3,
+    ),
+  ),
+);
 const TILE_CAPTION = {
   fontFamily: "Inter",
   fontSize: 10,
@@ -405,7 +430,7 @@ export default function OptionsScreen() {
               ...theme.text.label,
             }}
           >
-            {t("studio.step_3_of_4")}
+            {t("studio.step_of", { current: STUDIO_STEP.DETAILS, total: STUDIO_STEP_TOTAL })}
           </Text>
           <Text
             className="font-headline text-on-surface"
@@ -538,10 +563,17 @@ export default function OptionsScreen() {
             marginTop: TILE_ROW_SPACING,
             marginBottom: TILE_ROW_SPACING,
           }}>
-            {/* Top-aligned: only the empty tile carries a caption, so the
-                thumbnails must hang from the same edge rather than centre
-                themselves against a taller neighbour. */}
-            <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
+            {/* Centred, top-aligned. Top-aligned because only the empty tile
+                carries a caption, so the thumbnails must hang from the same
+                edge rather than centre themselves against a taller neighbour.
+                Centred horizontally because this row is now almost the only
+                thing on the step: left-pinned, one dashed square looked like
+                something left behind rather than the one thing being offered.
+                Centring holds for one tile or three, so no count branching. */}
+            <View
+              className="flex-row"
+              style={{ gap: TILE_GAP, alignItems: "flex-start", justifyContent: "center" }}
+            >
               {objectRefs.map((ref) => (
                 <View key={ref.fileId} style={{ position: "relative", width: TILE_SIZE, height: TILE_SIZE }}>
                   <View className="rounded-xl overflow-hidden" style={{ width: TILE_SIZE, height: TILE_SIZE }}>
@@ -594,11 +626,11 @@ export default function OptionsScreen() {
                         <ActivityIndicator size="small" color="#E1C39B" />
                       ) : referenceImageAllowed ? (
                         <>
-                          <Ionicons name="bed-outline" size={22} color="#8C8378" />
-                          <Ionicons name="add" size={14} color="#A79C8E" />
+                          <Ionicons name="bed-outline" size={Math.round(TILE_SIZE * 0.32)} color="#8C8378" />
+                          <Ionicons name="add" size={Math.round(TILE_SIZE * 0.2)} color="#A79C8E" />
                         </>
                       ) : (
-                        <Ionicons name="lock-closed-outline" size={18} color="#8C8378" />
+                        <Ionicons name="lock-closed-outline" size={Math.round(TILE_SIZE * 0.26)} color="#8C8378" />
                       )}
                     </View>
                     <Text
@@ -615,6 +647,11 @@ export default function OptionsScreen() {
             </View>
           </View>
         )}
+
+        {/* Breathing room before the folded controls. The details step lost its
+            quality selector, so without this the accordion crowded the tile row
+            it is unrelated to and the two read as one control. */}
+        <View style={{ height: TILE_ROW_SPACING }} />
 
         {/* Everything below is folded by default (P1-4). Each of these four
             controls already had the right default, so as a permanent wall

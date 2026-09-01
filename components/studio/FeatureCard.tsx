@@ -64,6 +64,10 @@ function TransferTeaser({
     media: Extract<FeatureMedia, { kind: "transfer" }>;
 }) {
     const { t } = useTranslation();
+    // Resolved once so the sizer below and the visible labels can never
+    // disagree about what they are measuring.
+    const beforeLabel = t("result.before");
+    const afterLabel = t("result.after");
     // Two independent values instead of one multi-segment loop value
     // (2026-07-11 tester flash): with act-interpolation cliffs, a native-
     // driver loop seam could flash the after for a frame right as the
@@ -213,25 +217,53 @@ function TransferTeaser({
                         borderColor: "rgba(225,195,155,0.28)",
                     }}
                 >
+                    {/* The two labels cross-fade in the same cell, so only one
+                        can sit in normal flow — and a wrapper sized by BEFORE
+                        alone clips AFTER whenever the translation is longer.
+                        Turkish is exactly that case (ÖNCE 4 chars, SONRA 5) and
+                        the tag wrapped to two lines on device; English hid the
+                        bug because AFTER is the shorter of its pair.
+
+                        Both are absolute now, over an invisible sizer carrying
+                        whichever string is longer in the ACTIVE locale. Width
+                        therefore follows the translation instead of the
+                        language we happened to develop in, and numberOfLines
+                        keeps a long one on a single line rather than wrapping
+                        inside a pill. */}
                     <View>
+                        <Text
+                            numberOfLines={1}
+                            style={{ ...theme.text.label, opacity: 0 }}
+                            accessible={false}
+                            importantForAccessibility="no-hide-descendants"
+                        >
+                            {beforeLabel.length >= afterLabel.length ? beforeLabel : afterLabel}
+                        </Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: "#D0C5B8",
                                 opacity: beforeTagOpacity,
                               }}
                         >
-                            {t("result.before")}
+                            {beforeLabel}
                         </Animated.Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
                                 position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: theme.color.goldMidday,
                                 opacity: afterOpacity,
                               }}
                         >
-                            {t("result.after")}
+                            {afterLabel}
                         </Animated.Text>
                     </View>
                 </View>
@@ -257,6 +289,10 @@ function PaintTeaser({
     media: Extract<FeatureMedia, { kind: "paint" }>;
 }) {
     const { t } = useTranslation();
+    // Resolved once so the sizer below and the visible labels can never
+    // disagree about what they are measuring.
+    const beforeLabel = t("result.before");
+    const afterLabel = t("result.after");
     const wipe = useRef(new Animated.Value(0)).current;   // 0 unpainted ↔ 1 painted
     const after = useRef(new Animated.Value(0)).current;  // 0 hidden ↔ 1 shown
     const [mediaW, setMediaW] = useState(0);
@@ -366,25 +402,53 @@ function PaintTeaser({
                         borderColor: "rgba(225,195,155,0.28)",
                     }}
                 >
+                    {/* The two labels cross-fade in the same cell, so only one
+                        can sit in normal flow — and a wrapper sized by BEFORE
+                        alone clips AFTER whenever the translation is longer.
+                        Turkish is exactly that case (ÖNCE 4 chars, SONRA 5) and
+                        the tag wrapped to two lines on device; English hid the
+                        bug because AFTER is the shorter of its pair.
+
+                        Both are absolute now, over an invisible sizer carrying
+                        whichever string is longer in the ACTIVE locale. Width
+                        therefore follows the translation instead of the
+                        language we happened to develop in, and numberOfLines
+                        keeps a long one on a single line rather than wrapping
+                        inside a pill. */}
                     <View>
+                        <Text
+                            numberOfLines={1}
+                            style={{ ...theme.text.label, opacity: 0 }}
+                            accessible={false}
+                            importantForAccessibility="no-hide-descendants"
+                        >
+                            {beforeLabel.length >= afterLabel.length ? beforeLabel : afterLabel}
+                        </Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: "#D0C5B8",
                                 opacity: beforeTagOpacity,
                               }}
                         >
-                            {t("result.before")}
+                            {beforeLabel}
                         </Animated.Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
                                 position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: theme.color.goldMidday,
                                 opacity: afterOpacity,
                               }}
                         >
-                            {t("result.after")}
+                            {afterLabel}
                         </Animated.Text>
                     </View>
                 </View>
@@ -397,6 +461,10 @@ function PaintTeaser({
 
 function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
     const { t } = useTranslation();
+    // Resolved once so the sizer below and the visible labels can never
+    // disagree about what they are measuring.
+    const beforeLabel = t("result.before");
+    const afterLabel = t("result.after");
     const fade = useRef(new Animated.Value(0)).current;
     // Ken Burns — a barely-there push-in that breathes with the crossfade;
     // premium/soft, never busy.
@@ -512,10 +580,23 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                         borderColor: "rgba(225,195,155,0.28)",
                     }}
                 >
+                    {/* Same locale-width fix as the other two teasers. */}
                     <View>
+                        <Text
+                            numberOfLines={1}
+                            style={{ ...theme.text.label, opacity: 0 }}
+                            accessible={false}
+                            importantForAccessibility="no-hide-descendants"
+                        >
+                            {beforeLabel.length >= afterLabel.length ? beforeLabel : afterLabel}
+                        </Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: "#D0C5B8",
                                 opacity: fade.interpolate({
                                     inputRange: [0, 1],
@@ -523,17 +604,20 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                                 }),
                               }}
                         >
-                            {t("result.before")}
+                            {beforeLabel}
                         </Animated.Text>
                         <Animated.Text
+                            numberOfLines={1}
                             style={{
                                 ...theme.text.label,
                                 position: "absolute",
+                                left: 0,
+                                right: 0,
                                 color: theme.color.goldMidday,
                                 opacity: fade,
                               }}
                         >
-                            {t("result.after")}
+                            {afterLabel}
                         </Animated.Text>
                     </View>
                 </View>

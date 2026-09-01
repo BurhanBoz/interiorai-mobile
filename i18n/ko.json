@@ -161,14 +161,9 @@
     "eyebrow": "접근 보호"
   },
   "studio": {
-    "step_1_of_4": "1단계 / 4",
-    "step_2_of_4": "2단계 / 4",
-    "step_3_of_4": "3단계 / 4",
-    "step_4_of_4": "4단계 / 4",
     "step1_title": "공간 분석",
     "step2_title": "방 유형 및 스타일",
     "step3_title": "디자인 사양",
-    "step4_title": "검토 및 생성",
     "tap_to_upload": "탭하여 업로드",
     "uploading": "업로드 중…",
     "take_a_photo": "사진 찍기",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "정원, 안뜰, 테라스 — 야외 공간을 새롭게",
     "advanced_settings": "고급 설정",
     "add_furniture": "가구 추가",
-    "add_reference": "참고 추가"
+    "add_reference": "참고 추가",
+    "step_of": "단계 {{current}} / {{total}}"
   },
   "gallery": {
     "title": "갤러리",

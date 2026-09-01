@@ -161,14 +161,9 @@
     "eyebrow": "Secure access"
   },
   "studio": {
-    "step_1_of_4": "STEP 1 OF 4",
-    "step_2_of_4": "STEP 2 OF 4",
-    "step_3_of_4": "STEP 3 OF 4",
-    "step_4_of_4": "STEP 4 OF 4",
     "step1_title": "Analyze Your Space",
     "step2_title": "Room Type & Style",
     "step3_title": "Design Specifications",
-    "step4_title": "Review & Generate",
     "tap_to_upload": "Tap to Upload",
     "uploading": "Uploading…",
     "take_a_photo": "Take a Photo",
@@ -312,7 +307,8 @@
     "feature_outdoor_desc": "Gardens, courtyards, terraces — your outdoor space, redesigned",
     "advanced_settings": "Advanced settings",
     "add_furniture": "Add furniture",
-    "add_reference": "Add reference"
+    "add_reference": "Add reference",
+    "step_of": "STEP {{current}} / {{total}}"
   },
   "gallery": {
     "title": "Gallery",
