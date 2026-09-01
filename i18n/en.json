@@ -1045,5 +1045,16 @@
     "restore_failed": "We couldn't find a purchase to restore.",
     "restore_none_title": "Nothing to restore",
     "restore_none": "We couldn't find an active subscription on this Apple ID."
+  },
+  "source": {
+    "title": "How did you find us?",
+    "subtitle": "One tap — it helps us know where to put our effort.",
+    "app_store": "App Store search",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "A friend or family",
+    "web": "Google or the web",
+    "other": "Somewhere else",
+    "skip": "Skip"
   }
 }

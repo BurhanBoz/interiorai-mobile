@@ -73,6 +73,53 @@ export async function submitAttributionToken(): Promise<void> {
     }
 }
 
+/**
+ * The channels we offer on the "how did you hear about us" sheet.
+ *
+ * Closed set, mirrored server-side in {@code AcquisitionSurveyServiceImpl}.
+ * Free text would fill with spellings of the same four sources and stop being
+ * groupable, which is the only thing the answer is for.
+ */
+export type AcquisitionSource =
+    | "APP_STORE_SEARCH"
+    | "INSTAGRAM"
+    | "TIKTOK"
+    | "FRIEND"
+    | "WEB_SEARCH"
+    | "OTHER";
+
+/**
+ * Record where the user says they came from.
+ *
+ * <p>The only per-user channel signal available to us for anything that is not
+ * Apple Search Ads: Apple resolves the ad case through the AdServices token and
+ * reports every other source as an aggregate count with no users attached — so
+ * a channel can look like it delivered installs while we remain unable to say
+ * whether those people generated, stayed or paid.
+ *
+ * <p>Self-reported rather than fingerprinted on purpose. Probabilistic device
+ * matching would answer the same question covertly, and the market is largely
+ * the EU; a declaration the user can see and skip is the version we can defend.
+ *
+ * <p>Fire-and-forget, like every other call in this file — a survey must never
+ * cost a user their result screen.
+ */
+export async function recordAcquisitionSource(
+    answer: AcquisitionSource,
+    detail?: string,
+): Promise<void> {
+    try {
+        await api.post("/api/telemetry/source", {
+            answer,
+            detail: detail?.trim() || null,
+            appVersion: APP_VERSION,
+            locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
+        });
+    } catch {
+        // Analytics must never surface to the user.
+    }
+}
+
 /** Register this device for push. `environment` must match the build. */
 export async function registerPushToken(
     token: string,

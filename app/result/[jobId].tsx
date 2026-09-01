@@ -21,6 +21,7 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { SourceSheet } from "@/components/ui/SourceSheet";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -1043,6 +1044,14 @@ export default function ResultDetailScreen() {
           </Pressable>
         </View>
       </Modal>
+
+      {/* "How did you hear about us" — the only per-user channel signal we can
+          get for anything that is not Apple Search Ads. Gated on a COMPLETED
+          job on purpose: asked after the first render the user has actually
+          seen, it costs nothing, whereas the same question on the first screen
+          would sit next to the paywall and be charged against activation.
+          The sheet handles its own once-per-identity flag. */}
+      <SourceSheet enabled={job?.status === "COMPLETED"} />
     </SafeAreaView>
   );
 }

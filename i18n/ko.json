@@ -1045,5 +1045,16 @@
     "restore_failed": "복원할 구매 내역을 찾지 못했습니다.",
     "restore_none_title": "복원할 항목이 없습니다",
     "restore_none": "이 Apple ID에서 활성 구독을 찾지 못했습니다."
+  },
+  "source": {
+    "title": "어떻게 알게 되셨나요?",
+    "subtitle": "한 번의 탭이면 됩니다. 어디에 힘을 쏟을지 아는 데 도움이 됩니다.",
+    "app_store": "App Store 검색",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "친구나 가족",
+    "web": "구글이나 웹",
+    "other": "그 밖의 경로",
+    "skip": "건너뛰기"
   }
 }

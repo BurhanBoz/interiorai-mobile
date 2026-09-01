@@ -1045,5 +1045,16 @@
     "restore_failed": "Geri yüklenecek bir satın alma bulunamadı.",
     "restore_none_title": "Geri yüklenecek bir şey yok",
     "restore_none": "Bu Apple kimliğinde aktif bir abonelik bulunamadı."
+  },
+  "source": {
+    "title": "Bizi nereden buldun?",
+    "subtitle": "Tek dokunuş — emeğimizi nereye vereceğimizi bilmemize yardım eder.",
+    "app_store": "App Store aramasından",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "Arkadaş ya da aile",
+    "web": "Google veya internet",
+    "other": "Başka bir yerden",
+    "skip": "Geç"
   }
 }

@@ -1045,5 +1045,16 @@
     "restore_failed": "Es wurde kein Kauf zum Wiederherstellen gefunden.",
     "restore_none_title": "Nichts wiederherzustellen",
     "restore_none": "Auf dieser Apple-ID wurde kein aktives Abo gefunden."
+  },
+  "source": {
+    "title": "Wie hast du uns gefunden?",
+    "subtitle": "Ein Tipp — so wissen wir, wo sich unsere Arbeit lohnt.",
+    "app_store": "App-Store-Suche",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "Freunde oder Familie",
+    "web": "Google oder Web",
+    "other": "Woanders",
+    "skip": "Überspringen"
   }
 }

@@ -1045,5 +1045,16 @@
     "restore_failed": "Nessun acquisto da ripristinare.",
     "restore_none_title": "Niente da ripristinare",
     "restore_none": "Nessun abbonamento attivo trovato su questo ID Apple."
+  },
+  "source": {
+    "title": "Come ci hai trovato?",
+    "subtitle": "Un tocco: ci aiuta a capire dove investire il nostro lavoro.",
+    "app_store": "Ricerca su App Store",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "Un amico o un familiare",
+    "web": "Google o il web",
+    "other": "Altrove",
+    "skip": "Salta"
   }
 }

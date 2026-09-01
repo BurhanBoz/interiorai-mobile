@@ -1045,5 +1045,16 @@
     "restore_failed": "No encontramos ninguna compra para restaurar.",
     "restore_none_title": "Nada que restaurar",
     "restore_none": "No encontramos una suscripción activa en este ID de Apple."
+  },
+  "source": {
+    "title": "¿Cómo nos encontraste?",
+    "subtitle": "Un toque: nos ayuda a saber dónde poner nuestro esfuerzo.",
+    "app_store": "Búsqueda en App Store",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "Un amigo o familiar",
+    "web": "Google o la web",
+    "other": "En otro sitio",
+    "skip": "Omitir"
   }
 }

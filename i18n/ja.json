@@ -1045,5 +1045,16 @@
     "restore_failed": "復元できる購入が見つかりませんでした。",
     "restore_none_title": "復元できるものがありません",
     "restore_none": "この Apple ID で有効なサブスクリプションが見つかりませんでした。"
+  },
+  "source": {
+    "title": "どこで知りましたか？",
+    "subtitle": "タップ1回。どこに力を注ぐべきか知る手がかりになります。",
+    "app_store": "App Storeの検索",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "friend": "友人・家族",
+    "web": "Googleやウェブ",
+    "other": "その他",
+    "skip": "スキップ"
   }
 }
