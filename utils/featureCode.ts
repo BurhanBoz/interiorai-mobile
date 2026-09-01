@@ -3,23 +3,25 @@ import type { DesignMode, QualityTier } from "@/types/api";
 /**
  * Resolve the backend feature_code for a given (mode, quality tier) pair.
  *
- * The gotcha: V25 migration split what used to be a single `INTERIOR_REDESIGN`
- * feature into two — STANDARD stays under `INTERIOR_REDESIGN`, but HD and
- * ULTRA_HD live under `HD_REDESIGN`. `plan_credit_rules` and the model
- * routing table both use these split feature codes, so any mobile lookup
- * that ignores the tier will miss the HD/ULTRA_HD rules and make the chip
- * appear locked to Pro/Max users.
+ * Every mode is now tier-agnostic. Redesign used to split — STANDARD under
+ * `INTERIOR_REDESIGN`, HD/ULTRA_HD under `HD_REDESIGN` (the V25 rename) —
+ * because HD literally meant "generate at 2 MP instead of 1". V69 made 2 MP
+ * the floor for everyone, which left HD selling nothing, so 1.4.1 drops the
+ * tier from the picker exactly as ULTRA_HD was dropped in 2026-07 and for
+ * the same reason: sharpness sells better AFTER generation, on the render
+ * the user has already decided they like, via the 4x Upscale action.
  *
- * EMPTY_ROOM, INPAINT, and STYLE_TRANSFER are tier-agnostic — their quality
- * variants live under the same feature code.
+ * `HD_REDESIGN` is NOT gone from the backend — 1.4.0 clients keep sending
+ * HD for weeks and their jobs must keep working, so the feature, its plan
+ * rows and its credit rules all stay (V70 aligned its price with STANDARD
+ * so nobody in the field overpays for an identical render). This function
+ * simply stops producing it.
  */
 export function resolveFeatureCode(
     mode: DesignMode,
-    tier: QualityTier,
+    _tier: QualityTier,
 ): string {
-    if (mode === "REDESIGN") {
-        return tier === "STANDARD" ? "INTERIOR_REDESIGN" : "HD_REDESIGN";
-    }
+    if (mode === "REDESIGN") return "INTERIOR_REDESIGN";
     if (mode === "EMPTY_ROOM") return "EMPTY_ROOM";
     if (mode === "INPAINT") return "INPAINT";
     if (mode === "STYLE_TRANSFER") return "STYLE_TRANSFER";

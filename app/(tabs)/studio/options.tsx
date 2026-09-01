@@ -140,9 +140,22 @@ const encodePalette = (colors: readonly string[]) => colors.join(";");
 // where the user upscales the render they actually like — better economics
 // and no dead tier (ST had no ULTRA_HD credit rule, so even MAX saw it
 // locked here). The backend keeps accepting ULTRA_HD for compatibility.
+// HD dropped 2026-09-01, for the same reason ULTRA_HD went in 2026-07:
+// the tier only ever meant "render at 2 MP instead of 1", and V69 made 2 MP
+// the floor for every plan. A tier that sells nothing is worse than no tier —
+// it asks the user to weigh a choice that cannot change their result, and it
+// charged a credit for the privilege until V70 aligned the price.
+//
+// Sharpness beyond the floor is sold AFTER generation, through the 4x Upscale
+// action on the result screen: better economics (the user upscales only the
+// render they decided they liked) and a better moment to ask for money.
+//
+// The array stays a list rather than collapsing to a constant so that a real
+// future tier — a different MODEL, not a different pixel count — drops back in
+// without rebuilding the control. The selector renders only when there is more
+// than one entry, so adding one is the whole change.
 const QUALITY_TIERS: { key: QualityTier; labelKey: string }[] = [
   { key: "STANDARD", labelKey: "studio.quality_standard" },
-  { key: "HD", labelKey: "studio.quality_hd" },
 ];
 
 export default function OptionsScreen() {
@@ -406,7 +419,13 @@ export default function OptionsScreen() {
             the chips that lived here are gone; `mode` arrives via the store
             and mode-specific steps (mask/reference) run right after upload. */}
 
-        {/* Quality & AI Strength Bento Layout */}
+        {/* Quality selector — rendered only when there is an actual choice.
+            A one-option segmented control is not a control: it costs vertical
+            space, invites a tap that changes nothing, and reads as a setting
+            the user failed to understand. Driven off availableQualityTiers
+            rather than a hardcoded flag, so if a second tier is ever added
+            back the control returns on its own. */}
+        {availableQualityTiers.length > 1 && (
         <View style={{ marginTop: 48, paddingHorizontal: theme.space.gutter, gap: 16 }}>
           {/* Quality Segmented Control */}
           <View
@@ -504,6 +523,7 @@ export default function OptionsScreen() {
             </View>
           </View>
         </View>
+        )}
 
         {/* IO-2 — object insertion "+" row (2026-08-11). Free-form modes
             only: the depth (preserve) route has no input_images channel, so

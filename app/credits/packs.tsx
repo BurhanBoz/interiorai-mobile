@@ -341,11 +341,15 @@ export default function CreditPacksScreen() {
     const subscription = useSubscriptionStore((s) => s.subscription);
     const creditPackBonusPct = useSubscriptionStore((s) => s.creditPackBonusPct);
     const getCreditCost = useSubscriptionStore((s) => s.getCreditCost);
-    // Plan-aware credit costs for the pack usage hint. Read once at
-    // render time; resolved against the active plan's `plan_credit_rules`.
-    // FREE has no HD rule → hdCost = 0 → HD line is hidden in PackCard.
+    // Plan-aware credit cost for the pack usage hint. Read once at render
+    // time; resolved against the active plan's `plan_credit_rules`.
+    //
+    // The HD line is gone (2026-09-01): HD meant "2 MP instead of 1" and V69
+    // made 2 MP the floor, so "how many HD designs does this buy" no longer
+    // describes anything a user can choose. hdCost is passed as 0, which is
+    // the suppression path PackCard already had for FREE.
     const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
-    const hdCost = getCreditCost("HD_REDESIGN", "HD", 1);
+    const hdCost = 0;
     const handleBack = useBackHandler("/(tabs)/profile");
     const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
 

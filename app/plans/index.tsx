@@ -49,8 +49,11 @@ const FEATURE_ROWS: FeatureRow[] = [
     { labelKey: "plans.row_monthly_credits",   key: "monthlyCredits",           type: "credits",    groupLabelKey: "plans.group_allowance" },
     { labelKey: "plans.row_no_watermark",      key: "watermark",                type: "watermark",  groupLabelKey: "plans.group_quality" },
     { labelKey: "plans.row_queue_priority",    key: "queuePriority",            type: "queue" },
-    { labelKey: "plans.row_hd",                key: "HD_REDESIGN",              type: "feature",    groupLabelKey: "plans.group_capabilities" },
-    { labelKey: "plans.row_upscale",           key: "ULTRA_HD_UPSCALE",         type: "feature" },
+    // HD row removed 2026-09-01: the tier meant "2 MP instead of 1", and V69
+    // made 2 MP the floor on every plan including FREE. Advertising it as a
+    // paid capability would now be selling something every user already has.
+    // Upscale inherits the group label it used to sit under.
+    { labelKey: "plans.row_upscale",           key: "ULTRA_HD_UPSCALE",         type: "feature",    groupLabelKey: "plans.group_capabilities" },
     { labelKey: "plans.row_inpaint",           key: "INPAINT",                  type: "feature" },
     { labelKey: "plans.row_style_transfer",    key: "STYLE_TRANSFER",           type: "feature" },
     { labelKey: "plans.row_empty_room",        key: "EMPTY_ROOM",               type: "feature" },
@@ -63,7 +66,7 @@ const FEATURE_ROWS: FeatureRow[] = [
 // Frontend truth table — which features each tier definitively introduces.
 // Overrides backend "—" for features we know belong to a tier.
 const TIER_HIGHLIGHTS: Record<string, string[]> = {
-    BASE: ["HD_REDESIGN", "allow_custom_prompt", "allow_commercial_spaces"],
+    BASE: ["allow_custom_prompt", "allow_commercial_spaces"],
     PRO:  ["INPAINT", "STYLE_TRANSFER", "ULTRA_HD_UPSCALE", "advanced_controls"],
 };
 
