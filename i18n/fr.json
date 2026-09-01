@@ -712,7 +712,8 @@
     "expand_zoom_15": "Dézoomer 1,5×",
     "expand_zoom_2": "Dézoomer 2×",
     "expand_square": "Format carré",
-    "try_another_style": "Essayer un autre style"
+    "try_another_style": "Essayer un autre style",
+    "save_to_photos": "Enregistrer dans Photos"
   },
   "settings": {
     "notifications_title": "Notifications",

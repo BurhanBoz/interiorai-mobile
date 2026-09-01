@@ -712,7 +712,8 @@
     "expand_zoom_15": "1.5× 축소",
     "expand_zoom_2": "2× 축소",
     "expand_square": "정사각형으로",
-    "try_another_style": "다른 스타일 시도"
+    "try_another_style": "다른 스타일 시도",
+    "save_to_photos": "사진에 저장"
   },
   "settings": {
     "notifications_title": "알림",

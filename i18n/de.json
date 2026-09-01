@@ -712,7 +712,8 @@
     "expand_zoom_15": "1,5× herauszoomen",
     "expand_zoom_2": "2× herauszoomen",
     "expand_square": "Quadratisch machen",
-    "try_another_style": "Anderen Stil testen"
+    "try_another_style": "Anderen Stil testen",
+    "save_to_photos": "In Fotos sichern"
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",

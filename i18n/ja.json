@@ -712,7 +712,8 @@
     "expand_zoom_15": "1.5×ズームアウト",
     "expand_zoom_2": "2×ズームアウト",
     "expand_square": "正方形にする",
-    "try_another_style": "別のスタイルを試す"
+    "try_another_style": "別のスタイルを試す",
+    "save_to_photos": "写真に保存"
   },
   "settings": {
     "notifications_title": "通知",

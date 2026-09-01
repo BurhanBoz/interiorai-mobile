@@ -712,7 +712,8 @@
     "expand_zoom_15": "1,5× uzaklaştır",
     "expand_zoom_2": "2× uzaklaştır",
     "expand_square": "Kare yap",
-    "try_another_style": "Başka stil dene"
+    "try_another_style": "Başka stil dene",
+    "save_to_photos": "Fotoğraflara Kaydet"
   },
   "settings": {
     "notifications_title": "Bildirimler",

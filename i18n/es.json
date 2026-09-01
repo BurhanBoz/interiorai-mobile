@@ -712,7 +712,8 @@
     "expand_zoom_15": "Alejar 1,5×",
     "expand_zoom_2": "Alejar 2×",
     "expand_square": "Hacer cuadrada",
-    "try_another_style": "Probar otro estilo"
+    "try_another_style": "Probar otro estilo",
+    "save_to_photos": "Guardar en Fotos"
   },
   "settings": {
     "notifications_title": "Notificaciones",

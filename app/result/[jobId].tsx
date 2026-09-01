@@ -438,22 +438,39 @@ export default function ResultDetailScreen() {
         </View>
 
         {/* ────────── Action area ──────────
-            Two-row layout fixes the "5 buttons in one row" overflow
-            (UPSCALE was getting clipped to "U P S(") and elevates
-            Upscale to a deliberate "Pro action" tier:
-              • Top row — 3 utility actions (Compare/Download/Share)
-                as evenly-spaced icon-circles. Variation is PARKED
-                (2026-07-10 founder call) — backend + VariationSheet
-                stay intact in git history for an easy return.
-              • Bottom row — Upscale as a full-width premium pill,
-                gold-bordered with sparkles + arrow affordance
-            Premium tone is intentional — Upscale costs extra credits
-            and is plan-gated, so visually separating it from the free
-            utility actions matches the credit semantics. */}
+            Three tiers, ordered by what we actually want to happen:
+              • Save to Photos — full-width primary. Keeping the render
+                is the strongest quality signal a user can give us, and
+                until 2026-09-01 it was a muted icon-circle sitting
+                between Compare and Share while UPSCALE — a paid action
+                most users cannot even reach — owned the only full-width
+                pill on the screen. We were shouting the thing that
+                costs the user money and whispering the thing that means
+                "this one was good". 81 generations had produced 2
+                downloads.
+              • Utility row — Compare and Share as icon-circles.
+                Variation is PARKED (2026-07-10 founder call) — backend
+                + VariationSheet stay intact in git history.
+              • Upscale — still its own pill below the divider, still
+                gold, just no longer the loudest thing here. It reads
+                better AFTER the save anyway: you upscale a render you
+                have decided you want, and V69 made the base output 2 MP
+                so upscale is now "print size", not "finally usable". */}
         <View style={{ marginBottom: 24 }}>
-          {/* Top row — 4 utility actions, justified for even spacing
-              regardless of screen width (small phones get 60px gaps,
-              Plus models get 90px without code branching). */}
+          {/* Primary — saves to Photos. Label says where it goes rather
+              than "Download": on a phone the destination is the whole
+              point, and it is what makes the action feel finished. */}
+          <PrimaryButton
+            label={t("result.save_to_photos", { defaultValue: "Save to Photos" })}
+            leftIcon="download-outline"
+            onPress={handleDownload}
+            loading={isDownloading}
+            style={{ marginBottom: 18 }}
+          />
+
+          {/* Utility row — justified for even spacing regardless of
+              screen width (small phones get 60px gaps, Plus models 90px
+              without code branching). */}
           <View
             className="flex-row items-start"
             style={{ justifyContent: "space-around", marginBottom: 18 }}
@@ -473,30 +490,6 @@ export default function ResultDetailScreen() {
                 }}
               >
                 {t("result.compare")}
-              </Text>
-            </View>
-
-            {/* Download — saves to Photos */}
-            <View className="items-center" style={{ gap: 8 }}>
-              <Pressable
-                onPress={handleDownload}
-                disabled={isDownloading}
-                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-                style={{ opacity: isDownloading ? 0.5 : 1 }}
-              >
-                {isDownloading ? (
-                  <ActivityIndicator size="small" color="#D1C5B8" />
-                ) : (
-                  <Ionicons name="download-outline" size={22} color="#D1C5B8" />
-                )}
-              </Pressable>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  ...theme.text.label,
-                }}
-              >
-                {t("result.download")}
               </Text>
             </View>
 

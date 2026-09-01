@@ -712,7 +712,8 @@
     "expand_zoom_15": "Riduci 1,5×",
     "expand_zoom_2": "Riduci 2×",
     "expand_square": "Rendi quadrata",
-    "try_another_style": "Prova un altro stile"
+    "try_another_style": "Prova un altro stile",
+    "save_to_photos": "Salva nelle Foto"
   },
   "settings": {
     "notifications_title": "Notifiche",

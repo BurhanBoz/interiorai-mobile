@@ -712,7 +712,8 @@
     "expand_zoom_15": "Zoom out 1.5×",
     "expand_zoom_2": "Zoom out 2×",
     "expand_square": "Make square",
-    "try_another_style": "Try another style"
+    "try_another_style": "Try another style",
+    "save_to_photos": "Save to Photos"
   },
   "settings": {
     "notifications_title": "Notifications",
