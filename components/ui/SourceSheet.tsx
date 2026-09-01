@@ -20,14 +20,26 @@ type Option = {
     icon: keyof typeof Ionicons.glyphMap;
 };
 
+/**
+ * Order matters: the grid is three per row, so the first three share a row and
+ * the last three share the next. Instagram, TikTok and the App Store sit
+ * together because they are the three channels we can actually act on — the
+ * ones a decision about where to spend effort would turn on.
+ *
+ * The label lives on for accessibility only. Sighted users get the icon; a
+ * screen reader still hears "Instagram" rather than "button".
+ */
 const OPTIONS: Option[] = [
-    { key: "APP_STORE_SEARCH", labelKey: "source.app_store", icon: "search" },
+    { key: "APP_STORE_SEARCH", labelKey: "source.app_store", icon: "storefront" },
     { key: "INSTAGRAM", labelKey: "source.instagram", icon: "logo-instagram" },
     { key: "TIKTOK", labelKey: "source.tiktok", icon: "logo-tiktok" },
     { key: "FRIEND", labelKey: "source.friend", icon: "chatbubble-ellipses" },
     { key: "WEB_SEARCH", labelKey: "source.web", icon: "globe-outline" },
-    { key: "OTHER", labelKey: "source.other", icon: "sparkles-outline" },
+    { key: "OTHER", labelKey: "source.other", icon: "ellipsis-horizontal" },
 ];
+
+/** Three per row — the grid derives from this, nothing is measured by hand. */
+const PER_ROW = 3;
 
 /**
  * "How did you hear about us?" — one tap, once per user.
@@ -172,77 +184,70 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
                         >
                             {t("source.title")}
                         </Text>
-                        <Text
-                            style={{
-                                ...theme.text.body,
-                                color: "#9A9089",
-                                textAlign: "center",
-                                marginTop: 8,
-                                marginBottom: 22,
-                                paddingHorizontal: 8,
-                            }}
-                        >
-                            {t("source.subtitle")}
-                        </Text>
+                        {/* No subtitle. The question is one line long and the
+                            icons are self-evident; a sentence explaining why we
+                            ask turns a two-second tap into something to read. */}
+                        <View style={{ height: 22 }} />
 
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                flexWrap: "wrap",
-                                justifyContent: "space-between",
-                                rowGap: 10,
-                            }}
-                        >
-                            {OPTIONS.map((opt) => {
-                                const active = chosen === opt.key;
-                                return (
-                                    <Pressable
-                                        key={opt.key}
-                                        onPress={() => close(opt.key)}
-                                        disabled={chosen !== null}
-                                        style={({ pressed }) => ({
-                                            // Two per row with a gutter between:
-                                            // percentage, not a measured width, so
-                                            // it holds on every screen size.
-                                            width: "48.5%",
-                                            minHeight: 92,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: 9,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 10,
-                                            borderRadius: 18,
-                                            borderWidth: 1,
-                                            borderColor: active
-                                                ? "rgba(225,195,155,0.55)"
-                                                : "rgba(255,255,255,0.07)",
-                                            backgroundColor: active
-                                                ? "rgba(225,195,155,0.16)"
-                                                : pressed
-                                                    ? "rgba(225,195,155,0.10)"
-                                                    : "rgba(255,255,255,0.035)",
-                                        })}
-                                    >
-                                        <Ionicons
-                                            name={active ? "checkmark-circle" : opt.icon}
-                                            size={22}
-                                            color={active ? "#E1C39B" : "#C6B7A4"}
-                                        />
-                                        <Text
-                                            numberOfLines={2}
-                                            style={{
-                                                ...theme.text.body,
-                                                fontSize: 13,
-                                                lineHeight: 17,
-                                                textAlign: "center",
-                                                color: active ? "#F0E4D4" : "#CFC5BA",
-                                            }}
-                                        >
-                                            {t(opt.labelKey)}
-                                        </Text>
-                                    </Pressable>
-                                );
-                            })}
+                        {/* Icon-only grid, PER_ROW across. Chunked from OPTIONS
+                            rather than hand-laid, so changing PER_ROW or adding a
+                            channel needs no layout edit — and each row is padded to
+                            full width with inert spacers so a final short row keeps
+                            the same column positions as the one above it instead of
+                            centring itself and looking crooked.
+
+                            Labels are gone by design: six words under six icons
+                            made a two-second question look like a form, and the
+                            translated ones were the longest thing on the sheet.
+                            They survive as accessibilityLabel, so nothing is lost
+                            to a screen reader. */}
+                        <View style={{ gap: 12 }}>
+                            {Array.from(
+                                { length: Math.ceil(OPTIONS.length / PER_ROW) },
+                                (_, row) => OPTIONS.slice(row * PER_ROW, row * PER_ROW + PER_ROW),
+                            ).map((rowOptions, rowIndex) => (
+                                <View key={rowIndex} style={{ flexDirection: "row", gap: 12 }}>
+                                    {rowOptions.map((opt) => {
+                                        const active = chosen === opt.key;
+                                        return (
+                                            <Pressable
+                                                key={opt.key}
+                                                onPress={() => close(opt.key)}
+                                                disabled={chosen !== null}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={t(opt.labelKey)}
+                                                style={({ pressed }) => ({
+                                                    flex: 1,
+                                                    aspectRatio: 1.15,
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    borderRadius: 20,
+                                                    borderWidth: 1,
+                                                    borderColor: active
+                                                        ? "rgba(225,195,155,0.55)"
+                                                        : "rgba(255,255,255,0.07)",
+                                                    backgroundColor: active
+                                                        ? "rgba(225,195,155,0.16)"
+                                                        : pressed
+                                                            ? "rgba(225,195,155,0.10)"
+                                                            : "rgba(255,255,255,0.035)",
+                                                })}
+                                            >
+                                                <Ionicons
+                                                    name={active ? "checkmark-circle" : opt.icon}
+                                                    size={26}
+                                                    color={active ? "#E1C39B" : "#C6B7A4"}
+                                                />
+                                            </Pressable>
+                                        );
+                                    })}
+                                    {/* Pad a short last row so columns stay aligned. */}
+                                    {Array.from(
+                                        { length: PER_ROW - rowOptions.length },
+                                        (_, i) => <View key={`pad-${i}`} style={{ flex: 1 }} />,
+                                    )}
+                                </View>
+                            ))}
                         </View>
 
                         <Pressable

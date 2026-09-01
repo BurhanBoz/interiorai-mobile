@@ -102,7 +102,12 @@ export default function AnonymousTrialScreen() {
       // 2026-08-31: the welcome bonus is gone and the paywall took its place.
       // `replace` (not `push`) so the back gesture cannot walk into a
       // half-created onboarding state behind it.
-      router.replace("/paywall");
+      // Hand back to the root gate rather than naming a destination.
+      // Whether this person sees the paywall or Studio depends on their
+      // subscription, and that question is answered in exactly one place
+      // (app/index.tsx) — three screens each deciding for themselves is
+      // how the reinstall case slipped through in the first place.
+      router.replace("/");
     } catch {
       router.push("/register");
     } finally {

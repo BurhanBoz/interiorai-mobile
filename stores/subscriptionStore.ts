@@ -22,6 +22,16 @@ export type PlanPermissionKey =
 
 interface SubscriptionState {
     subscription: SubscriptionResponse | null;
+    /**
+     * True once the first {@link fetchSubscription} has SETTLED — succeeded or
+     * failed, either way we are no longer guessing.
+     *
+     * <p>Without this, `subscription === null` means two different things at
+     * once: "not fetched yet" and "no subscription". Any gate reading it during
+     * boot would show a paywall to a paying customer for as long as the request
+     * took. The flag is the difference between an absence and an answer.
+     */
+    subscriptionResolved: boolean;
     plans: PlanResponse[] | null;
     features: PlanFeatureResponse[];
     creditRules: PlanCreditRuleResponse[];
@@ -45,9 +55,16 @@ interface SubscriptionState {
 // each reset call isolated (no shared array reference across resets).
 const initialSubscriptionState = (): Pick<
     SubscriptionState,
-    "subscription" | "plans" | "features" | "creditRules" | "permissions" | "creditPackBonusPct"
+    | "subscription"
+    | "subscriptionResolved"
+    | "plans"
+    | "features"
+    | "creditRules"
+    | "permissions"
+    | "creditPackBonusPct"
 > => ({
     subscription: null,
+    subscriptionResolved: false,
     plans: null,
     features: [],
     creditRules: [],
@@ -59,6 +76,9 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     ...initialSubscriptionState(),
 
     fetchSubscription: async () => {
+        // Marked resolved on EVERY exit, including the throwing one — a gate
+        // waiting on this must not hang because the network did.
+        try {
         const subscription = await plansService.getActiveSubscription();
         // Resolve the active plan from the already-fetched plan list.
         const plans = get().plans;
@@ -83,6 +103,9 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
             permissions: plan?.permissions ?? {},
             creditPackBonusPct: plan?.creditPackBonusPct ?? 0,
         });
+        } finally {
+            set({ subscriptionResolved: true });
+        }
     },
 
     fetchPlans: async () => {

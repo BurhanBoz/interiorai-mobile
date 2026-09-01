@@ -26,9 +26,7 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
-import { useEffectiveWatermark } from "@/hooks/useEntitlement";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
@@ -99,9 +97,6 @@ export default function GalleryScreen() {
   const toggleFavorite = useFavoritesStore(s => s.toggle);
   const isFavorite = useFavoritesStore(s => s.isFavorite);
   // Free plan tiles show a corner mark; paid plans AND welcome bonus
-  // trial users don't. useEffectiveWatermark applies the same logic
-  // the result screen + backend use — single source of truth.
-  const showWatermark = useEffectiveWatermark();
 
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(0);
@@ -386,7 +381,12 @@ export default function GalleryScreen() {
         )}
 
         {/* Free plan tiny corner mark */}
-        {showWatermark && <FreeWatermark size="sm" />}
+        {/* Watermark pill removed from the grid (2026-09-01). The real
+            watermark is baked into the output by the backend's WatermarkService,
+            so this was a SECOND mark layered on top of the first — and on a
+            thumbnail it covered the design the tile exists to show. The free-tier
+            mark still travels with the image everywhere it actually matters:
+            downloads, shares, screenshots. */}
       </Pressable>
     ),
     [
@@ -397,7 +397,6 @@ export default function GalleryScreen() {
       handleLongPress,
       handleToggleFavorite,
       isFavorite,
-      showWatermark,
     ],
   );
 

@@ -466,14 +466,19 @@ export default function ResultDetailScreen() {
               stay muted — so keeping the render still reads as the main move
               without breaking the row's rhythm.
 
-              Justified for even spacing regardless of screen width (small
-              phones get tighter gaps, Plus models wider, no code branching). */}
+              Each action owns an equal third of the row (flex: 1) rather than
+              being spaced apart. space-around distributes the GAPS evenly, not
+              the items, so the widest label drags its neighbours off centre —
+              on device "KARŞILAŞTIR" pushed the row visibly right of centre
+              while "İNDİR" and "PAYLAŞ" bunched up. Equal thirds put each icon
+              on the centre line of its own column, which holds for any label
+              length in any language. */}
           <View
             className="flex-row items-start"
-            style={{ justifyContent: "space-around", marginBottom: 18 }}
+            style={{ marginBottom: 18 }}
           >
             {/* Compare */}
-            <View className="items-center" style={{ gap: 8 }}>
+            <View className="items-center" style={{ flex: 1, gap: 8 }}>
               <Pressable
                 onPress={handleCompare}
                 className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
@@ -493,7 +498,7 @@ export default function ResultDetailScreen() {
             {/* Save — same shape as its neighbours, gold-tinted. Keeping the
                 render is the strongest quality signal a user gives us, so it
                 gets the accent; it does not get a different size. */}
-            <View className="items-center" style={{ gap: 8 }}>
+            <View className="items-center" style={{ flex: 1, gap: 8 }}>
               <Pressable
                 onPress={handleDownload}
                 disabled={isDownloading}
@@ -523,7 +528,7 @@ export default function ResultDetailScreen() {
             </View>
 
             {/* Share */}
-            <View className="items-center" style={{ gap: 8 }}>
+            <View className="items-center" style={{ flex: 1, gap: 8 }}>
               <Pressable
                 onPress={handleShare}
                 disabled={isSharing}

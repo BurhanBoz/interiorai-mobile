@@ -16,7 +16,6 @@ import { useStorePricesStore } from "@/stores/storePricesStore";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
-import { setFlag } from "@/utils/oneShotFlag";
 import { planTier } from "@/utils/planTier";
 
 /**
@@ -96,10 +95,11 @@ export default function PaywallScreen() {
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
         recordPaywallEvent("SHOWN");
-        // Mark it seen the moment it renders, not on exit: a user who kills the
-        // app mid-screen has still seen it, and replaying it on next launch
-        // would read as the app nagging.
-        setFlag("paywall_onboarding").catch(() => {});
+        // No "already seen" flag any more. It was the wrong question: a flag
+        // asks "have we shown this before", and the answer we actually want is
+        // "does this person pay us" — which app/index.tsx now asks on every
+        // launch. Worse, that flag lived in the Keychain, so it survived app
+        // deletion and silenced the paywall for reinstalls too.
     }, []);
 
     const annual = useMemo(() => plans?.find((p) => p.code === PLAN_ANNUAL), [plans]);
