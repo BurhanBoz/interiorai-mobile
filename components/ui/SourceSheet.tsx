@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Modal, View, Text, Pressable, Animated, Easing } from "react-native";
+import { Modal, View, Text, Pressable, Animated, Easing, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -54,8 +54,29 @@ const OPTIONS: Option[] = [
     { key: "OTHER", labelKey: "source.other", icon: "ellipsis-horizontal" },
 ];
 
-/** Three per row — the grid derives from this, nothing is measured by hand. */
-const PER_ROW = 3;
+/**
+ * Two per row, three rows — the grid derives from this, nothing is laid out by
+ * hand. Three-across was tried on device and read as a toolbar: the tiles were
+ * wide, short and edge-to-edge, so the eye ran along them instead of choosing
+ * between them. Two-across gives square tiles with air around them, which is
+ * what makes six options feel like a question rather than a menu bar.
+ */
+const PER_ROW = 2;
+
+/**
+ * Tile edge, derived rather than fixed.
+ *
+ * <p>Roughly a third of the screen so two tiles plus the gap between them sit
+ * centred with margin either side, and clamped so the sheet looks the same on a
+ * 320pt phone as on a Pro Max: never so small the glyph loses weight, never so
+ * large the pair fills the width and the air disappears.
+ */
+const TILE = Math.round(
+    Math.min(112, Math.max(84, Dimensions.get("window").width * 0.29)),
+);
+
+/** Gap between tiles, in both directions — one number keeps the grid square. */
+const TILE_GAP = 20;
 
 /**
  * "How did you hear about us?" — one tap, once per user.
@@ -206,26 +227,29 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
                         {/* No subtitle. The question is one line long and the
                             icons are self-evident; a sentence explaining why we
                             ask turns a two-second tap into something to read. */}
-                        <View style={{ height: 22 }} />
+                        <View style={{ height: 30 }} />
 
-                        {/* Icon-only grid, PER_ROW across. Chunked from OPTIONS
-                            rather than hand-laid, so changing PER_ROW or adding a
-                            channel needs no layout edit — and each row is padded to
-                            full width with inert spacers so a final short row keeps
-                            the same column positions as the one above it instead of
-                            centring itself and looking crooked.
+                        {/* Icon-only grid, PER_ROW across, chunked from OPTIONS
+                            rather than hand-laid — changing PER_ROW or adding a
+                            channel needs no layout edit. Rows are centred and
+                            tiles are a fixed square, so a short final row keeps
+                            its columns under the row above instead of stretching
+                            to fill and breaking the grid.
 
                             Labels are gone by design: six words under six icons
                             made a two-second question look like a form, and the
                             translated ones were the longest thing on the sheet.
-                            They survive as accessibilityLabel, so nothing is lost
-                            to a screen reader. */}
-                        <View style={{ gap: 12 }}>
+                            They survive as accessibilityLabel, so a screen reader
+                            still hears "Instagram" rather than "button". */}
+                        <View style={{ gap: TILE_GAP, alignItems: "center" }}>
                             {Array.from(
                                 { length: Math.ceil(OPTIONS.length / PER_ROW) },
                                 (_, row) => OPTIONS.slice(row * PER_ROW, row * PER_ROW + PER_ROW),
                             ).map((rowOptions, rowIndex) => (
-                                <View key={rowIndex} style={{ flexDirection: "row", gap: 12 }}>
+                                <View
+                                    key={rowIndex}
+                                    style={{ flexDirection: "row", gap: TILE_GAP, justifyContent: "center" }}
+                                >
                                     {rowOptions.map((opt) => {
                                         const active = chosen === opt.key;
                                         return (
@@ -236,35 +260,33 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
                                                 accessibilityRole="button"
                                                 accessibilityLabel={t(opt.labelKey)}
                                                 style={({ pressed }) => ({
-                                                    flex: 1,
-                                                    aspectRatio: 1.15,
+                                                    width: TILE,
+                                                    height: TILE,
                                                     alignItems: "center",
                                                     justifyContent: "center",
-                                                    borderRadius: 20,
+                                                    // Squircle rather than a circle:
+                                                    // brand glyphs are square-ish and
+                                                    // a circle crops their optical mass.
+                                                    borderRadius: Math.round(TILE * 0.28),
                                                     borderWidth: 1,
                                                     borderColor: active
                                                         ? "rgba(225,195,155,0.55)"
-                                                        : "rgba(255,255,255,0.07)",
+                                                        : "rgba(255,255,255,0.08)",
                                                     backgroundColor: active
                                                         ? "rgba(225,195,155,0.16)"
                                                         : pressed
                                                             ? "rgba(225,195,155,0.10)"
-                                                            : "rgba(255,255,255,0.035)",
+                                                            : "rgba(255,255,255,0.045)",
                                                 })}
                                             >
                                                 <Ionicons
                                                     name={active ? "checkmark-circle" : opt.icon}
-                                                    size={26}
-                                                    color={active ? "#E1C39B" : "#C6B7A4"}
+                                                    size={Math.round(TILE * 0.36)}
+                                                    color={active ? "#E1C39B" : "#CFC0AC"}
                                                 />
                                             </Pressable>
                                         );
                                     })}
-                                    {/* Pad a short last row so columns stay aligned. */}
-                                    {Array.from(
-                                        { length: PER_ROW - rowOptions.length },
-                                        (_, i) => <View key={`pad-${i}`} style={{ flex: 1 }} />,
-                                    )}
                                 </View>
                             ))}
                         </View>
@@ -273,13 +295,15 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
                             onPress={() => close()}
                             disabled={chosen !== null}
                             hitSlop={14}
-                            style={{ paddingVertical: 18, alignItems: "center" }}
+                            style={{ paddingTop: 28, paddingBottom: 14, alignItems: "center" }}
                         >
                             <Text
                                 style={{
-                                    ...theme.text.body,
-                                    fontSize: 13,
-                                    color: "#7E756D",
+                                    // The house uppercase label — the same one every
+                                    // other dismissive action in the app uses. Keeps
+                                    // this sheet from inventing a seventh text style.
+                                    ...theme.text.label,
+                                    color: "#8A8078",
                                 }}
                             >
                                 {t("source.skip")}
