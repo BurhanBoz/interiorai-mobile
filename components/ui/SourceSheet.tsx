@@ -3,13 +3,29 @@ import { Modal, View, Text, Pressable, Animated, Easing } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useAuthStore } from "@/stores/authStore";
 import * as Haptics from "expo-haptics";
 import { theme } from "@/config/theme";
 import { recordAcquisitionSource, type AcquisitionSource } from "@/services/telemetry";
 import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 
-/** Asked once per identity. Keychain-backed, so a reinstall does not re-ask. */
-const FLAG = "acquisition_source_asked";
+/**
+ * Asked once per USER, not once per device.
+ *
+ * <p>The first version keyed on the device alone. The flag lives in the
+ * Keychain — chosen so a reinstall would not re-ask a returning user — but the
+ * Keychain belongs to the bundle id, not to the account, so it also silenced
+ * the question for the NEXT person on that device. Guests are the common case
+ * here: logging out mints a brand new user id, and that person would never have
+ * been asked at all. It also made the sheet untestable, since a skip on one
+ * build muted it on every later one.
+ *
+ * <p>Keying by user id keeps the property that was wanted (a reinstall does not
+ * re-ask the same person) and drops the one that was accidental. The same user
+ * on a NEW device is asked again; the backend's per-user unique key absorbs the
+ * duplicate, so the cost of that is one request, not a bad row.
+ */
+const flagFor = (userId: string) => `acquisition_source_asked:${userId}`;
 
 /** Let the render land before asking anything. */
 const DELAY_MS = 2200;
@@ -63,17 +79,20 @@ const PER_ROW = 3;
  */
 export function SourceSheet({ enabled }: { enabled: boolean }) {
     const { t } = useTranslation();
+    const userId = useAuthStore((s) => s.user?.id ?? null);
     const [visible, setVisible] = useState(false);
     const [chosen, setChosen] = useState<AcquisitionSource | null>(null);
     const rise = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        if (!enabled) return;
+        // No identity yet means no flag to check and nobody to attribute the
+        // answer to — wait rather than ask into the void.
+        if (!enabled || !userId) return;
         let cancelled = false;
         let timer: ReturnType<typeof setTimeout> | undefined;
 
         (async () => {
-            if (await isFlagSet(FLAG)) return;
+            if (await isFlagSet(flagFor(userId))) return;
             if (cancelled) return;
             timer = setTimeout(() => {
                 if (!cancelled) setVisible(true);
@@ -84,7 +103,7 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
             cancelled = true;
             if (timer) clearTimeout(timer);
         };
-    }, [enabled]);
+    }, [enabled, userId]);
 
     useEffect(() => {
         if (!visible) return;
@@ -101,7 +120,7 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
     // dismissing are both final: re-asking someone who skipped is the fastest
     // way to turn a harmless question into an irritation.
     const close = (answer?: AcquisitionSource) => {
-        setFlag(FLAG).catch(() => {});
+        if (userId) setFlag(flagFor(userId)).catch(() => {});
         if (answer) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             recordAcquisitionSource(answer).catch(() => {});
