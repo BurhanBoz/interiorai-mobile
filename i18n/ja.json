@@ -1040,7 +1040,8 @@
     "restore_failed_title": "復元できませんでした",
     "restore_failed": "復元できる購入が見つかりませんでした。",
     "restore_none_title": "復元できるものがありません",
-    "restore_none": "この Apple ID で有効なサブスクリプションが見つかりませんでした。"
+    "restore_none": "この Apple ID で有効なサブスクリプションが見つかりませんでした。",
+    "subscribe_cta": "登録する · {{price}}"
   },
   "source": {
     "title": "どこで知りましたか？",

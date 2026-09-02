@@ -291,9 +291,27 @@ export default function PaywallScreen() {
                         </View>
                     )}
 
+                    {/* The CTA names the action AND the price.
+                        It used to read "Continue", while the tap opened Apple's
+                        payment sheet for the pre-selected annual plan. The event
+                        log showed exactly what that produced: three users tapped
+                        it 4, 7 and 11 seconds after the screen appeared — far too
+                        fast to have read an offer — and all three cancelled at
+                        the sheet, then left. One of them cancelled the annual,
+                        looked at the weekly, and still left.
+                        Nobody was rejecting the price; they were pressing what
+                        looked like "next" and meeting a bill.
+
+                        A button that charges money must say so before the tap,
+                        not after — the same rule Guideline 3.1.2 applies to the
+                        terms printed beneath it. The price is interpolated live
+                        from the storefront, so it always matches the sheet the
+                        user is about to see. */}
                     <View style={{ marginTop: 18 }}>
                         <PrimaryButton
-                            label={t("paywall.continue")}
+                            label={t("paywall.subscribe_cta", {
+                                price: priceOf(selected === PLAN_WEEKLY ? weekly : annual),
+                            })}
                             onPress={handleContinue}
                             loading={busy}
                             disabled={!plans}

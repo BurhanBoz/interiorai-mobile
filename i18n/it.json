@@ -1040,7 +1040,8 @@
     "restore_failed_title": "Ripristino non riuscito",
     "restore_failed": "Nessun acquisto da ripristinare.",
     "restore_none_title": "Niente da ripristinare",
-    "restore_none": "Nessun abbonamento attivo trovato su questo ID Apple."
+    "restore_none": "Nessun abbonamento attivo trovato su questo ID Apple.",
+    "subscribe_cta": "Abbonati · {{price}}"
   },
   "source": {
     "title": "Come ci hai trovato?",

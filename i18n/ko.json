@@ -1040,7 +1040,8 @@
     "restore_failed_title": "복원 실패",
     "restore_failed": "복원할 구매 내역을 찾지 못했습니다.",
     "restore_none_title": "복원할 항목이 없습니다",
-    "restore_none": "이 Apple ID에서 활성 구독을 찾지 못했습니다."
+    "restore_none": "이 Apple ID에서 활성 구독을 찾지 못했습니다.",
+    "subscribe_cta": "구독하기 · {{price}}"
   },
   "source": {
     "title": "어떻게 알게 되셨나요?",

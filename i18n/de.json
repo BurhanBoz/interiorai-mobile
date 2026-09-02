@@ -1040,7 +1040,8 @@
     "restore_failed_title": "Wiederherstellung fehlgeschlagen",
     "restore_failed": "Es wurde kein Kauf zum Wiederherstellen gefunden.",
     "restore_none_title": "Nichts wiederherzustellen",
-    "restore_none": "Auf dieser Apple-ID wurde kein aktives Abo gefunden."
+    "restore_none": "Auf dieser Apple-ID wurde kein aktives Abo gefunden.",
+    "subscribe_cta": "Abonnieren · {{price}}"
   },
   "source": {
     "title": "Wie hast du uns gefunden?",
