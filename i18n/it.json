@@ -1022,16 +1022,10 @@
         "cancel_body": "I crediti riservati verranno rimborsati."
     },
     "paywall": {
-        "title": "Sblocca Roomframe PRO",
-        "benefit_quality": "I nostri modelli IA di qualità massima",
-        "benefit_features": "Trasferimento di stile, modifica mirata e 4K",
+        "title": "Sblocca Roomframe",
+        "benefit_credits": "Crediti ogni settimana, non uno al giorno",
         "benefit_watermark": "Nessuna filigrana sui tuoi progetti",
-        "annual": "Annuale",
-        "annual_sub": "Addebitato una volta l'anno",
-        "weekly": "Settimanale",
-        "weekly_sub": "Perfetto per iniziare",
-        "save_pct": "Risparmia il {{pct}} %",
-        "continue": "Continua",
+        "benefit_tools": "Tutti gli strumenti: Magic Edit, 4K, stanza vuota",
         "renewal_note": "Si rinnova automaticamente fino alla disdetta. Disdici quando vuoi nelle Impostazioni.",
         "restore": "Ripristina",
         "terms": "Termini",
@@ -1043,7 +1037,12 @@
         "restore_failed": "Nessun acquisto da ripristinare.",
         "restore_none_title": "Niente da ripristinare",
         "restore_none": "Nessun abbonamento attivo trovato su questo ID Apple.",
-        "subscribe_cta": "Abbonati · {{price}}"
+        "subscribe_cta": "Abbonati · {{price}}",
+        "plan_base": "Base · Settimanale",
+        "plan_base_sub": "{{credits}} crediti a settimana",
+        "plan_pro": "Pro · Settimanale",
+        "plan_pro_sub": "{{credits}} crediti + Style Transfer",
+        "best_value": "MIGLIOR VALORE"
     },
     "source": {
         "title": "Come ci hai trovato?",

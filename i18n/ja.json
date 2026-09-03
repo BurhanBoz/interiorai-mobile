@@ -1022,16 +1022,10 @@
         "cancel_body": "予約されたクレジットは返金されます。"
     },
     "paywall": {
-        "title": "Roomframe PRO を解除",
-        "benefit_quality": "最高品質のAIモデル",
-        "benefit_features": "スタイル転送・マジック編集・4Kアップスケール",
-        "benefit_watermark": "デザインに透かしなし",
-        "annual": "年額",
-        "annual_sub": "年に1回のお支払い",
-        "weekly": "週額",
-        "weekly_sub": "まずはここから",
-        "save_pct": "{{pct}}%お得",
-        "continue": "続ける",
+        "title": "Roomframeのすべてを使う",
+        "benefit_credits": "1日1回ではなく、毎週まとめてクレジット",
+        "benefit_watermark": "デザインに透かしが入りません",
+        "benefit_tools": "すべての機能：Magic Edit、4K、空室化",
         "renewal_note": "解約するまで自動更新されます。設定からいつでも解約できます。",
         "restore": "復元",
         "terms": "利用規約",
@@ -1043,7 +1037,12 @@
         "restore_failed": "復元できる購入が見つかりませんでした。",
         "restore_none_title": "復元できるものがありません",
         "restore_none": "この Apple ID で有効なサブスクリプションが見つかりませんでした。",
-        "subscribe_cta": "登録する · {{price}}"
+        "subscribe_cta": "登録する · {{price}}",
+        "plan_base": "Base · 毎週",
+        "plan_base_sub": "毎週{{credits}}クレジット",
+        "plan_pro": "Pro · 毎週",
+        "plan_pro_sub": "{{credits}}クレジット＋スタイル転送",
+        "best_value": "いちばんお得"
     },
     "source": {
         "title": "どこで知りましたか？",

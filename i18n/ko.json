@@ -1022,16 +1022,10 @@
         "cancel_body": "예약된 크레딧은 환불됩니다."
     },
     "paywall": {
-        "title": "Roomframe PRO 잠금 해제",
-        "benefit_quality": "최고 품질의 AI 모델",
-        "benefit_features": "스타일 전송, 매직 편집, 4K 업스케일",
+        "title": "Roomframe 전체 사용하기",
+        "benefit_credits": "하루 한 개가 아니라 매주 크레딧",
         "benefit_watermark": "디자인에 워터마크 없음",
-        "annual": "연간",
-        "annual_sub": "1년에 한 번 결제",
-        "weekly": "주간",
-        "weekly_sub": "시작하기 좋아요",
-        "save_pct": "{{pct}}% 절약",
-        "continue": "계속",
+        "benefit_tools": "모든 도구: Magic Edit, 4K, 빈 방",
         "renewal_note": "해지할 때까지 자동 갱신됩니다. 설정에서 언제든 해지할 수 있습니다.",
         "restore": "복원",
         "terms": "약관",
@@ -1043,7 +1037,12 @@
         "restore_failed": "복원할 구매 내역을 찾지 못했습니다.",
         "restore_none_title": "복원할 항목이 없습니다",
         "restore_none": "이 Apple ID에서 활성 구독을 찾지 못했습니다.",
-        "subscribe_cta": "구독하기 · {{price}}"
+        "subscribe_cta": "구독하기 · {{price}}",
+        "plan_base": "Base · 주간",
+        "plan_base_sub": "매주 {{credits}} 크레딧",
+        "plan_pro": "Pro · 주간",
+        "plan_pro_sub": "{{credits}} 크레딧 + 스타일 전송",
+        "best_value": "가장 좋은 선택"
     },
     "source": {
         "title": "어떻게 알게 되셨나요?",

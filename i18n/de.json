@@ -1022,16 +1022,10 @@
         "cancel_body": "Reservierte Credits werden erstattet."
     },
     "paywall": {
-        "title": "Roomframe PRO freischalten",
-        "benefit_quality": "Unsere hochwertigsten KI-Modelle",
-        "benefit_features": "Stilübertragung, gezielte Bearbeitung und 4K",
-        "benefit_watermark": "Kein Wasserzeichen auf deinen Designs",
-        "annual": "Jährlich",
-        "annual_sub": "Einmal im Jahr abgerechnet",
-        "weekly": "Wöchentlich",
-        "weekly_sub": "Gut zum Starten",
-        "save_pct": "{{pct}} % sparen",
-        "continue": "Weiter",
+        "title": "Roomframe freischalten",
+        "benefit_credits": "Wöchentliche Credits statt einem pro Tag",
+        "benefit_watermark": "Kein Wasserzeichen auf deinen Entwürfen",
+        "benefit_tools": "Alle Werkzeuge: Magic Edit, 4K, leerer Raum",
         "renewal_note": "Verlängert sich automatisch bis zur Kündigung. Jederzeit in den Einstellungen kündbar.",
         "restore": "Wiederherstellen",
         "terms": "AGB",
@@ -1043,7 +1037,12 @@
         "restore_failed": "Es wurde kein Kauf zum Wiederherstellen gefunden.",
         "restore_none_title": "Nichts wiederherzustellen",
         "restore_none": "Auf dieser Apple-ID wurde kein aktives Abo gefunden.",
-        "subscribe_cta": "Abonnieren · {{price}}"
+        "subscribe_cta": "Abonnieren · {{price}}",
+        "plan_base": "Base · Wöchentlich",
+        "plan_base_sub": "{{credits}} Credits pro Woche",
+        "plan_pro": "Pro · Wöchentlich",
+        "plan_pro_sub": "{{credits}} Credits + Style Transfer",
+        "best_value": "BESTER WERT"
     },
     "source": {
         "title": "Wie hast du uns gefunden?",

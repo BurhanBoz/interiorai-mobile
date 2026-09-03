@@ -43,11 +43,24 @@ import { planTier } from "@/utils/planTier";
 const TERMS_URL = "https://roomframeai.com/terms";
 const PRIVACY_URL = "https://roomframeai.com/privacy";
 
-const PLAN_ANNUAL = "PRO_ANNUAL";
-const PLAN_WEEKLY = "PRO_WEEKLY";
-
-/** Weeks per year, used only to express annual as a weekly-equivalent saving. */
-const WEEKS_PER_YEAR = 52;
+/**
+ * Two weekly plans, nothing else.
+ *
+ * <p>The annual plan used to sit here, pre-selected, and the event log is
+ * unambiguous about what that produced: PRO_ANNUAL was never once chosen by
+ * hand (0 PLAN_SELECTED) while the weekly plan was chosen 12 times, yet
+ * PRO_ANNUAL collected 10 PURCHASE_STARTED — people pressing the CTA over a
+ * default they had not picked. Every one of those, and all 8 who reached
+ * Apple's sheet, abandoned there: the sheet asked for $239.99. Nobody rejected
+ * the product; they met a year's bill on a screen they had opened seconds ago.
+ *
+ * <p>So the choice on offer is now between two small numbers rather than
+ * between small and enormous. The annual SKUs stay live and purchasable from
+ * the plans screen for anyone who wants one — they are simply no longer the
+ * first thing a stranger sees.
+ */
+const PLAN_PRO = "PRO_WEEKLY";
+const PLAN_BASE = "BASE_WEEKLY";
 
 export default function PaywallScreen() {
     const { t } = useTranslation();
@@ -56,7 +69,7 @@ export default function PaywallScreen() {
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
     const storePrices = useStorePricesStore((s) => s.prices);
 
-    const [selected, setSelected] = useState<string>(PLAN_ANNUAL);
+    const [selected, setSelected] = useState<string>(PLAN_PRO);
     const [busy, setBusy] = useState(false);
 
     // Hero reveal. Width is animated rather than a transform because the
@@ -102,22 +115,27 @@ export default function PaywallScreen() {
         // deletion and silenced the paywall for reinstalls too.
     }, []);
 
-    const annual = useMemo(() => plans?.find((p) => p.code === PLAN_ANNUAL), [plans]);
-    const weekly = useMemo(() => plans?.find((p) => p.code === PLAN_WEEKLY), [plans]);
+    const pro = useMemo(() => plans?.find((p) => p.code === PLAN_PRO), [plans]);
+    const base = useMemo(() => plans?.find((p) => p.code === PLAN_BASE), [plans]);
+    const chosen = selected === PLAN_BASE ? base : pro;
 
     /**
-     * Real saving, computed from the two live prices — never a hardcoded badge.
-     * Returns null when either price is missing so the badge disappears rather
-     * than rendering a number we cannot stand behind.
+     * Which plan gives more credit per unit of money — computed from the live
+     * pair, never asserted. Same rule the old saving badge followed: if either
+     * side is missing the badge disappears rather than claiming something we
+     * cannot stand behind. (Today PRO wins at $0.09/credit against BASE's
+     * $0.12, but a price change in the plans table moves the badge on its own.)
      */
-    const savingPct = useMemo(() => {
-        if (!annual?.priceCents || !weekly?.priceCents) return null;
-        const weeklyYear = weekly.priceCents * WEEKS_PER_YEAR;
-        if (weeklyYear <= annual.priceCents) return null;
-        return Math.round((1 - annual.priceCents / weeklyYear) * 100);
-    }, [annual, weekly]);
+    const bestValueCode = useMemo(() => {
+        const perCredit = (p?: typeof pro) =>
+            p?.priceCents && p?.monthlyCredits ? p.priceCents / p.monthlyCredits : null;
+        const proRate = perCredit(pro);
+        const baseRate = perCredit(base);
+        if (proRate == null || baseRate == null || proRate === baseRate) return null;
+        return proRate < baseRate ? PLAN_PRO : PLAN_BASE;
+    }, [pro, base]);
 
-    const priceOf = (plan?: typeof annual) =>
+    const priceOf = (plan?: typeof pro) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
 
     const leave = async (event: "DISMISSED" | "PURCHASED", planCode?: string) => {
@@ -126,7 +144,7 @@ export default function PaywallScreen() {
     };
 
     const handleContinue = async () => {
-        const plan = selected === PLAN_ANNUAL ? annual : weekly;
+        const plan = chosen;
         if (!plan || busy) return;
 
         setBusy(true);
@@ -175,10 +193,28 @@ export default function PaywallScreen() {
         }
     };
 
+    /**
+     * What a paid plan actually buys, checked against plan_features in prod
+     * rather than written from memory.
+     *
+     * <p>The previous list promised "our highest-quality AI models" and named
+     * Magic Edit and 4K upscale as things to unlock. Neither survived contact
+     * with the database: every active plan runs the same model tier, and
+     * INPAINT and ULTRA_HD_UPSCALE are enabled on FREE too (V66). A paywall
+     * charging money for what the user already has is both a lie and a 2.3.1
+     * problem. What genuinely changes is the credit budget, the watermark, and
+     * — on PRO only — Style Transfer and Outdoor Design.
+     *
+     * <p>These three hold for BOTH plans on offer, so the list does not move
+     * when the selection does; the per-tier numbers live on the cards, where
+     * the two are read side by side. The credit line names the contrast with
+     * what a free account actually gets — one credit a day — because that, not
+     * an abstract "more credits", is the thing being bought.
+     */
     const benefits: { icon: keyof typeof Ionicons.glyphMap; key: string }[] = [
-        { icon: "sparkles", key: "paywall.benefit_quality" },
-        { icon: "color-wand", key: "paywall.benefit_features" },
+        { icon: "flash", key: "paywall.benefit_credits" },
         { icon: "water-outline", key: "paywall.benefit_watermark" },
+        { icon: "color-wand", key: "paywall.benefit_tools" },
     ];
 
     return (
@@ -267,25 +303,25 @@ export default function PaywallScreen() {
                     ) : (
                         <View style={{ gap: 12 }}>
                             <PlanCard
-                                label={t("paywall.annual")}
-                                sub={t("paywall.annual_sub")}
-                                price={priceOf(annual)}
-                                badge={savingPct ? t("paywall.save_pct", { pct: savingPct }) : null}
-                                selected={selected === PLAN_ANNUAL}
+                                label={t("paywall.plan_base")}
+                                sub={t("paywall.plan_base_sub", { credits: base?.monthlyCredits ?? 0 })}
+                                price={priceOf(base)}
+                                badge={bestValueCode === PLAN_BASE ? t("paywall.best_value") : null}
+                                selected={selected === PLAN_BASE}
                                 onPress={() => {
-                                    setSelected(PLAN_ANNUAL);
-                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_ANNUAL });
+                                    setSelected(PLAN_BASE);
+                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_BASE });
                                 }}
                             />
                             <PlanCard
-                                label={t("paywall.weekly")}
-                                sub={t("paywall.weekly_sub")}
-                                price={priceOf(weekly)}
-                                badge={null}
-                                selected={selected === PLAN_WEEKLY}
+                                label={t("paywall.plan_pro")}
+                                sub={t("paywall.plan_pro_sub", { credits: pro?.monthlyCredits ?? 0 })}
+                                price={priceOf(pro)}
+                                badge={bestValueCode === PLAN_PRO ? t("paywall.best_value") : null}
+                                selected={selected === PLAN_PRO}
                                 onPress={() => {
-                                    setSelected(PLAN_WEEKLY);
-                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_WEEKLY });
+                                    setSelected(PLAN_PRO);
+                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_PRO });
                                 }}
                             />
                         </View>
@@ -293,7 +329,7 @@ export default function PaywallScreen() {
 
                     {/* The CTA names the action AND the price.
                         It used to read "Continue", while the tap opened Apple's
-                        payment sheet for the pre-selected annual plan. The event
+                        payment sheet for the then pre-selected annual plan. The event
                         log showed exactly what that produced: three users tapped
                         it 4, 7 and 11 seconds after the screen appeared — far too
                         fast to have read an offer — and all three cancelled at
@@ -309,9 +345,7 @@ export default function PaywallScreen() {
                         user is about to see. */}
                     <View style={{ marginTop: 18 }}>
                         <PrimaryButton
-                            label={t("paywall.subscribe_cta", {
-                                price: priceOf(selected === PLAN_WEEKLY ? weekly : annual),
-                            })}
+                            label={t("paywall.subscribe_cta", { price: priceOf(chosen) })}
                             onPress={handleContinue}
                             loading={busy}
                             disabled={!plans}

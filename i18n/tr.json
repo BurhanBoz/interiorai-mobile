@@ -1022,16 +1022,10 @@
         "cancel_body": "Ayrılan krediler iade edilir."
     },
     "paywall": {
-        "title": "Roomframe PRO'yu aç",
-        "benefit_quality": "En yüksek kaliteli yapay zekâ modellerimiz",
-        "benefit_features": "Stil Aktarımı, Sihirli Düzenleme ve 4K yükseltme",
+        "title": "Roomframe'i aç",
+        "benefit_credits": "Günde bir yerine haftalık kredi",
         "benefit_watermark": "Tasarımlarında filigran yok",
-        "annual": "Yıllık",
-        "annual_sub": "Yılda bir kez tahsil edilir",
-        "weekly": "Haftalık",
-        "weekly_sub": "Başlamak için ideal",
-        "save_pct": "%{{pct}} tasarruf",
-        "continue": "Devam et",
+        "benefit_tools": "Tüm araçlar: Magic Edit, 4K büyütme, boş oda",
         "renewal_note": "İptal edilene kadar otomatik yenilenir. İstediğin an Ayarlar'dan iptal edebilirsin.",
         "restore": "Geri yükle",
         "terms": "Şartlar",
@@ -1043,7 +1037,12 @@
         "restore_failed": "Geri yüklenecek bir satın alma bulunamadı.",
         "restore_none_title": "Geri yüklenecek bir şey yok",
         "restore_none": "Bu Apple kimliğinde aktif bir abonelik bulunamadı.",
-        "subscribe_cta": "Abone ol · {{price}}"
+        "subscribe_cta": "Abone ol · {{price}}",
+        "plan_base": "Base · Haftalık",
+        "plan_base_sub": "Her hafta {{credits}} kredi",
+        "plan_pro": "Pro · Haftalık",
+        "plan_pro_sub": "{{credits}} kredi + Stil Transferi",
+        "best_value": "EN AVANTAJLI"
     },
     "source": {
         "title": "Bizi nereden buldun?",

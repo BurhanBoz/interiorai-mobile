@@ -1022,16 +1022,10 @@
         "cancel_body": "Reserved credits will be refunded."
     },
     "paywall": {
-        "title": "Unlock Roomframe PRO",
-        "benefit_quality": "Our highest-quality AI models",
-        "benefit_features": "Style Transfer, Magic Edit and 4K upscale",
+        "title": "Unlock Roomframe",
+        "benefit_credits": "Weekly credits instead of one a day",
         "benefit_watermark": "No watermark on your designs",
-        "annual": "Yearly",
-        "annual_sub": "Billed once a year",
-        "weekly": "Weekly",
-        "weekly_sub": "Good to start",
-        "save_pct": "Save {{pct}}%",
-        "continue": "Continue",
+        "benefit_tools": "Every tool: Magic Edit, 4K upscale, empty room",
         "renewal_note": "Auto-renews until cancelled. Cancel anytime in Settings.",
         "restore": "Restore",
         "terms": "Terms",
@@ -1043,7 +1037,12 @@
         "restore_failed": "We couldn't find a purchase to restore.",
         "restore_none_title": "Nothing to restore",
         "restore_none": "We couldn't find an active subscription on this Apple ID.",
-        "subscribe_cta": "Subscribe · {{price}}"
+        "subscribe_cta": "Subscribe · {{price}}",
+        "plan_base": "Base · Weekly",
+        "plan_base_sub": "{{credits}} credits every week",
+        "plan_pro": "Pro · Weekly",
+        "plan_pro_sub": "{{credits}} credits + Style Transfer",
+        "best_value": "BEST VALUE"
     },
     "source": {
         "title": "How did you find us?",
