@@ -420,23 +420,34 @@ function PlanCard({ label, sub, price, badge, selected, onPress }: {
                 size={22}
                 color={selected ? theme.color.goldContainer : theme.color.outline}
             />
+            {/* Label, badge and sub share one flexible column; the price keeps
+                its own. The badge used to sit in the price's row, competing
+                with it for width — fine for a four-character "41%", but this
+                badge is a translated phrase ("MEILLEUR CHOIX", "BESTER WERT")
+                and it squeezed the label into a two-line wrap on the narrow
+                screens. Inside the column it wraps under the label instead,
+                so no translation can rearrange the row. */}
             <View style={{ flex: 1 }}>
-                <Text style={{ ...theme.text.label, color: theme.color.onSurface }}>{label}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Text style={{ ...theme.text.label, color: theme.color.onSurface }}>{label}</Text>
+                    {badge ? (
+                        <View style={{
+                            backgroundColor: theme.color.goldContainer, borderRadius: 999,
+                            paddingHorizontal: 8, paddingVertical: 2,
+                        }}>
+                            <Text style={{ ...theme.text.caption, color: theme.color.onGold, fontWeight: "700" }}>
+                                {badge}
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
                 <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceMuted, marginTop: 2 }}>
                     {sub}
                 </Text>
             </View>
-            {badge ? (
-                <View style={{
-                    backgroundColor: theme.color.goldContainer, borderRadius: 999,
-                    paddingHorizontal: 8, paddingVertical: 3, marginRight: 6,
-                }}>
-                    <Text style={{ ...theme.text.caption, color: theme.color.onGold, fontWeight: "700" }}>
-                        {badge}
-                    </Text>
-                </View>
-            ) : null}
-            <Text style={{ ...theme.text.label, color: theme.color.onSurface }}>{price}</Text>
+            {/* Never shrinks: the amount is the one thing on this card that
+                must stay legible whatever the label does. */}
+            <Text style={{ ...theme.text.label, color: theme.color.onSurface, flexShrink: 0 }}>{price}</Text>
         </Pressable>
     );
 }
