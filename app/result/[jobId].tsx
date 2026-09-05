@@ -37,6 +37,8 @@ import type { JobResponse, JobOutputResponse } from "@/types/api";
 import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
+import { useFirstResultPaywall } from "@/hooks/useFirstResultPaywall";
+import { useSuccessCount } from "@/hooks/useSuccessCount";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
@@ -161,12 +163,14 @@ export default function ResultDetailScreen() {
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
 
-  // ASO: single, well-timed rating ask — fires on the user's 2nd successfully
-  // viewed result (see useReviewPrompt for the full strategy).
+  // Post-result prompts are rationed one per visit, in this order: the offer
+  // (1st result, below), the notification ask (2nd), the channel question
+  // (3rd), the rating (4th). Two sheets in one visit get both dismissed.
+  const successCount = useSuccessCount(outputs.length > 0);
+  const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
+  const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
+  const paywallFiredThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
   useReviewPrompt(outputs.length > 0);
-  // Notification permission, asked on the 3rd success — deliberately behind
-  // the rating prompt (2nd success). Two system sheets in one visit gets both
-  // dismissed, and on iOS the push prompt is one-shot forever.
   usePushPermissionAsk(outputs.length > 0);
   useAccountPrompt(outputs.length > 0);
 
@@ -1084,7 +1088,7 @@ export default function ResultDetailScreen() {
           seen, it costs nothing, whereas the same question on the first screen
           would sit next to the paywall and be charged against activation.
           The sheet handles its own once-per-identity flag. */}
-      <SourceSheet enabled={job?.status === "COMPLETED"} />
+      <SourceSheet enabled={job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3} />
     </SafeAreaView>
   );
 }

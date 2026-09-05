@@ -1042,7 +1042,13 @@
         "plan_base_sub": "毎週{{credits}}クレジット",
         "plan_pro": "Pro · 毎週",
         "plan_pro_sub": "{{credits}}クレジット＋スタイル転送",
-        "best_value": "いちばんお得"
+        "best_value": "いちばんお得",
+        "title_first_result": "気に入りましたか？透かしなしで続けましょう。",
+        "title_out_of_credits": "クレジット切れ — デザインを続けましょう",
+        "trial_badge": "{{days}}日間無料",
+        "trial_cta": "{{days}}日間無料で試す · その後 {{price}}/週",
+        "renewal_note_trial": "{{days}}日間無料、その後は解約するまで毎週自動更新。設定からいつでも解約可能 — 前日にお知らせします。",
+        "pack_cta": "この部屋だけ仕上げる：{{credits}}クレジット · {{price}}"
     },
     "source": {
         "title": "どこで知りましたか？",
@@ -1053,5 +1059,11 @@
         "web": "Googleやウェブ",
         "other": "その他",
         "skip": "スキップ"
+    },
+    "push": {
+        "preprompt_title": "お知らせしますか？",
+        "preprompt_body": "無料クレジットの準備ができたとき、トライアル終了前にお知らせします。それ以外はありません。",
+        "preprompt_yes": "はい、お知らせする",
+        "preprompt_later": "今はしない"
     }
 }

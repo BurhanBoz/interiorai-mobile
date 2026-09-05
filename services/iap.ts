@@ -130,6 +130,7 @@ export async function fetchStorePrices(): Promise<StorePriceMap> {
         price: p.price,
         currencyCode: p.currencyCode,
         pricePerMonthString: p.pricePerMonthString,
+        introTrialDays: freeTrialDays(p),
     });
 
     const map: StorePriceMap = {};
@@ -402,5 +403,28 @@ export async function openManageSubscriptions(): Promise<boolean> {
     } catch (e) {
         console.warn("[IAP] showManageSubscriptions failed, falling back to deep-link:", e);
         return fallback();
+    }
+}
+
+/**
+ * Days of FREE trial StoreKit attaches to a product, or null.
+ *
+ * <p>Only a zero-priced introductory offer counts — a paid intro ("first week
+ * $0.99") is not a trial and must not be described as one. The unit is
+ * normalised to days because the paywall copy says "{{days}} days free";
+ * Apple's shortest option is 3 days, so anything shorter is impossible and
+ * anything longer than a month is not a trial we would ever configure.
+ */
+function freeTrialDays(p: PurchasesStoreProduct): number | null {
+    const intro = p.introPrice;
+    if (!intro || intro.price !== 0) return null;
+    const n = intro.periodNumberOfUnits;
+    if (!Number.isFinite(n) || n <= 0) return null;
+    switch (intro.periodUnit) {
+        case "DAY": return n;
+        case "WEEK": return n * 7;
+        case "MONTH": return n * 30;
+        case "YEAR": return n * 365;
+        default: return null;
     }
 }

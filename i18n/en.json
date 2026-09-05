@@ -1042,7 +1042,13 @@
         "plan_base_sub": "{{credits}} credits every week",
         "plan_pro": "Pro · Weekly",
         "plan_pro_sub": "{{credits}} credits + Style Transfer",
-        "best_value": "BEST VALUE"
+        "best_value": "BEST VALUE",
+        "title_first_result": "Like it? Keep going, without the watermark.",
+        "title_out_of_credits": "Out of credits — keep designing",
+        "trial_badge": "{{days}} DAYS FREE",
+        "trial_cta": "Try {{days}} days free · then {{price}}/week",
+        "renewal_note_trial": "Free for {{days}} days, then auto-renews weekly until cancelled. Cancel anytime in Settings — we'll remind you the day before.",
+        "pack_cta": "Just finish this room: {{credits}} credits · {{price}}"
     },
     "source": {
         "title": "How did you find us?",
@@ -1053,5 +1059,11 @@
         "web": "Google or the web",
         "other": "Somewhere else",
         "skip": "Skip"
+    },
+    "push": {
+        "preprompt_title": "Get a heads-up?",
+        "preprompt_body": "We'll tell you when your free credit is ready and before any trial ends. Nothing else.",
+        "preprompt_yes": "Yes, notify me",
+        "preprompt_later": "Not now"
     }
 }

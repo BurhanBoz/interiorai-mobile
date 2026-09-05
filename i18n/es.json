@@ -1042,7 +1042,13 @@
         "plan_base_sub": "{{credits}} créditos cada semana",
         "plan_pro": "Pro · Semanal",
         "plan_pro_sub": "{{credits}} créditos + Style Transfer",
-        "best_value": "MEJOR VALOR"
+        "best_value": "MEJOR VALOR",
+        "title_first_result": "¿Te gusta? Sigue, sin marca de agua.",
+        "title_out_of_credits": "Sin créditos: sigue diseñando",
+        "trial_badge": "{{days}} DÍAS GRATIS",
+        "trial_cta": "Prueba {{days}} días gratis · luego {{price}}/semana",
+        "renewal_note_trial": "Gratis {{days}} días, luego se renueva cada semana hasta que canceles. Cancela cuando quieras en Ajustes; te avisamos el día antes.",
+        "pack_cta": "Solo esta habitación: {{credits}} créditos · {{price}}"
     },
     "source": {
         "title": "¿Cómo nos encontraste?",
@@ -1053,5 +1059,11 @@
         "web": "Google o la web",
         "other": "En otro sitio",
         "skip": "Omitir"
+    },
+    "push": {
+        "preprompt_title": "¿Te avisamos?",
+        "preprompt_body": "Te avisaremos cuando tu crédito gratis esté listo y antes de que termine una prueba. Nada más.",
+        "preprompt_yes": "Sí, avísame",
+        "preprompt_later": "Ahora no"
     }
 }

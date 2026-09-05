@@ -34,6 +34,13 @@ export interface StorePrice {
      * by the SDK for the device locale. Null for consumables/monthly.
      */
     pricePerMonthString: string | null;
+    /**
+     * Length in days of a FREE introductory offer attached to the product,
+     * null when the store reports none (or a paid intro). Read from StoreKit
+     * via RevenueCat, never assumed: the paywall promises a trial only when
+     * the store will actually deliver one at the payment sheet.
+     */
+    introTrialDays?: number | null;
 }
 
 /** productId → StorePrice map, as held by storePricesStore. */

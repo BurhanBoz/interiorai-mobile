@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -69,11 +70,17 @@ export function usePushTokenSync(enabled: boolean) {
  * refused.
  */
 const PUSH_ASKED_KEY = "push_permission_asked";
-const ASK_ON_NTH_SUCCESS = 3;
+/**
+ * 2nd success, not 3rd (1.4.5). Under the old number 65 users produced one
+ * permission: most never reached a third render. The 1st result now carries
+ * the offer, so the 2nd is the earliest visit with no other sheet in it.
+ */
+const ASK_ON_NTH_SUCCESS = 2;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
 const ASK_DELAY_MS = 3000;
 
 export function usePushPermissionAsk(jobSucceeded: boolean) {
+    const { t } = useTranslation();
     const ask = useCallback(async () => {
         if (Platform.OS !== "ios") return;
         // Expo Go cannot register for remote notifications; asking there
@@ -101,11 +108,24 @@ export function usePushPermissionAsk(jobSucceeded: boolean) {
         // Mark BEFORE prompting: the ask is one-shot on iOS whatever the answer,
         // and re-asking is worse than occasionally missing one.
         await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
+
+        // Our own question first. iOS grants one chance and a cold system
+        // sheet is refused by most people; a sentence saying WHAT we would
+        // send (the daily credit, a trial ending) lets the user decline here
+        // without spending Apple's prompt, and reach it already decided.
+        const proceed = await new Promise<boolean>((resolve) =>
+            Alert.alert(t("push.preprompt_title"), t("push.preprompt_body"), [
+                { text: t("push.preprompt_later"), style: "cancel", onPress: () => resolve(false) },
+                { text: t("push.preprompt_yes"), onPress: () => resolve(true) },
+            ]),
+        );
+        if (!proceed) return;
+
         const { status } = await Notifications.requestPermissionsAsync();
         if (status === "granted") {
             await syncPushTokenIfPermitted();
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!jobSucceeded) return;

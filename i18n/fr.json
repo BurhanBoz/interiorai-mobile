@@ -1042,7 +1042,13 @@
         "plan_base_sub": "{{credits}} crédits chaque semaine",
         "plan_pro": "Pro · Hebdo",
         "plan_pro_sub": "{{credits}} crédits + Transfert de style",
-        "best_value": "MEILLEUR CHOIX"
+        "best_value": "MEILLEUR CHOIX",
+        "title_first_result": "Ça vous plaît ? Continuez, sans filigrane.",
+        "title_out_of_credits": "Plus de crédits — continuez à créer",
+        "trial_badge": "{{days}} JOURS GRATUITS",
+        "trial_cta": "Essai gratuit {{days}} jours · puis {{price}}/semaine",
+        "renewal_note_trial": "Gratuit {{days}} jours, puis renouvellement hebdomadaire jusqu'à annulation. Annulez à tout moment dans Réglages — on vous prévient la veille.",
+        "pack_cta": "Juste cette pièce : {{credits}} crédits · {{price}}"
     },
     "source": {
         "title": "Comment nous avez-vous trouvés ?",
@@ -1053,5 +1059,11 @@
         "web": "Google ou le web",
         "other": "Ailleurs",
         "skip": "Passer"
+    },
+    "push": {
+        "preprompt_title": "On vous prévient ?",
+        "preprompt_body": "Nous vous prévenons quand votre crédit gratuit est prêt et avant la fin d'un essai. Rien d'autre.",
+        "preprompt_yes": "Oui, prévenez-moi",
+        "preprompt_later": "Pas maintenant"
     }
 }

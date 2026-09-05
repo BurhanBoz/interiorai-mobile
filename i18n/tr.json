@@ -1042,7 +1042,13 @@
         "plan_base_sub": "Her hafta {{credits}} kredi",
         "plan_pro": "Pro · Haftalık",
         "plan_pro_sub": "{{credits}} kredi + Stil Transferi",
-        "best_value": "EN AVANTAJLI"
+        "best_value": "EN AVANTAJLI",
+        "title_first_result": "Beğendin mi? Devamı filigransız.",
+        "title_out_of_credits": "Kredin bitti — tasarlamaya devam et",
+        "trial_badge": "{{days}} GÜN ÜCRETSİZ",
+        "trial_cta": "{{days}} gün ücretsiz dene · sonra {{price}}/hafta",
+        "renewal_note_trial": "{{days}} gün ücretsiz, sonra iptal edilene dek haftalık yenilenir. Ayarlar'dan istediğin an iptal edebilirsin — bir gün önce hatırlatırız.",
+        "pack_cta": "Sadece bu odayı bitir: {{credits}} kredi · {{price}}"
     },
     "source": {
         "title": "Bizi nereden buldun?",
@@ -1053,5 +1059,11 @@
         "web": "Google veya internet",
         "other": "Başka bir yerden",
         "skip": "Geç"
+    },
+    "push": {
+        "preprompt_title": "Haber verelim mi?",
+        "preprompt_body": "Ücretsiz kredin hazır olduğunda ve bir deneme bitmeden önce haber veririz. Başka bir şey için değil.",
+        "preprompt_yes": "Evet, haber ver",
+        "preprompt_later": "Şimdi değil"
     }
 }

@@ -6,13 +6,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { theme } from "@/config/theme";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
+import { useCreditPacksStore } from "@/stores/creditPacksStore";
+import { useCreditStore } from "@/stores/creditStore";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
@@ -62,12 +65,42 @@ const PRIVACY_URL = "https://roomframeai.com/privacy";
 const PLAN_PRO = "PRO_WEEKLY";
 const PLAN_BASE = "BASE_WEEKLY";
 
+/**
+ * Where the paywall was opened from — stored as {@code paywall_events.source}
+ * so each placement's SHOWN→PURCHASED can be read on its own.
+ *
+ * <p>Until 1.4.5 every SHOWN was ONBOARDING: the wall stood at first open. The
+ * log for that placement was unambiguous — all 16 taps on "buy" came from
+ * people who had generated nothing yet, a median ~10 s after the screen
+ * appeared, and every one of them backed out at Apple's sheet; three then went
+ * and rendered twice. The offer now waits for the first result (the user's own
+ * room is the hero) and for the moment the wallet runs dry.
+ */
+const SOURCE_ONBOARDING = "ONBOARDING";
+const SOURCE_FIRST_RESULT = "FIRST_RESULT";
+const SOURCE_CREDITS_EXHAUSTED = "CREDITS_EXHAUSTED";
+
+/** The low-commitment step, offered only to someone who has just run dry. */
+const EXHAUSTED_PACK_CODE = "CREDITS_20";
+
 export default function PaywallScreen() {
     const { t } = useTranslation();
     const plans = useSubscriptionStore((s) => s.plans);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
     const storePrices = useStorePricesStore((s) => s.prices);
+    const packs = useCreditPacksStore((s) => s.packs);
+    const fetchPacks = useCreditPacksStore((s) => s.fetchPacks);
+    const purchasePack = useCreditPacksStore((s) => s.purchase);
+    const fetchBalance = useCreditStore((s) => s.fetchBalance);
+    const authHeaders = useAuthHeaders();
+
+    const params = useLocalSearchParams<{ source?: string; beforeUrl?: string; afterUrl?: string }>();
+    const source = (typeof params.source === "string" && params.source ? params.source : SOURCE_ONBOARDING).toUpperCase();
+    // The user's own room, when the caller has one to show. Presigned "after"
+    // URLs must travel without headers; the "before" proxy needs the token.
+    const ownAfter = typeof params.afterUrl === "string" && params.afterUrl ? params.afterUrl : null;
+    const ownBefore = typeof params.beforeUrl === "string" && params.beforeUrl ? params.beforeUrl : null;
 
     const [selected, setSelected] = useState<string>(PLAN_PRO);
     const [busy, setBusy] = useState(false);
@@ -107,7 +140,8 @@ export default function PaywallScreen() {
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
-        recordPaywallEvent("SHOWN");
+        if (source === SOURCE_CREDITS_EXHAUSTED && packs.length === 0) fetchPacks().catch(() => {});
+        recordPaywallEvent("SHOWN", { source });
         // No "already seen" flag any more. It was the wrong question: a flag
         // asks "have we shown this before", and the answer we actually want is
         // "does this person pay us" — which app/index.tsx now asks on every
@@ -138,9 +172,49 @@ export default function PaywallScreen() {
     const priceOf = (plan?: typeof pro) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
 
+    /**
+     * Opened as the first screen, the app is behind the paywall: replace.
+     * Opened from inside the app (a result, an empty wallet), the screen the
+     * user was on is exactly where they should land: go back.
+     */
+    const exit = () => {
+        if (source === SOURCE_ONBOARDING) router.replace("/(tabs)/studio");
+        else router.back();
+    };
+
     const leave = async (event: "DISMISSED" | "PURCHASED", planCode?: string) => {
-        await recordPaywallEvent(event, { planCode });
-        router.replace("/(tabs)/studio");
+        await recordPaywallEvent(event, { source, planCode });
+        exit();
+    };
+
+    /** Trial the STORE reports on the PRO product — never a build-time assumption. */
+    const trialDays = pro?.appleProductId ? storePrices[pro.appleProductId]?.introTrialDays ?? null : null;
+    const trialApplies = !!trialDays && selected === PLAN_PRO;
+
+    const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
+        ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
+        : null;
+
+    const handlePack = async () => {
+        if (!exhaustedPack || busy) return;
+        setBusy(true);
+        await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: exhaustedPack.code });
+        try {
+            await purchasePack(exhaustedPack.code);
+            // The wallet changed server-side; the studio's affordability gate
+            // reads the store, so refresh before handing the user back to it.
+            await fetchBalance().catch(() => {});
+            await leave("PURCHASED", exhaustedPack.code);
+        } catch (e) {
+            if (iap.isUserCancelled(e)) {
+                await recordPaywallEvent("DISMISSED", { source, planCode: exhaustedPack.code });
+            } else {
+                await recordPaywallEvent("FAILED", { source, planCode: exhaustedPack.code });
+                Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
+            }
+        } finally {
+            setBusy(false);
+        }
     };
 
     const handleContinue = async () => {
@@ -148,19 +222,20 @@ export default function PaywallScreen() {
         if (!plan || busy) return;
 
         setBusy(true);
-        await recordPaywallEvent("PURCHASE_STARTED", { planCode: plan.code });
+        await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: plan.code });
         try {
             await iap.purchaseSubscription(plan.code, plan.appleProductId);
             await fetchSubscription().catch(() => {});
+            await fetchBalance().catch(() => {});
             await leave("PURCHASED", plan.code);
         } catch (e) {
             if (iap.isUserCancelled(e)) {
                 // Cancelling the Apple sheet is not a failure and must not be
                 // reported as one — it would inflate the FAILED bucket with
                 // people who simply changed their mind at the last step.
-                await recordPaywallEvent("DISMISSED", { planCode: plan.code });
+                await recordPaywallEvent("DISMISSED", { source, planCode: plan.code });
             } else {
-                await recordPaywallEvent("FAILED", { planCode: plan.code });
+                await recordPaywallEvent("FAILED", { source, planCode: plan.code });
                 Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
             }
         } finally {
@@ -181,8 +256,9 @@ export default function PaywallScreen() {
             // had nothing to restore — they left thinking it had worked.
             const restored = useSubscriptionStore.getState().subscription?.planCode;
             if (restored && planTier(restored) !== "FREE") {
-                await recordPaywallEvent("PURCHASED", { planCode: restored });
-                router.replace("/(tabs)/studio");
+                await recordPaywallEvent("PURCHASED", { source, planCode: restored });
+                await fetchBalance().catch(() => {});
+                exit();
             } else {
                 Alert.alert(t("paywall.restore_none_title"), t("paywall.restore_none"));
             }
@@ -227,13 +303,13 @@ export default function PaywallScreen() {
                     to happen whether or not anyone touches the screen. Honours
                     reduce-motion by holding at the midpoint instead. */}
                 <View style={{ height: 230, position: "relative" }}>
-                    <Image source={require("@/assets/trial/kitchen_After.png")}
+                    <Image source={ownAfter ? { uri: ownAfter } : require("@/assets/trial/kitchen_After.png")}
                            style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                     <Animated.View style={{
                         position: "absolute", top: 0, left: 0, bottom: 0,
                         width: revealWidth, overflow: "hidden",
                     }}>
-                        <Image source={require("@/assets/trial/kitchen_Before.png")}
+                        <Image source={ownBefore ? { uri: ownBefore, headers: authHeaders } : require("@/assets/trial/kitchen_Before.png")}
                                style={{ width: heroWidth, height: "100%" }} resizeMode="cover" />
                     </Animated.View>
                     <Animated.View style={{
@@ -276,7 +352,11 @@ export default function PaywallScreen() {
                         ...theme.text.title, color: theme.color.goldMidday,
                         textAlign: "center", marginBottom: 18,
                     }}>
-                        {t("paywall.title")}
+                        {t(source === SOURCE_FIRST_RESULT
+                            ? "paywall.title_first_result"
+                            : source === SOURCE_CREDITS_EXHAUSTED
+                                ? "paywall.title_out_of_credits"
+                                : "paywall.title")}
                     </Text>
 
                     {/* ── Benefits ── */}
@@ -310,18 +390,18 @@ export default function PaywallScreen() {
                                 selected={selected === PLAN_BASE}
                                 onPress={() => {
                                     setSelected(PLAN_BASE);
-                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_BASE });
+                                    recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
                                 }}
                             />
                             <PlanCard
                                 label={t("paywall.plan_pro")}
                                 sub={t("paywall.plan_pro_sub", { credits: pro?.monthlyCredits ?? 0 })}
                                 price={priceOf(pro)}
-                                badge={bestValueCode === PLAN_PRO ? t("paywall.best_value") : null}
+                                badge={trialDays ? t("paywall.trial_badge", { days: trialDays }) : bestValueCode === PLAN_PRO ? t("paywall.best_value") : null}
                                 selected={selected === PLAN_PRO}
                                 onPress={() => {
                                     setSelected(PLAN_PRO);
-                                    recordPaywallEvent("PLAN_SELECTED", { planCode: PLAN_PRO });
+                                    recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
                                 }}
                             />
                         </View>
@@ -345,7 +425,9 @@ export default function PaywallScreen() {
                         user is about to see. */}
                     <View style={{ marginTop: 18 }}>
                         <PrimaryButton
-                            label={t("paywall.subscribe_cta", { price: priceOf(chosen) })}
+                            label={trialApplies
+                                ? t("paywall.trial_cta", { days: trialDays, price: priceOf(pro) })
+                                : t("paywall.subscribe_cta", { price: priceOf(chosen) })}
                             onPress={handleContinue}
                             loading={busy}
                             disabled={!plans}
@@ -358,8 +440,32 @@ export default function PaywallScreen() {
                         ...theme.text.caption, color: theme.color.onSurfaceMuted,
                         textAlign: "center", marginTop: 10,
                     }}>
-                        {t("paywall.renewal_note")}
+                        {trialApplies
+                            ? t("paywall.renewal_note_trial", { days: trialDays })
+                            : t("paywall.renewal_note")}
                     </Text>
+
+                    {/* Only for a wallet that has just run dry: one small, one-time
+                        purchase beside the subscription. The store's own pack
+                        screen has existed since July and sold exactly nothing,
+                        because it was never in front of anyone at the moment
+                        they wanted one more render. This is that moment. */}
+                    {exhaustedPack && (
+                        <Pressable
+                            onPress={handlePack}
+                            disabled={busy}
+                            hitSlop={8}
+                            style={{ marginTop: 14, alignItems: "center", paddingVertical: 8 }}
+                        >
+                            <Text style={{ ...theme.text.body, color: theme.color.goldMidday, textAlign: "center" }}>
+                                {t("paywall.pack_cta", {
+                                    credits: exhaustedPack.totalCredits,
+                                    price: formatProductPrice(storePrices, exhaustedPack.appleProductId,
+                                        exhaustedPack.priceCents, exhaustedPack.currency),
+                                })}
+                            </Text>
+                        </Pressable>
+                    )}
 
                     <View style={{
                         flexDirection: "row", justifyContent: "center",

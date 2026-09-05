@@ -1042,7 +1042,13 @@
         "plan_base_sub": "{{credits}} Credits pro Woche",
         "plan_pro": "Pro · Wöchentlich",
         "plan_pro_sub": "{{credits}} Credits + Style Transfer",
-        "best_value": "BESTER WERT"
+        "best_value": "BESTER WERT",
+        "title_first_result": "Gefällt's dir? Weiter geht's, ohne Wasserzeichen.",
+        "title_out_of_credits": "Keine Credits mehr — weiter gestalten",
+        "trial_badge": "{{days}} TAGE GRATIS",
+        "trial_cta": "{{days}} Tage gratis testen · dann {{price}}/Woche",
+        "renewal_note_trial": "{{days}} Tage gratis, danach wöchentliche Verlängerung bis zur Kündigung. Jederzeit in den Einstellungen kündbar — wir erinnern dich am Vortag.",
+        "pack_cta": "Nur diesen Raum fertig machen: {{credits}} Credits · {{price}}"
     },
     "source": {
         "title": "Wie hast du uns gefunden?",
@@ -1053,5 +1059,11 @@
         "web": "Google oder Web",
         "other": "Woanders",
         "skip": "Überspringen"
+    },
+    "push": {
+        "preprompt_title": "Bescheid geben?",
+        "preprompt_body": "Wir melden uns, wenn dein Gratis-Credit da ist und bevor ein Test endet. Sonst nichts.",
+        "preprompt_yes": "Ja, Bescheid geben",
+        "preprompt_later": "Jetzt nicht"
     }
 }

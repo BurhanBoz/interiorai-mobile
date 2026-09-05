@@ -19,8 +19,12 @@ import * as StoreReview from "expo-store-review";
 
 const SUCCESS_COUNT_KEY = "review_prompt_success_count";
 const ASKED_KEY = "review_prompt_asked";
-/** Ask on the Nth successfully viewed result. */
-const ASK_ON_NTH_SUCCESS = 2;
+/**
+ * Ask on the Nth successfully viewed result. 4th since 1.4.5: the 1st carries
+ * the offer, the 2nd the notification ask, the 3rd the channel question. A
+ * fourth render is also a better moment to ask for stars than a second.
+ */
+const ASK_ON_NTH_SUCCESS = 4;
 /** Let the user enjoy the result before the sheet appears. */
 const ASK_DELAY_MS = 2500;
 

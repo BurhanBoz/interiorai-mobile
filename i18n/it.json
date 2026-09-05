@@ -1042,7 +1042,13 @@
         "plan_base_sub": "{{credits}} crediti a settimana",
         "plan_pro": "Pro · Settimanale",
         "plan_pro_sub": "{{credits}} crediti + Style Transfer",
-        "best_value": "MIGLIOR VALORE"
+        "best_value": "MIGLIOR VALORE",
+        "title_first_result": "Ti piace? Continua, senza filigrana.",
+        "title_out_of_credits": "Crediti finiti: continua a progettare",
+        "trial_badge": "{{days}} GIORNI GRATIS",
+        "trial_cta": "Prova {{days}} giorni gratis · poi {{price}}/settimana",
+        "renewal_note_trial": "Gratis per {{days}} giorni, poi si rinnova ogni settimana finché non annulli. Annulla quando vuoi nelle Impostazioni: ti avvisiamo il giorno prima.",
+        "pack_cta": "Solo questa stanza: {{credits}} crediti · {{price}}"
     },
     "source": {
         "title": "Come ci hai trovato?",
@@ -1053,5 +1059,11 @@
         "web": "Google o il web",
         "other": "Altrove",
         "skip": "Salta"
+    },
+    "push": {
+        "preprompt_title": "Ti avvisiamo?",
+        "preprompt_body": "Ti avvisiamo quando il credito gratuito è pronto e prima che una prova finisca. Nient'altro.",
+        "preprompt_yes": "Sì, avvisami",
+        "preprompt_later": "Non ora"
     }
 }

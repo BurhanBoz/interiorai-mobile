@@ -1042,7 +1042,13 @@
         "plan_base_sub": "매주 {{credits}} 크레딧",
         "plan_pro": "Pro · 주간",
         "plan_pro_sub": "{{credits}} 크레딧 + 스타일 전송",
-        "best_value": "최고의 선택"
+        "best_value": "최고의 선택",
+        "title_first_result": "마음에 드나요? 워터마크 없이 계속하세요.",
+        "title_out_of_credits": "크레딧 소진 — 디자인을 계속하세요",
+        "trial_badge": "{{days}}일 무료",
+        "trial_cta": "{{days}}일 무료 체험 · 이후 주 {{price}}",
+        "renewal_note_trial": "{{days}}일 무료, 이후 해지 전까지 매주 자동 갱신. 설정에서 언제든 해지 가능 — 하루 전에 알려드려요.",
+        "pack_cta": "이 방만 완성하기: {{credits}} 크레딧 · {{price}}"
     },
     "source": {
         "title": "어떻게 알게 되셨나요?",
@@ -1053,5 +1059,11 @@
         "web": "구글이나 웹",
         "other": "그 밖의 경로",
         "skip": "건너뛰기"
+    },
+    "push": {
+        "preprompt_title": "알려드릴까요?",
+        "preprompt_body": "무료 크레딧이 준비되면, 그리고 체험 종료 전에 알려드려요. 그 외에는 보내지 않아요.",
+        "preprompt_yes": "네, 알려주세요",
+        "preprompt_later": "나중에"
     }
 }
