@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}}日間無料",
         "trial_cta": "{{days}}日間無料で試す · その後 {{price}}/週",
         "renewal_note_trial": "{{days}}日間無料、その後は解約するまで毎週自動更新。設定からいつでも解約可能 — 前日にお知らせします。",
-        "pack_cta": "この部屋だけ仕上げる：{{credits}}クレジット · {{price}}"
+        "pack_cta": "この部屋だけ仕上げる：{{credits}}クレジット · {{price}}",
+        "reload_today": "毎週のクレジットは本日補充されます。",
+        "reload_tomorrow": "毎週のクレジットは明日補充されます。",
+        "reload_in_days": "毎週のクレジットは{{days}}日後に補充されます。"
     },
     "source": {
         "title": "どこで知りましたか？",

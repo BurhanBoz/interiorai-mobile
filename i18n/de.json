@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} TAGE GRATIS",
         "trial_cta": "{{days}} Tage gratis testen · dann {{price}}/Woche",
         "renewal_note_trial": "{{days}} Tage gratis, danach wöchentliche Verlängerung bis zur Kündigung. Jederzeit in den Einstellungen kündbar — wir erinnern dich am Vortag.",
-        "pack_cta": "Nur diesen Raum fertig machen: {{credits}} Credits · {{price}}"
+        "pack_cta": "Nur diesen Raum fertig machen: {{credits}} Credits · {{price}}",
+        "reload_today": "Deine wöchentlichen Credits laden heute.",
+        "reload_tomorrow": "Deine wöchentlichen Credits laden morgen.",
+        "reload_in_days": "Deine wöchentlichen Credits laden in {{days}} Tagen."
     },
     "source": {
         "title": "Wie hast du uns gefunden?",

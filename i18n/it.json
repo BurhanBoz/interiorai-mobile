@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} GIORNI GRATIS",
         "trial_cta": "Prova {{days}} giorni gratis · poi {{price}}/settimana",
         "renewal_note_trial": "Gratis per {{days}} giorni, poi si rinnova ogni settimana finché non annulli. Annulla quando vuoi nelle Impostazioni: ti avvisiamo il giorno prima.",
-        "pack_cta": "Solo questa stanza: {{credits}} crediti · {{price}}"
+        "pack_cta": "Solo questa stanza: {{credits}} crediti · {{price}}",
+        "reload_today": "I tuoi crediti settimanali si ricaricano oggi.",
+        "reload_tomorrow": "I tuoi crediti settimanali si ricaricano domani.",
+        "reload_in_days": "I tuoi crediti settimanali si ricaricano tra {{days}} giorni."
     },
     "source": {
         "title": "Come ci hai trovato?",

@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}}일 무료",
         "trial_cta": "{{days}}일 무료 체험 · 이후 주 {{price}}",
         "renewal_note_trial": "{{days}}일 무료, 이후 해지 전까지 매주 자동 갱신. 설정에서 언제든 해지 가능 — 하루 전에 알려드려요.",
-        "pack_cta": "이 방만 완성하기: {{credits}} 크레딧 · {{price}}"
+        "pack_cta": "이 방만 완성하기: {{credits}} 크레딧 · {{price}}",
+        "reload_today": "주간 크레딧이 오늘 충전됩니다.",
+        "reload_tomorrow": "주간 크레딧이 내일 충전됩니다.",
+        "reload_in_days": "주간 크레딧이 {{days}}일 후 충전됩니다."
     },
     "source": {
         "title": "어떻게 알게 되셨나요?",

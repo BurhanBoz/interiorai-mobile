@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} JOURS GRATUITS",
         "trial_cta": "Essai gratuit {{days}} jours · puis {{price}}/semaine",
         "renewal_note_trial": "Gratuit {{days}} jours, puis renouvellement hebdomadaire jusqu'à annulation. Annulez à tout moment dans Réglages — on vous prévient la veille.",
-        "pack_cta": "Juste cette pièce : {{credits}} crédits · {{price}}"
+        "pack_cta": "Juste cette pièce : {{credits}} crédits · {{price}}",
+        "reload_today": "Vos crédits hebdomadaires se rechargent aujourd'hui.",
+        "reload_tomorrow": "Vos crédits hebdomadaires se rechargent demain.",
+        "reload_in_days": "Vos crédits hebdomadaires se rechargent dans {{days}} jours."
     },
     "source": {
         "title": "Comment nous avez-vous trouvés ?",

@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} DAYS FREE",
         "trial_cta": "Try {{days}} days free · then {{price}}/week",
         "renewal_note_trial": "Free for {{days}} days, then auto-renews weekly until cancelled. Cancel anytime in Settings — we'll remind you the day before.",
-        "pack_cta": "Just finish this room: {{credits}} credits · {{price}}"
+        "pack_cta": "Just finish this room: {{credits}} credits · {{price}}",
+        "reload_today": "Your weekly credits reload today.",
+        "reload_tomorrow": "Your weekly credits reload tomorrow.",
+        "reload_in_days": "Your weekly credits reload in {{days}} days."
     },
     "source": {
         "title": "How did you find us?",

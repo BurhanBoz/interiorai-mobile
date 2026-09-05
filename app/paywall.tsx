@@ -19,7 +19,7 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
-import { planTier } from "@/utils/planTier";
+import { planTier, tierRank } from "@/utils/planTier";
 
 /**
  * First-open paywall (2026-08-31).
@@ -88,6 +88,7 @@ export default function PaywallScreen() {
     const plans = useSubscriptionStore((s) => s.plans);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+    const subscription = useSubscriptionStore((s) => s.subscription);
     const storePrices = useStorePricesStore((s) => s.prices);
     const packs = useCreditPacksStore((s) => s.packs);
     const fetchPacks = useCreditPacksStore((s) => s.fetchPacks);
@@ -151,7 +152,43 @@ export default function PaywallScreen() {
 
     const pro = useMemo(() => plans?.find((p) => p.code === PLAN_PRO), [plans]);
     const base = useMemo(() => plans?.find((p) => p.code === PLAN_BASE), [plans]);
-    const chosen = selected === PLAN_BASE ? base : pro;
+
+    /**
+     * Never sell someone what they already own.
+     *
+     * <p>The out-of-credits placement can open for a PAYING subscriber — a PRO
+     * week is 100 credits and they are spendable in an afternoon. Before this,
+     * that user was shown "Subscribe · $8.99" for the plan they were already
+     * on, and Apple answered the tap with "You're currently subscribed to
+     * this": a dead end at the exact moment they wanted to keep working.
+     *
+     * <p>So the offer is filtered to tiers strictly ABOVE the current one. A
+     * free user still sees both plans, a Base subscriber sees only the Pro
+     * upgrade, and a Pro subscriber sees no subscription at all — for them the
+     * honest answer is the one-time pack plus the date their weekly credits
+     * come back, which is what {@link reloadNote} says.
+     */
+    const currentRank = tierRank(subscription?.planCode);
+    const offersBase = !!base && tierRank(PLAN_BASE) > currentRank;
+    const offersPro = !!pro && tierRank(PLAN_PRO) > currentRank;
+    const hasUpgrade = offersBase || offersPro;
+    // Keep the selection inside what is actually on offer: a Base subscriber
+    // must not carry the default PRO selection into a CTA that then prices the
+    // wrong plan, and vice versa.
+    const effectiveSelected = offersPro && offersBase
+        ? selected
+        : offersPro ? PLAN_PRO : PLAN_BASE;
+    const chosen = effectiveSelected === PLAN_BASE ? base : pro;
+
+    /** When the subscriber's own weekly allocation comes back. */
+    const reloadNote = useMemo(() => {
+        if (hasUpgrade || !subscription?.currentPeriodEnd) return null;
+        const diffMs = new Date(subscription.currentPeriodEnd).getTime() - Date.now();
+        const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        if (days === 0) return t("paywall.reload_today");
+        if (days === 1) return t("paywall.reload_tomorrow");
+        return t("paywall.reload_in_days", { days });
+    }, [hasUpgrade, subscription?.currentPeriodEnd, t]);
 
     /**
      * Which plan gives more credit per unit of money — computed from the live
@@ -189,7 +226,7 @@ export default function PaywallScreen() {
 
     /** Trial the STORE reports on the PRO product — never a build-time assumption. */
     const trialDays = pro?.appleProductId ? storePrices[pro.appleProductId]?.introTrialDays ?? null : null;
-    const trialApplies = !!trialDays && selected === PLAN_PRO;
+    const trialApplies = !!trialDays && effectiveSelected === PLAN_PRO && offersPro;
 
     const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
         ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
@@ -352,14 +389,18 @@ export default function PaywallScreen() {
                         ...theme.text.title, color: theme.color.goldMidday,
                         textAlign: "center", marginBottom: 18,
                     }}>
-                        {t(source === SOURCE_FIRST_RESULT
+                        {t(!hasUpgrade
+                            ? "paywall.title_out_of_credits"
+                            : source === SOURCE_FIRST_RESULT
                             ? "paywall.title_first_result"
                             : source === SOURCE_CREDITS_EXHAUSTED
                                 ? "paywall.title_out_of_credits"
                                 : "paywall.title")}
                     </Text>
 
-                    {/* ── Benefits ── */}
+                    {/* ── Benefits ── (only when something is on offer; a top-tier
+                        subscriber already has all of them) */}
+                    {hasUpgrade && (
                     <View style={{ gap: 10, marginBottom: 20 }}>
                         {benefits.map((b) => (
                             <View key={b.key} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -376,34 +417,39 @@ export default function PaywallScreen() {
                             </View>
                         ))}
                     </View>
+                    )}
 
                     {/* ── Plans ── */}
                     {!plans ? (
                         <ActivityIndicator color={theme.color.goldContainer} style={{ marginVertical: 30 }} />
                     ) : (
                         <View style={{ gap: 12 }}>
+                            {offersBase && (
                             <PlanCard
                                 label={t("paywall.plan_base")}
                                 sub={t("paywall.plan_base_sub", { credits: base?.monthlyCredits ?? 0 })}
                                 price={priceOf(base)}
                                 badge={bestValueCode === PLAN_BASE ? t("paywall.best_value") : null}
-                                selected={selected === PLAN_BASE}
+                                selected={effectiveSelected === PLAN_BASE}
                                 onPress={() => {
                                     setSelected(PLAN_BASE);
                                     recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
                                 }}
                             />
+                            )}
+                            {offersPro && (
                             <PlanCard
                                 label={t("paywall.plan_pro")}
                                 sub={t("paywall.plan_pro_sub", { credits: pro?.monthlyCredits ?? 0 })}
                                 price={priceOf(pro)}
                                 badge={trialDays ? t("paywall.trial_badge", { days: trialDays }) : bestValueCode === PLAN_PRO ? t("paywall.best_value") : null}
-                                selected={selected === PLAN_PRO}
+                                selected={effectiveSelected === PLAN_PRO}
                                 onPress={() => {
                                     setSelected(PLAN_PRO);
                                     recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
                                 }}
                             />
+                            )}
                         </View>
                     )}
 
@@ -423,16 +469,18 @@ export default function PaywallScreen() {
                         terms printed beneath it. The price is interpolated live
                         from the storefront, so it always matches the sheet the
                         user is about to see. */}
-                    <View style={{ marginTop: 18 }}>
-                        <PrimaryButton
-                            label={trialApplies
-                                ? t("paywall.trial_cta", { days: trialDays, price: priceOf(pro) })
-                                : t("paywall.subscribe_cta", { price: priceOf(chosen) })}
-                            onPress={handleContinue}
-                            loading={busy}
-                            disabled={!plans}
-                        />
-                    </View>
+                    {hasUpgrade && (
+                        <View style={{ marginTop: 18 }}>
+                            <PrimaryButton
+                                label={trialApplies
+                                    ? t("paywall.trial_cta", { days: trialDays, price: priceOf(pro) })
+                                    : t("paywall.subscribe_cta", { price: priceOf(chosen) })}
+                                onPress={handleContinue}
+                                loading={busy}
+                                disabled={!plans}
+                            />
+                        </View>
+                    )}
 
                     {/* Renewal terms in plain words — Apple 3.1.2 wants the user to
                         know what recurs before they tap, not after. */}
@@ -440,9 +488,11 @@ export default function PaywallScreen() {
                         ...theme.text.caption, color: theme.color.onSurfaceMuted,
                         textAlign: "center", marginTop: 10,
                     }}>
-                        {trialApplies
-                            ? t("paywall.renewal_note_trial", { days: trialDays })
-                            : t("paywall.renewal_note")}
+                        {!hasUpgrade
+                            ? reloadNote
+                            : trialApplies
+                                ? t("paywall.renewal_note_trial", { days: trialDays })
+                                : t("paywall.renewal_note")}
                     </Text>
 
                     {/* Only for a wallet that has just run dry: one small, one-time
@@ -450,7 +500,21 @@ export default function PaywallScreen() {
                         screen has existed since July and sold exactly nothing,
                         because it was never in front of anyone at the moment
                         they wanted one more render. This is that moment. */}
-                    {exhaustedPack && (
+                    {exhaustedPack && !hasUpgrade && (
+                        <View style={{ marginTop: 18 }}>
+                            <PrimaryButton
+                                label={t("paywall.pack_cta", {
+                                    credits: exhaustedPack.totalCredits,
+                                    price: formatProductPrice(storePrices, exhaustedPack.appleProductId,
+                                        exhaustedPack.priceCents, exhaustedPack.currency),
+                                })}
+                                onPress={handlePack}
+                                loading={busy}
+                            />
+                        </View>
+                    )}
+
+                    {exhaustedPack && hasUpgrade && (
                         <Pressable
                             onPress={handlePack}
                             disabled={busy}

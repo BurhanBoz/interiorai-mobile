@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} GÜN ÜCRETSİZ",
         "trial_cta": "{{days}} gün ücretsiz dene · sonra {{price}}/hafta",
         "renewal_note_trial": "{{days}} gün ücretsiz, sonra iptal edilene dek haftalık yenilenir. Ayarlar'dan istediğin an iptal edebilirsin — bir gün önce hatırlatırız.",
-        "pack_cta": "Sadece bu odayı bitir: {{credits}} kredi · {{price}}"
+        "pack_cta": "Sadece bu odayı bitir: {{credits}} kredi · {{price}}",
+        "reload_today": "Haftalık kredin bugün yenileniyor.",
+        "reload_tomorrow": "Haftalık kredin yarın yenileniyor.",
+        "reload_in_days": "Haftalık kredin {{days}} gün sonra yenileniyor."
     },
     "source": {
         "title": "Bizi nereden buldun?",

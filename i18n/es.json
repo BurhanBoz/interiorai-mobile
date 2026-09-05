@@ -1051,7 +1051,10 @@
         "trial_badge": "{{days}} DÍAS GRATIS",
         "trial_cta": "Prueba {{days}} días gratis · luego {{price}}/semana",
         "renewal_note_trial": "Gratis {{days}} días, luego se renueva cada semana hasta que canceles. Cancela cuando quieras en Ajustes; te avisamos el día antes.",
-        "pack_cta": "Solo esta habitación: {{credits}} créditos · {{price}}"
+        "pack_cta": "Solo esta habitación: {{credits}} créditos · {{price}}",
+        "reload_today": "Tus créditos semanales se recargan hoy.",
+        "reload_tomorrow": "Tus créditos semanales se recargan mañana.",
+        "reload_in_days": "Tus créditos semanales se recargan en {{days}} días."
     },
     "source": {
         "title": "¿Cómo nos encontraste?",
