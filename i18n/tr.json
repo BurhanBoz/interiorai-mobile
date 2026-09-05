@@ -374,9 +374,9 @@
         "delete_failed": "Hesap silinemedi.",
         "upgrade": "Yükselt",
         "version": "Sürüm {{version}}",
-        "trial_ends_today": "Deneme bugün bitiyor",
-        "trial_ends_tomorrow": "Deneme yarın bitiyor",
-        "trial_ends_in_days": "Deneme {{days}} gün içinde bitiyor",
+        "trial_ends_today": "deneme bugün bitiyor",
+        "trial_ends_tomorrow": "deneme yarın bitiyor",
+        "trial_ends_in_days": "deneme {{days}} gün sonra bitiyor",
         "free_drip_caption": "Kredin mi bitti? Base ya da Pro ile devam et",
         "annual_plan_tag": "Yıllık plan",
         "credits_refresh_today": "Sonraki krediler bugün",
@@ -384,7 +384,9 @@
         "credits_refresh_in_days": "Sonraki krediler {{days}} gün içinde",
         "pro_trial": "PRO DENEME",
         "secure_account": "Hesabını güvenceye al",
-        "secure_account_hint": "E-posta ekle — tasarımların ve satın alımların güvende olsun"
+        "secure_account_hint": "E-posta ekle — tasarımların ve satın alımların güvende olsun",
+        "trial_gift_label": "Hediye deneme kredisi",
+        "trial_gift_note": "Deneme bitince haftalık {{credits}} kredin yüklenir — kalan hediye krediler üstüne eklenir."
     },
     "plans": {
         "title": "Planını Seç",
@@ -483,7 +485,8 @@
         "toggle_weekly": "HAFTALIK",
         "per_week": "/hafta",
         "plan_subtitle_weekly": "Haftada {{credits}} kredi · kullanılmayan birikir",
-        "row_weekly_credits": "Haftalık kredi"
+        "row_weekly_credits": "Haftalık kredi",
+        "weekly_credits_label": "haftalık kredi"
     },
     "credits_bridge": {
         "or_buy_credits": "Ya da tek seferlik kredi al"

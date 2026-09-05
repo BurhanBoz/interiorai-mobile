@@ -374,9 +374,9 @@
         "delete_failed": "La suppression du compte a échoué.",
         "upgrade": "Passer à l'offre supérieure",
         "version": "Version {{version}}",
-        "trial_ends_today": "L'essai se termine aujourd'hui",
-        "trial_ends_tomorrow": "L'essai se termine demain",
-        "trial_ends_in_days": "L'essai se termine dans {{days}} jours",
+        "trial_ends_today": "l'essai se termine aujourd'hui",
+        "trial_ends_tomorrow": "l'essai se termine demain",
+        "trial_ends_in_days": "l'essai se termine dans {{days}} jours",
         "free_drip_caption": "Plus de crédits ? Continuez avec Base ou Pro",
         "annual_plan_tag": "Offre annuelle",
         "credits_refresh_today": "Prochains crédits aujourd'hui",
@@ -384,7 +384,9 @@
         "credits_refresh_in_days": "Prochains crédits dans {{days}} jours",
         "pro_trial": "ESSAI PRO",
         "secure_account": "Sécurisez votre compte",
-        "secure_account_hint": "Ajoutez un e-mail — vos créations et vos achats resteront protégés"
+        "secure_account_hint": "Ajoutez un e-mail — vos créations et vos achats resteront protégés",
+        "trial_gift_label": "Crédits d'essai offerts",
+        "trial_gift_note": "À la fin de l'essai, vos {{credits}} crédits hebdomadaires arrivent — les crédits offerts restants s'y ajoutent."
     },
     "plans": {
         "title": "Choisissez votre offre",
@@ -483,7 +485,8 @@
         "toggle_weekly": "HEBDO",
         "per_week": "/semaine",
         "plan_subtitle_weekly": "{{credits}} crédits chaque semaine · les non utilisés se cumulent",
-        "row_weekly_credits": "Crédits hebdomadaires"
+        "row_weekly_credits": "Crédits hebdomadaires",
+        "weekly_credits_label": "crédits hebdomadaires"
     },
     "credits_bridge": {
         "or_buy_credits": "Ou achetez des crédits à l'unité"

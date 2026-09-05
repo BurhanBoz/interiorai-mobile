@@ -454,8 +454,20 @@ export default function PaywallScreen() {
                         <Pressable
                             onPress={handlePack}
                             disabled={busy}
-                            hitSlop={8}
-                            style={{ marginTop: 14, alignItems: "center", paddingVertical: 8 }}
+                            accessibilityRole="button"
+                            style={({ pressed }) => ({
+                                marginTop: 14,
+                                paddingVertical: 14,
+                                paddingHorizontal: 16,
+                                borderRadius: 14,
+                                borderWidth: 1,
+                                borderColor: "rgba(225,195,155,0.38)",
+                                backgroundColor: pressed
+                                    ? "rgba(225,195,155,0.16)"
+                                    : "rgba(225,195,155,0.07)",
+                                alignItems: "center",
+                                opacity: busy ? 0.6 : 1,
+                            })}
                         >
                             <Text style={{ ...theme.text.body, color: theme.color.goldMidday, textAlign: "center" }}>
                                 {t("paywall.pack_cta", {

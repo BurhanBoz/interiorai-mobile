@@ -374,9 +374,9 @@
         "delete_failed": "アカウントの削除に失敗しました。",
         "upgrade": "今すぐアップグレード",
         "version": "バージョン {{version}}",
-        "trial_ends_today": "トライアル本日終了",
-        "trial_ends_tomorrow": "トライアル明日終了",
-        "trial_ends_in_days": "トライアル{{days}}日後終了",
+        "trial_ends_today": "トライアルは本日終了",
+        "trial_ends_tomorrow": "トライアルは明日終了",
+        "trial_ends_in_days": "トライアルはあと{{days}}日",
         "free_drip_caption": "クレジット切れ？BaseまたはProで続行",
         "annual_plan_tag": "年間プラン",
         "credits_refresh_today": "次のクレジットは本日",
@@ -384,7 +384,9 @@
         "credits_refresh_in_days": "次のクレジットは{{days}}日後",
         "pro_trial": "PRO トライアル",
         "secure_account": "アカウントを保護",
-        "secure_account_hint": "メール追加でデザインと購入を安全に"
+        "secure_account_hint": "メール追加でデザインと購入を安全に",
+        "trial_gift_label": "プレゼントのトライアルクレジット",
+        "trial_gift_note": "トライアル終了後に毎週の{{credits}}クレジットが届きます。残ったプレゼント分は繰り越されます。"
     },
     "plans": {
         "title": "プランを選択",
@@ -483,7 +485,8 @@
         "toggle_weekly": "週額",
         "per_week": "/週",
         "plan_subtitle_weekly": "毎週{{credits}}クレジット · 未使用分は繰り越し",
-        "row_weekly_credits": "週間クレジット"
+        "row_weekly_credits": "週間クレジット",
+        "weekly_credits_label": "毎週のクレジット"
     },
     "credits": {
         "title": "クレジット",

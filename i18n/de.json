@@ -374,9 +374,9 @@
         "delete_failed": "Konto konnte nicht gelöscht werden.",
         "upgrade": "Jetzt upgraden",
         "version": "Version {{version}}",
-        "trial_ends_today": "Testphase endet heute",
-        "trial_ends_tomorrow": "Testphase endet morgen",
-        "trial_ends_in_days": "Testphase endet in {{days}} Tagen",
+        "trial_ends_today": "Test endet heute",
+        "trial_ends_tomorrow": "Test endet morgen",
+        "trial_ends_in_days": "Test endet in {{days}} Tagen",
         "free_drip_caption": "Keine Credits mehr? Weiter mit Base oder Pro",
         "annual_plan_tag": "Jahresabo",
         "credits_refresh_today": "Nächste Credits heute",
@@ -384,7 +384,9 @@
         "credits_refresh_in_days": "Nächste Credits in {{days}} Tagen",
         "pro_trial": "PRO-TESTPHASE",
         "secure_account": "Konto sichern",
-        "secure_account_hint": "E-Mail hinzufügen — Designs und Käufe sichern"
+        "secure_account_hint": "E-Mail hinzufügen — Designs und Käufe sichern",
+        "trial_gift_label": "Geschenkte Test-Credits",
+        "trial_gift_note": "Nach dem Test laden deine wöchentlichen {{credits}} Credits — übrige Geschenk-Credits bleiben erhalten."
     },
     "plans": {
         "title": "Tarif wählen",
@@ -483,7 +485,8 @@
         "toggle_weekly": "WÖCHENTLICH",
         "per_week": "/Woche",
         "plan_subtitle_weekly": "{{credits}} Credits pro Woche · ungenutzte bleiben",
-        "row_weekly_credits": "Wöchentliche Credits"
+        "row_weekly_credits": "Wöchentliche Credits",
+        "weekly_credits_label": "wöchentliche Credits"
     },
     "credits": {
         "title": "Credits",

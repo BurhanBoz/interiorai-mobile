@@ -384,7 +384,9 @@
         "credits_refresh_in_days": "الأرصدة التالية خلال {{days}} يوم",
         "pro_trial": "تجربة PRO",
         "secure_account": "أمّن حسابك",
-        "secure_account_hint": "أضف بريدك — احفظ تصاميمك ومشترياتك"
+        "secure_account_hint": "أضف بريدك — احفظ تصاميمك ومشترياتك",
+        "trial_gift_label": "أرصدة تجربة هدية",
+        "trial_gift_note": "عند انتهاء التجربة يصلك رصيدك الأسبوعي {{credits}} — وتُضاف الأرصدة الهدية المتبقية إليه."
     },
     "plans": {
         "title": "اختر خطتك",
@@ -483,7 +485,8 @@
         "toggle_weekly": "أسبوعي",
         "per_week": "/أسبوع",
         "plan_subtitle_weekly": "{{credits}} رصيدًا كل أسبوع · غير المستخدم يتراكم",
-        "row_weekly_credits": "أرصدة أسبوعية"
+        "row_weekly_credits": "أرصدة أسبوعية",
+        "weekly_credits_label": "أرصدة أسبوعية"
     },
     "credits": {
         "title": "الرصيد",

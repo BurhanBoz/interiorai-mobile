@@ -204,6 +204,8 @@ export default function ProfileScreen() {
   const planLabel = isOnTrial
     ? t("profile.pro_trial", { defaultValue: "PRO TRIAL" })
     : (subscription?.planName ?? (isFree ? t("profile.free") : planCode));
+  // Computed below subscription state; Apple-trial variant appended after
+  // isAppleTrial exists (declaration order), see badge render.
 
   // Trial countdown — "7d left", "1d left", "ends today". Replaces the
   // misleading "renews in 30 days" copy during the welcome bonus window
@@ -251,12 +253,28 @@ export default function ProfileScreen() {
 
   const isAnnual = isAnnualPlan(subscription?.planCode);
 
+  // Apple free trial (V72) — a paid-tier subscription still inside its trial
+  // period. Its wallet holds the capped GIFT credits (15), not the plan
+  // allocation, so the card must not imply "15 of 100" or promise a weekly
+  // renewal that is actually the conversion. Parallel to the welcome-trial
+  // state above, but sourced from the store via subscription.trialEndsAt.
+  const appleTrialEndsAt = subscription?.trialEndsAt ?? null;
+  const isAppleTrial = !isOnTrial && !isFree && !!appleTrialEndsAt;
+  const appleTrialEndsText = useMemo(() => {
+    if (!isAppleTrial || !appleTrialEndsAt) return null;
+    const diffMs = new Date(appleTrialEndsAt).getTime() - Date.now();
+    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    if (days === 0) return t("profile.trial_ends_today", { defaultValue: "trial ends today" });
+    if (days === 1) return t("profile.trial_ends_tomorrow", { defaultValue: "trial ends tomorrow" });
+    return t("profile.trial_ends_in_days", { days, defaultValue: `trial ends in ${days} days` });
+  }, [isAppleTrial, appleTrialEndsAt, t]);
+
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
   // The "X / Y" divisor only makes sense for paid plans where Y is the
   // monthly allocation. FREE uses daily drip (cap=7/10) — showing "X / 10"
   // implies a monthly ceiling that doesn't match the actual mechanic, so we
   // suppress the divisor for FREE + trial. Paid users still see "150 / 150".
-  const showCreditDivisor = !isFree && !isOnTrial && monthlyLimit > 0;
+  const showCreditDivisor = !isFree && !isOnTrial && !isAppleTrial && monthlyLimit > 0;
 
   const handleDeleteAccount = () => {
     router.push("/settings/delete-account");
@@ -421,16 +439,33 @@ export default function ProfileScreen() {
             >
               {isOnTrial
                 ? renewalText /* "Trial ends in 7 days" */
-                : isFree
+                : isAppleTrial
+                  ? `${t("profile.trial_gift_label", { defaultValue: "Gift trial credits" })}${appleTrialEndsText ? ` · ${appleTrialEndsText}` : ""}`
+                  : isFree
                   ? t("profile.free_drip_caption", {
                       defaultValue: "1 credit/day + 3 every Monday",
                     })
                   : showCreditDivisor
-                    ? `${t("plans.monthly_credits", { defaultValue: "monthly credits" })}${isAnnual ? ` · ${t("profile.annual_plan_tag", { defaultValue: "Annual plan" })}` : ""}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
+                    ? `${t(subscription?.planCode?.includes("WEEKLY") ? "plans.weekly_credits_label" : "plans.monthly_credits", { defaultValue: "monthly credits" })}${isAnnual ? ` · ${t("profile.annual_plan_tag", { defaultValue: "Annual plan" })}` : ""}${renewalText ? ` · ${renewalText.toLowerCase()}` : ""}`
                     : t("plans.credits_never_expire", {
                         defaultValue: "Credits never expire",
                       })}
             </Text>
+            {isAppleTrial ? (
+              <Text
+                style={{
+                  ...theme.text.caption,
+                  color: theme.color.onSurfaceMuted,
+                  marginTop: 4,
+                }}
+              >
+                {t("profile.trial_gift_note", {
+                  credits: monthlyLimit,
+                  defaultValue:
+                    "When the trial ends your weekly credits load — leftover gift credits carry over.",
+                })}
+              </Text>
+            ) : null}
 
             {/* Two gold CTAs, flex:1 each — no fullWidth prop because the
                 Button primitive's width:100% fights with the flex share and

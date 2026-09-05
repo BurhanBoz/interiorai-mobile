@@ -216,6 +216,8 @@ export interface SubscriptionResponse {
     createdAt: string;
     /** Apple-deferred plan change target — null/absent when none pending. */
     scheduledPlanCode?: string | null;
+    /** Apple free-trial end (V72); null when converted or never a trial. */
+    trialEndsAt?: string | null;
     /** ISO instant when the scheduled change takes effect. */
     scheduledChangeAt?: string | null;
 }
