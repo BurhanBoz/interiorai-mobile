@@ -173,7 +173,12 @@ export default function PaywallScreen() {
     const currentRank = tierRank(subscription?.planCode);
     const offersBase = !!base && tierRank(PLAN_BASE) > currentRank;
     const offersPro = !!pro && tierRank(PLAN_PRO) > currentRank;
-    const hasUpgrade = offersBase || offersPro;
+    // Until the catalog has loaded, both offers read false for the wrong
+    // reason (no plans to offer, not a subscriber who owns them) — and the
+    // no-upgrade layout would flash its "out of credits" title at everyone
+    // on a slow network. Default to the upgrade view while loading; the CTA
+    // is disabled until plans arrive anyway.
+    const hasUpgrade = !plans || offersBase || offersPro;
     // Keep the selection inside what is actually on offer: a Base subscriber
     // must not carry the default PRO selection into a CTA that then prices the
     // wrong plan, and vice versa.

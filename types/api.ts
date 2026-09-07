@@ -218,6 +218,8 @@ export interface SubscriptionResponse {
     scheduledPlanCode?: string | null;
     /** Apple free-trial end (V72); null when converted or never a trial. */
     trialEndsAt?: string | null;
+    /** Server truth: this org has at least one COMPLETED render (2026-09-07). */
+    hasGenerated?: boolean | null;
     /** ISO instant when the scheduled change takes effect. */
     scheduledChangeAt?: string | null;
 }

@@ -122,11 +122,17 @@ export default function RootIndex() {
     if (__DEV__) {
       // One line per decision — this gate has now been debugged blind twice.
       console.log("[gate]", { subscriptionResolved, plan: subscription?.planCode,
-        metFirstOffer, waitedLongEnough });
+        metFirstOffer, serverHasGenerated: subscription?.hasGenerated, waitedLongEnough });
     }
+    // Device flag OR server truth. The flag answers instantly and covers the
+    // second cold start after a first render even if that render's job row
+    // vanished; the server copy survives what the device cannot — deletion,
+    // sign-out, a new phone. Both found the hard way (founder devices,
+    // 2026-09-06/07).
+    const metOffer = metFirstOffer === true || subscription?.hasGenerated === true;
     if (subscriptionResolved
         && !tierAtLeast(subscription?.planCode, "BASE")
-        && metFirstOffer === true) {
+        && metOffer) {
       offerShownThisLaunch = true;
       return <Redirect href={{ pathname: "/paywall", params: { source: "APP_OPEN" } }} />;
     }
