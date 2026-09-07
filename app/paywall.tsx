@@ -79,6 +79,8 @@ const PLAN_BASE = "BASE_WEEKLY";
 const SOURCE_ONBOARDING = "ONBOARDING";
 const SOURCE_FIRST_RESULT = "FIRST_RESULT";
 const SOURCE_CREDITS_EXHAUSTED = "CREDITS_EXHAUSTED";
+/** Return visit of a free user who already met the first-result offer. */
+const SOURCE_APP_OPEN = "APP_OPEN";
 
 /** The low-commitment step, offered only to someone who has just run dry. */
 const EXHAUSTED_PACK_CODE = "CREDITS_20";
@@ -215,8 +217,14 @@ export default function PaywallScreen() {
      * user was on is exactly where they should land: go back.
      */
     const exit = () => {
-        if (source === SOURCE_ONBOARDING) router.replace("/(tabs)/studio");
-        else router.back();
+        // Opened as the first screen of the session (launch gate) there is
+        // nothing behind this to go back to; opened from inside the app, the
+        // screen the user was on is exactly where they should land.
+        if (source === SOURCE_ONBOARDING || source === SOURCE_APP_OPEN) {
+            router.replace("/(tabs)/studio");
+        } else {
+            router.back();
+        }
     };
 
     const leave = async (event: "DISMISSED" | "PURCHASED", planCode?: string) => {

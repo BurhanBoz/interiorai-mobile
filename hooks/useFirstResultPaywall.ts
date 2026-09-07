@@ -9,7 +9,14 @@ import type { JobResponse } from "@/types/api";
 /** Let the reveal land before asking for anything. */
 const DELAY_MS = 2500;
 
-const flagFor = (userId: string) => `first_result_paywall:${userId}`;
+/**
+ * Exported because the root gate reads the SAME flag to decide the
+ * return-visit offer: "has this person already met the first-result offer"
+ * is one question, and two hand-written copies of the key is how the two
+ * askers drift apart.
+ */
+export const firstResultOfferFlag = (userId: string) => `first_result_paywall:${userId}`;
+const flagFor = firstResultOfferFlag;
 
 /**
  * The offer, at the moment it has something to point at.

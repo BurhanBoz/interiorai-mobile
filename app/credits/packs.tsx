@@ -7,6 +7,7 @@ import {
     Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { recordPaywallEvent } from "@/services/telemetry";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -364,8 +365,12 @@ export default function CreditPacksScreen() {
     }, []);
 
     const handlePurchase = async (packCode: string) => {
+        // Same funnel table as the paywall (V65); this screen's sales were
+        // invisible there until 2026-09-06.
+        await recordPaywallEvent("PURCHASE_STARTED", { source: "PACKS_SCREEN", planCode: packCode });
         try {
             const result = await purchase(packCode);
+            recordPaywallEvent("PURCHASED", { source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
             // Webhook grant hasn't reconciled within the poll window — the
             // purchase went through on Apple's side, credits land shortly.
             const pending = (result as { pending?: boolean }).pending
@@ -385,6 +390,7 @@ export default function CreditPacksScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
+            recordPaywallEvent("FAILED", { source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
             const status = (e as any)?.response?.status;
             const message =
                 status === 429

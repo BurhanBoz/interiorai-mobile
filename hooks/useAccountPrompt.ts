@@ -17,7 +17,7 @@ import { useAuthStore } from "@/stores/authStore";
 
 const COUNT_KEY = "account_prompt_success_count";
 const ASKED_KEY = "account_prompt_asked";
-const ASK_ON_NTH = 3;
+const ASK_ON_NTH = 5;
 const DELAY_MS = 2500;
 
 export function useAccountPrompt(jobSucceeded: boolean) {

@@ -13,6 +13,7 @@ import { useStorePricesStore } from "@/stores/storePricesStore";
 import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import * as iap from "@/services/iap";
+import { recordPaywallEvent } from "@/services/telemetry";
 import type { PlanResponse } from "@/types/api";
 import { SubscriptionDisclosure } from "@/components/ui/SubscriptionDisclosure";
 
@@ -122,6 +123,11 @@ export default function PlanConfirmScreen() {
     const handleConfirm = async () => {
         if (!plan) return;
         setSubmitting(true);
+        // Same funnel table as the paywall (V65). Until 2026-09-06 purchases
+        // made from this screen were invisible in paywall_events, so the one
+        // report every pricing decision leans on could not say where a sale
+        // came from.
+        await recordPaywallEvent("PURCHASE_STARTED", { source: "PLANS_SCREEN", planCode: plan.code });
         try {
             // iap.purchaseSubscription: dummy mode → backend activate-dummy;
             // RC mode → Apple StoreKit payment sheet. The authoritative
@@ -161,6 +167,8 @@ export default function PlanConfirmScreen() {
                 }
                 await new Promise((r) => setTimeout(r, 1500));
             }
+
+            await recordPaywallEvent("PURCHASED", { source: "PLANS_SCREEN", planCode: plan.code });
 
             const scheduledDate = (() => {
                 const iso = useSubscriptionStore.getState().subscription?.scheduledChangeAt
@@ -213,9 +221,13 @@ export default function PlanConfirmScreen() {
                 ],
             );
         } catch (e: unknown) {
+            if (!iap.isUserCancelled(e)) {
+                recordPaywallEvent("FAILED", { source: "PLANS_SCREEN", planCode: plan.code }).catch(() => {});
+            }
             // User tapped Cancel in the Apple payment sheet — quiet dismiss,
             // no error alert needed (Apple already showed the cancel UI).
             if (iap.isUserCancelled(e)) {
+                recordPaywallEvent("DISMISSED", { source: "PLANS_SCREEN", planCode: plan.code }).catch(() => {});
                 return;
             }
             const status = (e as any)?.response?.status;
