@@ -30,10 +30,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 /** Keychain keys may hold alphanumerics, ".", "-" and "_" — the "." namespaces ours. */
 const NS = "oneshot.";
 
+/**
+ * Keychain rejects every character outside [A-Za-z0-9._-] — and rejects means
+ * THROWS, which this module swallows by design. The per-user flags are built
+ * as "name:<uuid>", so the colon quietly voided the primary store for all of
+ * them: every such flag lived only in the AsyncStorage fallback, which dies
+ * with an app deletion — the exact lifetime the Keychain was chosen to avoid.
+ * Found 2026-09-06 while debugging the return-visit offer. AsyncStorage keeps
+ * the RAW key (it has no such restriction, and legacy values live under it);
+ * only the Keychain side is mapped.
+ */
+const keychainSafe = (key: string) => key.replace(/[^A-Za-z0-9._-]/g, "_");
+
 /** True when this flag has already been recorded on this device. */
 export async function isFlagSet(key: string): Promise<boolean> {
     try {
-        if ((await SecureStore.getItemAsync(NS + key)) != null) return true;
+        if ((await SecureStore.getItemAsync(NS + keychainSafe(key))) != null) return true;
     } catch {
         // Keychain unreadable (locked device, simulator quirk) — fall through
         // to the legacy store rather than declaring the flag unset.
@@ -41,7 +53,7 @@ export async function isFlagSet(key: string): Promise<boolean> {
     try {
         if ((await AsyncStorage.getItem(key)) != null) {
             // Legacy value found: promote it so this is the last time we look.
-            await SecureStore.setItemAsync(NS + key, "1").catch(() => {});
+            await SecureStore.setItemAsync(NS + keychainSafe(key), "1").catch(() => {});
             return true;
         }
     } catch {
@@ -53,7 +65,7 @@ export async function isFlagSet(key: string): Promise<boolean> {
 /** Record the flag. Writes both stores so a downgrade to 1.1.0 still sees it. */
 export async function setFlag(key: string): Promise<void> {
     await Promise.allSettled([
-        SecureStore.setItemAsync(NS + key, "1"),
+        SecureStore.setItemAsync(NS + keychainSafe(key), "1"),
         AsyncStorage.setItem(key, "1"),
     ]);
 }
@@ -61,7 +73,7 @@ export async function setFlag(key: string): Promise<void> {
 /** Read an integer counter (0 when absent or unparseable). */
 export async function readCounter(key: string): Promise<number> {
     try {
-        const raw = (await SecureStore.getItemAsync(NS + key))
+        const raw = (await SecureStore.getItemAsync(NS + keychainSafe(key)))
             ?? (await AsyncStorage.getItem(key));
         const n = parseInt(raw ?? "0", 10);
         return Number.isFinite(n) ? n : 0;
@@ -73,7 +85,7 @@ export async function readCounter(key: string): Promise<number> {
 /** Persist an integer counter to both stores. */
 export async function writeCounter(key: string, value: number): Promise<void> {
     await Promise.allSettled([
-        SecureStore.setItemAsync(NS + key, String(value)),
+        SecureStore.setItemAsync(NS + keychainSafe(key), String(value)),
         AsyncStorage.setItem(key, String(value)),
     ]);
 }

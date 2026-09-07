@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { tierAtLeast } from "@/utils/planTier";
@@ -44,9 +45,9 @@ let offerShownThisLaunch = false;
 export default function RootIndex() {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const isLoading = useAuthStore(s => s.isLoading);
-  const userId = useAuthStore(s => s.user?.id ?? null);
   const subscription = useSubscriptionStore(s => s.subscription);
   const subscriptionResolved = useSubscriptionStore(s => s.subscriptionResolved);
+  const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
 
   const [waitedLongEnough, setWaitedLongEnough] = useState(false);
   // null = not read yet; the flag read is async (Keychain) and the redirect
@@ -59,13 +60,40 @@ export default function RootIndex() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!isAuthenticated) return;
     let cancelled = false;
-    isFlagSet(firstResultOfferFlag(userId))
-      .then(v => { if (!cancelled) setMetFirstOffer(v); })
-      .catch(() => { if (!cancelled) setMetFirstOffer(false); });
+    (async () => {
+      try {
+        // The id comes from the Keychain, NOT from authStore.user: hydrate()
+        // marks the session authenticated immediately and fills the user
+        // object from a background /me call. The first version of this gate
+        // waited on that object — on a cold start it was still null, the flag
+        // was never read, and the 4 s ceiling quietly routed every launch to
+        // Studio. Caught in TestFlight T1, 2026-09-06. The Keychain copy is
+        // written at login and needs no network.
+        const uid = useAuthStore.getState().user?.id
+          ?? (await SecureStore.getItemAsync("user_id"));
+        if (cancelled) return;
+        if (!uid) { setMetFirstOffer(false); return; }
+        const v = await isFlagSet(firstResultOfferFlag(uid));
+        if (!cancelled) setMetFirstOffer(v);
+      } catch {
+        if (!cancelled) setMetFirstOffer(false);
+      }
+    })();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [isAuthenticated]);
+
+  // The boot chain in _layout fetches plans THEN the subscription; two
+  // round-trips can crowd the 4 s window on a slow network. Kicking the
+  // (idempotent) fetch directly removes the serialization from this gate's
+  // critical path.
+  useEffect(() => {
+    if (isAuthenticated && !subscriptionResolved) {
+      fetchSubscription().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const spinner = (
     <View
@@ -91,6 +119,11 @@ export default function RootIndex() {
 
     // Only a RESOLVED non-paying answer opens the offer; a timeout falls
     // through to Studio. tierAtLeast is false for FREE and for null alike.
+    if (__DEV__) {
+      // One line per decision — this gate has now been debugged blind twice.
+      console.log("[gate]", { subscriptionResolved, plan: subscription?.planCode,
+        metFirstOffer, waitedLongEnough });
+    }
     if (subscriptionResolved
         && !tierAtLeast(subscription?.planCode, "BASE")
         && metFirstOffer === true) {
