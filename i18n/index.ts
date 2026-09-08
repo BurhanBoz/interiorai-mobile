@@ -10,6 +10,7 @@ import fr from "./fr.json";
 import ja from "./ja.json";
 import ko from "./ko.json";
 import ar from "./ar.json";
+import nl from "./nl.json";
 
 /**
  * Registry of every bundled language pack.
@@ -40,6 +41,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
     { code: "ja", nativeName: "日本語",    englishName: "Japanese" },
     { code: "ko", nativeName: "한국어",    englishName: "Korean" },
     { code: "ar", nativeName: "العربية",  englishName: "Arabic" },
+    { code: "nl", nativeName: "Nederlands", englishName: "Dutch" },
 ];
 
 /** Languages that use right-to-left script. */
@@ -57,6 +59,7 @@ const resources: Record<string, { translation: Record<string, unknown> }> = {
     ja: { translation: ja },
     ko: { translation: ko },
     ar: { translation: ar },
+    nl: { translation: nl },
 };
 
 /**

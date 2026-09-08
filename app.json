@@ -50,7 +50,8 @@
           "it",
           "ja",
           "ko",
-          "ar"
+          "ar",
+          "nl"
         ],
         "CFBundleDevelopmentRegion": "en"
       },
@@ -97,7 +98,8 @@
       "it": "./i18n/infoPlist/it.json",
       "ja": "./i18n/infoPlist/ja.json",
       "ko": "./i18n/infoPlist/ko.json",
-      "ar": "./i18n/infoPlist/ar.json"
+      "ar": "./i18n/infoPlist/ar.json",
+      "nl": "./i18n/infoPlist/nl.json"
     }
   }
 }
