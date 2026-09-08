@@ -7,6 +7,8 @@ import { useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { samplesFor } from "@/components/studio/sampleRooms";
+import { Image } from "expo-image";
 import { AvatarMenu } from "@/components/ui/AvatarMenu";
 import { Brand } from "@/components/brand/Brand";
 import { BOTTOM_BAR_SCROLL_PADDING } from "@/components/layout/BottomBar";
@@ -28,8 +30,10 @@ import { STUDIO_STEP, STUDIO_STEP_TOTAL } from "@/constants/studioSteps";
  */
 export default function UploadScreen() {
   const { t } = useTranslation();
-  const { pickImage, isUploading } = useImagePicker();
+  const { pickImage, useSampleImage, isUploading } = useImagePicker();
   const setPhoto = useStudioStore((s) => s.setPhoto);
+  const mode = useStudioStore((s) => s.mode);
+  const samples = samplesFor(mode);
 
   const handleUpload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -43,6 +47,20 @@ export default function UploadScreen() {
   const handleCamera = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickImage("camera");
+    if (result) {
+      setPhoto(result);
+      router.push("/studio/uploaded");
+    }
+  };
+
+  // 38% of registrations never reach a photo (2026-09-09). The ask is
+  // heavy for someone who has not seen the product work yet: find a room,
+  // clear an OS dialog, hope. A sample skips both and still spends a
+  // credit on a real render — the point is to earn the next photo, not to
+  // fake the first one.
+  const handleSample = async (module: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await useSampleImage(module);
     if (result) {
       setPhoto(result);
       router.push("/studio/uploaded");
@@ -263,6 +281,66 @@ export default function UploadScreen() {
                 </Text>
               </View>
             </Pressable>
+
+            {/* ── Sample rooms ──
+                Below the two real actions, never instead of them: someone
+                who came to redesign their own room should not have to step
+                over a demo to do it. Hidden when the mode has no sensible
+                sample rather than shown empty. */}
+            {samples.length > 0 && (
+              <View style={{ marginTop: 28 }}>
+                <Text
+                  style={{
+                    ...theme.text.caption,
+                    color: theme.color.onSurfaceMuted,
+                    marginBottom: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  {t("studio.sample_prompt")}
+                </Text>
+                <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
+                  {samples.map((sample) => (
+                    <Pressable
+                      key={sample.key}
+                      onPress={() => handleSample(sample.module)}
+                      disabled={isUploading}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(sample.labelKey)}
+                      style={({ pressed }) => ({
+                        flex: 1,
+                        maxWidth: 148,
+                        opacity: isUploading ? 0.35 : pressed ? 0.72 : 1,
+                        transform: [{ scale: pressed ? 0.97 : 1 }],
+                      })}
+                    >
+                      <Image
+                        source={sample.module}
+                        style={{
+                          width: "100%",
+                          aspectRatio: 4 / 3,
+                          borderRadius: theme.radius.md,
+                          borderWidth: 1,
+                          borderColor: "rgba(225,195,155,0.28)",
+                        }}
+                        contentFit="cover"
+                      />
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          ...theme.text.caption,
+                          color: theme.color.onSurfaceMuted,
+                          marginTop: 6,
+                          textAlign: "center",
+                        }}
+                      >
+                        {t(sample.labelKey)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>

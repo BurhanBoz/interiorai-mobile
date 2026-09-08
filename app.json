@@ -82,7 +82,8 @@
       "expo-secure-store",
       "expo-image-picker",
       "expo-apple-authentication",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-asset"
     ],
     "extra": {
       "router": {},

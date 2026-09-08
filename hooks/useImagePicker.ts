@@ -3,6 +3,7 @@ import { Alert, Linking } from "react-native";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
+import { Asset } from "expo-asset";
 import { uploadImage } from "@/services/files";
 import { useAiConsentStore } from "@/stores/aiConsentStore";
 
@@ -173,7 +174,64 @@ export function useImagePicker() {
         }
     };
 
-    return { pickImage, isUploading };
+    /**
+     * Put a bundled sample room through the exact same pipeline a picked
+     * photo goes through — consent, downscale, upload, one retry, the same
+     * `{uri, fileId, width, height}` on the way out.
+     *
+     * <p>Deliberately NOT a preview path. The user is going to spend a credit
+     * and judge the product on what comes back, so what comes back has to be a
+     * real render of that room; a mocked result would be a different product
+     * from the one they are being asked to trust.
+     *
+     * <p>What it skips is the part that costs us people: the OS photo-library
+     * dialog and the hunt through their camera roll. The AI consent sheet
+     * still runs — the image reaches the same third parties either way, and
+     * two consent paths is exactly how a compliance gap starts.
+     */
+    const useSampleImage = async (module: number) => {
+        if (!(await useAiConsentStore.getState().request())) return null;
+
+        setIsUploading(true);
+        try {
+            // Bundled assets are module ids, not files. downloadAsync resolves
+            // one to a real localUri — a no-op for an asset already inside the
+            // binary, a fetch when Metro is serving it in development.
+            const asset = Asset.fromModule(module);
+            await asset.downloadAsync();
+            const uri = asset.localUri ?? asset.uri;
+
+            const resizedUri = await resizeIfNeeded({
+                uri,
+                width: asset.width ?? 0,
+                height: asset.height ?? 0,
+            } as ImagePicker.ImagePickerAsset);
+
+            let file;
+            try {
+                file = await uploadImage(resizedUri);
+            } catch (err) {
+                if (!isRetriableUploadError(err)) throw err;
+                file = await uploadImage(resizedUri);
+            }
+            return {
+                uri: resizedUri,
+                fileId: file.id,
+                width: asset.width ?? null,
+                height: asset.height ?? null,
+            };
+        } catch {
+            Alert.alert(
+                t("errors.upload_failed_title"),
+                t("errors.upload_failed_body"),
+            );
+            return null;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return { pickImage, useSampleImage, isUploading };
 }
 
 /**

@@ -1,47 +1,53 @@
 import { useEffect } from "react";
-import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFlag";
+import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 import * as StoreReview from "expo-store-review";
 
 /**
- * In-app rating request (ASO Stage 0, 2026-07-21). The listing has zero
- * ratings, which suppresses both search ranking and product-page conversion —
- * this is the highest-leverage fix on the ASO checklist.
+ * In-app rating request. The listing still has zero ratings, which suppresses
+ * both search ranking and product-page conversion — so the ask has to land,
+ * and it has to land on someone who liked something.
  *
- * Strategy: ask ONCE, at the moment of demonstrated value — right after the
- * user views their 2nd successful generation (the 1st can be a fluke; by the
- * 2nd they've chosen to come back). Apple caps the system sheet at 3
- * shows/year and silently drops excess calls, but we self-limit anyway so the
- * single ask lands at a high-satisfaction moment instead of being burned by
- * the OS at random ones.
+ * <p><b>Why this no longer counts renders.</b> It used to ask on the 4th
+ * successful result. The median user makes ONE, so the ask was reaching almost
+ * nobody: 84 users had generated and the store still reported "not enough
+ * ratings" (2026-09-09). Counting renders also asks the wrong question — a
+ * render viewed is not a render liked.
  *
- * Never blocks or throws: any storage/API failure just skips the ask.
+ * <p>It now asks on the first VALUE signal: the user saved, shared or
+ * favourited a result. That is the strongest evidence of satisfaction the app
+ * can observe, it happens on the user's own tap, and for a one-render user it
+ * happens inside their only visit.
+ *
+ * <p>Asked once per install. Apple caps the system sheet at 3 shows/year and
+ * silently drops the excess, so the single ask is spent deliberately rather
+ * than burned by the OS at a random moment.
+ *
+ * <p>Never blocks or throws: any storage or API failure just skips the ask.
  */
 
-const SUCCESS_COUNT_KEY = "review_prompt_success_count";
 const ASKED_KEY = "review_prompt_asked";
-/**
- * Ask on the Nth successfully viewed result. 4th since 1.4.5: the 1st carries
- * the offer, the 2nd the notification ask, the 3rd the channel question. A
- * fourth render is also a better moment to ask for stars than a second.
- */
-const ASK_ON_NTH_SUCCESS = 4;
-/** Let the user enjoy the result before the sheet appears. */
-const ASK_DELAY_MS = 2500;
 
-export function useReviewPrompt(jobSucceeded: boolean) {
+/**
+ * Long enough for the "Saved to Photos" alert to be read and dismissed.
+ * saveToPhotos fires that alert without awaiting it, so the rating sheet would
+ * otherwise race a modal that is already on screen — and iOS drops a review
+ * request it cannot present.
+ */
+const ASK_DELAY_MS = 4000;
+
+/**
+ * @param valueSignal true once the user has saved, shared or favourited a
+ *   result in this visit. Pass false while nothing has happened yet.
+ */
+export function useReviewPrompt(valueSignal: boolean) {
   useEffect(() => {
-    if (!jobSucceeded) return;
+    if (!valueSignal) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     (async () => {
       try {
         if (await isFlagSet(ASKED_KEY)) return;
-
-        const count = (await readCounter(SUCCESS_COUNT_KEY)) + 1;
-        await writeCounter(SUCCESS_COUNT_KEY, count);
-        if (count < ASK_ON_NTH_SUCCESS) return;
-
         if (!(await StoreReview.isAvailableAsync())) return;
 
         timer = setTimeout(async () => {
@@ -61,5 +67,5 @@ export function useReviewPrompt(jobSucceeded: boolean) {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [jobSucceeded]);
+  }, [valueSignal]);
 }

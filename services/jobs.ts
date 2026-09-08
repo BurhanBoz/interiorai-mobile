@@ -126,14 +126,27 @@ export async function rateOutput(
     await api.patch(`/api/jobs/${jobId}/outputs/${outputId}/rating`, { rating });
 }
 
+/** V74. FAVORITE/DOWNLOAD/SHARE are value votes; VIEW is an observation. */
+export type OutputSignalType = "FAVORITE" | "DOWNLOAD" | "SHARE" | "VIEW";
+
 /**
- * C1 learning loop — tell the backend this output was worth keeping
- * (favorited) or taking away (downloaded). Fire-and-forget BY CONTRACT:
- * a quality signal must never surface an error into the moment the user
- * is enjoying their render. Idempotent server-side (append-once).
+ * C1 learning loop — tell the backend what happened to this output.
+ *
+ * <p>FAVORITE / DOWNLOAD / SHARE all mean "worth keeping" and append once.
+ * VIEW means "the result screen was open, this long" and is what separates a
+ * render nobody wanted from one nobody looked at — pass `dwellMs` with it and
+ * the server adds it to the running total for that output.
+ *
+ * Fire-and-forget BY CONTRACT: a signal must never surface an error into the
+ * moment the user is enjoying their render.
  */
-export function sendOutputSignal(outputId: string, type: "FAVORITE" | "DOWNLOAD"): void {
-    api.post(`/api/jobs/outputs/${outputId}/signals`, { type }).catch((e) => {
+export function sendOutputSignal(
+    outputId: string,
+    type: OutputSignalType,
+    dwellMs?: number,
+): void {
+    const body = dwellMs === undefined ? { type } : { type, dwellMs: Math.round(dwellMs) };
+    api.post(`/api/jobs/outputs/${outputId}/signals`, body).catch((e) => {
         // Still fire-and-forget for the USER — nothing is surfaced, nothing is
         // retried. But swallowing the error completely made a real question
         // unanswerable: `output_signals` was empty in production and there was

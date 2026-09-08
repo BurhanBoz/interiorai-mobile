@@ -9,6 +9,7 @@ import {
   Modal,
   StatusBar,
   Alert,
+  AppState,
 } from "react-native";
 import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -170,7 +171,43 @@ export default function ResultDetailScreen() {
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
   const paywallFiredThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
-  useReviewPrompt(outputs.length > 0);
+  // The rating ask now waits for a value signal instead of a render count
+  // (see useReviewPrompt). Held back during the visit that carries the push
+  // permission prompt — two SYSTEM sheets in one visit get both dismissed,
+  // and the push one is one-shot forever on iOS.
+  const [valueSignal, setValueSignal] = useState(false);
+  useReviewPrompt(valueSignal && successCount !== 2);
+
+  // How long the result actually held attention (V74). Without this the
+  // only thing we could see was that 11% of people downloaded, which says
+  // nothing about the other 89% — a render nobody wanted and a render
+  // nobody looked at produced identical data.
+  //
+  // Measured per output: switching between variants closes one window and
+  // opens the next, so two variants viewed for a minute each read as two
+  // minutes across two outputs rather than one blurred total. Sent on the
+  // way out (unmount, or the app going to background) because that is the
+  // only moment the duration is known.
+  const viewedId = currentOutput?.id;
+  useEffect(() => {
+    if (!viewedId) return;
+    const openedAt = Date.now();
+    let sent = false;
+    const flush = () => {
+      if (sent) return;
+      sent = true;
+      const dwell = Date.now() - openedAt;
+      // Under a second is a swipe passing through, not a view.
+      if (dwell >= 1000) sendOutputSignal(viewedId, "VIEW", dwell);
+    };
+    const sub = AppState.addEventListener("change", (st) => {
+      if (st !== "active") flush();
+    });
+    return () => {
+      sub.remove();
+      flush();
+    };
+  }, [viewedId]);
   usePushPermissionAsk(outputs.length > 0);
   useAccountPrompt(outputs.length > 0);
 
@@ -194,6 +231,12 @@ export default function ResultDetailScreen() {
       ? getOutputImageUrl(job!.id, currentOutput)
       : undefined;
     if (!url) return;
+    // Sharing is as strong a vote as saving — the render is leaving the
+    // app either way — and until V74 it fired no signal at all, so every
+    // user who sent a design to WhatsApp counted as someone who did
+    // nothing with it.
+    if (currentOutput?.id) sendOutputSignal(currentOutput.id, "SHARE");
+    setValueSignal(true);
     // Share the actual image file (downloaded from the pre-signed S3
     // URL), not just the URL string. iMessage / WhatsApp / Mail get a
     // real attachment instead of a paste-this-into-a-browser link.
@@ -211,6 +254,7 @@ export default function ResultDetailScreen() {
     // C1: a download is the strongest quality vote we have — the user is
     // taking this render OUT of the app. Fire-and-forget by contract.
     if (currentOutput?.id) sendOutputSignal(currentOutput.id, "DOWNLOAD");
+    setValueSignal(true);
     // No auth headers — see getOutputImageUrl.
     await saveToPhotos(url, {
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),

@@ -91,6 +91,26 @@ export default function RootLayout() {
             if (useAuthStore.getState().isAuthenticated) sendHeartbeat();
           })
           .catch(() => {});
+      } else if (state === "background") {
+        // Stamp the END of the session. Until this existed the only beats
+        // were on launch and on returning to foreground, so last_beat_at
+        // meant "when they last opened the app", not "when they left" —
+        // and any question about time spent in a session was unanswerable.
+        // It cost a real misreading on 2026-09-09: eighteen users looked
+        // like they had abandoned their result within seconds, when the
+        // truth was the opposite, that they never backgrounded the app at
+        // all and so no later beat was ever sent.
+        //
+        // One request per session, not a timer: a poll would multiply
+        // traffic all day to learn the same thing this learns once. The
+        // server extends the existing row when a beat lands within thirty
+        // minutes (SessionServiceImpl.SESSION_GAP), so this moves the end
+        // marker rather than opening a second session.
+        //
+        // "inactive" is deliberately excluded — iOS fires it for the app
+        // switcher, Control Centre and incoming calls, none of which mean
+        // the user left.
+        if (useAuthStore.getState().isAuthenticated) sendHeartbeat();
       }
     });
     return () => sub.remove();
