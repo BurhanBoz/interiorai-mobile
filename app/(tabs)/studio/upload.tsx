@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { View, Text, Pressable, ScrollView, Animated, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,6 +34,17 @@ export default function UploadScreen() {
   const setPhoto = useStudioStore((s) => s.setPhoto);
   const mode = useStudioStore((s) => s.mode);
   const samples = samplesFor(mode);
+
+  // Thumbnail width is computed, not flexed. `flex: 1` with a maxWidth let
+  // the row grow past the gutter on device and the tiles bled off both
+  // edges — a fixed number cannot do that whatever the parent chain does.
+  const { width: screenW } = useWindowDimensions();
+  const SAMPLE_GAP = 12;
+  const sampleW = Math.min(
+    150,
+    (screenW - theme.space.gutter * 2 - SAMPLE_GAP * Math.max(samples.length - 1, 0)) /
+      Math.max(samples.length, 1),
+  );
 
   const handleUpload = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -299,7 +310,7 @@ export default function UploadScreen() {
                 >
                   {t("studio.sample_prompt")}
                 </Text>
-                <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
+                <View style={{ flexDirection: "row", gap: SAMPLE_GAP, justifyContent: "center" }}>
                   {samples.map((sample) => (
                     <Pressable
                       key={sample.key}
@@ -308,8 +319,7 @@ export default function UploadScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={t(sample.labelKey)}
                       style={({ pressed }) => ({
-                        flex: 1,
-                        maxWidth: 148,
+                        width: sampleW,
                         opacity: isUploading ? 0.35 : pressed ? 0.72 : 1,
                         transform: [{ scale: pressed ? 0.97 : 1 }],
                       })}
@@ -317,8 +327,8 @@ export default function UploadScreen() {
                       <Image
                         source={sample.module}
                         style={{
-                          width: "100%",
-                          aspectRatio: 4 / 3,
+                          width: sampleW,
+                          height: Math.round((sampleW * 3) / 4),
                           borderRadius: theme.radius.md,
                           borderWidth: 1,
                           borderColor: "rgba(225,195,155,0.28)",

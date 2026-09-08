@@ -201,11 +201,14 @@ export function useImagePicker() {
             await asset.downloadAsync();
             const uri = asset.localUri ?? asset.uri;
 
-            const resizedUri = await resizeIfNeeded({
-                uri,
-                width: asset.width ?? 0,
-                height: asset.height ?? 0,
-            } as ImagePicker.ImagePickerAsset);
+            const resizedUri = await resizeIfNeeded(
+                {
+                    uri,
+                    width: asset.width ?? 0,
+                    height: asset.height ?? 0,
+                } as ImagePicker.ImagePickerAsset,
+                true, // samples ship as PNG — always re-encode
+            );
 
             let file;
             try {
@@ -284,16 +287,30 @@ export function aspectRatioFor(
  */
 async function resizeIfNeeded(
     asset: ImagePicker.ImagePickerAsset,
+    /**
+     * Re-encode even when the image is already small enough.
+     *
+     * <p>For the bundled samples: they ship as PNG, and PNG of a photograph
+     * is enormous — the living room is 896×1152 and 1.7 MB, well under the
+     * pixel cap and so left untouched by the size test alone. A sample exists
+     * to make the first try cheap, and 1.7 MB over a slow link is the exact
+     * failure we already watched cost a user their session. JPEG at the same
+     * dimensions is a fraction of that.
+     */
+    alwaysEncode = false,
 ): Promise<string> {
     const { width, height, uri } = asset;
     if (!width || !height) return uri;
     const longest = Math.max(width, height);
-    if (longest <= MAX_EDGE_PX) return uri;
+    if (longest <= MAX_EDGE_PX && !alwaysEncode) return uri;
 
+    // Already inside the cap and only here to be re-encoded: keep the
+    // dimensions, change the container.
+    const scale = longest <= MAX_EDGE_PX ? longest : MAX_EDGE_PX;
     const targetWidth =
-        width >= height ? MAX_EDGE_PX : Math.round((width / height) * MAX_EDGE_PX);
+        width >= height ? scale : Math.round((width / height) * scale);
     const targetHeight =
-        height > width ? MAX_EDGE_PX : Math.round((height / width) * MAX_EDGE_PX);
+        height > width ? scale : Math.round((height / width) * scale);
 
     try {
         const manipulated = await ImageManipulator.manipulateAsync(
