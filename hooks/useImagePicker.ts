@@ -7,11 +7,26 @@ import { uploadImage } from "@/services/files";
 import { useAiConsentStore } from "@/stores/aiConsentStore";
 
 // Upload-side cap: iPhone photos can be 8-12 MB at 4032×3024; S3 PUT is
-// metered and Replicate pulls the image each prediction, so shrinking to
-// 2048 on the longest edge + JPEG 0.85 loses no perceptible detail while
-// cutting bandwidth 5-8×.
-const MAX_EDGE_PX = 2048;
-const JPEG_QUALITY = 0.85;
+// metered and Replicate pulls the image each prediction, so downscaling
+// cuts bandwidth 5-8× with no perceptible loss.
+//
+// 1800/0.82 measured against a real 3456×5184 photo (2026-09-08):
+// 2048/0.85 → 1070 KB, 1800/0.82 → 786 KB, a 27% cut. The floor is the
+// model, not the eye: STANDARD renders at 2 MP / 1680 px wide (V69), so
+// an input below 1680 would hand the model less detail than it outputs.
+// 1600/0.80 tested at 557 KB and was rejected for exactly that reason.
+const MAX_EDGE_PX = 1800;
+const JPEG_QUALITY = 0.82;
+
+/**
+ * Retry only what a retry can fix: no response at all (network drop,
+ * timeout) or a server-side 5xx. A 4xx is a verdict — auth, file size,
+ * media type — and the second attempt would earn the same answer.
+ */
+const isRetriableUploadError = (err: unknown): boolean => {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    return status === undefined || status >= 500;
+};
 
 export function useImagePicker() {
     const { t } = useTranslation();
@@ -116,7 +131,25 @@ export function useImagePicker() {
 
         setIsUploading(true);
         try {
-            const file = await uploadImage(resizedUri);
+            // A dropped upload used to vanish. uploadImage would reject,
+            // not one of the five call sites had a catch, and the
+            // rejection died as an unhandled promise: spinner off, no
+            // message, no retry, nothing to tap. A real user on a
+            // 0.76 Mbit/s link (2026-09-08) lost a 1 MB photo at 96%
+            // after 10.8 s and left the app five seconds later — the
+            // whole session, gone to a silent failure. Uploads fail ~1%
+            // overall but far more on the slow mobile links our largest
+            // ad cohort arrives on. So: one automatic retry, then a
+            // visible message, and null — the value every call site
+            // already handles, since consent, permission and cancel all
+            // return it too.
+            let file;
+            try {
+                file = await uploadImage(resizedUri);
+            } catch (err) {
+                if (!isRetriableUploadError(err)) throw err;
+                file = await uploadImage(resizedUri);
+            }
             // Capture original dimensions so the studio can compute a
             // model-friendly aspect ratio (`16:9`, `4:5`, `1:1`, …) and
             // pass it to the backend. Without this the backend falls back
@@ -129,6 +162,12 @@ export function useImagePicker() {
                 width: asset.width ?? null,
                 height: asset.height ?? null,
             };
+        } catch {
+            Alert.alert(
+                t("errors.upload_failed_title"),
+                t("errors.upload_failed_body"),
+            );
+            return null;
         } finally {
             setIsUploading(false);
         }

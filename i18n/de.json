@@ -925,7 +925,9 @@
         "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
         "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
         "unauthorized": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
-        "rate_limit": "Zu viele Versuche. Bitte warte kurz und versuche es erneut."
+        "rate_limit": "Zu viele Versuche. Bitte warte kurz und versuche es erneut.",
+        "upload_failed_title": "Upload abgebrochen",
+        "upload_failed_body": "Dein Foto ist nicht angekommen. Prüfe deine Verbindung und versuch es erneut."
     },
     "upscale": {
         "upscaling_to_hd": "Hochskalierung auf HD…",

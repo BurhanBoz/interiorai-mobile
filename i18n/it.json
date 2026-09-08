@@ -925,7 +925,9 @@
         "network": "Errore di rete. Controlla la connessione.",
         "generic": "Qualcosa è andato storto. Riprova.",
         "unauthorized": "La tua sessione è scaduta. Accedi di nuovo.",
-        "rate_limit": "Troppi tentativi. Attendi un momento e riprova."
+        "rate_limit": "Troppi tentativi. Attendi un momento e riprova.",
+        "upload_failed_title": "Caricamento non riuscito",
+        "upload_failed_body": "La tua foto non è arrivata. Controlla la connessione e riprova."
     },
     "upscale": {
         "upscaling_to_hd": "Upscaling a HD…",

@@ -925,7 +925,9 @@
         "network": "Network error. Please check your connection.",
         "generic": "Something went wrong. Please try again.",
         "unauthorized": "Your session has expired. Please sign in again.",
-        "rate_limit": "Too many attempts. Please wait a moment and try again."
+        "rate_limit": "Too many attempts. Please wait a moment and try again.",
+        "upload_failed_title": "Upload didn't finish",
+        "upload_failed_body": "Your photo didn't reach us. Check your connection and try again."
     },
     "upscale": {
         "upscaling_to_hd": "Upscaling to HD…",

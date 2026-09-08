@@ -925,7 +925,9 @@
         "network": "Error de red. Verifica tu conexión.",
         "generic": "Algo salió mal. Intenta de nuevo.",
         "unauthorized": "Tu sesión expiró. Inicia sesión de nuevo.",
-        "rate_limit": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
+        "rate_limit": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+        "upload_failed_title": "No se completó la subida",
+        "upload_failed_body": "Tu foto no llegó. Comprueba tu conexión e inténtalo de nuevo."
     },
     "upscale": {
         "upscaling_to_hd": "Escalando a HD…",

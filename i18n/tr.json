@@ -925,7 +925,9 @@
         "network": "Ağ hatası. Bağlantını kontrol et.",
         "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
         "unauthorized": "Oturumun sona erdi. Lütfen tekrar giriş yap.",
-        "rate_limit": "Çok fazla deneme. Lütfen bir süre bekleyip tekrar dene."
+        "rate_limit": "Çok fazla deneme. Lütfen bir süre bekleyip tekrar dene.",
+        "upload_failed_title": "Yükleme tamamlanmadı",
+        "upload_failed_body": "Fotoğrafın bize ulaşmadı. Bağlantını kontrol edip tekrar dene."
     },
     "upscale": {
         "upscaling_to_hd": "HD'ye büyütülüyor…",

@@ -925,7 +925,9 @@
         "network": "Erreur réseau. Vérifiez votre connexion.",
         "generic": "Une erreur est survenue. Veuillez réessayer.",
         "unauthorized": "Votre session a expiré. Reconnectez-vous.",
-        "rate_limit": "Trop de tentatives. Patientez un instant et réessayez."
+        "rate_limit": "Trop de tentatives. Patientez un instant et réessayez.",
+        "upload_failed_title": "Envoi interrompu",
+        "upload_failed_body": "Votre photo n'est pas arrivée. Vérifiez votre connexion et réessayez."
     },
     "upscale": {
         "upscaling_to_hd": "Agrandissement en HD…",
