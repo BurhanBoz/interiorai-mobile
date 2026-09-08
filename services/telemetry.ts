@@ -84,6 +84,7 @@ export type AcquisitionSource =
     | "APP_STORE_SEARCH"
     | "INSTAGRAM"
     | "TIKTOK"
+    | "PINTEREST"
     | "FRIEND"
     | "WEB_SEARCH"
     | "OTHER";

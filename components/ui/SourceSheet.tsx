@@ -37,10 +37,12 @@ type Option = {
 };
 
 /**
- * Order matters: the grid is three per row, so the first three share a row and
- * the last three share the next. Instagram, TikTok and the App Store sit
- * together because they are the three channels we can actually act on — the
- * ones a decision about where to spend effort would turn on.
+ * Order matters: two per row, so the App Store sits with Instagram and TikTok
+ * with Pinterest — the four channels we can actually act on, ahead of the two
+ * we cannot (a friend, the open web) and the escape hatch alone on the last
+ * row. Pinterest was added 2026-09-08: 37% of all Pins are home decor, so it
+ * is the one platform whose biggest category IS our product, and without a
+ * tile of its own its traffic would land in WEB_SEARCH and be unreadable.
  *
  * The label lives on for accessibility only. Sighted users get the icon; a
  * screen reader still hears "Instagram" rather than "button".
@@ -49,6 +51,7 @@ const OPTIONS: Option[] = [
     { key: "APP_STORE_SEARCH", labelKey: "source.app_store", icon: "storefront" },
     { key: "INSTAGRAM", labelKey: "source.instagram", icon: "logo-instagram" },
     { key: "TIKTOK", labelKey: "source.tiktok", icon: "logo-tiktok" },
+    { key: "PINTEREST", labelKey: "source.pinterest", icon: "logo-pinterest" },
     { key: "FRIEND", labelKey: "source.friend", icon: "chatbubble-ellipses" },
     { key: "WEB_SEARCH", labelKey: "source.web", icon: "globe-outline" },
     { key: "OTHER", labelKey: "source.other", icon: "ellipsis-horizontal" },
