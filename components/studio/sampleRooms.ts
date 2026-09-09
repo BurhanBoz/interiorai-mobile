@@ -17,9 +17,18 @@ import type { DesignMode } from "@/types/api";
  * <p><b>Choosing images.</b> A sample has to be a believable "before": a real
  * room, unstyled, with the flaws a user's own photo would have. A magazine
  * shot teaches the wrong expectation — the render looks barely different and
- * the product reads as broken. These are the same source photographs the store
- * screenshots are cut from, so what the sample produces is what the listing
- * promised.
+ * the product reads as broken.
+ *
+ * <p>All four are photographs the product already shows somewhere, so a sample
+ * renders what the user was promised rather than something new:
+ * <ul>
+ *   <li>living room, kitchen — the before/after pairs in the anonymous trial
+ *       carousel and the paywall hero fallback ({@code assets/trial/}).</li>
+ *   <li>empty room — the same photograph as store screenshot frame 02,
+ *       downscaled from {@code aso_gorseller/empty_before.JPG}.</li>
+ *   <li>garden — the exact file frame 07 is cut from; {@code compose.py}
+ *       reads {@code assets/features/outdoor_before.png} directly.</li>
+ * </ul>
  */
 export type SampleRoom = {
     /** Stable id — analytics and React keys. */
