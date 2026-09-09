@@ -34,9 +34,13 @@ yarn-error.*
 *.pem
 
 # Environment / Secrets — NEVER commit these.
-# Pattern matches .env, .env.local, .env.production, .env.development, etc.
+# `.env.*` is what actually catches .env.local / .env.production /
+# .env.development — `*.env` only matches names ENDING in ".env", so before
+# 2026-09-09 the comment claimed a coverage the patterns did not have and
+# `git check-ignore .env.production` came back empty.
 # Whitelist .env.example so the template stays in repo as documentation.
 .env
+.env.*
 *.env
 !.env.example
 
