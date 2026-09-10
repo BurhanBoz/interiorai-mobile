@@ -10,7 +10,11 @@
     "clean": "bash scripts/clean.sh",
     "clean:start": "bash scripts/clean.sh && npx expo start --clear",
     "clean:ios": "bash scripts/clean.sh && npx expo run:ios",
-    "lint:tokens": "node scripts/lint-tokens.js"
+    "lint:tokens": "node scripts/lint-tokens.js",
+    "check-env": "node scripts/check-env.js development",
+    "check-env:prod": "node scripts/check-env.js production",
+    "build:prod": "npm run check-env:prod && eas build --platform ios --profile production",
+    "submit:prod": "npm run check-env:prod && eas submit --platform ios --latest"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
