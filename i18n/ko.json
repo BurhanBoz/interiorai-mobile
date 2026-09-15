@@ -331,7 +331,7 @@
             "storage": "수납",
             "decor": "장식"
         },
-        "limit_reached": "디자인당 두 개까지.",
+        "limit_reached": "디자인당 네 개까지.",
         "own_photo": "내 사진 사용",
         "own_photo_hint": "단색 배경에서 가장 잘 작동합니다",
         "empty": "아직 항목이 없습니다.",

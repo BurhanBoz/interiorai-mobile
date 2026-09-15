@@ -331,7 +331,7 @@
             "storage": "Opberging",
             "decor": "Decoratie"
         },
-        "limit_reached": "Twee stuks per ontwerp.",
+        "limit_reached": "Vier stuks per ontwerp.",
         "own_photo": "Eigen foto gebruiken",
         "own_photo_hint": "Werkt het best op een egale achtergrond",
         "empty": "Hier staat nog niets.",

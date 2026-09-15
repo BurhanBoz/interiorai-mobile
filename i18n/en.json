@@ -331,7 +331,7 @@
             "storage": "Storage",
             "decor": "Decor"
         },
-        "limit_reached": "Two pieces per design.",
+        "limit_reached": "Four pieces per design.",
         "own_photo": "Use my own photo",
         "own_photo_hint": "Best on a plain background",
         "empty": "No pieces here yet.",

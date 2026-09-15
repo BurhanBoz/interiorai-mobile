@@ -331,7 +331,7 @@
             "storage": "Almacenaje",
             "decor": "Decoración"
         },
-        "limit_reached": "Dos piezas por diseño.",
+        "limit_reached": "Cuatro piezas por diseño.",
         "own_photo": "Usar mi propia foto",
         "own_photo_hint": "Mejor con fondo liso",
         "empty": "Aquí todavía no hay piezas.",

@@ -116,10 +116,12 @@ const initialState = {
     // furniture in place, so the default run only ever restyled surfaces —
     // a weaker first impression than the redesign people came for. It stays
     // one tap away in Advanced for the "same layout, new materials" job.
-    // Default ON, matching CreateDesignJobRequest's own default. Keeping the
-    // room's geometry is what most people want from a redesign; the furniture
-    // row explains itself when this is on rather than vanishing.
-    preserveLayout: true,
+    // Default OFF (owner, 2026-09-15). It was briefly on to match the DTO's
+    // default, but that put the furniture row behind an explanation and a tap
+    // on the very step that offers it. Adding a piece is the thing this step
+    // is for; preserving the layout is the deliberate choice, so it is the one
+    // that costs a tap.
+    preserveLayout: false,
     prompt: "",
     negativePrompt: "",
     colorPalette: DEFAULT_COLOR_PALETTE,
@@ -185,7 +187,7 @@ export const useStudioStore = create<StudioState>((set) => ({
         set((state) => ({ extraStyleRefs: state.extraStyleRefs.filter((r) => r.fileId !== fileId) })),
     addObjectRef: (ref) =>
         set((state) =>
-            state.objectRefs.length >= 2
+            state.objectRefs.length >= 4
                 || state.objectRefs.some((r) => r.fileId === ref.fileId)
                 ? state
                 : { objectRefs: [...state.objectRefs, ref] }),
