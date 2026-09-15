@@ -315,6 +315,26 @@
         "add_reference": "Ajouter une référence",
         "step_of": "ÉTAPE {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "Mobilier",
+        "all": "Tout",
+        "category": {
+            "sofa": "Canapés",
+            "chair": "Chaises",
+            "table": "Tables",
+            "bed": "Lits",
+            "lamp": "Lampes",
+            "rug": "Tapis",
+            "plant": "Plantes",
+            "storage": "Rangement",
+            "decor": "Déco"
+        },
+        "limit_reached": "Deux pièces par design.",
+        "own_photo": "Utiliser ma photo",
+        "own_photo_hint": "Idéal sur fond uni",
+        "empty": "Rien ici pour l'instant.",
+        "load_failed": "Impossible de charger le catalogue."
+    },
     "gallery": {
         "title": "Galerie",
         "search_placeholder": "Rechercher par style ou pièce…",

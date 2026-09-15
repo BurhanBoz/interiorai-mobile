@@ -315,6 +315,26 @@
         "add_reference": "Riferimento",
         "step_of": "PASSO {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "Arredamento",
+        "all": "Tutto",
+        "category": {
+            "sofa": "Divani",
+            "chair": "Sedie",
+            "table": "Tavoli",
+            "bed": "Letti",
+            "lamp": "Lampade",
+            "rug": "Tappeti",
+            "plant": "Piante",
+            "storage": "Contenitori",
+            "decor": "Decorazioni"
+        },
+        "limit_reached": "Due pezzi per progetto.",
+        "own_photo": "Usa una mia foto",
+        "own_photo_hint": "Meglio su sfondo neutro",
+        "empty": "Qui non c'è ancora nulla.",
+        "load_failed": "Impossibile caricare il catalogo."
+    },
     "gallery": {
         "title": "Galleria",
         "search_placeholder": "Cerca per stile o stanza...",

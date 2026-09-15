@@ -315,6 +315,26 @@
         "add_reference": "참고 추가",
         "step_of": "단계 {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "가구",
+        "all": "전체",
+        "category": {
+            "sofa": "소파",
+            "chair": "의자",
+            "table": "테이블",
+            "bed": "침대",
+            "lamp": "조명",
+            "rug": "러그",
+            "plant": "식물",
+            "storage": "수납",
+            "decor": "장식"
+        },
+        "limit_reached": "디자인당 두 개까지.",
+        "own_photo": "내 사진 사용",
+        "own_photo_hint": "단색 배경에서 가장 잘 작동합니다",
+        "empty": "아직 항목이 없습니다.",
+        "load_failed": "카탈로그를 불러오지 못했습니다."
+    },
     "gallery": {
         "title": "갤러리",
         "search_placeholder": "스타일 또는 방으로 검색...",

@@ -315,6 +315,26 @@
         "add_reference": "Referenz",
         "step_of": "SCHRITT {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "Möbel",
+        "all": "Alle",
+        "category": {
+            "sofa": "Sofas",
+            "chair": "Stühle",
+            "table": "Tische",
+            "bed": "Betten",
+            "lamp": "Lampen",
+            "rug": "Teppiche",
+            "plant": "Pflanzen",
+            "storage": "Stauraum",
+            "decor": "Deko"
+        },
+        "limit_reached": "Zwei Stücke pro Design.",
+        "own_photo": "Eigenes Foto verwenden",
+        "own_photo_hint": "Am besten vor schlichtem Hintergrund",
+        "empty": "Hier gibt es noch nichts.",
+        "load_failed": "Katalog konnte nicht geladen werden."
+    },
     "gallery": {
         "title": "Galerie",
         "search_placeholder": "Nach Stil oder Raum suchen...",

@@ -315,6 +315,26 @@
         "add_reference": "Referentie toevoegen",
         "step_of": "STAP {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "Meubels",
+        "all": "Alles",
+        "category": {
+            "sofa": "Banken",
+            "chair": "Stoelen",
+            "table": "Tafels",
+            "bed": "Bedden",
+            "lamp": "Lampen",
+            "rug": "Vloerkleden",
+            "plant": "Planten",
+            "storage": "Opberging",
+            "decor": "Decoratie"
+        },
+        "limit_reached": "Twee stuks per ontwerp.",
+        "own_photo": "Eigen foto gebruiken",
+        "own_photo_hint": "Werkt het best op een egale achtergrond",
+        "empty": "Hier staat nog niets.",
+        "load_failed": "Catalogus kon niet worden geladen."
+    },
     "gallery": {
         "title": "Galerij",
         "search_placeholder": "Zoek op stijl of kamer...",

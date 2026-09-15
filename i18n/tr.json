@@ -315,6 +315,26 @@
         "add_reference": "Referans ekle",
         "step_of": "ADIM {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "Mobilya",
+        "all": "Tümü",
+        "category": {
+            "sofa": "Koltuklar",
+            "chair": "Sandalyeler",
+            "table": "Masalar",
+            "bed": "Yataklar",
+            "lamp": "Lambalar",
+            "rug": "Halılar",
+            "plant": "Bitkiler",
+            "storage": "Dolaplar",
+            "decor": "Dekor"
+        },
+        "limit_reached": "Tasarım başına iki parça.",
+        "own_photo": "Kendi fotoğrafımı kullan",
+        "own_photo_hint": "Sade arka planda en iyi sonucu verir",
+        "empty": "Burada henüz parça yok.",
+        "load_failed": "Katalog yüklenemedi."
+    },
     "gallery": {
         "title": "Galeri",
         "search_placeholder": "Stil veya odaya göre ara...",

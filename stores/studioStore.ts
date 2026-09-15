@@ -1,6 +1,22 @@
 import { create } from "zustand";
 import type { CatalogItemResponse, DesignMode, MaskMode, MaskStroke, QualityTier, SpeedMode } from "@/types/api";
 
+/**
+ * An OBJECT "+" tile. V177 — a tile is either an uploaded photo or a
+ * catalogue piece; `fileId` is present for both (a catalogue item's image is
+ * a file too) so dedupe and removal stay one code path, and `catalogItemId`
+ * is what makes the brief able to state real dimensions instead of guessing.
+ */
+export type ObjectRef = {
+    uri: string;
+    fileId: string;
+    catalogItemId?: string;
+    /** Catalogue piece name — the tile caption and the accessibility label. */
+    name?: string;
+    /** Normalised 0-1 box from tap-to-place; absent means "model decides". */
+    placement?: { x: number; y: number; w: number; h: number };
+};
+
 interface StudioState {
     step: 1 | 2 | 3 | 4;
     photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null;
@@ -46,7 +62,7 @@ interface StudioState {
      * backend roles; each entry bills +1 credit.
      */
     extraStyleRefs: { uri: string; fileId: string }[];
-    objectRefs: { uri: string; fileId: string }[];
+    objectRefs: ObjectRef[];
     setStep: (step: 1 | 2 | 3 | 4) => void;
     setPhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
     setRoomType: (roomType: CatalogItemResponse | null) => void;
@@ -67,7 +83,7 @@ interface StudioState {
     setMask: (fileId: string | null, strokes: MaskStroke[] | null, mode: MaskMode | null) => void;
     addExtraStyleRef: (ref: { uri: string; fileId: string }) => void;
     removeExtraStyleRef: (fileId: string) => void;
-    addObjectRef: (ref: { uri: string; fileId: string }) => void;
+    addObjectRef: (ref: ObjectRef) => void;
     removeObjectRef: (fileId: string) => void;
     reset: () => void;
 }
@@ -112,7 +128,7 @@ const initialState = {
     maskStrokes: null,
     maskMode: null,
     extraStyleRefs: [] as { uri: string; fileId: string }[],
-    objectRefs: [] as { uri: string; fileId: string }[],
+    objectRefs: [] as ObjectRef[],
 };
 
 export const useStudioStore = create<StudioState>((set) => ({
