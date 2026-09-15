@@ -56,7 +56,7 @@ export default function FurnitureScreen() {
   const [form, setForm] = useState({ name: "", category: "SOFA", w: "", d: "", h: "" });
   const [saving, setSaving] = useState(false);
 
-  const full = objectRefs.length >= 2;
+  const full = objectRefs.length >= 4;
 
   const load = useCallback(async (cat: string | null) => {
     setLoading(true);

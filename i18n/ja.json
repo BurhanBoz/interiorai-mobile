@@ -331,7 +331,7 @@
             "storage": "収納",
             "decor": "装飾"
         },
-        "limit_reached": "1つのデザインにつき2点まで。",
+        "limit_reached": "1つのデザインにつき4点まで。",
         "own_photo": "自分の写真を使う",
         "own_photo_hint": "無地の背景が最適です",
         "empty": "まだアイテムがありません。",

@@ -331,7 +331,7 @@
             "storage": "Stauraum",
             "decor": "Deko"
         },
-        "limit_reached": "Zwei Stücke pro Design.",
+        "limit_reached": "Vier Stücke pro Design.",
         "own_photo": "Eigenes Foto verwenden",
         "own_photo_hint": "Am besten vor schlichtem Hintergrund",
         "empty": "Hier gibt es noch nichts.",

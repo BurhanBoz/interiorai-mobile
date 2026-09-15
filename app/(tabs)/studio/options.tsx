@@ -605,7 +605,14 @@ export default function OptionsScreen() {
                expression and break the branch. */
             <View
               className="flex-row"
-              style={{ gap: TILE_GAP, alignItems: "flex-start", justifyContent: "center" }}
+              style={{
+                gap: TILE_GAP,
+                alignItems: "flex-start",
+                justifyContent: "center",
+                // Wraps since the limit went to four: TILE_SIZE is sized for
+                // three across, and four pieces plus the add tile is five.
+                flexWrap: "wrap",
+              }}
             >
               {objectRefs.map((ref) => (
                 <View key={ref.fileId} style={{ position: "relative", width: TILE_SIZE, height: TILE_SIZE }}>
@@ -641,7 +648,7 @@ export default function OptionsScreen() {
                   </Pressable>
                 </View>
               ))}
-              {objectRefs.length < 2 && (
+              {objectRefs.length < 4 && (
                 <Pressable onPress={handlePickObject} disabled={isObjectUploading}>
                   <View style={{ alignItems: "center", gap: 7 }}>
                     <View

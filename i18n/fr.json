@@ -331,7 +331,7 @@
             "storage": "Rangement",
             "decor": "Déco"
         },
-        "limit_reached": "Deux pièces par design.",
+        "limit_reached": "Quatre pièces par design.",
         "own_photo": "Utiliser ma photo",
         "own_photo_hint": "Idéal sur fond uni",
         "empty": "Rien ici pour l'instant.",
