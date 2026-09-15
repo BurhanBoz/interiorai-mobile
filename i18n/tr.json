@@ -313,7 +313,9 @@
         "advanced_settings": "Gelişmiş ayarlar",
         "add_furniture": "Mobilya ekle",
         "add_reference": "Referans ekle",
-        "step_of": "ADIM {{current}} / {{total}}"
+        "step_of": "ADIM {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Mobilya eklemek için Düzeni Koru'yu kapat",
+        "turn_off": "Kapat"
     },
     "furniture": {
         "title": "Mobilya",

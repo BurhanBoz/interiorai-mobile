@@ -313,7 +313,9 @@
         "advanced_settings": "Ajustes avanzados",
         "add_furniture": "Añadir mueble",
         "add_reference": "Referencia",
-        "step_of": "PASO {{current}} / {{total}}"
+        "step_of": "PASO {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Desactiva «Preservar Distribución» para añadir muebles",
+        "turn_off": "Desactivar"
     },
     "furniture": {
         "title": "Muebles",

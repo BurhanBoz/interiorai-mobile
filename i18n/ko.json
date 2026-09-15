@@ -313,7 +313,9 @@
         "advanced_settings": "고급 설정",
         "add_furniture": "가구 추가",
         "add_reference": "참고 추가",
-        "step_of": "단계 {{current}} / {{total}}"
+        "step_of": "단계 {{current}} / {{total}}",
+        "furniture_needs_free_layout": "가구를 추가하려면 '레이아웃 유지'를 끄세요",
+        "turn_off": "끄기"
     },
     "furniture": {
         "title": "가구",

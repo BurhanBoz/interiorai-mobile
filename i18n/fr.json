@@ -313,7 +313,9 @@
         "advanced_settings": "Réglages avancés",
         "add_furniture": "Ajouter un meuble",
         "add_reference": "Ajouter une référence",
-        "step_of": "ÉTAPE {{current}} / {{total}}"
+        "step_of": "ÉTAPE {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Désactivez « Conserver l'agencement » pour ajouter du mobilier",
+        "turn_off": "Désactiver"
     },
     "furniture": {
         "title": "Mobilier",

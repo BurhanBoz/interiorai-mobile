@@ -313,7 +313,9 @@
         "advanced_settings": "Geavanceerde instellingen",
         "add_furniture": "Meubels toevoegen",
         "add_reference": "Referentie toevoegen",
-        "step_of": "STAP {{current}} / {{total}}"
+        "step_of": "STAP {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Schakel «Indeling behouden» uit om meubels toe te voegen",
+        "turn_off": "Uitschakelen"
     },
     "furniture": {
         "title": "Meubels",

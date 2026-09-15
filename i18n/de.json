@@ -313,7 +313,9 @@
         "advanced_settings": "Erweiterte Einstellungen",
         "add_furniture": "Möbel",
         "add_reference": "Referenz",
-        "step_of": "SCHRITT {{current}} / {{total}}"
+        "step_of": "SCHRITT {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Zum Hinzufügen von Möbeln „Layout beibehalten“ ausschalten",
+        "turn_off": "Ausschalten"
     },
     "furniture": {
         "title": "Möbel",

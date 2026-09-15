@@ -313,7 +313,9 @@
         "advanced_settings": "Impostazioni avanzate",
         "add_furniture": "Aggiungi mobile",
         "add_reference": "Riferimento",
-        "step_of": "PASSO {{current}} / {{total}}"
+        "step_of": "PASSO {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Disattiva «Mantieni Layout» per aggiungere arredi",
+        "turn_off": "Disattiva"
     },
     "furniture": {
         "title": "Arredamento",

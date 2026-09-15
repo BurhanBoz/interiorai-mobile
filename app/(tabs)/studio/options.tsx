@@ -557,20 +557,52 @@ export default function OptionsScreen() {
             attached objects on that toggle. Each object bills +1 credit
             (mirrored in useCreditCost). Plan-gated by allow_reference_image;
             unentitled taps route to the paywall like the strength slider. */}
-        {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM")
-          && !preserveLayout && (
+        {(mode === "REDESIGN" || mode === "OUTDOOR" || mode === "EMPTY_ROOM") && (
           <View style={{
             paddingHorizontal: theme.space.gutter,
             marginTop: TILE_ROW_SPACING,
             marginBottom: TILE_ROW_SPACING,
           }}>
-            {/* Centred, top-aligned. Top-aligned because only the empty tile
-                carries a caption, so the thumbnails must hang from the same
-                edge rather than centre themselves against a taller neighbour.
-                Centred horizontally because this row is now almost the only
-                thing on the step: left-pinned, one dashed square looked like
-                something left behind rather than the one thing being offered.
-                Centring holds for one tile or three, so no count branching. */}
+          {preserveLayout ? (
+            /* V177 — this row used to VANISH when preserve came on. The rule is
+               real (the depth route carries no object image) but silence is not
+               an explanation: someone opened advanced settings, came back, and
+               a feature had disappeared with no way to learn why. Say it, and
+               make the fix one tap. */
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setPreserveLayout(false);
+              }}
+              className="rounded-xl bg-surface-container-low"
+              style={{
+                padding: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                borderWidth: 1,
+                borderColor: "rgba(225,195,155,0.18)",
+              }}
+            >
+              <Ionicons name="bed-outline" size={20} color="#8C8378" />
+              <Text style={{ ...TILE_CAPTION, flex: 1, textAlign: "left" }}>
+                {t("studio.furniture_needs_free_layout")}
+              </Text>
+              <Text style={{ ...TILE_CAPTION, color: "#E1C39B" }}>
+                {t("studio.turn_off")}
+              </Text>
+            </Pressable>
+          ) : (
+            /* Centred, top-aligned. Top-aligned because only the empty tile
+               carries a caption, so the thumbnails must hang from the same
+               edge rather than centre themselves against a taller neighbour.
+               Centred horizontally because this row is now almost the only
+               thing on the step: left-pinned, one dashed square looked like
+               something left behind rather than the one thing being offered.
+               Centring holds for one tile or three, so no count branching.
+               A JS comment, not a JSX one: this sits in a ternary's expression
+               position, where a braced JSX comment would be a second
+               expression and break the branch. */
             <View
               className="flex-row"
               style={{ gap: TILE_GAP, alignItems: "flex-start", justifyContent: "center" }}
@@ -646,6 +678,7 @@ export default function OptionsScreen() {
                 </Pressable>
               )}
             </View>
+          )}
           </View>
         )}
 
