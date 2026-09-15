@@ -19,6 +19,7 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
+import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
 import { planTier, tierRank } from "@/utils/planTier";
 
 /**
@@ -256,10 +257,12 @@ export default function PaywallScreen() {
             await fetchBalance().catch(() => {});
             await leave("PURCHASED", exhaustedPack.code);
         } catch (e) {
-            if (iap.isUserCancelled(e)) {
-                await recordPaywallEvent("DISMISSED", { source, planCode: exhaustedPack.code });
-            } else {
-                await recordPaywallEvent("FAILED", { source, planCode: exhaustedPack.code });
+            // One classifier for all four purchase entry points — see
+            // services/purchaseOutcome.ts for why this is not four catch blocks.
+            const { cancelled } = await reportPurchaseOutcome(e, {
+                source, planCode: exhaustedPack.code,
+            });
+            if (!cancelled) {
                 Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
             }
         } finally {
@@ -279,13 +282,14 @@ export default function PaywallScreen() {
             await fetchBalance().catch(() => {});
             await leave("PURCHASED", plan.code);
         } catch (e) {
-            if (iap.isUserCancelled(e)) {
-                // Cancelling the Apple sheet is not a failure and must not be
-                // reported as one — it would inflate the FAILED bucket with
-                // people who simply changed their mind at the last step.
-                await recordPaywallEvent("DISMISSED", { source, planCode: plan.code });
-            } else {
-                await recordPaywallEvent("FAILED", { source, planCode: plan.code });
+            // Cancelling the Apple sheet is not a failure and must not be
+            // reported as one — it would inflate the FAILED bucket with people
+            // who simply changed their mind at the last step. The classifier
+            // makes that call now, identically for every screen.
+            const { cancelled } = await reportPurchaseOutcome(e, {
+                source, planCode: plan.code,
+            });
+            if (!cancelled) {
                 Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
             }
         } finally {

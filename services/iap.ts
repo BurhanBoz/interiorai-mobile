@@ -61,12 +61,53 @@ import type { StorePrice, StorePriceMap } from "@/utils/price";
  * @param userId backend's user UUID (null = anonymous, RC creates an
  *               anonymous customer that we'll later alias on login).
  */
+/**
+ * Why a purchase could not even be attempted.
+ *
+ * <p>These are OUR failures, thrown before StoreKit is ever contacted, and
+ * until 2026-09-15 every one of them was a bare `Error(string)` that reached
+ * the user as "purchase failed" and reached us as nothing at all. Two users
+ * lost six attempts in 220-280ms each and the reason was unrecoverable
+ * afterwards — RevenueCat only records transactions that reached Apple, so a
+ * throw on this side leaves no trace anywhere.
+ *
+ * <p>A code, not a message: messages get reworded, interpolated and
+ * translated, and a report that groups on them splits one cause into ten.
+ */
+export type IapErrorCode =
+    /** Purchases.configure() never succeeded — every purchase this session throws instantly. */
+    | "SDK_NOT_READY"
+    /** The pack code has no product id in our map. A build/config mismatch, not the store. */
+    | "UNKNOWN_PACK"
+    /** StoreKit returned no product for an id we believe exists. */
+    | "PRODUCT_NOT_FOUND"
+    /** RevenueCat has no current offering. */
+    | "NO_OFFERING"
+    /** The offering exists but carries no package for this plan. */
+    | "NO_PACKAGE";
+
+export class IapError extends Error {
+    constructor(readonly code: IapErrorCode, message: string) {
+        super(message);
+        this.name = "IapError";
+    }
+}
+
+export function isIapError(e: unknown): e is IapError {
+    return e instanceof IapError;
+}
+
 let isConfigured = false;
+let lastUserId: string | null = null;
 
 export async function initializeIAP(userId: string | null): Promise<void> {
     if (isDummyMode) {
         return;
     }
+    // Remembered so ensureConfigured() can retry as the same customer; a retry
+    // that fell back to anonymous would strand the purchase on a customer the
+    // webhook cannot map back to our user.
+    lastUserId = userId;
 
     try {
         if (!isConfigured) {
@@ -83,9 +124,38 @@ export async function initializeIAP(userId: string | null): Promise<void> {
             await Purchases.logIn(userId);
         }
     } catch (e) {
-        // Don't crash the app on RC config failure — purchases will fail
-        // gracefully when attempted. Log so devs notice.
+        // Still must not crash the app at boot. But swallowing it whole is
+        // what made this invisible: isConfigured stayed false, initializeIAP
+        // was never called again, and every purchase for the rest of that
+        // session threw instantly with nobody able to say why.
+        //
+        // ensureConfigured() below retries on demand, so a boot-time blip is
+        // no longer a session-long outage.
         console.warn("[IAP] RevenueCat initialization failed:", e);
+    }
+}
+
+/**
+ * Guarantee the SDK is usable, retrying a failed boot-time configure.
+ *
+ * <p>Called at the top of every purchase. If configure still fails, this
+ * throws {@link IapError} SDK_NOT_READY — a named cause instead of whatever
+ * the SDK happens to raise when it was never initialised.
+ */
+async function ensureConfigured(): Promise<void> {
+    if (isConfigured) return;
+    try {
+        await Purchases.configure({
+            apiKey: revenueCatConfig.appleApiKey,
+            appUserID: lastUserId,
+        });
+        isConfigured = true;
+        console.warn("[IAP] RevenueCat configured on retry (boot attempt had failed)");
+    } catch (e) {
+        throw new IapError(
+            "SDK_NOT_READY",
+            `RevenueCat not configured: ${(e as Error)?.message ?? e}`,
+        );
     }
 }
 
@@ -173,7 +243,8 @@ export async function fetchStorePrices(): Promise<StorePriceMap> {
  * @return          updated SubscriptionResponse from backend after grant
  * @throws Error    on cancellation (`USER_CANCELLED`), network failure, or
  *                  unverified receipt. Caller should distinguish cancelled
- *                  vs failure via the error code (see {@link isUserCancelled}).
+ *                  vs failure via services/purchaseOutcome.ts, which
+ *                  classifies both in one place.
  */
 export async function purchaseSubscription(
     planCode: string,
@@ -187,11 +258,13 @@ export async function purchaseSubscription(
         return activateDummySubscription(planCode);
     }
 
+    await ensureConfigured();
+
     // Fetch the current offering and find the target package.
     const offerings = await Purchases.getOfferings();
     const offering = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID];
     if (!offering) {
-        throw new Error("No RevenueCat offering available");
+        throw new IapError("NO_OFFERING", "No RevenueCat offering available");
     }
 
     // Server-driven resolution first (V3 improvement): the backend already
@@ -206,7 +279,8 @@ export async function purchaseSubscription(
             (packageId != null && p.identifier === packageId),
     );
     if (!targetPackage) {
-        throw new Error(
+        throw new IapError(
+            "NO_PACKAGE",
             `No RC package matches plan ${planCode} (product ${appleProductId ?? "?"}, package ${packageId ?? "?"})`,
         );
     }
@@ -272,7 +346,7 @@ export async function purchaseSubscription(
 export async function purchasePack(packCode: string): Promise<CreditPackPurchaseResponse> {
     const productId = CREDIT_PACK_PRODUCT_IDS[packCode];
     if (!productId) {
-        throw new Error(`Unknown pack code: ${packCode}`);
+        throw new IapError("UNKNOWN_PACK", `Unknown pack code: ${packCode}`);
     }
 
     if (isDummyMode) {
@@ -289,17 +363,29 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
         });
     }
 
+    await ensureConfigured();
+
     // Real RC flow — fetch the product, trigger the StoreKit purchase.
+    //
+    // 🔴 This is a DIFFERENT call from the subscription path, which reads
+    // getOfferings(). Packs are consumables and sit outside the offering, so
+    // they are looked up by identifier. The two can fail independently — and
+    // on 2026-09-15 that is exactly what the data showed: every recorded
+    // failure was a pack, none was a subscription.
     const products = await Purchases.getProducts([productId]);
     const product = products.find((p) => p.identifier === productId);
     if (!product) {
-        throw new Error(`Product not found in App Store Connect: ${productId}`);
+        throw new IapError(
+            "PRODUCT_NOT_FOUND",
+            `StoreKit returned no product for ${productId}`,
+        );
     }
 
     const { useCreditStore } = await import("@/stores/creditStore");
     const balanceBefore = useCreditStore.getState().balance ?? 0;
 
-    // StoreKit purchase — throws on user-cancel (caller maps via isUserCancelled).
+    // StoreKit purchase — throws on user-cancel; purchaseOutcome.ts separates
+    // that from a real failure so no screen has to decide for itself.
     await Purchases.purchaseStoreProduct(product);
 
     // Poll for the webhook-driven grant. 12 tries × 2s = 24s ceiling — RC
@@ -353,17 +439,13 @@ export async function restorePurchases() {
     return Purchases.restorePurchases();
 }
 
-/**
- * Distinguish "user cancelled the payment sheet" from "purchase failed".
- *
- * <p>Cancellation should show a quiet UI dismissal; failure should show an
- * error alert. RC packages the underlying StoreKit error in a typed way.
- */
-export function isUserCancelled(error: unknown): boolean {
-    if (isDummyMode) return false;
-    const purchasesError = error as PurchasesError;
-    return purchasesError?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR;
-}
+// isUserCancelled lived here until 2026-09-15. It answered "was this a
+// cancellation?" and three screens called it while a fourth did not, so the
+// same error got two names depending on where it was caught. Keeping it next
+// to the classifier would have preserved the duplication that caused that
+// drift, so the question has one answer now: classifyPurchaseError in
+// services/purchaseOutcome.ts, which returns the cancellation flag together
+// with the cause.
 
 /**
  * Open Apple's native "Manage Subscriptions" sheet.

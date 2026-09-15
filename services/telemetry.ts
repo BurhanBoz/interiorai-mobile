@@ -170,13 +170,29 @@ export type PaywallEvent =
  */
 export async function recordPaywallEvent(
     event: PaywallEvent,
-    opts?: { source?: string; planCode?: string | null },
+    opts?: {
+        source?: string;
+        planCode?: string | null;
+        /**
+         * Why the purchase ended this way (V179). Set on FAILED, and on the
+         * DISMISSED that means "cancelled at Apple's sheet" rather than
+         * "closed the screen" — the two were indistinguishable until now.
+         *
+         * Produced in exactly one place: services/purchaseOutcome.ts. Do not
+         * hand-write a code at a call site; that is how four screens ended up
+         * with four vocabularies.
+         */
+        failureCode?: string | null;
+        failureDetail?: string | null;
+    },
 ): Promise<void> {
     try {
         await api.post("/api/telemetry/paywall", {
             eventType: event,
             source: opts?.source ?? "ONBOARDING",
             planCode: opts?.planCode ?? null,
+            failureCode: opts?.failureCode ?? null,
+            failureDetail: opts?.failureDetail?.slice(0, 255) ?? null,
             appVersion: APP_VERSION,
             locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
         });

@@ -14,6 +14,7 @@ import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
+import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
 import type { PlanResponse } from "@/types/api";
 import { SubscriptionDisclosure } from "@/components/ui/SubscriptionDisclosure";
 
@@ -221,13 +222,13 @@ export default function PlanConfirmScreen() {
                 ],
             );
         } catch (e: unknown) {
-            if (!iap.isUserCancelled(e)) {
-                recordPaywallEvent("FAILED", { source: "PLANS_SCREEN", planCode: plan.code }).catch(() => {});
-            }
             // User tapped Cancel in the Apple payment sheet — quiet dismiss,
             // no error alert needed (Apple already showed the cancel UI).
-            if (iap.isUserCancelled(e)) {
-                recordPaywallEvent("DISMISSED", { source: "PLANS_SCREEN", planCode: plan.code }).catch(() => {});
+            // Everything else is recorded with its cause.
+            const { cancelled } = await reportPurchaseOutcome(e, {
+                source: "PLANS_SCREEN", planCode: plan.code,
+            });
+            if (cancelled) {
                 return;
             }
             const status = (e as any)?.response?.status;

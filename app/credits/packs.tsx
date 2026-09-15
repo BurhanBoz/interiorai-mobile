@@ -8,10 +8,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { recordPaywallEvent } from "@/services/telemetry";
+import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
 import { useCreditStore } from "@/stores/creditStore";
@@ -352,6 +353,11 @@ export default function CreditPacksScreen() {
     const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
     const hdCost = 0;
     const handleBack = useBackHandler("/(tabs)/profile");
+
+    // Set when a purchase lands, so unmount does not report a dismissal on
+    // top of it. A ref, not state: it is read during teardown, when a state
+    // update would already have been discarded.
+    const purchasedRef = useRef(false);
     const hydrateStorePrices = useStorePricesStore((s) => s.hydrate);
 
     // Localized pack prices — idempotent retry in case boot hydration
@@ -364,12 +370,33 @@ export default function CreditPacksScreen() {
         fetchPacks();
     }, []);
 
+    // SHOWN gives this screen the denominator every other paywall surface
+    // already had. Without it the funnel could say six people tapped a pack
+    // and nothing about how many opened the screen and left — so "almost
+    // nobody buys credits" and "almost nobody reaches the screen" read the
+    // same, and they call for opposite fixes.
+    //
+    // DISMISSED fires from the teardown rather than from the back button:
+    // every exit passes through unmount, but only one of them passes through
+    // that button. iOS's edge-swipe would have been missing from the count,
+    // and a denominator that silently drops a whole exit route is worse than
+    // none — it looks trustworthy.
+    useEffect(() => {
+        recordPaywallEvent("SHOWN", { source: "PACKS_SCREEN" });
+        return () => {
+            if (!purchasedRef.current) {
+                recordPaywallEvent("DISMISSED", { source: "PACKS_SCREEN" }).catch(() => {});
+            }
+        };
+    }, []);
+
     const handlePurchase = async (packCode: string) => {
         // Same funnel table as the paywall (V65); this screen's sales were
         // invisible there until 2026-09-06.
         await recordPaywallEvent("PURCHASE_STARTED", { source: "PACKS_SCREEN", planCode: packCode });
         try {
             const result = await purchase(packCode);
+            purchasedRef.current = true;
             recordPaywallEvent("PURCHASED", { source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
             // Webhook grant hasn't reconciled within the poll window — the
             // purchase went through on Apple's side, credits land shortly.
@@ -390,7 +417,17 @@ export default function CreditPacksScreen() {
                 [{ text: "OK", onPress: () => router.back() }],
             );
         } catch (e: unknown) {
-            recordPaywallEvent("FAILED", { source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
+            // Until 2026-09-15 this block recorded FAILED for everything,
+            // cancellation included, and told the user their purchase had
+            // failed when they had simply changed their mind. Six of the six
+            // failures this table ever held came from this screen, and not one
+            // of them recorded why.
+            const { cancelled } = await reportPurchaseOutcome(e, {
+                source: "PACKS_SCREEN", planCode: packCode,
+            });
+            if (cancelled) {
+                return;
+            }
             const status = (e as any)?.response?.status;
             const message =
                 status === 429
