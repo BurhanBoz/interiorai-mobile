@@ -255,17 +255,18 @@ export default function OptionsScreen() {
   const removeObjectRef = useStudioStore(s => s.removeObjectRef);
   const { pickImage: pickObjectImage, isUploading: isObjectUploading } = useImagePicker();
 
-  const handlePickObject = async () => {
+  // V177 — the "+" tile opens the catalogue instead of the photo library.
+  // The library is still reachable, as the first cell of that screen: a
+  // catalogue piece carries its real centimetres into the brief, and the
+  // photo path cannot, so the catalogue is the one that should be one tap
+  // away. The paywall check stays HERE so an unentitled tap never navigates.
+  const handlePickObject = () => {
     if (!referenceImageAllowed) {
       router.push("/plans");
       return;
     }
-    if (isObjectUploading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await pickObjectImage();
-    if (result?.fileId) {
-      addObjectRef({ uri: result.uri, fileId: result.fileId });
-    }
+    router.push("/studio/furniture");
   };
   const { cost } = useCreditCost();
   // EFFECTIVE values — welcome bonus trial users get MAX plan's rules + features

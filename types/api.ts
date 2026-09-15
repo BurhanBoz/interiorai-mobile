@@ -93,10 +93,40 @@ export interface CreateJobRequest {
      * OBJECT insertions: free-form REDESIGN/OUTDOOR/EMPTY_ROOM (preserve
      * layout off). Max 3 total; each bills +1 credit on the backend.
      */
-    extraReferences?: { fileId: string; role: ExtraReferenceRole }[];
+    extraReferences?: ExtraReferenceInput[];
 }
 
 export type ExtraReferenceRole = "STYLE" | "OBJECT";
+
+/**
+ * V177 — a reference comes from exactly one source: a photo the user uploaded
+ * (fileId) or a catalogue piece (catalogItemId). The backend rejects both or
+ * neither, so the union is enforced on the wire, not just here.
+ */
+export type ExtraReferenceInput = {
+    role: ExtraReferenceRole;
+    fileId?: string;
+    catalogItemId?: string;
+    /** Normalised 0-1 box on the room photo; omitted means "you decide". */
+    placement?: { x: number; y: number; w: number; h: number };
+};
+
+/** One pickable piece from GET /api/furniture. */
+export interface FurnitureItem {
+    id: string;
+    code: string;
+    category: string;
+    name: string;
+    imageUrl: string;
+    material?: string | null;
+    colourName?: string | null;
+    colourHex?: string | null;
+    widthCm?: number | null;
+    depthCm?: number | null;
+    heightCm?: number | null;
+    /** true when this is the user's own saved piece rather than a curated one. */
+    mine: boolean;
+}
 
 export interface JobOutputResponse {
     id: string;

@@ -315,6 +315,26 @@
         "add_reference": "参考を追加",
         "step_of": "ステップ {{current}} / {{total}}"
     },
+    "furniture": {
+        "title": "家具",
+        "all": "すべて",
+        "category": {
+            "sofa": "ソファ",
+            "chair": "チェア",
+            "table": "テーブル",
+            "bed": "ベッド",
+            "lamp": "照明",
+            "rug": "ラグ",
+            "plant": "グリーン",
+            "storage": "収納",
+            "decor": "装飾"
+        },
+        "limit_reached": "1つのデザインにつき2点まで。",
+        "own_photo": "自分の写真を使う",
+        "own_photo_hint": "無地の背景が最適です",
+        "empty": "まだアイテムがありません。",
+        "load_failed": "カタログを読み込めませんでした。"
+    },
     "gallery": {
         "title": "ギャラリー",
         "search_placeholder": "スタイルや部屋で検索...",

@@ -134,9 +134,24 @@ export function useGenerate() {
           // The store clears them on mode/preserve changes, so what's here
           // is always valid for the current request shape.
           extraReferences: (() => {
+            // V177 — a catalogue piece travels as catalogItemId, an uploaded
+            // photo as fileId. The backend rejects a reference carrying both
+            // or neither, so exactly one is sent per entry.
             const extras = [
               ...extraStyleRefs.map((r) => ({ fileId: r.fileId, role: "STYLE" as const })),
-              ...objectRefs.map((r) => ({ fileId: r.fileId, role: "OBJECT" as const })),
+              ...objectRefs.map((r) =>
+                r.catalogItemId
+                  ? {
+                      catalogItemId: r.catalogItemId,
+                      role: "OBJECT" as const,
+                      ...(r.placement ? { placement: r.placement } : {}),
+                    }
+                  : {
+                      fileId: r.fileId,
+                      role: "OBJECT" as const,
+                      ...(r.placement ? { placement: r.placement } : {}),
+                    },
+              ),
             ];
             return extras.length > 0 ? extras : undefined;
           })(),
