@@ -313,7 +313,9 @@
         "advanced_settings": "詳細設定",
         "add_furniture": "家具を追加",
         "add_reference": "参考を追加",
-        "step_of": "ステップ {{current}} / {{total}}"
+        "step_of": "ステップ {{current}} / {{total}}",
+        "furniture_needs_free_layout": "家具を追加するには「レイアウトを保持」をオフにしてください",
+        "turn_off": "オフにする"
     },
     "furniture": {
         "title": "家具",

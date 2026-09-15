@@ -313,7 +313,9 @@
         "advanced_settings": "Advanced settings",
         "add_furniture": "Add furniture",
         "add_reference": "Add reference",
-        "step_of": "STEP {{current}} / {{total}}"
+        "step_of": "STEP {{current}} / {{total}}",
+        "furniture_needs_free_layout": "Turn off Preserve Layout to add furniture",
+        "turn_off": "Turn off"
     },
     "furniture": {
         "title": "Furniture",

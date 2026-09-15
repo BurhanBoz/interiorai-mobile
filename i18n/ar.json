@@ -313,7 +313,9 @@
         "advanced_settings": "إعدادات متقدمة",
         "add_furniture": "إضافة أثاث",
         "add_reference": "إضافة مرجع",
-        "step_of": "الخطوة {{current}} / {{total}}"
+        "step_of": "الخطوة {{current}} / {{total}}",
+        "furniture_needs_free_layout": "أوقف «الحفاظ على التخطيط» لإضافة أثاث",
+        "turn_off": "إيقاف"
     },
     "furniture": {
         "title": "الأثاث",

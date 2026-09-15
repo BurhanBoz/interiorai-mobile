@@ -110,13 +110,19 @@ export default function FurnitureScreen() {
       </View>
 
       {/* categories */}
+      {/* flexGrow 0: the parent is flex-1 and the grid below it shrinks when a
+          category has few items — without this the chip strip absorbed the
+          slack and the chips stretched into tall ovals. alignItems keeps each
+          chip its own height rather than the tallest sibling's. */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0, flexShrink: 0 }}
         contentContainerStyle={{
           paddingHorizontal: theme.space.gutter,
           gap: 8,
           paddingBottom: 14,
+          alignItems: "center",
         }}
       >
         {[null, ...CATEGORIES].map((c) => {

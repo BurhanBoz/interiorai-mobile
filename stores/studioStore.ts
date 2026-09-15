@@ -116,7 +116,10 @@ const initialState = {
     // furniture in place, so the default run only ever restyled surfaces —
     // a weaker first impression than the redesign people came for. It stays
     // one tap away in Advanced for the "same layout, new materials" job.
-    preserveLayout: false,
+    // Default ON, matching CreateDesignJobRequest's own default. Keeping the
+    // room's geometry is what most people want from a redesign; the furniture
+    // row explains itself when this is on rather than vanishing.
+    preserveLayout: true,
     prompt: "",
     negativePrompt: "",
     colorPalette: DEFAULT_COLOR_PALETTE,
