@@ -335,7 +335,19 @@
         "own_photo": "Use my own photo",
         "own_photo_hint": "Best on a plain background",
         "empty": "No pieces here yet.",
-        "load_failed": "Couldn't load the catalogue."
+        "load_failed": "Couldn't load the catalogue.",
+        "save_title": "Save this piece",
+        "save_action": "Save to my catalogue",
+        "use_once": "Use in this design only",
+        "field_name": "Name",
+        "field_name_hint": "e.g. my grey armchair",
+        "field_category": "Category",
+        "field_size": "Size in cm (optional)",
+        "field_w": "W",
+        "field_d": "D",
+        "field_h": "H",
+        "saved_title": "Saved",
+        "saved_body": "We're removing the background. It'll appear in your catalogue in a moment."
     },
     "gallery": {
         "title": "Gallery",

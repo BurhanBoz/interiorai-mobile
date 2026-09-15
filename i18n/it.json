@@ -335,7 +335,19 @@
         "own_photo": "Usa una mia foto",
         "own_photo_hint": "Meglio su sfondo neutro",
         "empty": "Qui non c'è ancora nulla.",
-        "load_failed": "Impossibile caricare il catalogo."
+        "load_failed": "Impossibile caricare il catalogo.",
+        "save_title": "Salva questo pezzo",
+        "save_action": "Salva nel mio catalogo",
+        "use_once": "Usa solo in questo progetto",
+        "field_name": "Nome",
+        "field_name_hint": "es. la mia poltrona grigia",
+        "field_category": "Categoria",
+        "field_size": "Misure in cm (facoltativo)",
+        "field_w": "L",
+        "field_d": "P",
+        "field_h": "A",
+        "saved_title": "Salvato",
+        "saved_body": "Stiamo rimuovendo lo sfondo. Comparirà nel tuo catalogo tra poco."
     },
     "gallery": {
         "title": "Galleria",

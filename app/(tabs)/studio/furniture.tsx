@@ -1,9 +1,13 @@
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { theme } from "@/config/theme";
@@ -44,6 +48,13 @@ export default function FurnitureScreen() {
   const [category, setCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+
+  // V178 — a picked photo waiting to be named. While this is set the screen
+  // shows the save form instead of the grid: the same screen, one step on,
+  // rather than a second route the back button has to learn about.
+  const [pending, setPending] = useState<{ uri: string; fileId: string } | null>(null);
+  const [form, setForm] = useState({ name: "", category: "SOFA", w: "", d: "", h: "" });
+  const [saving, setSaving] = useState(false);
 
   const full = objectRefs.length >= 2;
 
@@ -89,10 +100,175 @@ export default function FurnitureScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await pickObjectImage();
     if (result?.fileId) {
-      addObjectRef({ uri: result.uri, fileId: result.fileId });
-      router.back();
+      setPending({ uri: result.uri, fileId: result.fileId });
+      setForm({ name: "", category: category ?? "SOFA", w: "", d: "", h: "" });
     }
   };
+
+  /** Use the photo for this design only — the pre-V178 behaviour. */
+  const useOnce = () => {
+    if (!pending) return;
+    addObjectRef({ uri: pending.uri, fileId: pending.fileId });
+    router.back();
+  };
+
+  /** Save it as a catalogue piece; the cutout runs server-side. */
+  const saveToCatalogue = async () => {
+    if (!pending || saving) return;
+    const name = form.name.trim();
+    if (!name) return;
+    setSaving(true);
+    try {
+      const num = (v: string) => {
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) && n > 0 && n <= 1000 ? n : undefined;
+      };
+      await furnitureService.save({
+        fileId: pending.fileId,
+        name,
+        category: form.category,
+        widthCm: num(form.w),
+        depthCm: num(form.d),
+        heightCm: num(form.h),
+      });
+      // 202, not 200: the piece is being cut out and will appear once that
+      // lands. Saying so beats a list that silently does not contain it.
+      Alert.alert(t("furniture.saved_title"), t("furniture.saved_body"));
+      setPending(null);
+      load(category);
+    } catch {
+      Alert.alert(t("errors.generic"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── V178: name the piece you just photographed ──────────────────────
+  if (pending) {
+    const input = {
+      color: "#F5F0EB",
+      backgroundColor: "rgba(255,255,255,0.05)",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.10)",
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      ...theme.text.body,
+    } as const;
+    return (
+      <SafeAreaView className="flex-1 bg-surface" edges={["top", "bottom"]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View
+            className="flex-row items-center justify-between"
+            style={{ paddingHorizontal: theme.space.gutter, paddingBottom: 10 }}
+          >
+            <Text style={{ ...theme.text.headline, color: "#F5F0EB" }}>
+              {t("furniture.save_title")}
+            </Text>
+            <Pressable onPress={() => setPending(null)} hitSlop={10}>
+              <Ionicons name="close" size={24} color="#A79C8E" />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 28, gap: 14 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="rounded-xl overflow-hidden bg-surface-container-low" style={{ height: 180 }}>
+              <Image source={{ uri: pending.uri }} style={{ width: "100%", height: "100%" }} contentFit="contain" />
+            </View>
+
+            <View style={{ gap: 6 }}>
+              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_name")}</Text>
+              <TextInput
+                value={form.name}
+                onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
+                placeholder={t("furniture.field_name_hint")}
+                placeholderTextColor="#6E665D"
+                maxLength={120}
+                style={input}
+              />
+            </View>
+
+            <View style={{ gap: 6 }}>
+              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_category")}</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ flexGrow: 0, flexShrink: 0 }}
+                contentContainerStyle={{ gap: 8, alignItems: "center" }}
+              >
+                {CATEGORIES.map((c) => {
+                  const on = form.category === c;
+                  return (
+                    <Pressable
+                      key={c}
+                      onPress={() => setForm((f) => ({ ...f, category: c }))}
+                      className="rounded-full"
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 7,
+                        backgroundColor: on ? "rgba(225,195,155,0.16)" : "rgba(255,255,255,0.05)",
+                        borderWidth: 1,
+                        borderColor: on ? "rgba(225,195,155,0.42)" : "rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <Text style={{ ...theme.text.caption, color: on ? "#E1C39B" : "#A79C8E" }}>
+                        {t(`furniture.category.${c.toLowerCase()}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* Centimetres are the reason a catalogue piece beats a photograph:
+                they are the one fact the model otherwise has to guess, and
+                scale is what it guesses wrong. Optional, but asked for. */}
+            <View style={{ gap: 6 }}>
+              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_size")}</Text>
+              <View className="flex-row" style={{ gap: 8 }}>
+                {(["w", "d", "h"] as const).map((k) => (
+                  <TextInput
+                    key={k}
+                    value={form[k]}
+                    onChangeText={(v) => setForm((f) => ({ ...f, [k]: v.replace(/[^0-9]/g, "") }))}
+                    placeholder={t(`furniture.field_${k}`)}
+                    placeholderTextColor="#6E665D"
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    style={{ ...input, flex: 1, textAlign: "center" }}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <Pressable
+              onPress={saveToCatalogue}
+              disabled={saving || !form.name.trim()}
+              className="rounded-xl items-center justify-center"
+              style={{
+                paddingVertical: 15,
+                backgroundColor: "#E1C39B",
+                opacity: saving || !form.name.trim() ? 0.45 : 1,
+              }}
+            >
+              {saving
+                ? <ActivityIndicator size="small" color="#131313" />
+                : <Text style={{ ...theme.text.title, color: "#131313" }}>{t("furniture.save_action")}</Text>}
+            </Pressable>
+
+            <Pressable onPress={useOnce} disabled={saving} style={{ alignItems: "center", paddingVertical: 8 }}>
+              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.use_once")}</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={["top", "bottom"]}>

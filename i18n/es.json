@@ -335,7 +335,19 @@
         "own_photo": "Usar mi propia foto",
         "own_photo_hint": "Mejor con fondo liso",
         "empty": "Aquí todavía no hay piezas.",
-        "load_failed": "No se pudo cargar el catálogo."
+        "load_failed": "No se pudo cargar el catálogo.",
+        "save_title": "Guardar esta pieza",
+        "save_action": "Guardar en mi catálogo",
+        "use_once": "Usar solo en este diseño",
+        "field_name": "Nombre",
+        "field_name_hint": "p. ej. mi sillón gris",
+        "field_category": "Categoría",
+        "field_size": "Medidas en cm (opcional)",
+        "field_w": "An",
+        "field_d": "P",
+        "field_h": "Al",
+        "saved_title": "Guardado",
+        "saved_body": "Estamos quitando el fondo. Aparecerá en tu catálogo en un momento."
     },
     "gallery": {
         "title": "Galería",

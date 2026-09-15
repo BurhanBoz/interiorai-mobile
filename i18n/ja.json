@@ -335,7 +335,19 @@
         "own_photo": "自分の写真を使う",
         "own_photo_hint": "無地の背景が最適です",
         "empty": "まだアイテムがありません。",
-        "load_failed": "カタログを読み込めませんでした。"
+        "load_failed": "カタログを読み込めませんでした。",
+        "save_title": "この家具を保存",
+        "save_action": "マイカタログに保存",
+        "use_once": "このデザインだけで使う",
+        "field_name": "名前",
+        "field_name_hint": "例：グレーのアームチェア",
+        "field_category": "カテゴリ",
+        "field_size": "サイズ（cm・任意）",
+        "field_w": "幅",
+        "field_d": "奥",
+        "field_h": "高",
+        "saved_title": "保存しました",
+        "saved_body": "背景を切り抜いています。まもなくカタログに表示されます。"
     },
     "gallery": {
         "title": "ギャラリー",

@@ -335,7 +335,19 @@
         "own_photo": "Utiliser ma photo",
         "own_photo_hint": "Idéal sur fond uni",
         "empty": "Rien ici pour l'instant.",
-        "load_failed": "Impossible de charger le catalogue."
+        "load_failed": "Impossible de charger le catalogue.",
+        "save_title": "Enregistrer ce meuble",
+        "save_action": "Enregistrer dans mon catalogue",
+        "use_once": "Utiliser uniquement dans ce design",
+        "field_name": "Nom",
+        "field_name_hint": "ex. mon fauteuil gris",
+        "field_category": "Catégorie",
+        "field_size": "Dimensions en cm (facultatif)",
+        "field_w": "L",
+        "field_d": "P",
+        "field_h": "H",
+        "saved_title": "Enregistré",
+        "saved_body": "Nous détourons le meuble. Il apparaîtra dans votre catalogue dans un instant."
     },
     "gallery": {
         "title": "Galerie",
