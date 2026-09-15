@@ -111,6 +111,18 @@ export type ExtraReferenceInput = {
     placement?: { x: number; y: number; w: number; h: number };
 };
 
+/** Body for POST /api/furniture/items (V178). */
+export interface SaveFurnitureInput {
+    fileId: string;
+    name: string;
+    category: string;
+    material?: string;
+    colourName?: string;
+    widthCm?: number;
+    depthCm?: number;
+    heightCm?: number;
+}
+
 /** One pickable piece from GET /api/furniture. */
 export interface FurnitureItem {
     id: string;

@@ -335,7 +335,19 @@
         "own_photo": "Eigen foto gebruiken",
         "own_photo_hint": "Werkt het best op een egale achtergrond",
         "empty": "Hier staat nog niets.",
-        "load_failed": "Catalogus kon niet worden geladen."
+        "load_failed": "Catalogus kon niet worden geladen.",
+        "save_title": "Dit meubel opslaan",
+        "save_action": "Opslaan in mijn catalogus",
+        "use_once": "Alleen in dit ontwerp gebruiken",
+        "field_name": "Naam",
+        "field_name_hint": "bijv. mijn grijze fauteuil",
+        "field_category": "Categorie",
+        "field_size": "Maten in cm (optioneel)",
+        "field_w": "B",
+        "field_d": "D",
+        "field_h": "H",
+        "saved_title": "Opgeslagen",
+        "saved_body": "We verwijderen de achtergrond. Het verschijnt zo in je catalogus."
     },
     "gallery": {
         "title": "Galerij",

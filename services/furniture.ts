@@ -1,5 +1,5 @@
 import api from "./api";
-import type { FurnitureItem } from "@/types/api";
+import type { FurnitureItem, SaveFurnitureInput } from "@/types/api";
 
 /**
  * The furniture catalogue (V177).
@@ -15,6 +15,19 @@ export const furnitureService = {
         const { data } = await api.get<FurnitureItem[]>("/api/furniture", {
             params: category ? { category } : undefined,
         });
+        return data;
+    },
+
+    /**
+     * Save a photographed piece as a personal catalogue item (V178).
+     *
+     * Returns 202: the row exists but is INACTIVE until the background-removal
+     * job lands, so the piece will not appear in browse() straight away. That
+     * is deliberate — a piece still wearing the room it was photographed in
+     * drags that room's lighting into every design it joins.
+     */
+    async save(input: SaveFurnitureInput): Promise<FurnitureItem> {
+        const { data } = await api.post<FurnitureItem>("/api/furniture/items", input);
         return data;
     },
 };

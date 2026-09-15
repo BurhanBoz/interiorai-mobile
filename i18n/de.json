@@ -335,7 +335,19 @@
         "own_photo": "Eigenes Foto verwenden",
         "own_photo_hint": "Am besten vor schlichtem Hintergrund",
         "empty": "Hier gibt es noch nichts.",
-        "load_failed": "Katalog konnte nicht geladen werden."
+        "load_failed": "Katalog konnte nicht geladen werden.",
+        "save_title": "Dieses Stück speichern",
+        "save_action": "In meinem Katalog speichern",
+        "use_once": "Nur in diesem Design verwenden",
+        "field_name": "Name",
+        "field_name_hint": "z. B. mein grauer Sessel",
+        "field_category": "Kategorie",
+        "field_size": "Maße in cm (optional)",
+        "field_w": "B",
+        "field_d": "T",
+        "field_h": "H",
+        "saved_title": "Gespeichert",
+        "saved_body": "Wir entfernen den Hintergrund. Gleich erscheint es in deinem Katalog."
     },
     "gallery": {
         "title": "Galerie",

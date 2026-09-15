@@ -335,7 +335,19 @@
         "own_photo": "Kendi fotoğrafımı kullan",
         "own_photo_hint": "Sade arka planda en iyi sonucu verir",
         "empty": "Burada henüz parça yok.",
-        "load_failed": "Katalog yüklenemedi."
+        "load_failed": "Katalog yüklenemedi.",
+        "save_title": "Bu parçayı kaydet",
+        "save_action": "Kataloğuma kaydet",
+        "use_once": "Sadece bu tasarımda kullan",
+        "field_name": "Ad",
+        "field_name_hint": "ör. gri koltuğum",
+        "field_category": "Kategori",
+        "field_size": "Ölçü (cm, isteğe bağlı)",
+        "field_w": "G",
+        "field_d": "D",
+        "field_h": "Y",
+        "saved_title": "Kaydedildi",
+        "saved_body": "Arka planı siliyoruz. Birazdan kataloğunda görünecek."
     },
     "gallery": {
         "title": "Galeri",

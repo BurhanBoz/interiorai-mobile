@@ -335,7 +335,19 @@
         "own_photo": "내 사진 사용",
         "own_photo_hint": "단색 배경에서 가장 잘 작동합니다",
         "empty": "아직 항목이 없습니다.",
-        "load_failed": "카탈로그를 불러오지 못했습니다."
+        "load_failed": "카탈로그를 불러오지 못했습니다.",
+        "save_title": "이 가구 저장",
+        "save_action": "내 카탈로그에 저장",
+        "use_once": "이 디자인에만 사용",
+        "field_name": "이름",
+        "field_name_hint": "예: 회색 안락의자",
+        "field_category": "카테고리",
+        "field_size": "크기(cm, 선택)",
+        "field_w": "가로",
+        "field_d": "세로",
+        "field_h": "높이",
+        "saved_title": "저장됨",
+        "saved_body": "배경을 제거하는 중입니다. 곧 카탈로그에 나타납니다."
     },
     "gallery": {
         "title": "갤러리",
