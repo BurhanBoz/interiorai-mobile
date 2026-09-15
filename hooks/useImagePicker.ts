@@ -24,6 +24,26 @@ const JPEG_QUALITY = 0.82;
  * timeout) or a server-side 5xx. A 4xx is a verdict — auth, file size,
  * media type — and the second attempt would earn the same answer.
  */
+/**
+ * HEIF/HEIC — the iPhone camera default, and a format nothing downstream
+ * can read.
+ *
+ * <p>The JVM cannot decode it, so the backend's reference downscaler skipped
+ * it and passed the original through; Replicate then rejected it with
+ * {@code E006 "The input was invalid"}. On 2026-09-15 a subscriber's first
+ * two generations after paying both died that way.
+ *
+ * <p>iOS itself decodes HEIC fine, so the conversion belongs here: one
+ * re-encode on the device and nothing downstream ever meets the format.
+ */
+const isHeif = (uri: string, mimeType?: string | null): boolean => {
+    if (mimeType && /^image\/hei[cf]/i.test(mimeType)) return true;
+    // Strip any query/fragment before looking at the extension — picker uris
+    // carry them (ph://…#…, file://…?width=…).
+    const path = uri.split(/[?#]/)[0];
+    return /\.(heic|heif|hif)$/i.test(path);
+};
+
 const isRetriableUploadError = (err: unknown): boolean => {
     const status = (err as { response?: { status?: number } })?.response?.status;
     return status === undefined || status >= 500;
@@ -301,8 +321,17 @@ async function resizeIfNeeded(
 ): Promise<string> {
     const { width, height, uri } = asset;
     if (!width || !height) return uri;
+
+    // A HEIC has to be re-encoded whatever its size. The test below is about
+    // PIXELS, and until 2026-09-15 that was the only test — so a large HEIC
+    // was converted on its way through the resize and a small one sailed past
+    // untouched, straight to a provider that cannot read it. The bug was not
+    // that we failed to handle HEIC; it was that the condition asked about
+    // dimensions when the thing that mattered was the container.
+    const mustTranscode = isHeif(uri, (asset as { mimeType?: string }).mimeType);
+
     const longest = Math.max(width, height);
-    if (longest <= MAX_EDGE_PX && !alwaysEncode) return uri;
+    if (longest <= MAX_EDGE_PX && !alwaysEncode && !mustTranscode) return uri;
 
     // Already inside the cap and only here to be re-encoded: keep the
     // dimensions, change the container.
@@ -323,8 +352,14 @@ async function resizeIfNeeded(
         );
         return manipulated.uri;
     } catch {
-        // If manipulator fails (rare), fall back to the original — better
+        // If the manipulator fails (rare), fall back to the original — better
         // than blocking the user's upload.
+        //
+        // Except for HEIC: there the original is known-unusable, and handing
+        // it back would recreate exactly the silent failure this branch
+        // exists to prevent. Return it anyway so the upload proceeds, and let
+        // the backend refuse it with a message the user can act on; a fallback
+        // that pretends to work is worse than a refusal that explains itself.
         return uri;
     }
 }
