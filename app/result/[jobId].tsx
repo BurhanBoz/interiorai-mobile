@@ -183,12 +183,29 @@ export default function ResultDetailScreen() {
   // The ladder below is the whole policy, in one place. Each entry is a visit
   // some other prompt has already claimed:
   const userId = useAuthStore((st) => st.user?.id ?? null);
+  const pushAskClaimed = usePushPermissionAsk(outputs.length > 0);
+  const accountAskClaimed = useAccountPrompt(outputs.length > 0);
+
+  // WHO OWNS THIS VISIT
+  //
+  // Only one system sheet may appear per visit; two get both dismissed. Every
+  // other prompt here has a fixed slot, and the rating — keyed to a value
+  // signal rather than a count — is the one that has to stand aside.
+  //
+  // Twice now that standing-aside was computed by GUESSING which visit the
+  // others would take, from counters. It was wrong both times: the push ask
+  // counts successes in "push_prompt_success_count" while this screen counts
+  // them in "result_success_count", and for any user who predates one of the
+  // two those numbers disagree. On 2026-09-16 the notification sheets opened,
+  // the guess said the visit was free, iOS refused the rating over them, and
+  // the attempt was recorded anyway.
+  //
+  // So nothing is inferred any more. Each prompt reports when it has actually
+  // committed to showing something, and the rating reads that at the moment
+  // it would fire.
   const sourceSheetEligible =
     job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3;
-  // Eligible is not the same as asking. The sheet stops after the first
-  // answer, and gating the rating on eligibility alone would have blocked it
-  // forever for every engaged user past their third render — the exact people
-  // most likely to leave a rating.
+  // Eligible is not asking: the sheet keeps its own once-per-identity flag.
   const [sourceSheetWillShow, setSourceSheetWillShow] = useState(true);
   useEffect(() => {
     let cancelled = false;
@@ -202,14 +219,19 @@ export default function ResultDetailScreen() {
     return () => { cancelled = true; };
   }, [sourceSheetEligible, userId]);
 
-  const visitAlreadyClaimed =
-    paywallFiredThisVisit     // 1st result — the offer
-    || successCount === 2     // 2nd — notification permission (usePushPermissionAsk)
-    || sourceSheetWillShow    // 3rd — where did you hear about us, if still unanswered
-    || successCount === 5;    // 5th — secure your account (guests, useAccountPrompt)
+  const visitClaimed =
+    paywallFiredThisVisit   // the offer, on the first result
+    || pushAskClaimed       // notification permission — reported, not guessed
+    || accountAskClaimed    // secure your account — reported, not guessed
+    || sourceSheetWillShow; // where did you hear about us, if still unanswered
+
+  // A ref so useReviewPrompt can read the CURRENT answer inside its delay,
+  // rather than the answer that happened to be true when it was scheduled.
+  const visitClaimedRef = useRef(visitClaimed);
+  visitClaimedRef.current = visitClaimed;
 
   const [valueSignal, setValueSignal] = useState(false);
-  useReviewPrompt(valueSignal && !visitAlreadyClaimed);
+  useReviewPrompt(valueSignal, visitClaimedRef);
 
   // How long the result actually held attention (V74). Without this the
   // only thing we could see was that 11% of people downloaded, which says
@@ -241,8 +263,8 @@ export default function ResultDetailScreen() {
       flush();
     };
   }, [viewedId]);
-  usePushPermissionAsk(outputs.length > 0);
-  useAccountPrompt(outputs.length > 0);
+
+
 
   /**
    * Build the image source for expo-image.

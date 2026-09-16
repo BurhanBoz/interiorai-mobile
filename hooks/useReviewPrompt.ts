@@ -63,7 +63,20 @@ const ASK_DELAY_MS = 4000;
  * @param valueSignal true once the user has saved, shared or favourited a
  *   result in this visit. Pass false while nothing has happened yet.
  */
-export function useReviewPrompt(valueSignal: boolean) {
+export function useReviewPrompt(
+  valueSignal: boolean,
+  /**
+   * Read at FIRE time, not at schedule time.
+   *
+   * <p>The gate used to be a boolean argument evaluated when the effect ran,
+   * which meant it answered "has anything claimed this visit YET" four
+   * seconds before the sheet was actually requested. Other prompts decide
+   * asynchronously — a Keychain read, a counter, their own delay — so the
+   * honest answer only exists later. Passing a ref moves the question to the
+   * moment it matters.
+   */
+  visitClaimed: { current: boolean },
+) {
   useEffect(() => {
     if (!valueSignal) return;
     let cancelled = false;
@@ -88,6 +101,11 @@ export function useReviewPrompt(valueSignal: boolean) {
 
         timer = setTimeout(async () => {
           if (cancelled) return;
+          // Someone else took the visit while we were waiting. Standing down
+          // costs nothing; asking would spend an attempt on a sheet iOS is
+          // going to refuse, which is exactly how the budget was burned
+          // before anyone could see it happening.
+          if (visitClaimed.current) return;
           // Still recorded BEFORE the call, because the OS reports nothing
           // back. The difference is what "recorded" now costs: one of three
           // attempts rather than the only one.
@@ -104,5 +122,5 @@ export function useReviewPrompt(valueSignal: boolean) {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [valueSignal]);
+  }, [valueSignal, visitClaimed]);
 }
