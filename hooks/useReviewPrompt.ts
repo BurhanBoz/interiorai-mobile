@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
+import { isFlagSet, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import * as StoreReview from "expo-store-review";
 
 /**
@@ -18,14 +18,38 @@ import * as StoreReview from "expo-store-review";
  * can observe, it happens on the user's own tap, and for a one-render user it
  * happens inside their only visit.
  *
- * <p>Asked once per install. Apple caps the system sheet at 3 shows/year and
- * silently drops the excess, so the single ask is spent deliberately rather
- * than burned by the OS at a random moment.
+ * <p><b>Why this is no longer one-shot.</b> It used to write "asked" and then
+ * call the OS, on the reasoning that iOS reports nothing back and re-asking
+ * is worse than missing one. But iOS silently REFUSES to present the sheet
+ * while another modal is up — and until 2026-09-16 the ask could land on the
+ * first-result visit, where the paywall is already on screen. The refusal
+ * costs nothing on Apple's side and everything on ours: the user is marked
+ * asked and is never asked again. In the seven days to 2026-09-16 about 25
+ * people saved a result and the listing gained zero ratings; France, the only
+ * market we advertise in, still shows none at all.
+ *
+ * <p>So the ask now has a small budget instead of one shot: at most
+ * {@link MAX_ATTEMPTS} attempts, on separate visits, at least
+ * {@link MIN_GAP_DAYS} days apart. That number is Apple's own — the system
+ * sheet is capped at three shows per year and the OS drops the excess without
+ * complaint — so spending it across three visits asks no more of the user
+ * than the old design intended, and survives an attempt that was never shown.
  *
  * <p>Never blocks or throws: any storage or API failure just skips the ask.
  */
 
-const ASKED_KEY = "review_prompt_asked";
+/** The 1.5.0 one-shot flag. Read only to migrate; never written again. */
+const LEGACY_ASKED_KEY = "review_prompt_asked";
+const ATTEMPTS_KEY = "review_prompt_attempts";
+/** Day number (epoch days, UTC) of the last attempt. 0 = never. */
+const LAST_DAY_KEY = "review_prompt_last_day";
+
+/** Apple's own ceiling for the system sheet. Asking past it is a no-op anyway. */
+const MAX_ATTEMPTS = 3;
+/** A second try lands on a later visit, not a later minute. */
+const MIN_GAP_DAYS = 3;
+
+const epochDay = () => Math.floor(Date.now() / 86_400_000);
 
 /**
  * Long enough for the "Saved to Photos" alert to be read and dismissed.
@@ -47,15 +71,28 @@ export function useReviewPrompt(valueSignal: boolean) {
 
     (async () => {
       try {
-        if (await isFlagSet(ASKED_KEY)) return;
+        let attempts = await readCounter(ATTEMPTS_KEY);
+        // Anyone carrying the 1.5.0 one-shot flag has spent exactly one
+        // attempt — not all three. Seeding it this way is what gives the
+        // users the old design stranded another chance.
+        if (attempts === 0 && (await isFlagSet(LEGACY_ASKED_KEY))) {
+          attempts = 1;
+          await writeCounter(ATTEMPTS_KEY, attempts);
+        }
+        if (attempts >= MAX_ATTEMPTS) return;
+
+        const lastDay = await readCounter(LAST_DAY_KEY);
+        if (lastDay > 0 && epochDay() - lastDay < MIN_GAP_DAYS) return;
+
         if (!(await StoreReview.isAvailableAsync())) return;
 
         timer = setTimeout(async () => {
           if (cancelled) return;
-          // Mark BEFORE requesting: the OS gives no callback about whether
-          // the sheet was actually shown, and re-asking is worse than
-          // occasionally missing one.
-          await setFlag(ASKED_KEY);
+          // Still recorded BEFORE the call, because the OS reports nothing
+          // back. The difference is what "recorded" now costs: one of three
+          // attempts rather than the only one.
+          await writeCounter(ATTEMPTS_KEY, attempts + 1);
+          await writeCounter(LAST_DAY_KEY, epochDay());
           await StoreReview.requestReview();
         }, ASK_DELAY_MS);
       } catch {

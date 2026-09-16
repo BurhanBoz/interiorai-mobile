@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.roomframeai.mobile",
-      "buildNumber": "65",
+      "buildNumber": "66",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -83,7 +83,8 @@
       "expo-image-picker",
       "expo-apple-authentication",
       "expo-notifications",
-      "expo-asset"
+      "expo-asset",
+      "posthog-react-native/expo"
     ],
     "extra": {
       "router": {},

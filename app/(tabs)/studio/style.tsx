@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 import { catalogName } from "@/utils/catalogI18n";
 import { useStudioStore } from "@/stores/studioStore";
+import { track } from "@/services/analytics";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Brand } from "@/components/brand/Brand";
@@ -626,7 +627,18 @@ export default function StyleScreen() {
                   return (
                     <Pressable
                       key={style.id}
-                      onPress={() => setDesignStyle(style)}
+                      onPress={() => {
+                        // Which of the eighteen styles people actually pick —
+                        // and, joined against the wallet, which ones lead to
+                        // paying. The backend stores the chosen style on the
+                        // job, but only for designs that were STARTED.
+                        track("style_selected", {
+                          style: style.code,
+                          room_type: roomType?.code ?? null,
+                          mode,
+                        });
+                        setDesignStyle(style);
+                      }}
                     >
                       <View style={{ width: CARD_WIDTH, marginBottom: 4 }}>
                         {/* Image Card */}

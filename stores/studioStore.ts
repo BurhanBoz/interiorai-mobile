@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { CatalogItemResponse, DesignMode, MaskMode, MaskStroke, QualityTier, SpeedMode } from "@/types/api";
+import { track } from "@/services/analytics";
 
 /**
  * An OBJECT "+" tile. V177 — a tile is either an uploaded photo or a
@@ -186,11 +187,23 @@ export const useStudioStore = create<StudioState>((set) => ({
     removeExtraStyleRef: (fileId) =>
         set((state) => ({ extraStyleRefs: state.extraStyleRefs.filter((r) => r.fileId !== fileId) })),
     addObjectRef: (ref) =>
-        set((state) =>
-            state.objectRefs.length >= 4
-                || state.objectRefs.some((r) => r.fileId === ref.fileId)
-                ? state
-                : { objectRefs: [...state.objectRefs, ref] }),
+        set((state) => {
+            if (state.objectRefs.length >= 4
+                || state.objectRefs.some((r) => r.fileId === ref.fileId)) {
+                return state;
+            }
+            const next = [...state.objectRefs, ref];
+            // Tracked here rather than in the two screens that call it: this
+            // is the single funnel both the catalogue and the photo library
+            // pass through, so one call site cannot drift from the other.
+            // The catalogue shipped in 1.5.0 with no way to tell whether
+            // anyone used it.
+            track("furniture_used", {
+                source: ref.catalogItemId ? "catalog" : "own_photo",
+                count: next.length,
+            });
+            return { objectRefs: next };
+        }),
     removeObjectRef: (fileId) =>
         set((state) => ({ objectRefs: state.objectRefs.filter((r) => r.fileId !== fileId) })),
     reset: () => set(initialState),

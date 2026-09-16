@@ -13,6 +13,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { initializeIAP } from "@/services/iap";
+import { initAnalytics } from "@/services/analytics";
 import { sendHeartbeat, submitAttributionToken } from "@/services/telemetry";
 import { syncPushTokenIfPermitted } from "@/hooks/usePushRegistration";
 import { AppSplash } from "@/components/ui/AppSplash";
@@ -171,6 +172,20 @@ export default function RootLayout() {
       .catch((e) => {
         console.warn("[ROOT] initializeIAP failed:", e);
       });
+  }, [user?.id, isLoading]);
+
+  // Product analytics, bound to the same backend user UUID RevenueCat uses
+  // as its app_user_id — one identity across PostHog, RevenueCat and our own
+  // tables, so a session here lines up with a wallet there without a join.
+  //
+  // No key configured means no client and no calls: a build ships and runs
+  // identically whether or not the project exists yet.
+  useEffect(() => {
+    if (isLoading) return;
+    initAnalytics(user?.id ?? null).catch(() => {
+      // Deliberately silent. Analytics that can interrupt a boot is worse
+      // than analytics that is missing.
+    });
   }, [user?.id, isLoading]);
 
   // Sync i18next with the persisted language store on mount and on change.
