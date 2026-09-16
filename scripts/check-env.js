@@ -75,6 +75,22 @@ function required(key, test, expectation) {
   }
 }
 
+/**
+ * Validate a key only when it is present.
+ *
+ * <p>Some integrations are optional by design: analytics is off until a
+ * project exists, and a build must still ship in the meantime. But an
+ * optional key that IS set and is wrong is worse than one that is missing —
+ * it looks configured and silently does nothing.
+ */
+function whenSet(key, test, expectation) {
+  const value = resolved[key];
+  if (value === undefined || value === '') return;
+  if (!test(value)) {
+    note(`${key}=${value}\n      from ${origin[key]} — ${expectation}`);
+  }
+}
+
 if (mode === 'production') {
   // A `.env.local` outranks `.env.production`, so its mere existence is the
   // hazard. There is no legitimate use for one in this project.
@@ -119,6 +135,18 @@ if (mode === 'production') {
     'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID',
     (v) => v.endsWith('.apps.googleusercontent.com'),
     'Google sign-in silently fails without it',
+  );
+  // Analytics is optional until the PostHog project exists; the app runs
+  // with no client and no calls when the key is absent.
+  whenSet(
+    'EXPO_PUBLIC_POSTHOG_KEY',
+    (v) => v.startsWith('phc_') && v.length > 20,
+    'a PostHog project key starts with "phc_". A personal API key (phx_/phs_) must NEVER ship in an app bundle',
+  );
+  whenSet(
+    'EXPO_PUBLIC_POSTHOG_HOST',
+    (v) => v.startsWith('https://') && !/us\.i\.posthog\.com/.test(v),
+    'most of our users are in the EU — use https://eu.i.posthog.com so their events stay there',
   );
 }
 

@@ -20,6 +20,7 @@ import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
 import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
+import { track } from "@/services/analytics";
 import { planTier, tierRank } from "@/utils/planTier";
 
 /**
@@ -107,6 +108,30 @@ export default function PaywallScreen() {
     const ownBefore = typeof params.beforeUrl === "string" && params.beforeUrl ? params.beforeUrl : null;
 
     const [selected, setSelected] = useState<string>(PLAN_PRO);
+
+    // How long the paywall actually held someone, and whether they touched it
+    // at all. The server already records SHOWN and DISMISSED — what it cannot
+    // record is that 43 of the 46 people who saw the first-result paywall were
+    // gone in seconds without ever picking a plan. That is the number that
+    // decides whether this screen needs different copy or a different moment.
+    const openedAt = useRef(Date.now());
+    const touchedAPlan = useRef(false);
+    const outcome = useRef<"dismissed" | "purchased">("dismissed");
+    const reported = useRef(false);
+
+    // Reported from teardown, not from leave(): restore, the hardware back
+    // gesture and a swipe all exit without passing through it, and a dwell
+    // number that silently drops whole exit routes is worse than none.
+    useEffect(() => () => {
+        if (reported.current) return;
+        reported.current = true;
+        track("paywall_viewed", {
+            source,
+            seconds: Math.round((Date.now() - openedAt.current) / 1000),
+            touched_a_plan: touchedAPlan.current,
+            outcome: outcome.current,
+        });
+    }, []);
     const [busy, setBusy] = useState(false);
 
     // Hero reveal. Width is animated rather than a transform because the
@@ -234,6 +259,7 @@ export default function PaywallScreen() {
     };
 
     const leave = async (event: "DISMISSED" | "PURCHASED", planCode?: string) => {
+        if (event === "PURCHASED") outcome.current = "purchased";
         await recordPaywallEvent(event, { source, planCode });
         exit();
     };
@@ -450,6 +476,7 @@ export default function PaywallScreen() {
                                 selected={effectiveSelected === PLAN_BASE}
                                 onPress={() => {
                                     setSelected(PLAN_BASE);
+                                    touchedAPlan.current = true;
                                     recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
                                 }}
                             />
@@ -463,6 +490,7 @@ export default function PaywallScreen() {
                                 selected={effectiveSelected === PLAN_PRO}
                                 onPress={() => {
                                     setSelected(PLAN_PRO);
+                                    touchedAPlan.current = true;
                                     recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
                                 }}
                             />

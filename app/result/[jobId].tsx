@@ -171,12 +171,26 @@ export default function ResultDetailScreen() {
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
   const paywallFiredThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
-  // The rating ask now waits for a value signal instead of a render count
-  // (see useReviewPrompt). Held back during the visit that carries the push
-  // permission prompt — two SYSTEM sheets in one visit get both dismissed,
-  // and the push one is one-shot forever on iOS.
+  // The rating ask waits for a value signal instead of a render count (see
+  // useReviewPrompt), which makes it the ONLY prompt here keyed to behaviour
+  // rather than to a visit number — and therefore the only one that can land
+  // on a visit another prompt already owns. Until 2026-09-16 it guarded
+  // against exactly one of them (the push ask) and collided with the rest;
+  // worst of all with the first-result paywall, because iOS refuses to
+  // present the review sheet over a modal and we recorded the ask anyway.
+  //
+  // The ladder below is the whole policy, in one place. Each entry is a visit
+  // some other prompt has already claimed:
+  const sourceSheetVisible =
+    job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3;
+  const visitAlreadyClaimed =
+    paywallFiredThisVisit   // 1st result — the offer
+    || successCount === 2   // 2nd — notification permission (usePushPermissionAsk)
+    || sourceSheetVisible   // 3rd — where did you hear about us
+    || successCount === 5;  // 5th — secure your account (guests, useAccountPrompt)
+
   const [valueSignal, setValueSignal] = useState(false);
-  useReviewPrompt(valueSignal && successCount !== 2);
+  useReviewPrompt(valueSignal && !visitAlreadyClaimed);
 
   // How long the result actually held attention (V74). Without this the
   // only thing we could see was that 11% of people downloaded, which says
@@ -1132,7 +1146,7 @@ export default function ResultDetailScreen() {
           seen, it costs nothing, whereas the same question on the first screen
           would sit next to the paywall and be charged against activation.
           The sheet handles its own once-per-identity flag. */}
-      <SourceSheet enabled={job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3} />
+      <SourceSheet enabled={sourceSheetVisible} />
     </SafeAreaView>
   );
 }
