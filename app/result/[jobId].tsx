@@ -22,7 +22,8 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { SourceSheet } from "@/components/ui/SourceSheet";
+import { SourceSheet, sourceSheetWillAsk } from "@/components/ui/SourceSheet";
+import { useAuthStore } from "@/stores/authStore";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -181,13 +182,31 @@ export default function ResultDetailScreen() {
   //
   // The ladder below is the whole policy, in one place. Each entry is a visit
   // some other prompt has already claimed:
-  const sourceSheetVisible =
+  const userId = useAuthStore((st) => st.user?.id ?? null);
+  const sourceSheetEligible =
     job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3;
+  // Eligible is not the same as asking. The sheet stops after the first
+  // answer, and gating the rating on eligibility alone would have blocked it
+  // forever for every engaged user past their third render — the exact people
+  // most likely to leave a rating.
+  const [sourceSheetWillShow, setSourceSheetWillShow] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    if (!sourceSheetEligible) {
+      setSourceSheetWillShow(false);
+      return;
+    }
+    sourceSheetWillAsk(userId)
+      .then((will) => { if (!cancelled) setSourceSheetWillShow(will); })
+      .catch(() => { if (!cancelled) setSourceSheetWillShow(true); });
+    return () => { cancelled = true; };
+  }, [sourceSheetEligible, userId]);
+
   const visitAlreadyClaimed =
-    paywallFiredThisVisit   // 1st result — the offer
-    || successCount === 2   // 2nd — notification permission (usePushPermissionAsk)
-    || sourceSheetVisible   // 3rd — where did you hear about us
-    || successCount === 5;  // 5th — secure your account (guests, useAccountPrompt)
+    paywallFiredThisVisit     // 1st result — the offer
+    || successCount === 2     // 2nd — notification permission (usePushPermissionAsk)
+    || sourceSheetWillShow    // 3rd — where did you hear about us, if still unanswered
+    || successCount === 5;    // 5th — secure your account (guests, useAccountPrompt)
 
   const [valueSignal, setValueSignal] = useState(false);
   useReviewPrompt(valueSignal && !visitAlreadyClaimed);
@@ -1146,7 +1165,7 @@ export default function ResultDetailScreen() {
           seen, it costs nothing, whereas the same question on the first screen
           would sit next to the paywall and be charged against activation.
           The sheet handles its own once-per-identity flag. */}
-      <SourceSheet enabled={sourceSheetVisible} />
+      <SourceSheet enabled={sourceSheetEligible} />
     </SafeAreaView>
   );
 }

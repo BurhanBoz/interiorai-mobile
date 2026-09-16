@@ -101,6 +101,28 @@ const TILE_GAP = 20;
  * the row, so a long translation (German, Arabic) wraps inside its own card
  * instead of pushing the layout — nothing here is measured in characters.
  */
+/**
+ * Will this sheet actually ask, for this user, right now?
+ *
+ * <p>{@code enabled} is ELIGIBILITY, not visibility: the sheet keeps its own
+ * once-per-identity flag and stays silent after the first answer. Anything
+ * that needs to stand aside for it — the rating prompt does — has to ask this
+ * question rather than read the prop, and has to ask it HERE, because a
+ * second copy of the flag key in another file is exactly how these two would
+ * drift apart again.
+ */
+export async function sourceSheetWillAsk(userId: string | null): Promise<boolean> {
+    if (!userId) return false;
+    try {
+        return !(await isFlagSet(flagFor(userId)));
+    } catch {
+        // Unreadable flag: assume it WILL ask, so a collision is avoided at
+        // the cost of one deferred rating rather than risked at the cost of
+        // two sheets at once.
+        return true;
+    }
+}
+
 export function SourceSheet({ enabled }: { enabled: boolean }) {
     const { t } = useTranslation();
     const userId = useAuthStore((s) => s.user?.id ?? null);
