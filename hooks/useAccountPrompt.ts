@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import { router } from "expo-router";
@@ -20,8 +20,10 @@ const ASKED_KEY = "account_prompt_asked";
 const ASK_ON_NTH = 5;
 const DELAY_MS = 2500;
 
-export function useAccountPrompt(jobSucceeded: boolean) {
+/** @return true once this visit has committed to showing its alert. */
+export function useAccountPrompt(jobSucceeded: boolean): boolean {
   const { t } = useTranslation();
+  const [claimed, setClaimed] = useState(false);
   const isGuest = useAuthStore((s) => s.user?.guest === true);
 
   useEffect(() => {
@@ -39,6 +41,7 @@ export function useAccountPrompt(jobSucceeded: boolean) {
         timer = setTimeout(async () => {
           if (cancelled) return;
           await setFlag(ASKED_KEY);
+          setClaimed(true);
           Alert.alert(
             t("auth.secure_account_title"),
             t("auth.secure_account_body"),
@@ -62,4 +65,6 @@ export function useAccountPrompt(jobSucceeded: boolean) {
       if (timer) clearTimeout(timer);
     };
   }, [jobSucceeded, isGuest, t]);
+
+  return claimed;
 }

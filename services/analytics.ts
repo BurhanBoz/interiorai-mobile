@@ -67,7 +67,16 @@ let client: PostHog | null = null;
  * same place and for the same reason as RevenueCat's own init.
  */
 export async function initAnalytics(userId: string | null): Promise<void> {
-    if (!isAnalyticsEnabled || client) return;
+    if (!isAnalyticsEnabled) return;
+    // Already started: the only thing left to do is bind the identity, which
+    // usually arrives AFTER the first call. The early return used to skip
+    // that too, so every event shipped under PostHog's own anonymous id and
+    // the "one identity across three systems" promise was never kept —
+    // visible in the console as a PERSON that is not our user UUID.
+    if (client) {
+        identifyUser(userId);
+        return;
+    }
     try {
         client = new PostHog(KEY, {
             host: HOST,

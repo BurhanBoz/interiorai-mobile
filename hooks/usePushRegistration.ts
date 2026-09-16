@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
@@ -79,8 +79,19 @@ const ASK_ON_NTH_SUCCESS = 2;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
 const ASK_DELAY_MS = 3000;
 
-export function usePushPermissionAsk(jobSucceeded: boolean) {
+/**
+ * @return true once this visit has decided to ask. Anything that must not
+ *   stack a second system sheet on top of this one reads the return value
+ *   rather than guessing from a counter — two hooks counting "successes" in
+ *   two different Keychain keys do not agree for any user who predates one
+ *   of them, and the rating prompt was burned twice on exactly that.
+ */
+export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
     const { t } = useTranslation();
+    // Flipped the moment this visit commits to showing a sheet — before the
+    // pre-prompt, not after the OS answers, because the point is to stop a
+    // SECOND sheet from being scheduled while this one is on screen.
+    const [claimed, setClaimed] = useState(false);
     const ask = useCallback(async () => {
         if (Platform.OS !== "ios") return;
         // Expo Go cannot register for remote notifications; asking there
@@ -108,6 +119,7 @@ export function usePushPermissionAsk(jobSucceeded: boolean) {
         // Mark BEFORE prompting: the ask is one-shot on iOS whatever the answer,
         // and re-asking is worse than occasionally missing one.
         await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
+        setClaimed(true);
 
         // Our own question first. iOS grants one chance and a cold system
         // sheet is refused by most people; a sentence saying WHAT we would
@@ -138,4 +150,6 @@ export function usePushPermissionAsk(jobSucceeded: boolean) {
             clearTimeout(timer);
         };
     }, [jobSucceeded, ask]);
+
+    return claimed;
 }
