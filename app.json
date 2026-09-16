@@ -83,8 +83,7 @@
       "expo-image-picker",
       "expo-apple-authentication",
       "expo-notifications",
-      "expo-asset",
-      "posthog-react-native/expo"
+      "expo-asset"
     ],
     "extra": {
       "router": {},

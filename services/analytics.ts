@@ -30,6 +30,19 @@ import type { PostHogEventProperties } from "@posthog/core";
  * exactly what we are trying to learn. No email, no name, no photo ever goes
  * into an event property.
  *
+ * <p><b>Why there is no config plugin in app.json.</b> PostHog ships one
+ * ("posthog-react-native/expo") and it was added, then removed on
+ * 2026-09-16: everything it does on iOS is source-map and dSYM upload for
+ * error-tracking symbolication, which we do not use. What it actually did
+ * was add a build phase that shells out to {@code posthog-cli}, and an
+ * archive died on "error: posthog-cli not found".
+ *
+ * <p>Session replay does NOT come from that plugin — it comes from the
+ * {@code @posthog/react-native-plugin} pod, which Expo autolinking picks up
+ * from package.json on its own. Podfile.lock carries it with the plugin
+ * gone. Re-add the config plugin only alongside error tracking, and install
+ * posthog-cli in the same change.
+ *
  * <p><b>Failure contract.</b> Same as the rest of our instrumentation: it
  * cannot throw and it cannot block. Every call swallows. Measurement that can
  * break the thing it measures is worse than no measurement.
