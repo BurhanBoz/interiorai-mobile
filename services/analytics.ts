@@ -174,4 +174,20 @@ export type AnalyticsEvent =
      * reach for our pieces or their own photographs. It shipped in 1.5.0
      * with no way to tell.
      */
-    | "furniture_used";
+    | "furniture_used"
+    /**
+     * A result leaving the app, and by which door.
+     *
+     * <p>App Store Connect says 44 downloads came from "App Referrer" — a tap
+     * inside some other app — and we cannot tell which. The share sheet is one
+     * candidate, Pinterest-in-app is another, and they point at completely
+     * different next moves.
+     *
+     * <p>🔴 It is worth knowing the answer is probably NOT the share sheet:
+     * {@code useImageActions.shareImage} sends the image FILE and nothing else
+     * — no message, no link — so whoever receives it has nothing to tap. Until
+     * that changes, sharing cannot produce an install by construction. This
+     * event measures how often people try anyway, which is what decides
+     * whether adding a link is worth the change.
+     */
+    | "result_shared";

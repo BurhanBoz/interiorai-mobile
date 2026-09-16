@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SourceSheet, sourceSheetWillAsk } from "@/components/ui/SourceSheet";
 import { useAuthStore } from "@/stores/authStore";
+import { track } from "@/services/analytics";
 import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
@@ -291,6 +292,13 @@ export default function ResultDetailScreen() {
     // user who sent a design to WhatsApp counted as someone who did
     // nothing with it.
     if (currentOutput?.id) sendOutputSignal(currentOutput.id, "SHARE");
+    // The server already counts THAT a share happened. What it cannot see is
+    // how often, against how many saves — the ratio that says whether making
+    // the share carry a link is worth doing at all.
+    track("result_shared", {
+      style: job?.designStyleName ?? null,
+      feature: job?.featureCode ?? null,
+    });
     setValueSignal(true);
     // Share the actual image file (downloaded from the pre-signed S3
     // URL), not just the URL string. iMessage / WhatsApp / Mail get a
