@@ -295,6 +295,12 @@ export interface CreditBalanceResponse {
      * still held, and a client that recomputed it would drift.
      */
     flatRateApplies?: boolean;
+    /**
+     * The plan whose credit rules price this account right now — not always
+     * the plan it is on. A welcome-trial user and a FREE account still
+     * holding a bought pack are both priced at the paid rate.
+     */
+    pricingPlanCode?: string;
 }
 
 // ── Pagination ─────────────────────────────────
