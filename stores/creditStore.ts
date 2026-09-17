@@ -13,6 +13,7 @@ interface CreditState {
      */
     welcomeBonusExpiresAt: string | null;
     welcomeBonusActive: boolean;
+    flatRateApplies: boolean;
     fetchBalance: () => Promise<void>;
     canAfford: (cost: number) => boolean;
     /**
@@ -26,12 +27,14 @@ interface CreditState {
 const initialCreditState = (): Pick<
     CreditState,
     "balance" | "monthlyLimit" | "planCode" | "welcomeBonusExpiresAt" | "welcomeBonusActive"
+    | "flatRateApplies"
 > => ({
     balance: 0,
     monthlyLimit: 0,
     planCode: "FREE",
     welcomeBonusExpiresAt: null,
     welcomeBonusActive: false,
+    flatRateApplies: true,
 });
 
 export const useCreditStore = create<CreditState>((set, get) => ({
@@ -45,6 +48,9 @@ export const useCreditStore = create<CreditState>((set, get) => ({
             planCode: data.planCode,
             welcomeBonusExpiresAt: data.welcomeBonusExpiresAt ?? null,
             welcomeBonusActive: data.welcomeBonusActive ?? false,
+            // Default true: an unknown balance is safest read as FREE, which
+            // shows the lower number rather than promising a discount.
+            flatRateApplies: data.flatRateApplies ?? true,
         });
     },
 
