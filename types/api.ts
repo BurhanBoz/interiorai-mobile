@@ -183,6 +183,12 @@ export interface PlanFeatureResponse {
     featureName: string;
     enabled: boolean;
     limitsJson: string;
+    /**
+     * ai_features.credits_per_use — what the backend charges when
+     * plan_credit_rules has no matching row. In production that is every
+     * row: the table is empty, so this IS the price.
+     */
+    creditsPerUse?: number;
 }
 
 export interface PlanCreditRuleResponse {
@@ -282,6 +288,13 @@ export interface CreditBalanceResponse {
     welcomeBonusExpiresAt?: string | null;
     /** Server-evaluated flag — true while trial expiry is in the future. */
     welcomeBonusActive?: boolean;
+    /**
+     * True when every design job bills a flat 1 credit for this account — the
+     * FREE rate (JobServiceImpl.freeFlatRateApplies). Server-evaluated on
+     * purpose: it depends on plan, trial state AND whether a bought pack is
+     * still held, and a client that recomputed it would drift.
+     */
+    flatRateApplies?: boolean;
 }
 
 // ── Pagination ─────────────────────────────────
