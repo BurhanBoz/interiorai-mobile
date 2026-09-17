@@ -59,15 +59,20 @@ export function useEffectivePlanCode(): EffectiveTier {
 export function useEffectiveCreditRules(): PlanCreditRuleResponse[] {
     const ownRules = useSubscriptionStore((s) => s.creditRules);
     const plans = useSubscriptionStore((s) => s.plans);
-    const welcomeBonusActive = useCreditStore((s) => s.welcomeBonusActive);
+    const pricingPlanCode = useCreditStore((s) => s.pricingPlanCode);
 
     return useMemo(() => {
-        if (welcomeBonusActive) {
-            const topPlan = plans?.find((p) => p.code === TOP_PLAN_CODE);
-            return topPlan?.creditRules ?? ownRules;
-        }
-        return ownRules;
-    }, [welcomeBonusActive, plans, ownRules]);
+        // The server says whose rules price this account. It used to be
+        // inferred here from the trial flag alone, which was right for trial
+        // users and wrong for anyone who had bought a credit pack: they stayed
+        // on FREE's rules — one credit for everything — while the backend
+        // billed them the paid rate. Pricing is not entitlement, so this is
+        // deliberately the only hook that follows it; features and permissions
+        // still come from the plan the account is actually on.
+        if (!pricingPlanCode) return ownRules;
+        const priced = plans?.find((p) => p.code === pricingPlanCode);
+        return priced?.creditRules ?? ownRules;
+    }, [pricingPlanCode, plans, ownRules]);
 }
 
 /**
