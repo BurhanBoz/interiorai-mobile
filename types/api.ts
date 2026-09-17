@@ -301,6 +301,16 @@ export interface CreditBalanceResponse {
      * holding a bought pack are both priced at the paid rate.
      */
     pricingPlanCode?: string;
+    /**
+     * The credit rules that price this account, already resolved server-side.
+     *
+     * Sent whole rather than as a plan code to look up: /api/plans is filtered
+     * by X-App-Version, and the weekly storefront a 1.5.x client receives has
+     * no plan called PRO — it has PRO_WEEKLY. The lookup missed and the app
+     * displayed FREE's prices for an account the backend was billing at the
+     * paid rate.
+     */
+    creditRules?: PlanCreditRuleResponse[];
 }
 
 // ── Pagination ─────────────────────────────────
