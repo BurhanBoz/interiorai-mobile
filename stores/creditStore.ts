@@ -1,3 +1,4 @@
+import type { PlanCreditRuleResponse } from "@/types/api";
 import { create } from "zustand";
 import * as creditsService from "@/services/credits";
 
@@ -15,6 +16,7 @@ interface CreditState {
     welcomeBonusActive: boolean;
     flatRateApplies: boolean;
     pricingPlanCode: string | null;
+    effectiveCreditRules: PlanCreditRuleResponse[];
     fetchBalance: () => Promise<void>;
     canAfford: (cost: number) => boolean;
     /**
@@ -28,7 +30,7 @@ interface CreditState {
 const initialCreditState = (): Pick<
     CreditState,
     "balance" | "monthlyLimit" | "planCode" | "welcomeBonusExpiresAt" | "welcomeBonusActive"
-    | "flatRateApplies" | "pricingPlanCode"
+    | "flatRateApplies" | "pricingPlanCode" | "effectiveCreditRules"
 > => ({
     balance: 0,
     monthlyLimit: 0,
@@ -37,6 +39,7 @@ const initialCreditState = (): Pick<
     welcomeBonusActive: false,
     flatRateApplies: true,
     pricingPlanCode: null,
+    effectiveCreditRules: [],
 });
 
 export const useCreditStore = create<CreditState>((set, get) => ({
@@ -54,6 +57,7 @@ export const useCreditStore = create<CreditState>((set, get) => ({
             // shows the lower number rather than promising a discount.
             flatRateApplies: data.flatRateApplies ?? true,
             pricingPlanCode: data.pricingPlanCode ?? null,
+            effectiveCreditRules: data.creditRules ?? [],
         });
     },
 

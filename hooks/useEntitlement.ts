@@ -58,22 +58,19 @@ export function useEffectivePlanCode(): EffectiveTier {
  */
 export function useEffectiveCreditRules(): PlanCreditRuleResponse[] {
     const ownRules = useSubscriptionStore((s) => s.creditRules);
-    const plans = useSubscriptionStore((s) => s.plans);
-    const pricingPlanCode = useCreditStore((s) => s.pricingPlanCode);
+    const effective = useCreditStore((s) => s.effectiveCreditRules);
 
-    return useMemo(() => {
-        // The server says whose rules price this account. It used to be
-        // inferred here from the trial flag alone, which was right for trial
-        // users and wrong for anyone who had bought a credit pack: they stayed
-        // on FREE's rules — one credit for everything — while the backend
-        // billed them the paid rate. Pricing is not entitlement, so this is
-        // deliberately the only hook that follows it; features and permissions
-        // still come from the plan the account is actually on.
-        if (!pricingPlanCode) return ownRules;
-        const priced = plans?.find((p) => p.code === pricingPlanCode);
-        return priced?.creditRules ?? ownRules;
-    }, [pricingPlanCode, plans, ownRules]);
+    // The server resolves whose rules price this account and sends them whole.
+    // This used to look up a plan CODE in the /api/plans list, which broke the
+    // moment the code was "PRO" and the client's version-filtered storefront
+    // only had "PRO_WEEKLY": the lookup missed, fell through to FREE's rules,
+    // and showed 3 for a job billed at 5. There is no lookup left to miss.
+    //
+    // ownRules is the fallback for a balance that has not loaded yet, not a
+    // second source of truth.
+    return effective.length > 0 ? effective : ownRules;
 }
+
 
 /**
  * Effective feature list. During trial, returns the top plan's

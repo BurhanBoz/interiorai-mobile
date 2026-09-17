@@ -50,8 +50,12 @@ export function useCreditCost() {
     const perUse = features.find((f) => f.featureCode === featureCode)?.creditsPerUse ?? 1;
     const base = rule?.creditCost ?? perUse + Math.max(numOutputs - 1, 0);
 
+    // The clamp lands on the BASE, then the attachments are added — the order
+    // the backend uses (JobServiceImpl.totalCreditCost). Clamping the total
+    // would show 1 for a free user who attached three catalogue pieces and
+    // will be charged 4.
+    const clamped = flatRateApplies && base > 1 ? 1 : base;
     const extraRefCount = extraStyleRefs.length + objectRefs.length;
-    const raw = base + extraRefCount;
 
-    return { cost: flatRateApplies && raw > 1 ? 1 : raw, featureCode };
+    return { cost: clamped + extraRefCount, featureCode };
 }
