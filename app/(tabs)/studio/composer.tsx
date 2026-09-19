@@ -66,6 +66,7 @@ export default function ComposerScreen() {
     const roomType = useStudioStore((s) => s.roomType);
     const designStyle = useStudioStore((s) => s.designStyle);
     const objectRefs = useStudioStore((s) => s.objectRefs);
+    const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
     const setRoomType = useStudioStore((s) => s.setRoomType);
     const setDesignStyle = useStudioStore((s) => s.setDesignStyle);
 
@@ -239,9 +240,10 @@ export default function ComposerScreen() {
                     </View>
 
                     <FurnitureRow
-                        products={products}
-                        picked={pickedProduct}
+                        picked={objectRefs}
+                        suggestions={products}
                         onBrowse={() => router.push("/studio/furniture" as never)}
+                        onRemove={removeObjectRef}
                     />
                 </View>
 
@@ -276,7 +278,7 @@ export default function ComposerScreen() {
                                   })}
                         </Text>
                         {/* The only statement of cost anywhere in the app. */}
-                        <Text style={{ fontFamily: "Archivo-700", fontSize: 12.5, color: U.accentBright }}>
+                        <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
                             {t("studio.credit_cost", { count: cost })}
                         </Text>
                     </View>
@@ -374,10 +376,10 @@ function PhotoFrame({
                 }}
             >
                 <PhotoPill onPress={onChangeRoom}>
-                    <Text style={{ fontFamily: "Archivo-600", fontSize: 12.5, color: "#fff" }}>
+                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: "#fff" }}>
                         {roomTypeName}
                     </Text>
-                    <Text style={{ fontFamily: "Archivo-400", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+                    <Text style={{ fontFamily: "Inter", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
                         {t("studio.change")}
                     </Text>
                 </PhotoPill>
@@ -386,7 +388,7 @@ function PhotoFrame({
                     {busy ? (
                         <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                        <Text style={{ fontFamily: "Archivo-600", fontSize: 12, color: "#fff" }}>
+                        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}>
                             {t("studio.replace")}
                         </Text>
                     )}
@@ -476,7 +478,7 @@ function StyleStrip({
                         <Text
                             numberOfLines={1}
                             style={{
-                                fontFamily: "Archivo-600",
+                                fontFamily: "Inter-SemiBold",
                                 fontSize: 12,
                                 marginTop: 6,
                                 color: selected ? U.accentBright : U.inkMuted,
@@ -493,20 +495,38 @@ function StyleStrip({
 
 /* ── furniture row ──────────────────────────────────────────────────── */
 
+/**
+ * The pieces the user has actually chosen — up to four.
+ *
+ * <p>It used to show the first four items of the CATALOGUE whatever the user
+ * had picked, so choosing a leather two-seater left four unrelated sofas on
+ * screen with the name changed underneath. The row now shows the selection,
+ * and each cell can be removed by tapping it: a choice you cannot take back
+ * is a choice most people will not make.
+ *
+ * <p>Empty, it shows four catalogue pieces as an invitation rather than four
+ * empty plates — the same suggestion the Studio band used to carry, now in
+ * the one place the room already exists.
+ */
 function FurnitureRow({
-    products,
     picked,
+    suggestions,
     onBrowse,
+    onRemove,
 }: {
-    products: FurnitureItem[];
-    picked: { name?: string } | null;
+    picked: { fileId: string; uri: string; name?: string }[];
+    suggestions: FurnitureItem[];
     onBrowse: () => void;
+    onRemove: (fileId: string) => void;
 }) {
     const { t } = useTranslation();
+    const hasPicks = picked.length > 0;
+    /** The catalogue caps a run at four pieces; the row shows exactly that. */
+    const cells = hasPicks ? picked.slice(0, 4) : [];
+    const blanks = hasPicks ? 4 - cells.length : 0;
+
     return (
-        <Pressable
-            onPress={onBrowse}
-            accessibilityRole="button"
+        <View
             style={{
                 marginTop: 18,
                 backgroundColor: U.surface,
@@ -517,31 +537,97 @@ function FurnitureRow({
             }}
         >
             <View style={{ flexDirection: "row", gap: 8 }}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <View
-                        key={i}
-                        style={{
-                            flex: 1,
-                            height: 56,
-                            borderRadius: 9,
-                            backgroundColor: U.productPlate,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {products[i] ? (
-                            <Image
-                                source={{ uri: products[i].imageUrl }}
-                                style={{ width: "100%", height: 48 }}
-                                resizeMode="contain"
-                            />
-                        ) : null}
-                    </View>
-                ))}
+                {hasPicks
+                    ? [
+                          ...cells.map((ref) => (
+                              <Pressable
+                                  key={ref.fileId}
+                                  onPress={() => onRemove(ref.fileId)}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={t("studio.remove_piece", {
+                                      name: ref.name ?? "",
+                                  })}
+                                  style={{
+                                      flex: 1,
+                                      height: 56,
+                                      borderRadius: 9,
+                                      backgroundColor: U.productPlate,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      overflow: "hidden",
+                                  }}
+                              >
+                                  <Image
+                                      source={{ uri: ref.uri }}
+                                      style={{ width: "100%", height: 48 }}
+                                      resizeMode="contain"
+                                  />
+                                  <View
+                                      style={{
+                                          position: "absolute",
+                                          top: 3,
+                                          right: 3,
+                                          width: 18,
+                                          height: 18,
+                                          borderRadius: 9,
+                                          backgroundColor: U.ground,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                      }}
+                                  >
+                                      <Text style={{ color: U.ink, fontSize: 11, lineHeight: 13 }}>×</Text>
+                                  </View>
+                              </Pressable>
+                          )),
+                          ...Array.from({ length: blanks }).map((_, i) => (
+                              <Pressable
+                                  key={`blank-${i}`}
+                                  onPress={onBrowse}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={t("studio.browse")}
+                                  style={{
+                                      flex: 1,
+                                      height: 56,
+                                      borderRadius: 9,
+                                      borderWidth: 1,
+                                      borderColor: U.lineNeutral,
+                                      borderStyle: "dashed",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                  }}
+                              >
+                                  <Text style={{ color: U.inkMuted, fontSize: 16 }}>+</Text>
+                              </Pressable>
+                          )),
+                      ]
+                    : suggestions.slice(0, 4).map((item) => (
+                          <Pressable
+                              key={item.id}
+                              onPress={onBrowse}
+                              accessibilityRole="button"
+                              accessibilityLabel={item.name}
+                              style={{
+                                  flex: 1,
+                                  height: 56,
+                                  borderRadius: 9,
+                                  backgroundColor: U.productPlate,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  overflow: "hidden",
+                              }}
+                          >
+                              <Image
+                                  source={{ uri: item.imageUrl }}
+                                  style={{ width: "100%", height: 48 }}
+                                  resizeMode="contain"
+                              />
+                          </Pressable>
+                      ))}
             </View>
 
-            <View
+            <Pressable
+                onPress={onBrowse}
+                accessibilityRole="button"
                 style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
@@ -549,14 +635,16 @@ function FurnitureRow({
                     marginTop: 10,
                 }}
             >
-                <Text style={{ ...V.row, color: U.ink }} numberOfLines={1}>
-                    {picked?.name ?? t("studio.place_a_real_piece")}
+                <Text style={{ ...V.row, color: U.ink, flex: 1 }} numberOfLines={1}>
+                    {hasPicks
+                        ? t("studio.pieces_chosen", { count: picked.length })
+                        : t("studio.place_a_real_piece")}
                 </Text>
-                <Text style={{ fontFamily: "Archivo-700", fontSize: 11.5, color: U.accentBright }}>
+                <Text style={{ fontFamily: "Inter-Bold", fontSize: 11.5, color: U.accentBright }}>
                     {t("studio.browse")} →
                 </Text>
-            </View>
-        </Pressable>
+            </Pressable>
+        </View>
     );
 }
 
@@ -588,7 +676,7 @@ function SecondaryButton({
         >
             <Text
                 style={{
-                    fontFamily: tone === "ink" ? "Archivo-600" : "Archivo-400",
+                    fontFamily: tone === "ink" ? "Inter-SemiBold" : "Inter",
                     fontSize: 12.5,
                     color: tone === "ink" ? U.ink : U.inkMuted,
                 }}

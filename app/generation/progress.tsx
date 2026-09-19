@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { useCreditStore } from "@/stores/creditStore";
+import { useGenerate } from "@/hooks/useGenerate";
 import { Brand } from "@/components/brand/Brand";
 import { theme } from "@/config/theme";
 import type { JobResponse, JobStatus } from "@/types/api";
@@ -34,6 +35,9 @@ type Phase = "queued" | "submitted" | "rendering" | "polishing" | "ready" | "err
 const ESTIMATED_TOTAL_MS = 45_000; // Avg job time — tuned to ControlNet Hough median
 
 export default function GenerationProgressScreen() {
+  // Retry replays the SAME request through the money path — same key, so a
+  // transient failure cannot become a second charge.
+  const { generate } = useGenerate();
   const { t } = useTranslation();
   const { jobId } = useLocalSearchParams<{ jobId?: string }>();
 
@@ -199,14 +203,22 @@ export default function GenerationProgressScreen() {
     else router.replace("/(tabs)/studio" as any);
   };
 
+  /**
+   * Retry re-runs the same request. It does not navigate.
+   *
+   * <p>It used to replace this screen with the old "Step 3 / 3" options
+   * wizard — a screen the composer replaced — so a failed generation dropped
+   * the user into an interface that no longer exists anywhere else in the
+   * app, and asked them to find Generate again.
+   *
+   * <p>The studio store still holds every selection, so the honest retry is
+   * the same call that failed: {@link useGenerate}, which mints and REUSES
+   * the idempotency key. A retap after a transient error therefore replays
+   * the same key and the backend returns the existing job rather than
+   * starting — and charging for — a second one.
+   */
   const handleRetry = () => {
-    // Options is where Generate lives since P2-8 folded Review into it. The
-    // studio store still holds every selection, so the user lands on a filled
-    // screen and can retap Generate — not restart the wizard.
-    router.replace({
-      pathname: "/(tabs)/studio/options" as any,
-      params: errorMessage ? { error: errorMessage } : {},
-    });
+    generate();
   };
 
   // "About this style" is a first-generation teaching card (2026-07 tester

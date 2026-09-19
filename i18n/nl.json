@@ -349,7 +349,9 @@
     "photo_source_body": "Maak een nieuwe of kies er een die je al hebt.",
     "camera": "Camera",
     "gallery": "Galerij",
-    "transformation": "Transformatie"
+    "transformation": "Transformatie",
+    "pieces_chosen": "{{count}} meubels gekozen",
+    "remove_piece": "{{name}} verwijderen"
   },
   "furniture": {
     "title": "Meubels",
@@ -469,7 +471,8 @@
     "credits_refill_line": "credits · dagelijks aangevuld",
     "credits_line": "credits",
     "account_and_data": "Account en gegevens",
-    "account_fallback_name": "Je account"
+    "account_fallback_name": "Je account",
+    "name_and_email": "Naam en e-mail"
   },
   "plans": {
     "title": "Kies je abonnement",
@@ -650,7 +653,13 @@
     "purchase_failed_default": "Aankoop mislukt",
     "none_available": "Er zijn nu geen creditpakketten beschikbaar.",
     "credits_pending_title": "Aankoop ontvangen",
-    "credits_pending_description": "Je aankoop is gelukt — de credits verschijnen zo."
+    "credits_pending_description": "Je aankoop is gelukt — de credits verschijnen zo.",
+    "balance_line": "Eenmalige aankoop. Credits verlopen nooit. Je hebt er {{count}}.",
+    "credits_plain": "{{count}} credits",
+    "credits_with_bonus": "{{total}} credits · {{bonus}} extra",
+    "buy_a11y": "{{name}} kopen, {{credits}} credits",
+    "secured_note": "Betalingen beveiligd door Apple · incl. btw",
+    "subscribe_bonus_hint": "Neem een abonnement voor tot +40% bonuscredits"
   },
   "credits_exhausted": {
     "title": "Geen credits meer",

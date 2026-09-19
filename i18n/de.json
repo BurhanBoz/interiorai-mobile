@@ -349,7 +349,9 @@
     "photo_source_body": "Mach ein neues oder wähle eines, das du schon hast.",
     "camera": "Kamera",
     "gallery": "Galerie",
-    "transformation": "Veränderung"
+    "transformation": "Veränderung",
+    "pieces_chosen": "{{count}} Stücke gewählt",
+    "remove_piece": "{{name}} entfernen"
   },
   "furniture": {
     "title": "Möbel",
@@ -469,7 +471,8 @@
     "credits_refill_line": "Guthaben · täglich aufgefüllt",
     "credits_line": "Guthaben",
     "account_and_data": "Konto und Daten",
-    "account_fallback_name": "Dein Konto"
+    "account_fallback_name": "Dein Konto",
+    "name_and_email": "Name und E-Mail"
   },
   "plans": {
     "title": "Tarif wählen",
@@ -647,7 +650,13 @@
     "purchase_failed_default": "Kauf fehlgeschlagen",
     "none_available": "Momentan sind keine Credit-Pakete verfügbar.",
     "credits_pending_title": "Kauf erhalten",
-    "credits_pending_description": "Dein Kauf war erfolgreich — die Credits erscheinen gleich."
+    "credits_pending_description": "Dein Kauf war erfolgreich — die Credits erscheinen gleich.",
+    "balance_line": "Einmalkauf. Guthaben verfällt nie. Du hast {{count}}.",
+    "credits_plain": "{{count}} Guthaben",
+    "credits_with_bonus": "{{total}} Guthaben · {{bonus}} extra",
+    "buy_a11y": "{{name}} kaufen, {{credits}} Guthaben",
+    "secured_note": "Zahlungen über Apple · inkl. Steuern",
+    "subscribe_bonus_hint": "Abonnieren und bis zu +40 % Bonusguthaben sichern"
   },
   "credits_bridge": {
     "or_buy_credits": "Oder Credits einmalig kaufen"

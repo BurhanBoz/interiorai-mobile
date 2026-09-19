@@ -349,7 +349,9 @@
     "photo_source_body": "Haz una nueva o elige una que ya tengas.",
     "camera": "Cámara",
     "gallery": "Galería",
-    "transformation": "Transformación"
+    "transformation": "Transformación",
+    "pieces_chosen": "{{count}} muebles elegidos",
+    "remove_piece": "Quitar {{name}}"
   },
   "furniture": {
     "title": "Muebles",
@@ -469,7 +471,8 @@
     "credits_refill_line": "créditos · se recargan a diario",
     "credits_line": "créditos",
     "account_and_data": "Cuenta y datos",
-    "account_fallback_name": "Tu cuenta"
+    "account_fallback_name": "Tu cuenta",
+    "name_and_email": "Nombre y correo"
   },
   "plans": {
     "title": "Elige Tu Plan",
@@ -647,7 +650,13 @@
     "purchase_failed_default": "Compra fallida",
     "none_available": "No hay paquetes de créditos disponibles en este momento.",
     "credits_pending_title": "Compra recibida",
-    "credits_pending_description": "Tu compra se realizó — los créditos aparecerán en un momento."
+    "credits_pending_description": "Tu compra se realizó — los créditos aparecerán en un momento.",
+    "balance_line": "Compra única. Los créditos no caducan. Tienes {{count}}.",
+    "credits_plain": "{{count}} créditos",
+    "credits_with_bonus": "{{total}} créditos · {{bonus}} de regalo",
+    "buy_a11y": "Comprar {{name}}, {{credits}} créditos",
+    "secured_note": "Pagos seguros con Apple · impuestos incluidos",
+    "subscribe_bonus_hint": "Suscríbete y consigue hasta +40 % de créditos extra"
   },
   "credits_bridge": {
     "or_buy_credits": "O compra créditos únicos"

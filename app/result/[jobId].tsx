@@ -661,7 +661,7 @@ function PhotoTag({ label, style }: { label: string; style: object }) {
         ...style,
       }}
     >
-      <Text style={{ fontFamily: "Archivo-600", fontSize: 10.5, color: "#fff", letterSpacing: 0.6 }}>
+      <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10.5, color: "#fff", letterSpacing: 0.6 }}>
         {label}
       </Text>
     </View>
@@ -694,7 +694,7 @@ function ResultAction({
         <ActivityIndicator size="small" color={U.inkMuted} />
       ) : (
         <Text
-          style={{ fontFamily: "Archivo-600", fontSize: 13, color: tone === "accent" ? U.accentBright : U.ink }}
+          style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: tone === "accent" ? U.accentBright : U.ink }}
           numberOfLines={1}
         >
           {label}
@@ -752,7 +752,7 @@ function AnotherStyleStrip({
               <Image source={getStyleImage(p.code)!} style={{ width: "100%", height: "100%" }} contentFit="cover" />
             ) : null}
           </View>
-          <Text style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
+          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
             {p.name}
           </Text>
         </Pressable>
@@ -770,12 +770,12 @@ function AnotherStyleStrip({
             backgroundColor: U.ground, borderWidth: 1, borderColor: U.accent,
             borderRadius: 5, paddingVertical: 2, paddingHorizontal: 5,
           }}>
-            <Text style={{ fontFamily: "Archivo-700", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
+            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
               PRO
             </Text>
           </View>
         </View>
-        <Text style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
+        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
           {t("result.reference_style")}
         </Text>
       </Pressable>

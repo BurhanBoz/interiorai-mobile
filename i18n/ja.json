@@ -348,7 +348,9 @@
     "photo_source_body": "新しく撮るか、すでにある写真を選んでください。",
     "camera": "カメラ",
     "gallery": "写真ライブラリ",
-    "transformation": "変化の強さ"
+    "transformation": "変化の強さ",
+    "pieces_chosen": "{{count}} 点を選択中",
+    "remove_piece": "{{name}} を外す"
   },
   "furniture": {
     "title": "家具",
@@ -468,7 +470,8 @@
     "credits_refill_line": "クレジット · 毎日補充",
     "credits_line": "クレジット",
     "account_and_data": "アカウントとデータ",
-    "account_fallback_name": "あなたのアカウント"
+    "account_fallback_name": "あなたのアカウント",
+    "name_and_email": "名前とメール"
   },
   "plans": {
     "title": "プランを選択",
@@ -645,7 +648,13 @@
     "purchase_failed_default": "購入失敗",
     "none_available": "現在利用可能なクレジットパックはありません。",
     "credits_pending_title": "購入を受け付けました",
-    "credits_pending_description": "購入が完了しました。クレジットは間もなく反映されます。"
+    "credits_pending_description": "購入が完了しました。クレジットは間もなく反映されます。",
+    "balance_line": "買い切りです。クレジットに有効期限はありません。現在 {{count}}。",
+    "credits_plain": "{{count}} クレジット",
+    "credits_with_bonus": "{{total}} クレジット · {{bonus}} ボーナス",
+    "buy_a11y": "{{name}} を購入、{{credits}} クレジット",
+    "secured_note": "Apple による安全な決済 · 税込",
+    "subscribe_bonus_hint": "サブスクで最大 +40% のボーナスクレジット"
   },
   "credits_bridge": {
     "or_buy_credits": "または単発でクレジット購入"

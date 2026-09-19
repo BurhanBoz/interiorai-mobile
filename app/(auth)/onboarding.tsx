@@ -163,7 +163,7 @@ export default function OnboardingScreen() {
                 }}
             >
                 <HexMark width={19} height={21} color={U.accent} />
-                <Text style={{ fontFamily: "Archivo-600", fontSize: 13, letterSpacing: 3, color: U.accentBright }}>
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, letterSpacing: 3, color: U.accentBright }}>
                     ROOMFRAME
                 </Text>
             </View>
@@ -212,7 +212,7 @@ export default function OnboardingScreen() {
                 <Pressable onPress={start} disabled={busy} hitSlop={10} accessibilityRole="button">
                     <Text
                         style={{
-                            fontFamily: "Archivo-600",
+                            fontFamily: "Inter-SemiBold",
                             fontSize: 13,
                             letterSpacing: 1.2,
                             color: U.inkMuted,

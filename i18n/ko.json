@@ -348,7 +348,9 @@
     "photo_source_body": "새로 찍거나 이미 있는 사진을 선택하세요.",
     "camera": "카메라",
     "gallery": "사진 보관함",
-    "transformation": "변화 정도"
+    "transformation": "변화 정도",
+    "pieces_chosen": "{{count}}개 선택됨",
+    "remove_piece": "{{name}} 제거"
   },
   "furniture": {
     "title": "가구",
@@ -468,7 +470,8 @@
     "credits_refill_line": "크레딧 · 매일 충전",
     "credits_line": "크레딧",
     "account_and_data": "계정 및 데이터",
-    "account_fallback_name": "내 계정"
+    "account_fallback_name": "내 계정",
+    "name_and_email": "이름과 이메일"
   },
   "plans": {
     "title": "플랜 선택",
@@ -645,7 +648,13 @@
     "purchase_failed_default": "구매 실패",
     "none_available": "현재 사용 가능한 크레딧 팩이 없습니다.",
     "credits_pending_title": "구매 접수됨",
-    "credits_pending_description": "구매가 완료되었습니다 — 크레딧이 곧 반영됩니다."
+    "credits_pending_description": "구매가 완료되었습니다 — 크레딧이 곧 반영됩니다.",
+    "balance_line": "1회 결제. 크레딧은 만료되지 않습니다. 현재 {{count}}개.",
+    "credits_plain": "크레딧 {{count}}개",
+    "credits_with_bonus": "크레딧 {{total}}개 · {{bonus}}개 보너스",
+    "buy_a11y": "{{name}} 구매, 크레딧 {{credits}}개",
+    "secured_note": "Apple 보안 결제 · 세금 포함",
+    "subscribe_bonus_hint": "구독하면 최대 +40% 보너스 크레딧"
   },
   "credits_bridge": {
     "or_buy_credits": "또는 일회성 크레딧 구매"

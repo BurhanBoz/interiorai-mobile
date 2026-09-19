@@ -38,8 +38,8 @@ export function PhotoSourceSheet({
     const { t } = useTranslation();
 
     return (
-        <BottomSheet heightRatio={0.42} onClose={onClose}>
-            <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28 }}>
+        <BottomSheet onClose={onClose}>
+            <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 30 }}>
                 {/* Grab handle — the sheet is draggable-looking because the
                     scrim behind it is tappable; the handle says so. */}
                 <View
@@ -123,7 +123,7 @@ function SourceButton({
             {glyph}
             <Text
                 style={{
-                    fontFamily: "Archivo-700",
+                    fontFamily: "Inter-Bold",
                     fontSize: 15,
                     color: primary ? U.buttonInk : U.accentBright,
                 }}

@@ -19,6 +19,8 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { formatProductPrice } from "@/utils/price";
+
+const U = theme.umber;
 import { isDummyMode } from "@/config/revenuecat";
 import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
@@ -439,175 +441,142 @@ export default function CreditPacksScreen() {
         }
     };
 
-    const showDevBanner = isDummyMode && __DEV__;
-    const planCode = subscription?.planCode ?? "FREE";
-    const planName = subscription?.planName ?? "Free";
+    const creditPackBonusPct2 = creditPackBonusPct;
+    const storePrices = useStorePricesStore((st) => st.prices);
     const hasBonusPlan = creditPackBonusPct > 0;
 
+    /**
+     * Credit packs (Umber, 2026-09-19).
+     *
+     * <p>The old screen gave each pack a card with a "≈ N standard renders"
+     * subtitle, a glow on the middle one and a MOST POPULAR badge that
+     * overhung the card edge. Three near-identical decisions presented as
+     * three competing objects.
+     *
+     * <p>They are now three rows in the paywall's shape: the amount on the
+     * left, the price on the right, the row itself the button. The badge is
+     * a quiet chip in the row rather than a sticker on top of it.
+     *
+     * <p>🔴 handlePurchase, the store call, the pending-purchase alert and the
+     * dummy-mode banner are unchanged. Only the presentation moved.
+     */
     return (
-        <SafeAreaView
-            edges={[]}
-            style={{ flex: 1, backgroundColor: theme.color.surface }}
-        >
-            <TopBar
-                title={t("credit_packs.title")}
-                showBack
-                onBack={handleBack}
-            />
-
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 100 }}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={{ marginBottom: 24 }}>
-                    <Text style={{
-                        ...theme.text.display,
-                        color: theme.color.onSurface,
-                        marginBottom: 12,
-                      }}>
-                        {t("credit_packs.headline")}
-                    </Text>
-                    <Text style={{
-                        ...theme.text.body,
-                        color: theme.color.onSurfaceVariant,
-                      }}>
-                        {t("credit_packs.subtitle", { balance })}
-                    </Text>
+        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
+            <View style={{ flex: 1, paddingHorizontal: 18 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 8, paddingBottom: 14 }}>
+                    <Pressable
+                        onPress={handleBack}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("common.back")}
+                        hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                        style={{
+                            width: 34, height: 34, borderRadius: 17,
+                            backgroundColor: U.lineNeutral,
+                            alignItems: "center", justifyContent: "center",
+                        }}
+                    >
+                        <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+                    </Pressable>
+                    <View style={{ flex: 1 }} />
+                    <View style={{ width: 34 }} />
                 </View>
 
-                {/* Loyalty bonus banner — shown only for paid plans */}
-                {hasBonusPlan && (
-                    <View style={{
-                        marginBottom: 24,
-                        borderRadius: theme.radius.md,
-                        overflow: "hidden",
-                        borderWidth: 1,
-                        borderColor: "rgba(123,179,138,0.35)",
-                    }}>
-                        <LinearGradient
-                            colors={["rgba(123,179,138,0.12)", "rgba(123,179,138,0.05)"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 14,
-                                padding: 18,
-                            }}
-                        >
-                            <View style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: theme.radius.lg,
-                                backgroundColor: "rgba(123,179,138,0.18)",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                <Ionicons name="gift-outline" size={20} color={theme.color.success} />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{
-                                    ...theme.text.subtitle,
-                                    color: theme.color.success,
-                                    marginBottom: 2,
-                                  }}>
-                                    {t("credit_packs.subscriber_bonus_title", { plan: planName, pct: creditPackBonusPct })}
-                                </Text>
-                                <Text style={{
-                                    ...theme.text.caption,
-                                    color: "rgba(208,197,184,0.65)",
-                                  }}>
-                                    {t("credit_packs.subscriber_bonus_body", { pct: creditPackBonusPct })}
-                                </Text>
-                            </View>
-                        </LinearGradient>
-                    </View>
-                )}
+                <Text style={{ ...theme.v2.displayL, color: U.ink }}>
+                    {t("credit_packs.headline")}
+                </Text>
+                <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 10, marginBottom: 22 }}>
+                    {t("credit_packs.balance_line", { count: balance })}
+                </Text>
 
-                {showDevBanner ? (
-                    <View style={{
-                        padding: 12,
-                        marginBottom: 20,
-                        borderRadius: theme.radius.sm,
-                        backgroundColor: "rgba(229,181,103,0.08)",
-                        borderWidth: 1,
-                        borderColor: "rgba(229,181,103,0.22)",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                    }}>
-                        <Ionicons name="construct-outline" size={14} color={theme.color.warning} />
-                        <Text style={{
-                            ...theme.text.caption,
-                            flex: 1,
-                            color: theme.color.warning,
-                          }}>
-                            {t("credit_packs.dev_mode_notice")}
-                        </Text>
-                    </View>
-                ) : null}
-
-                {loading && packs.length === 0 ? (
-                    <ActivityIndicator
-                        color={theme.color.goldMidday}
-                        style={{ marginTop: 48 }}
-                    />
+                {loading ? (
+                    <ActivityIndicator color={U.accent} style={{ marginTop: 24 }} />
                 ) : (
-                    packs.map((pack) => (
-                        <PackCard
-                            key={pack.id}
-                            pack={pack}
-                            onPress={() => handlePurchase(pack.code)}
-                            isPurchasing={purchasing === pack.code}
-                            disabled={purchasing !== null}
-                            loyaltyBonusPct={creditPackBonusPct}
-                            standardCost={standardCost}
-                            hdCost={hdCost}
-                        />
-                    ))
+                    <View style={{ gap: 10 }}>
+                        {packs.map((pack) => {
+                            const bonus =
+                                creditPackBonusPct2 > 0
+                                    ? Math.floor((pack.credits * creditPackBonusPct2) / 100)
+                                    : 0;
+                            const total = pack.credits + bonus;
+                            return (
+                                <Pressable
+                                    key={pack.code}
+                                    onPress={() => handlePurchase(pack.code)}
+                                    disabled={purchasing !== null}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t("credit_packs.buy_a11y", {
+                                        credits: total,
+                                        name: pack.name,
+                                    })}
+                                    style={{
+                                        borderRadius: 18,
+                                        borderWidth: pack.badgeLabel ? 1.5 : 1,
+                                        borderColor: pack.badgeLabel ? U.accent : U.lineNeutral,
+                                        backgroundColor: pack.badgeLabel ? U.surface : "transparent",
+                                        paddingVertical: 15,
+                                        paddingHorizontal: 16,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 12,
+                                        opacity: purchasing && purchasing !== pack.code ? 0.5 : 1,
+                                    }}
+                                >
+                                    <View style={{ flex: 1 }}>
+                                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                            <Text style={{ ...theme.v2.tier, color: pack.badgeLabel ? U.accentBright : U.inkMuted }}>
+                                                {pack.name}
+                                            </Text>
+                                            {pack.badgeLabel ? (
+                                                <View style={{
+                                                    backgroundColor: U.lineAccent,
+                                                    borderRadius: 4,
+                                                    paddingHorizontal: 6,
+                                                    paddingVertical: 2,
+                                                }}>
+                                                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
+                                                        {pack.badgeLabel}
+                                                    </Text>
+                                                </View>
+                                            ) : null}
+                                        </View>
+                                        <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 3 }}>
+                                            {bonus > 0
+                                                ? t("credit_packs.credits_with_bonus", { total, bonus })
+                                                : t("credit_packs.credits_plain", { count: pack.credits })}
+                                        </Text>
+                                    </View>
+
+                                    {purchasing === pack.code ? (
+                                        <ActivityIndicator color={U.accent} />
+                                    ) : (
+                                        <Text style={{ ...theme.v2.price, color: U.ink }}>
+                                            {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
+                                        </Text>
+                                    )}
+                                </Pressable>
+                            );
+                        })}
+                    </View>
                 )}
 
-                {!loading && packs.length === 0 ? (
-                    <Text style={{
-                        ...theme.text.body,
-                        textAlign: "center",
-                        color: theme.color.onSurfaceVariant,
-                        marginTop: 48,
-                      }}>
-                        {t("credit_packs.none_available")}
-                    </Text>
-                ) : null}
+                <View style={{ flex: 1 }} />
 
-                {/* Trust signal */}
-                {packs.length > 0 ? (
-                    <View style={{ marginTop: 24, alignItems: "center", gap: 8 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                            <Ionicons name="lock-closed" size={12} color={theme.color.onSurfaceMuted} />
-                            <Text style={{
-                                ...theme.text.caption,
-                                color: theme.color.onSurfaceMuted,
-                              }}>
-                                {t("credit_packs.payments_secured")}
-                            </Text>
-                        </View>
-                        {!hasBonusPlan && (
-                            <Pressable
-                                onPress={() => router.push("/plans")}
-                                style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}
-                            >
-                                <Ionicons name="sparkles-outline" size={11} color={theme.color.goldMidday} />
-                                <Text style={{
-                                    ...theme.text.caption,
-                                    color: theme.color.goldMidday,
-                                  }}>
-                                    {t("credit_packs.upsell_subscribe")}
-                                </Text>
-                            </Pressable>
-                        )}
-                    </View>
-                ) : null}
-            </ScrollView>
+                {!hasBonusPlan && (
+                    <Pressable
+                        onPress={() => router.push("/paywall?source=CREDIT_PACKS" as never)}
+                        accessibilityRole="button"
+                        style={{ paddingVertical: 8 }}
+                    >
+                        <Text style={{ ...theme.v2.rowQuiet, color: U.accentBright, textAlign: "center" }}>
+                            {t("credit_packs.subscribe_bonus_hint")}
+                        </Text>
+                    </Pressable>
+                )}
+                <Text style={{ ...theme.v2.caption, color: U.inkMuted, textAlign: "center", marginBottom: 12 }}>
+                    {t("credit_packs.secured_note")}
+                </Text>
+            </View>
         </SafeAreaView>
     );
 }

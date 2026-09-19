@@ -348,7 +348,9 @@
     "photo_source_body": "التقط صورة جديدة أو اختر واحدة لديك.",
     "camera": "الكاميرا",
     "gallery": "معرض الصور",
-    "transformation": "مدى التغيير"
+    "transformation": "مدى التغيير",
+    "pieces_chosen": "تم اختيار {{count}} قطعة",
+    "remove_piece": "إزالة {{name}}"
   },
   "furniture": {
     "title": "الأثاث",
@@ -468,7 +470,8 @@
     "credits_refill_line": "رصيد · يتجدّد يوميًا",
     "credits_line": "رصيد",
     "account_and_data": "الحساب والبيانات",
-    "account_fallback_name": "حسابك"
+    "account_fallback_name": "حسابك",
+    "name_and_email": "الاسم والبريد"
   },
   "plans": {
     "title": "اختر خطتك",
@@ -645,7 +648,13 @@
     "purchase_failed_default": "فشل الشراء",
     "none_available": "لا توجد حزم رصيد متاحة حاليًا.",
     "credits_pending_title": "تم استلام الشراء",
-    "credits_pending_description": "تمت عملية الشراء — ستظهر الأرصدة بعد لحظات."
+    "credits_pending_description": "تمت عملية الشراء — ستظهر الأرصدة بعد لحظات.",
+    "balance_line": "شراء لمرة واحدة. الرصيد لا ينتهي. لديك {{count}}.",
+    "credits_plain": "{{count}} رصيد",
+    "credits_with_bonus": "{{total}} رصيد · {{bonus}} إضافي",
+    "buy_a11y": "شراء {{name}}، {{credits}} رصيد",
+    "secured_note": "مدفوعات آمنة عبر Apple · الضرائب مشمولة",
+    "subscribe_bonus_hint": "اشترك واحصل على رصيد إضافي حتى ‎+40%‎"
   },
   "credits_bridge": {
     "or_buy_credits": "أو اشترِ رصيدًا لمرة واحدة"

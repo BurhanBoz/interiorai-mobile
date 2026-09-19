@@ -349,7 +349,9 @@
     "photo_source_body": "Prenez-en une nouvelle, ou choisissez-en une existante.",
     "camera": "Appareil photo",
     "gallery": "Galerie",
-    "transformation": "Transformation"
+    "transformation": "Transformation",
+    "pieces_chosen": "{{count}} meubles choisis",
+    "remove_piece": "Retirer {{name}}"
   },
   "furniture": {
     "title": "Mobilier",
@@ -469,7 +471,8 @@
     "credits_refill_line": "crédits · rechargés chaque jour",
     "credits_line": "crédits",
     "account_and_data": "Compte et données",
-    "account_fallback_name": "Votre compte"
+    "account_fallback_name": "Votre compte",
+    "name_and_email": "Nom et e-mail"
   },
   "plans": {
     "title": "Choisissez votre offre",
@@ -650,7 +653,13 @@
     "purchase_failed_default": "Achat échoué",
     "none_available": "Aucun pack de crédits disponible pour le moment.",
     "credits_pending_title": "Achat reçu",
-    "credits_pending_description": "Votre achat a été validé — les crédits arrivent dans un instant."
+    "credits_pending_description": "Votre achat a été validé — les crédits arrivent dans un instant.",
+    "balance_line": "Achat unique. Les crédits n'expirent jamais. Vous en avez {{count}}.",
+    "credits_plain": "{{count}} crédits",
+    "credits_with_bonus": "{{total}} crédits · {{bonus}} offerts",
+    "buy_a11y": "Acheter {{name}}, {{credits}} crédits",
+    "secured_note": "Paiements sécurisés par Apple · taxes incluses",
+    "subscribe_bonus_hint": "Abonnez-vous pour jusqu'à +30 % de crédits offerts"
   },
   "credits_exhausted": {
     "title": "Plus de crédits",

@@ -146,7 +146,7 @@ export function AdvancedSheet({ onClose }: { onClose: () => void }) {
                                 </SectionLabel>
                                 <Text
                                     style={{
-                                        fontFamily: "Archivo-700",
+                                        fontFamily: "Inter-Bold",
                                         fontSize: 13,
                                         color: strengthAllowed ? U.accentBright : U.inkMuted,
                                     }}

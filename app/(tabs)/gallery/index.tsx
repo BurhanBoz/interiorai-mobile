@@ -90,7 +90,7 @@ function NewDesignCell({
             }}
         >
             <Text
-                style={{ fontFamily: "Archivo-600", fontSize: 13, color: U.accentBright, textAlign: "center" }}
+                style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accentBright, textAlign: "center" }}
                 numberOfLines={2}
             >
                 {t("gallery.v2_new_design")}
@@ -334,7 +334,7 @@ export default function GalleryScreen() {
           }}
         >
           <Text
-            style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: "#fff" }}
+            style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: "#fff" }}
             numberOfLines={1}
           >
             {item.designStyleName || item.roomTypeName}

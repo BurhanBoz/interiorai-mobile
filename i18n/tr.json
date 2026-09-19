@@ -349,7 +349,9 @@
     "photo_source_body": "Yeni bir tane çek ya da mevcut birini seç.",
     "camera": "Kamera",
     "gallery": "Galeri",
-    "transformation": "Dönüşüm"
+    "transformation": "Dönüşüm",
+    "pieces_chosen": "{{count}} parça seçildi",
+    "remove_piece": "{{name}} kaldır"
   },
   "furniture": {
     "title": "Mobilya",
@@ -469,7 +471,8 @@
     "credits_refill_line": "kredi · her gün yenilenir",
     "credits_line": "kredi",
     "account_and_data": "Hesap ve veriler",
-    "account_fallback_name": "Hesabın"
+    "account_fallback_name": "Hesabın",
+    "name_and_email": "İsim ve e-posta"
   },
   "plans": {
     "title": "Planını Seç",
@@ -650,7 +653,13 @@
     "purchase_failed_default": "Satın alma başarısız",
     "none_available": "Şu anda kullanılabilir kredi paketi yok.",
     "credits_pending_title": "Satın alma alındı",
-    "credits_pending_description": "Satın alman tamamlandı — kredilerin birazdan hesabına geçecek."
+    "credits_pending_description": "Satın alman tamamlandı — kredilerin birazdan hesabına geçecek.",
+    "balance_line": "Tek seferlik alım. Krediler süresiz. Şu an {{count}} kredin var.",
+    "credits_plain": "{{count}} kredi",
+    "credits_with_bonus": "{{total}} kredi · {{bonus}} hediye",
+    "buy_a11y": "{{name}} al, {{credits}} kredi",
+    "secured_note": "Ödemeler Apple güvencesinde · vergiler dahil",
+    "subscribe_bonus_hint": "Abone ol, %40'a varan hediye kredi kazan"
   },
   "credits_exhausted": {
     "title": "Kredin Tükendi",

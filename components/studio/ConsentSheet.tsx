@@ -34,21 +34,23 @@ export function ConsentSheet({ onClose }: { onClose: () => void }) {
         { lead: t("consent.kept_lead"), body: t("consent.kept_body") },
     ];
 
+    // No ratio: four short paragraphs do not need 62% of the screen, and the
+    // button was stranded at the bottom of the empty half.
     return (
-        <BottomSheet heightRatio={0.62} onClose={onClose}>
-            <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 26 }}>
+        <BottomSheet onClose={onClose}>
+            <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 30 }}>
                 <Text style={{ ...V.displayS, color: U.ink, marginBottom: 14 }}>
                     {t("consent.title")}
                 </Text>
 
-                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+                <ScrollView showsVerticalScrollIndicator={false}>
                     {paragraphs.map((p) => (
                         <Text
                             key={p.lead}
-                            style={{ fontFamily: "Archivo-400", fontSize: 13, lineHeight: 19.5,
+                            style={{ fontFamily: "Inter", fontSize: 13, lineHeight: 19.5,
                                      color: U.inkMuted, marginBottom: 14 }}
                         >
-                            <Text style={{ fontFamily: "Archivo-700", color: U.ink }}>{p.lead} </Text>
+                            <Text style={{ fontFamily: "Inter-Bold", color: U.ink }}>{p.lead} </Text>
                             {p.body}
                         </Text>
                     ))}
@@ -56,7 +58,7 @@ export function ConsentSheet({ onClose }: { onClose: () => void }) {
                         onPress={() => Linking.openURL("https://roomframeai.com/privacy.html")}
                         accessibilityRole="link"
                     >
-                        <Text style={{ fontFamily: "Archivo-600", fontSize: 13, color: U.accent,
+                        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accent,
                                        textDecorationLine: "underline" }}>
                             {t("consent.privacy_policy")}
                         </Text>

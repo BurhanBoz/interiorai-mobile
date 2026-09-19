@@ -11,10 +11,9 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES } from "@/components/studio/featureCatalog";
 import { SAMPLE_ROOMS } from "@/components/studio/sampleRooms";
-import { furnitureService } from "@/services/furniture";
 import { useImagePicker } from "@/hooks/useImagePicker";
-import type { FurnitureItem } from "@/types/api";
 import { HexMark } from "@/components/brand/HexMark";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { PhotoSourceSheet } from "@/components/studio/PhotoSourceSheet";
 
 const U = theme.umber;
@@ -63,8 +62,6 @@ export default function StudioScreen() {
     const balance = useCreditStore((s) => s.balance);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
 
-    const [products, setProducts] = useState<FurnitureItem[]>([]);
-    const [catalogue, setCatalogue] = useState<FurnitureItem[] | null>(null);
     const [sourceSheet, setSourceSheet] = useState(false);
 
     useFocusEffect(
@@ -75,31 +72,33 @@ export default function StudioScreen() {
 
     // Four cut-outs for the band. A failure here must not take the screen
     // with it — the band simply renders its plates empty.
-    // One request for the whole screen. The band and the Furniture tile used
-    // to fetch /api/furniture independently, so every visit made the same
-    // call twice.
-    useEffect(() => {
-        let cancelled = false;
-        furnitureService
-            .browse()
-            .then((items) => {
-                if (cancelled) return;
-                const curated = items.filter((i) => !i.mine);
-                setCatalogue(curated);
-                setProducts(curated.slice(0, 4));
-            })
-            .catch(() => {
-                if (!cancelled) setCatalogue([]);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
     const { pickImage, useSampleImage, isUploading } = useImagePicker();
+
+    /**
+     * Where a mode goes.
+     *
+     * <p>🔴 Two modes need an input the composer does not collect, and
+     * {@link useGenerate} refuses without it: Magic Edit needs a painted mask
+     * and Style Transfer needs a reference photo. Sending them to the
+     * composer let the user walk the whole screen and meet an alert at
+     * Generate — a dead end with the credit cost already on display.
+     *
+     * <p>They keep their own screens, which do collect it. Both read the
+     * photo from the studio store, so the intake above still applies and
+     * nothing about the two-step selection changes.
+     */
+    const MODE_ROUTES: Record<string, string> = {
+        INPAINT: "/studio/smart-edit",
+        STYLE_TRANSFER: "/studio/style-transfer",
+    };
 
     const goComposer = (mode: string, opts?: { catalogue?: boolean }) => {
         setMode(mode as never);
+        const dedicated = MODE_ROUTES[mode];
+        if (dedicated) {
+            router.push(dedicated as never);
+            return;
+        }
         router.push({
             pathname: "/studio/composer",
             params: opts?.catalogue ? { sheet: "catalogue" } : undefined,
@@ -168,7 +167,16 @@ export default function StudioScreen() {
 
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
-            <View style={{ flex: 1, paddingHorizontal: GUTTER }}>
+            {/* 🔴 The tab bar is absolutely positioned, so it takes no space —
+                a flex:1 column runs underneath it. Without this padding the
+                second tile row and its labels sat behind the dock. */}
+            <View
+                style={{
+                    flex: 1,
+                    paddingHorizontal: GUTTER,
+                    paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
+                }}
+            >
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
@@ -184,12 +192,6 @@ export default function StudioScreen() {
                     onPress={onFeature}
                     t={t}
                     selectedMode={pendingMode}
-                />
-                <FurnitureBand
-                    products={products}
-                    loaded={catalogue !== null}
-                    catalogueSize={catalogue?.length ?? 0}
-                    onOpen={() => goComposer("REDESIGN", { catalogue: true })}
                 />
             </View>
 
@@ -265,11 +267,11 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                     paddingHorizontal: 12,
                 }}
             >
-                <Text style={{ fontFamily: "Archivo-700", fontSize: 13, color: U.accentBright }}>
+                <Text style={{ fontFamily: "Inter-Bold", fontSize: 13, color: U.accentBright }}>
                     {balance}
                 </Text>
                 {showRefill && (
-                    <Text style={{ fontFamily: "Archivo-500", fontSize: 11, color: U.inkMuted }}>
+                    <Text style={{ fontFamily: "Inter-Medium", fontSize: 11, color: U.inkMuted }}>
                         {t("studio.refill_in", { hours: hoursToRefill })}
                     </Text>
                 )}
@@ -347,7 +349,7 @@ function IntakeRow({
                                 paddingHorizontal: 14,
                             }}
                         >
-                            <Text style={{ fontFamily: "Archivo-600", fontSize: 12.5, color: "#fff" }}>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: "#fff" }}>
                                 {t("studio.replace")}
                             </Text>
                         </View>
@@ -356,7 +358,7 @@ function IntakeRow({
                     <>
                         <PlusGlyph color={U.buttonInk} />
                         <Text
-                            style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                            style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
                             numberOfLines={1}
                         >
                             {t("studio.add_a_photo")}
@@ -389,7 +391,7 @@ function IntakeRow({
                                     backgroundColor: "rgba(0,0,0,0.55)",
                                 }}
                             >
-                                <Text style={{ fontFamily: "Archivo-600", fontSize: 9.5, color: "#fff" }}>
+                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: "#fff" }}>
                                     {t("studio.try_a_sample")}
                                 </Text>
                             </View>
@@ -485,7 +487,9 @@ function FeatureGrid({
                     overflow: "hidden",
                 }}
             >
-                <View style={{ height: 72 }}>
+                {/* flex, not a fixed 72: the tile's height now comes from the
+                    row, and the image takes whatever the label does not. */}
+                <View style={{ flex: 1, minHeight: 72 }}>
                     {image ? (
                         <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                     ) : null}
@@ -503,7 +507,7 @@ function FeatureGrid({
                                 paddingHorizontal: 6,
                             }}
                         >
-                            <Text style={{ fontFamily: "Archivo-700", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
+                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
                                 PRO
                             </Text>
                         </View>
@@ -538,12 +542,23 @@ function FeatureGrid({
         );
     };
 
+    /**
+     * The grid takes the height the furniture band used to occupy.
+     *
+     * <p>Removing the band left roughly 250px of dead space under the tiles.
+     * The options were to centre the block (which floats), to add something
+     * (which the spec forbids — "text is the last resort") or to let the
+     * photographs grow into it. The photographs ARE the description of each
+     * feature, so they grew: the rows share the remaining height with flex,
+     * which also means the screen fills correctly on a 17 Pro and a 17 Pro
+     * Max without either one being tuned by hand.
+     */
     return (
-        <View style={{ marginTop: 18, gap: 8 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420 }}>
+            <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
                 {row1.map((i) => tile(i, "31.5%"))}
             </View>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flex: 1.15, flexDirection: "row", gap: 8 }}>
                 {row2.map((i) => tile(i, "48.7%"))}
             </View>
         </View>
@@ -558,110 +573,3 @@ function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
     return m.after;
 }
 
-/* ── furniture band ─────────────────────────────────────────────────── */
-
-/**
- * "Put this sofa in your room" — the sentence no competitor can say, stated
- * once, in the product's own voice, with four real products under it.
- */
-function FurnitureBand({
-    products,
-    loaded,
-    catalogueSize,
-    onOpen,
-}: {
-    products: FurnitureItem[];
-    /** Distinguishes "still fetching" from "fetched, and empty". */
-    loaded: boolean;
-    catalogueSize: number;
-    onOpen: () => void;
-}) {
-    const { t } = useTranslation();
-    return (
-        <Pressable
-            onPress={onOpen}
-            accessibilityRole="button"
-            style={{
-                marginTop: 18,
-                backgroundColor: U.surface,
-                borderWidth: 1,
-                borderColor: U.lineAccent,
-                borderRadius: R.button,
-                paddingVertical: 13,
-                paddingHorizontal: 14,
-            }}
-        >
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "baseline",
-                    justifyContent: "space-between",
-                    marginBottom: 10,
-                }}
-            >
-                {/* One interpolated string, never concatenated fragments —
-                    the emphasis sits on a word the translator chooses. */}
-                <Text style={{ ...V.displayXS, color: U.ink, flex: 1 }} numberOfLines={1}>
-                    {t("studio.put_this_sofa")}
-                </Text>
-                {/* The arrow lives in the translated string so RTL can flip
-                    it; appending one here as well is what printed "39 → →". */}
-                <Text style={{ fontFamily: "Archivo-600", fontSize: 10.5, color: U.inkMuted }}>
-                    {t("studio.catalogue_count", { count: catalogueSize })}
-                </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 7 }}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <View
-                        key={i}
-                        style={{
-                            flex: 1,
-                            height: 56,
-                            borderRadius: 9,
-                            backgroundColor: U.productPlate,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {products[i] ? (
-                            <Image
-                                source={{ uri: products[i].imageUrl }}
-                                style={{ width: "100%", height: 48 }}
-                                resizeMode="contain"
-                            />
-                        ) : loaded ? null : (
-                            /* Only while the request is in flight. An empty
-                               catalogue is a legitimate answer — a local
-                               database with no items spun these four plates
-                               forever, which reads as a hung screen. */
-                            <ActivityIndicator size="small" color={U.inkMuted} />
-                        )}
-                    </View>
-                ))}
-                <View
-                    style={{
-                        flex: 1,
-                        height: 56,
-                        borderRadius: 9,
-                        backgroundColor: U.lineAccent,
-                        borderWidth: 1,
-                        borderColor: U.accent,
-                        borderStyle: "dashed",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingHorizontal: 4,
-                    }}
-                >
-                    <Text
-                        style={{ fontFamily: "Archivo-600", fontSize: 10, color: U.accentBright, textAlign: "center" }}
-                        numberOfLines={2}
-                    >
-                        {t("studio.your_own")}
-                    </Text>
-                </View>
-            </View>
-        </Pressable>
-    );
-}

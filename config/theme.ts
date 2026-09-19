@@ -374,42 +374,49 @@ export const umber = {
  * exactly the raw values that rule exists to prevent — so they live here as
  * tokens instead. Both scales are valid; v2 is for redesigned screens.
  *
- * Fonts are Instrument Serif (display) and Archivo (text) — the faces the
- * website already uses. 🔴 Neither covers Arabic, Japanese or Korean; those
- * locales fall through to the system face, which is correct behaviour but
- * means an Arabic headline is NOT Instrument Serif. Check ar/ja/ko renders
- * before claiming a screen is done.
+ * 🔴 Faces reverted to NotoSerif + Inter on 2026-09-19, one day after the
+ * switch to Instrument Serif + Archivo. Founder call on how it read.
+ *
+ * The files were not at fault — metrics, hinting and gasp all checked out.
+ * They simply sit differently: Archivo carries 878/-210 on a 1000 em, Inter
+ * 1984/-494 on 2048, so at the same point size Archivo renders smaller and
+ * tighter. The spec's SIZES, line heights and tracking are unchanged; only
+ * the faces moved back.
+ *
+ * assets/fonts/InstrumentSerif-*.ttf and Archivo-*.ttf are still in the repo
+ * and no longer required(), so they do not ship. Coming back is this map plus
+ * six lines in app/_layout.tsx.
  */
 export const v2 = {
   /** Onboarding headline. */
-  displayXL: { fontFamily: "InstrumentSerif", fontSize: 44, lineHeight: 45, letterSpacing: -0.6 },
+  displayXL: { fontFamily: "NotoSerif", fontSize: 44, lineHeight: 45, letterSpacing: -0.6 },
   /** Paywall headline; the Settings credit numeral also uses 44. */
-  displayL: { fontFamily: "InstrumentSerif", fontSize: 36, lineHeight: 38, letterSpacing: -0.4 },
+  displayL: { fontFamily: "NotoSerif", fontSize: 36, lineHeight: 38, letterSpacing: -0.4 },
   /** Gallery title. */
-  displayM: { fontFamily: "InstrumentSerif", fontSize: 34, lineHeight: 38, letterSpacing: -0.3 },
+  displayM: { fontFamily: "NotoSerif", fontSize: 34, lineHeight: 38, letterSpacing: -0.3 },
   /** Section headers, sheet titles, the account name. */
-  displayS: { fontFamily: "InstrumentSerif", fontSize: 26, lineHeight: 30, letterSpacing: -0.2 },
+  displayS: { fontFamily: "NotoSerif", fontSize: 26, lineHeight: 30, letterSpacing: -0.2 },
   /** Prices. */
-  price: { fontFamily: "InstrumentSerif", fontSize: 28, lineHeight: 30 },
+  price: { fontFamily: "NotoSerif", fontSize: 28, lineHeight: 30 },
   /** "Put this sofa in your room". */
-  displayXS: { fontFamily: "InstrumentSerif", fontSize: 20, lineHeight: 25 },
+  displayXS: { fontFamily: "NotoSerif", fontSize: 20, lineHeight: 25 },
   /** Onboarding body. */
-  body: { fontFamily: "Archivo-400", fontSize: 16, lineHeight: 23 },
+  body: { fontFamily: "Inter", fontSize: 16, lineHeight: 23 },
   /** Primary button labels. */
-  button: { fontFamily: "Archivo-700", fontSize: 15, letterSpacing: 1.4, textTransform: "uppercase" as const },
+  button: { fontFamily: "Inter-Bold", fontSize: 15, letterSpacing: 1.4, textTransform: "uppercase" as const },
   /** Feature tile labels, plan tier labels. */
-  tile: { fontFamily: "Archivo-700", fontSize: 12.5, lineHeight: 16 },
-  tier: { fontFamily: "Archivo-700", fontSize: 12, letterSpacing: 1.6, textTransform: "uppercase" as const },
+  tile: { fontFamily: "Inter-Bold", fontSize: 12.5, lineHeight: 16 },
+  tier: { fontFamily: "Inter-Bold", fontSize: 12, letterSpacing: 1.6, textTransform: "uppercase" as const },
   /** List rows, chips, style labels. */
-  row: { fontFamily: "Archivo-600", fontSize: 13, lineHeight: 18 },
-  rowQuiet: { fontFamily: "Archivo-400", fontSize: 12.5, lineHeight: 17 },
+  row: { fontFamily: "Inter-SemiBold", fontSize: 13, lineHeight: 18 },
+  rowQuiet: { fontFamily: "Inter", fontSize: 12.5, lineHeight: 17 },
   /** Screen kickers. */
-  kicker: { fontFamily: "Archivo-600", fontSize: 11.5, letterSpacing: 2.2, textTransform: "uppercase" as const },
+  kicker: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: 2.2, textTransform: "uppercase" as const },
   /** The brand lockup — wider tracking than a kicker. */
-  brand: { fontFamily: "Archivo-600", fontSize: 11.5, letterSpacing: 2.6, textTransform: "uppercase" as const },
+  brand: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: 2.6, textTransform: "uppercase" as const },
   /** Captions, dimensions, tab labels. 10.5 is the floor; nothing goes below. */
-  caption: { fontFamily: "Archivo-400", fontSize: 11, lineHeight: 15 },
-  captionStrong: { fontFamily: "Archivo-600", fontSize: 10.5, lineHeight: 14 },
+  caption: { fontFamily: "Inter", fontSize: 11, lineHeight: 15 },
+  captionStrong: { fontFamily: "Inter-SemiBold", fontSize: 10.5, lineHeight: 14 },
 } as const;
 
 /* ───── v2 geometry ─────

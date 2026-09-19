@@ -423,7 +423,10 @@ export default function PaywallScreen() {
                         label={t("studio.mode_style_transfer")}
                     />
                     <ProCard
-                        image={require("@/assets/features/outdoor_card.png")}
+                        // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
+                        // "asset missing" pattern, not a photograph, and it was
+                        // being used as half the argument for a paid plan.
+                        image={require("@/assets/features/outdoor_after.png")}
                         label={t("studio.mode_outdoor")}
                     />
                 </View>
@@ -483,7 +486,7 @@ export default function PaywallScreen() {
                         <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted }}>
                             {t("paywall.pack_line", { credits: exhaustedPack.credits })}
                         </Text>
-                        <Text style={{ fontFamily: "Archivo-700", fontSize: 12.5, color: U.accentBright }}>
+                        <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
                             {priceOfPack(exhaustedPack)}
                         </Text>
                     </Pressable>
@@ -531,7 +534,7 @@ function ProCard({ image, label }: { image: number; label: string }) {
                 colors={["transparent", "rgba(0,0,0,0.9)"]}
                 style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingTop: 30, paddingHorizontal: 12, paddingBottom: 10 }}
             >
-                <Text style={{ fontFamily: "Archivo-700", fontSize: 14, color: "#fff" }} numberOfLines={2}>
+                <Text style={{ fontFamily: "Inter-Bold", fontSize: 14, color: "#fff" }} numberOfLines={2}>
                     {label}
                 </Text>
             </LinearGradient>

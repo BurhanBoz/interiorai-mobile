@@ -96,7 +96,7 @@ export default function SettingsScreen() {
                             justifyContent: "center",
                         }}
                     >
-                        <Text style={{ fontFamily: "InstrumentSerif", fontSize: 21, color: U.accentBright }}>
+                        <Text style={{ fontFamily: "NotoSerif", fontSize: 21, color: U.accentBright }}>
                             {initials}
                         </Text>
                     </View>
@@ -126,13 +126,15 @@ export default function SettingsScreen() {
                         overflow: "hidden",
                     }}
                 >
-                    {isGuest && (
-                        <Row
-                            label={t("profile.sign_in_to_keep")}
-                            onPress={() => router.push("/login" as never)}
-                            chevron
-                        />
-                    )}
+                    {/* Always present, and it opens the ACCOUNT screen — name,
+                        email, and for a guest the add-email upgrade. It used
+                        to push /login, which asked a signed-in user to sign in
+                        again and gave a guest no way to set a name at all. */}
+                    <Row
+                        label={t(isGuest ? "profile.sign_in_to_keep" : "profile.name_and_email")}
+                        onPress={() => router.push("/settings/profile-edit" as never)}
+                        chevron
+                    />
                     <Row
                         label={t("profile.daily_reminder")}
                         value={t(notificationsEnabled ? "common.on" : "common.off")}
@@ -182,7 +184,7 @@ function CreditCard({
     return (
         <View style={{ borderWidth: 1, borderColor: U.lineAccent, borderRadius: 18, padding: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-                <Text style={{ fontFamily: "InstrumentSerif", fontSize: 44, lineHeight: 48, color: U.accentBright }}>
+                <Text style={{ fontFamily: "NotoSerif", fontSize: 44, lineHeight: 48, color: U.accentBright }}>
                     {balance}
                 </Text>
                 <Text style={{ ...V.rowQuiet, color: U.inkMuted, flex: 1 }} numberOfLines={2}>
@@ -216,7 +218,7 @@ function CreditCard({
                         justifyContent: "center",
                     }}
                 >
-                    <Text style={{ fontFamily: "Archivo-700", fontSize: 13.5, color: U.buttonInk }}>
+                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 13.5, color: U.buttonInk }}>
                         {t("profile.get_pro")}
                     </Text>
                 </Pressable>
@@ -233,7 +235,7 @@ function CreditCard({
                         justifyContent: "center",
                     }}
                 >
-                    <Text style={{ fontFamily: "Archivo-700", fontSize: 13.5, color: U.accentBright }}>
+                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 13.5, color: U.accentBright }}>
                         {t("profile.buy_credits")}
                     </Text>
                 </Pressable>
@@ -279,7 +281,7 @@ function Row({
             {value ? (
                 <Text
                     style={{
-                        fontFamily: valueTone === "accent" ? "Archivo-700" : "Archivo-400",
+                        fontFamily: valueTone === "accent" ? "Inter-Bold" : "Inter",
                         fontSize: 13,
                         color: valueTone === "accent" ? U.accentBright : U.inkMuted,
                     }}

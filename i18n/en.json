@@ -349,7 +349,9 @@
     "photo_source_body": "Take a new one, or pick one you already have.",
     "camera": "Camera",
     "gallery": "Gallery",
-    "transformation": "Transformation"
+    "transformation": "Transformation",
+    "pieces_chosen": "{{count}} pieces chosen",
+    "remove_piece": "Remove {{name}}"
   },
   "furniture": {
     "title": "Furniture",
@@ -469,7 +471,8 @@
     "credits_refill_line": "credits · refills daily",
     "credits_line": "credits",
     "account_and_data": "Account and data",
-    "account_fallback_name": "Your account"
+    "account_fallback_name": "Your account",
+    "name_and_email": "Name and email"
   },
   "plans": {
     "title": "Choose Your Plan",
@@ -650,7 +653,13 @@
     "purchase_failed_default": "Purchase failed",
     "none_available": "No credit packs available right now.",
     "credits_pending_title": "Purchase received",
-    "credits_pending_description": "Your purchase went through — the credits will appear in a moment."
+    "credits_pending_description": "Your purchase went through — the credits will appear in a moment.",
+    "balance_line": "One-time purchase. Credits never expire. You have {{count}}.",
+    "credits_plain": "{{count}} credits",
+    "credits_with_bonus": "{{total}} credits · {{bonus}} bonus",
+    "buy_a11y": "Buy {{name}}, {{credits}} credits",
+    "secured_note": "Payments secured by Apple · taxes included",
+    "subscribe_bonus_hint": "Subscribe for up to +40% bonus credits"
   },
   "credits_exhausted": {
     "title": "Out of Credits",
