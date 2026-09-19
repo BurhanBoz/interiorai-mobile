@@ -30,18 +30,25 @@ const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6"] as const;
 // defaults (and a Turkish draft) live in i18n/*.json alongside the FAQ.
 // Plan gate lives in copy — we don't cross-reference usePlanPermission here
 // because this doc is a reference, not a live UI gate.
+/**
+ * 🔴 Only controls the user can actually find.
+ *
+ * <p>Five entries came off on 2026-09-19 because the redesign removed the
+ * controls they described: quality tier, speed mode, variants (number of
+ * outputs), negative prompt and seed. A help page that explains a knob which
+ * is not on any screen is worse than one that omits it — the reader goes
+ * looking, fails, and concludes the app is broken rather than the doc stale.
+ *
+ * <p>When a control comes back, its entry comes back with it. The i18n keys
+ * were left in the bundle for exactly that.
+ */
 const GENERATION_PARAMS = [
   { icon: "sparkles-outline", key: "design_mode" },
-  { icon: "diamond-outline", key: "quality_tier" },
-  { icon: "speedometer-outline", key: "speed_mode" },
-  { icon: "copy-outline", key: "variants" },
   { icon: "contrast-outline", key: "strength" },
   { icon: "layers-outline", key: "preserve_layout" },
-  { icon: "create-outline", key: "custom_prompt" },
-  { icon: "close-circle-outline", key: "negative_prompt" },
-  { icon: "dice-outline", key: "seed" },
   { icon: "color-palette-outline", key: "color_palette" },
   { icon: "image-outline", key: "reference_image" },
+  { icon: "create-outline", key: "custom_prompt" },
 ] as const;
 
 /**

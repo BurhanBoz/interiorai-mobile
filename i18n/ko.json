@@ -626,9 +626,23 @@
     "empty_filtered_title": "이 보기에 없음",
     "empty_filtered_subtitle": "다른 필터로 전환하거나 다음 활동 후 다시 오세요.",
     "ref_outdoor": "아웃도어 디자인",
-    "ledger.weekly_renewal": "주간 크레딧 +{{count}}",
     "balance_label": "크레딧 {{count}}개",
-    "balance_label_other": "크레딧 {{count}}개"
+    "balance_label_other": "크레딧 {{count}}개",
+    "headline_balance": "크레딧 {{count}}개",
+    "kind_adjustment": "조정",
+    "kind_promo": "프로모션 코드",
+    "kind_monthly_reset": "월간 크레딧",
+    "kind_welcome_bonus": "웰컴 보너스",
+    "kind_daily_drip": "일일 크레딧",
+    "kind_weekly_bonus": "주간 보너스",
+    "kind_trial_expiry": "체험 종료",
+    "kind_weekly_renewal": "주간 크레딧",
+    "ledger_feature_expand_view": "화면 확장",
+    "ledger_feature_generic": "디자인",
+    "ledger_refunded": "완료되지 않음 — 크레딧 반환",
+    "ledger_pack_bonus": "{{base}} + 보너스 {{bonus}}",
+    "ledger_today": "오늘",
+    "ledger_yesterday": "어제"
   },
   "credit_packs": {
     "title": "크레딧 팩",
@@ -1024,7 +1038,8 @@
     "profile_edit_email_cta": "이메일 변경",
     "profile_edit_email_hint": "현재 주소로 알림을 보냅니다. 앞으로는 새 이메일로 로그인합니다.",
     "profile_edit_email_success": "이메일이 변경되었습니다. 이제 이 주소로 로그인합니다.",
-    "profile_edit_email_managed": "{{provider}} 로그인으로 관리됩니다."
+    "profile_edit_email_managed": "{{provider}} 로그인으로 관리됩니다.",
+    "delete_account": "계정 삭제"
   },
   "errors": {
     "network": "네트워크 오류입니다. 연결을 확인해 주세요.",

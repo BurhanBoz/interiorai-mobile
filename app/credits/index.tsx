@@ -11,7 +11,6 @@ import {
 import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -22,9 +21,8 @@ import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitl
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
-import { AvatarMenu } from "@/components/ui/AvatarMenu";
-import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
+import { buildLedgerRows, parseLedgerLine, type LedgerRowModel } from "@/utils/ledger";
 import type { CreditLedgerEntry } from "@/types/api";
 
 /**
@@ -46,140 +44,114 @@ const REFERENCE_FEATURES: {
   { code: "ULTRA_HD_UPSCALE",  tier: null,       labelKey: "credits.ref_upscale" },
 ];
 
-function formatDate(dateStr: string): string {
+/**
+ * "Today" / "Yesterday" / "19 September" — the heading over one day's rows.
+ *
+ * <p>Every row used to carry its own "Sep 19" caption, so a day with eight
+ * entries repeated the same date eight times inside a column that was
+ * already sorted by it. The date moves up to the group and the row gets the
+ * space back.
+ */
+function dayLabel(dateStr: string, t: (k: string) => string): string {
   const d = new Date(dateStr);
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
+  const midnight = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((midnight(new Date()) - midnight(d)) / 86_400_000);
+  if (days === 0) return t("credits.ledger_today");
+  if (days === 1) return t("credits.ledger_yesterday");
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "long" });
+}
+
+/** A day's worth of rows, rendered as one bordered group. */
+interface LedgerSection {
+  key: string;
+  label: string;
+  rows: LedgerRowModel[];
 }
 
 /* ─────────────────── Ledger Row ───────────────────
- * Premium redesign — 48px thumb, monospace amount, kind badge pill, chevron
- * when the entry links to a job. Kind badge (RESERVE/CONSUME/RELEASE/TOPUP/
- * REFUND) comes from the ledger entry's `kind` field; fallback derives from
- * the reason string so historical rows without the field still render. */
-function kindBadgeKey(kind: string | undefined, reason: string): string {
-  const k = (kind ?? reason.split(" ")[0] ?? "").toUpperCase();
-  if (k.startsWith("RESERVE")) return "RESERVE";
-  if (k.startsWith("CONSUME")) return "CONSUME";
-  if (k.startsWith("RELEASE")) return "RELEASE";
-  if (k.startsWith("TOPUP")) return "TOPUP";
-  if (k.startsWith("REFUND")) return "REFUND";
-  if (k.startsWith("GRANT")) return "GRANT";
-  return "ACTIVITY";
-}
+ *
+ * Composer language: a group of hairline rows inside one quiet container,
+ * the same shape as the account list on Settings. What came off:
+ *
+ *  🔴 a 48px thumbnail loading `picsum.photos/seed/<jobId>` — a STOCK PHOTO
+ *     SERVICE. Every row on a paying customer's billing history showed a
+ *     random beach or mountain from the internet, sitting exactly where the
+ *     user would read it as the design they were charged for.
+ *  🔴 a badge pill reading the entry's `kind` — a field the API does not
+ *     have (it sends `type`), so the fallback fired on every row and all of
+ *     them said "Activity". A column of identical badges is not information.
+ *  • the per-row date, now on the group heading.
+ */
+function LedgerRow({
+  row,
+  last,
+  t,
+}: {
+  row: LedgerRowModel;
+  last: boolean;
+  t: (k: string, o?: any) => string;
+}) {
+  const line = parseLedgerLine(row.entry);
+  const positive = row.amount > 0;
 
-function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => string }) {
-  const isPositive = item.amount > 0;
-  const kind = kindBadgeKey((item as any).kind, item.reason);
-  const amountColor = isPositive ? "#8FE3A1" : "#FFB4AB";
+  // Three states, three colours: credits back is good news, credits out is
+  // neutral-negative, and an annulled pair is neither — it is a non-event.
+  const amountColor = row.refunded
+    ? theme.umber.inkMuted
+    : positive
+      ? theme.color.success
+      : theme.umber.ink;
+
+  const caption = row.refunded
+    ? t("credits.ledger_refunded")
+    : [line.room, line.captionKey ? t(line.captionKey, line.captionParams) : null]
+        .filter(Boolean)
+        .join(" · ");
+
   return (
     <Pressable
       onPress={() => {
-        if (item.jobId) router.push(`/result/${item.jobId}`);
+        if (row.jobId) router.push(`/result/${row.jobId}`);
       }}
-      className="flex-row items-center bg-surface-container-low rounded-xl"
-      style={({ pressed }) => ({
-        marginBottom: 12,
-        padding: 14,
-        opacity: pressed ? 0.85 : 1,
-        borderWidth: 1,
-        borderColor: "rgba(77,70,60,0.18)",
-      })}
+      disabled={!row.jobId}
+      accessibilityRole={row.jobId ? "button" : "text"}
     >
-      {/* Thumbnail — 48x48, rounded, job preview if available */}
       <View
-        className="rounded-lg overflow-hidden bg-surface-container-high items-center justify-center"
-        style={{ width: 48, height: 48, marginRight: 14 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          paddingVertical: 13,
+          paddingHorizontal: 16,
+          borderBottomWidth: last ? 0 : 1,
+          borderBottomColor: theme.umber.lineNeutral,
+        }}
       >
-        {item.jobId ? (
-          <Image
-            source={{ uri: `https://picsum.photos/seed/${item.jobId}/96` }}
-            style={{ width: 48, height: 48 }}
-            contentFit="cover"
-          />
-        ) : (
-          <Ionicons
-            name={isPositive ? "add-circle-outline" : "wallet-outline"}
-            size={22}
-            color="rgba(224,194,154,0.5)"
-          />
-        )}
-      </View>
-
-      {/* Info */}
-      <View className="flex-1" style={{ marginRight: 10 }}>
-        <View className="flex-row items-center" style={{ gap: 6, marginBottom: 4 }}>
-          <View
-            style={{
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 4,
-              backgroundColor: "rgba(225,195,155,0.14)",
-            }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                ...theme.text.caption,
-                color: "#DDB477",
-              }}
-            >
-              {t(`credits.kind_${kind.toLowerCase()}`)}
-            </Text>
-          </View>
-          <Text
-            className="font-label"
-            style={{
-              ...theme.text.caption,
-              color: "#9A8F7D",
-            }}
-          >
-            {formatDate(item.createdAt)}
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...theme.v2.row, color: theme.umber.ink }} numberOfLines={1}>
+            {t(line.titleKey)}
           </Text>
+          {caption !== "" && (
+            <Text
+              style={{ ...theme.v2.rowQuiet, color: theme.umber.inkMuted, marginTop: 2 }}
+              numberOfLines={1}
+            >
+              {caption}
+            </Text>
+          )}
         </View>
-        <Text
-          className="font-body text-on-surface"
-          style={{ ...theme.text.body }}
-          numberOfLines={1}
-        >
-          {item.reason}
-        </Text>
-      </View>
 
-      {/* Amount + chevron */}
-      <View className="items-end" style={{ gap: 2 }}>
         <Text
-          className="font-headline"
           style={{
-            ...theme.text.title,
+            ...theme.v2.row,
             color: amountColor,
             fontVariant: ["tabular-nums"],
-            minWidth: 56,
-            textAlign: "right",
           }}
         >
-          {isPositive ? "+" : ""}
-          {item.amount}
+          {row.refunded ? "—" : `${positive ? "+" : "−"}${Math.abs(row.amount)}`}
         </Text>
-        {item.jobId && (
-          <Ionicons
-            name="chevron-forward"
-            size={14}
-            color="#9A8F7D"
-          />
+        {row.jobId && (
+          <Text style={{ color: theme.umber.inkMuted, fontSize: 16 }}>›</Text>
         )}
       </View>
     </Pressable>
@@ -190,7 +162,6 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
 export default function CreditsScreen() {
   const { t } = useTranslation();
   const balance = useCreditStore(s => s.balance);
-  const planCode = useCreditStore(s => s.planCode);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
   // EFFECTIVE rules/features — welcome bonus trial users see MAX-tier
   // capabilities (what credits unlock) so the "what you can do" math
@@ -246,12 +217,28 @@ export default function CreditsScreen() {
   // users into thinking each job appeared twice; the spend is already
   // captured in the RESERVE row, so dropping CONSUME rows leaves a
   // clean "one job = one row" reading.
-  const filteredLedger = useMemo(() => {
-    const meaningful = ledger.filter(l => l.amount !== 0);
-    if (activityFilter === "ALL") return meaningful;
-    if (activityFilter === "EARNED") return meaningful.filter(l => l.amount > 0);
-    return meaningful.filter(l => l.amount < 0);
-  }, [ledger, activityFilter]);
+  //
+  // Pairing happens BEFORE filtering, so a cancelled job is one row and not
+  // two — and since its net is zero it belongs to neither Earned nor Spent.
+  // It shows under All, where it reads as what it is: nothing happened.
+  const sections = useMemo<LedgerSection[]>(() => {
+    const rows = buildLedgerRows(ledger).filter(r =>
+      activityFilter === "ALL"
+        ? true
+        : activityFilter === "EARNED"
+          ? r.amount > 0
+          : r.amount < 0,
+    );
+
+    const out: LedgerSection[] = [];
+    for (const row of rows) {
+      const key = new Date(row.createdAt).toDateString();
+      const head = out[out.length - 1];
+      if (head && head.key === key) head.rows.push(row);
+      else out.push({ key, label: dayLabel(row.createdAt, t), rows: [row] });
+    }
+    return out;
+  }, [ledger, activityFilter, t]);
 
   // "Spent this month" — sum of negative entries within the active period.
   // Gives the user a quick sense of burn rate without scrolling the list.
@@ -263,9 +250,12 @@ export default function CreditsScreen() {
   const spentThisMonth = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    return ledger
-      .filter(l => l.amount < 0 && new Date(l.createdAt).getTime() >= startOfMonth)
-      .reduce((sum, l) => sum + Math.abs(l.amount), 0);
+    // Built from the PAIRED rows: a reservation that was handed straight
+    // back is not money spent, and counting it inflated the headline figure
+    // by the full cost of every failed generation.
+    return buildLedgerRows(ledger)
+      .filter(r => r.amount < 0 && new Date(r.createdAt).getTime() >= startOfMonth)
+      .reduce((sum, r) => sum + Math.abs(r.amount), 0);
   }, [ledger]);
 
   // Reference guide — resolve each feature's credit cost from the plan's
@@ -333,119 +323,98 @@ export default function CreditsScreen() {
   };
 
   return (
-    <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
-      {/* Billing-history header — brand mark + quick-access avatar.
-          Back button behavior routes through useBackHandler so the
-          "profile → credits → back" loop lands on Profile, not the
-          tab-bar root. */}
-      <TopBar
-        showBranding
-        onBack={handleBack}
-        showBack
-        rightElement={<AvatarMenu />}
-      />
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.umber.ground }}>
+      {/* Composer-language header: 34px back, a kicker, a matching spacer.
+          The brand lockup and the avatar menu came off — this is a record the
+          user opened on purpose, not a place that needs to re-introduce the
+          app or offer an account menu. */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 18,
+          paddingTop: 8,
+          paddingBottom: 14,
+        }}
+      >
+        <Pressable
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+          hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: theme.umber.lineNeutral,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: theme.umber.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+        </Pressable>
+        <Text style={{ ...theme.v2.kicker, color: theme.umber.inkMuted, flex: 1, textAlign: "center" }}>
+          {t("profile.billing_history").toUpperCase()}
+        </Text>
+        <View style={{ width: 34 }} />
+      </View>
 
       <FlatList
-        data={filteredLedger}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => <LedgerRow item={item} t={t} />}
+        data={sections}
+        keyExtractor={section => section.key}
+        renderItem={({ item: section }) => (
+          <View style={{ marginBottom: 18 }}>
+            <Text
+              style={{
+                ...theme.v2.kicker,
+                color: theme.umber.inkMuted,
+                marginBottom: 8,
+                marginLeft: 2,
+              }}
+            >
+              {section.label.toUpperCase()}
+            </Text>
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: theme.umber.lineNeutral,
+                borderRadius: 16,
+                overflow: "hidden",
+              }}
+            >
+              {section.rows.map((row, i) => (
+                <LedgerRow
+                  key={row.id}
+                  row={row}
+                  last={i === section.rows.length - 1}
+                  t={t}
+                />
+              ))}
+            </View>
+          </View>
+        )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
         contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
-            {/* ── Hero Balance Section ── */}
-            <View
-              className="items-center"
-              style={{ paddingTop: 16, paddingBottom: 24 }}
-            >
-              <Text
-                className="font-label text-secondary"
-                style={{
-                  ...theme.text.caption,
-                  marginBottom: 8,
-                }}
-              >
-                {t("credits.available_balance")}
-              </Text>
-              <Text
-                className="font-headline text-on-surface"
-                style={{ ...theme.text.hero, marginBottom: 16 }}
-              >
-                {balance}
-              </Text>
-              <Text
-                className="font-body text-on-surface-variant"
-                style={{ ...theme.text.body, fontStyle: "italic" }}
-              >
-                {t("credits.credits_in_vault")}
+            {/* The balance, stated once and left-aligned like every other
+                heading in the redesign. It used to be a centred three-line
+                hero — a label, a 40px numeral and an italic line reading
+                "credits in vault" — for a number the Settings screen already
+                shows. */}
+            <View style={{ paddingTop: 6, paddingBottom: 22 }}>
+              <Text style={{ ...theme.v2.displayL, color: theme.umber.ink }}>
+                {t("credits.headline_balance", { count: balance })}
               </Text>
             </View>
 
-            {/* ── Upgrade Banner ── */}
-            <Pressable
-              onPress={() => router.push("/plans")}
-              style={{ marginBottom: 12 }}
-            >
-              <LinearGradient
-                colors={["#DDB477", "#C09B62"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  height: 56,
-                  borderRadius: theme.radius.md,
-                  paddingHorizontal: theme.space.gutter,
-                  borderWidth: 1,
-                  borderColor: "rgba(196,168,130,0.3)",
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    ...theme.text.caption,
-                    color: "#231B10",
-                  }}
-                >
-                  {t("credits.upgrade_banner")}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#231B10" />
-              </LinearGradient>
-            </Pressable>
-
-            {/* ── One-time Credit Pack Banner ── */}
-            <Pressable
-              onPress={() => router.push("/credits/packs")}
-              style={{ marginBottom: 28 }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  height: 56,
-                  borderRadius: theme.radius.md,
-                  paddingHorizontal: theme.space.gutter,
-                  borderWidth: 1,
-                  borderColor: "#3D362A",
-                  backgroundColor: "transparent",
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  className="font-label text-secondary"
-                  style={{
-                    ...theme.text.caption,
-                  }}
-                >
-                  {t("credits.one_time_banner")}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#DDB477" />
-              </View>
-            </Pressable>
+            {/* Upgrade and one-off pack banners came off (2026-09-19).
+                This screen is the LEDGER — what was spent and when. Two
+                buy buttons on a history page turn a record into a shop, and
+                both destinations already sit one tap away on Settings as
+                "Get Pro" and "Buy Credits". */}
 
             {/* ── Reference Guide ── */}
             {referenceItems.length > 0 && (

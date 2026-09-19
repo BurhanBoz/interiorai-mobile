@@ -2,6 +2,7 @@ import { FlatList, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/config/theme";
 import { BottomSheet } from "./BottomSheet";
+import { catalogName } from "@/utils/catalogI18n";
 import type { CatalogItemResponse } from "@/types/api";
 
 const U = theme.umber;
@@ -74,7 +75,7 @@ export function RoomTypeSheet({
                             }}
                         >
                             <Text style={{ ...V.row, color: selected ? U.accentBright : U.ink }}>
-                                {item.name}
+                                {catalogName(t, "room", item)}
                             </Text>
                             {selected && <Text style={{ color: U.accentBright, fontSize: 15 }}>✓</Text>}
                         </Pressable>

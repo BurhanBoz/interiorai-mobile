@@ -630,10 +630,24 @@
     "empty_filtered_title": "Bu görünümde bir şey yok",
     "empty_filtered_subtitle": "Başka bir filtreye geç veya bir sonraki hareketinden sonra dön.",
     "ref_outdoor": "Dış Mekân Tasarımı",
-    "ledger.weekly_renewal": "Haftalık kredi +{{count}}",
     "balance_label": "{{count}} kredi",
     "balance_label_one": "{{count}} kredi",
-    "balance_label_other": "{{count}} kredi"
+    "balance_label_other": "{{count}} kredi",
+    "headline_balance": "{{count}} kredi",
+    "kind_adjustment": "Düzeltme",
+    "kind_promo": "Promosyon kodu",
+    "kind_monthly_reset": "Aylık krediler",
+    "kind_welcome_bonus": "Hoş geldin hediyesi",
+    "kind_daily_drip": "Günlük kredi",
+    "kind_weekly_bonus": "Haftalık hediye",
+    "kind_trial_expiry": "Deneme bitti",
+    "kind_weekly_renewal": "Haftalık krediler",
+    "ledger_feature_expand_view": "Görüşü Genişlet",
+    "ledger_feature_generic": "Tasarım",
+    "ledger_refunded": "Tamamlanmadı — krediler iade edildi",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} hediye",
+    "ledger_today": "Bugün",
+    "ledger_yesterday": "Dün"
   },
   "credit_packs": {
     "title": "Kredi Paketleri",
@@ -1026,7 +1040,8 @@
     "profile_edit_email_cta": "E-postayı değiştir",
     "profile_edit_email_hint": "Mevcut adresine bilgi göndereceğiz. Girişlerini yeni adresle yapacaksın.",
     "profile_edit_email_success": "E-posta güncellendi. Artık girişlerini bu adresle yapacaksın.",
-    "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor."
+    "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor.",
+    "delete_account": "Hesabı sil"
   },
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",

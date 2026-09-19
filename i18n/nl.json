@@ -630,10 +630,24 @@
     "empty_filtered_title": "Niets in deze weergave",
     "empty_filtered_subtitle": "Kies een ander filter of kom terug na je volgende activiteit.",
     "ref_outdoor": "Buitenontwerp",
-    "ledger.weekly_renewal": "Wekelijkse credits +{{count}}",
     "balance_label": "{{count}} credit",
     "balance_label_one": "{{count}} credit",
-    "balance_label_other": "{{count}} credits"
+    "balance_label_other": "{{count}} credits",
+    "headline_balance": "{{count}} credits",
+    "kind_adjustment": "Correctie",
+    "kind_promo": "Actiecode",
+    "kind_monthly_reset": "Maandelijkse credits",
+    "kind_welcome_bonus": "Welkomstbonus",
+    "kind_daily_drip": "Dagelijkse credit",
+    "kind_weekly_bonus": "Weekbonus",
+    "kind_trial_expiry": "Proefperiode voorbij",
+    "kind_weekly_renewal": "Wekelijkse credits",
+    "ledger_feature_expand_view": "Beeld uitbreiden",
+    "ledger_feature_generic": "Ontwerp",
+    "ledger_refunded": "Niet voltooid — credits terug",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} bonus",
+    "ledger_today": "Vandaag",
+    "ledger_yesterday": "Gisteren"
   },
   "credit_packs": {
     "title": "Creditpakketten",
@@ -1026,7 +1040,8 @@
     "profile_edit_email_cta": "E-mailadres wijzigen",
     "profile_edit_email_hint": "We sturen een bericht naar je huidige adres. Vanaf dan log je in met het nieuwe.",
     "profile_edit_email_success": "E-mailadres bijgewerkt. Vanaf nu log je daarmee in.",
-    "profile_edit_email_managed": "Beheerd via je {{provider}}-account."
+    "profile_edit_email_managed": "Beheerd via je {{provider}}-account.",
+    "delete_account": "Account verwijderen"
   },
   "errors": {
     "network": "Netwerkfout. Controleer je verbinding.",

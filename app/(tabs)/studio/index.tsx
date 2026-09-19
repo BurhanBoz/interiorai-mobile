@@ -180,7 +180,6 @@ export default function StudioScreen() {
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
-                    photoUri={photo?.uri ?? null}
                     onAddPhoto={() => setSourceSheet(true)}
                     onSample={(m) => addPhoto({ kind: "sample", module: m })}
                 />
@@ -296,16 +295,19 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
  * <p>The label is neutral on purpose. The tile now leads to both sources, so
  * naming the camera on it would be a promise the sheet immediately breaks.
  */
+/**
+ * <p>The tile does NOT show the last photo (2026-09-19 founder call). It did
+ * briefly, to make the pending half of the two-step selection visible — but
+ * a room the user finished with yesterday, sitting on the home screen as if
+ * it were about to be used, reads as a stale state rather than a ready one.
+ * The screen opens empty; the photo belongs to the run, not to the home.
+ */
 function IntakeRow({
     busy,
-    photoUri,
     onAddPhoto,
     onSample,
 }: {
     busy: boolean;
-    /** Once a photo is held, the tile shows it — the pending half of the
-        request has to be visible, or the screen looks like it did nothing. */
-    photoUri: string | null;
     onAddPhoto: () => void;
     onSample: (module: number) => void;
 }) {
@@ -331,42 +333,13 @@ function IntakeRow({
                     paddingHorizontal: 12,
                 }}
             >
-                {photoUri ? (
-                    <>
-                        <Image
-                            source={{ uri: photoUri }}
-                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                            resizeMode="cover"
-                        />
-                        <View
-                            style={{
-                                position: "absolute",
-                                bottom: 10,
-                                alignSelf: "center",
-                                backgroundColor: U.photoChrome,
-                                borderWidth: 1,
-                                borderColor: U.photoChromeBorder,
-                                borderRadius: R.pill,
-                                paddingVertical: 6,
-                                paddingHorizontal: 14,
-                            }}
-                        >
-                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: "#fff" }}>
-                                {t("studio.replace")}
-                            </Text>
-                        </View>
-                    </>
-                ) : (
-                    <>
-                        <PlusGlyph color={U.buttonInk} />
-                        <Text
-                            style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                            numberOfLines={1}
-                        >
-                            {t("studio.add_a_photo")}
-                        </Text>
-                    </>
-                )}
+                <PlusGlyph color={U.buttonInk} />
+                <Text
+                    style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                    numberOfLines={1}
+                >
+                    {t("studio.add_a_photo")}
+                </Text>
             </Pressable>
 
             <View style={{ flex: 1, gap: 8 }}>

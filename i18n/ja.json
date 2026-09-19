@@ -626,9 +626,23 @@
     "empty_filtered_title": "このビューには何もありません",
     "empty_filtered_subtitle": "別のフィルターに切り替えるか、次のアクティビティ後に戻ってきてください。",
     "ref_outdoor": "アウトドアデザイン",
-    "ledger.weekly_renewal": "週間クレジット +{{count}}",
     "balance_label": "{{count}} クレジット",
-    "balance_label_other": "{{count}} クレジット"
+    "balance_label_other": "{{count}} クレジット",
+    "headline_balance": "{{count}} クレジット",
+    "kind_adjustment": "調整",
+    "kind_promo": "プロモコード",
+    "kind_monthly_reset": "月間クレジット",
+    "kind_welcome_bonus": "ウェルカムボーナス",
+    "kind_daily_drip": "デイリークレジット",
+    "kind_weekly_bonus": "ウィークリーボーナス",
+    "kind_trial_expiry": "トライアル終了",
+    "kind_weekly_renewal": "週間クレジット",
+    "ledger_feature_expand_view": "ビューを拡張",
+    "ledger_feature_generic": "デザイン",
+    "ledger_refunded": "未完了 — クレジットを返却しました",
+    "ledger_pack_bonus": "{{base}} + ボーナス{{bonus}}",
+    "ledger_today": "今日",
+    "ledger_yesterday": "昨日"
   },
   "credit_packs": {
     "title": "クレジットパック",
@@ -1024,7 +1038,8 @@
     "profile_edit_email_cta": "メールアドレスを変更",
     "profile_edit_email_hint": "現在のアドレスに通知します。今後は新しいアドレスでサインインします。",
     "profile_edit_email_success": "メールアドレスを更新しました。今後はこのアドレスでサインインします。",
-    "profile_edit_email_managed": "{{provider}}のサインインで管理されています。"
+    "profile_edit_email_managed": "{{provider}}のサインインで管理されています。",
+    "delete_account": "アカウントを削除"
   },
   "errors": {
     "network": "ネットワークエラーです。接続を確認してください。",
