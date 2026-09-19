@@ -672,7 +672,8 @@
     "credits_with_bonus": "{{total}} クレジット · {{bonus}} ボーナス",
     "buy_a11y": "{{name}} を購入、{{credits}} クレジット",
     "secured_note": "Apple による安全な決済 · 税込",
-    "subscribe_bonus_hint": "サブスクで最大 +40% のボーナスクレジット"
+    "subscribe_bonus_hint": "サブスクで最大 +40% のボーナスクレジット",
+    "promise_line": "買い切り · クレジットの有効期限なし"
   },
   "credits_bridge": {
     "or_buy_credits": "または単発でクレジット購入"

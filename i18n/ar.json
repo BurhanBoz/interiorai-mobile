@@ -672,7 +672,8 @@
     "credits_with_bonus": "{{total}} رصيد · {{bonus}} إضافي",
     "buy_a11y": "شراء {{name}}، {{credits}} رصيد",
     "secured_note": "مدفوعات آمنة عبر Apple · الضرائب مشمولة",
-    "subscribe_bonus_hint": "اشترك واحصل على رصيد إضافي حتى ‎+40%‎"
+    "subscribe_bonus_hint": "اشترك واحصل على رصيد إضافي حتى ‎+40%‎",
+    "promise_line": "شراء لمرة واحدة · الأرصدة لا تنتهي"
   },
   "credits_bridge": {
     "or_buy_credits": "أو اشترِ رصيدًا لمرة واحدة"

@@ -133,6 +133,21 @@ export default function StudioScreen() {
      */
     const [pendingMode, setPendingMode] = useState<string | null>(null);
 
+    /**
+     * BU ziyarette seçilen fotoğraf.
+     *
+     * <p>🔴 Store'dan okunmuyor, kasten. Karo açılışta store'daki fotoğrafı
+     * gösterdiğinde ekran geçen seferden kalmış bir odayla karşılıyordu ve
+     * kullanıcı onu yeni seçimi sanıyordu — bu yüzden kaldırılmıştı. Ama
+     * kaldırınca ters uç ortaya çıktı: mod seçmeden fotoğraf seçen kullanıcı
+     * HİÇBİR geri bildirim görmüyor. Fotoğraf gerçekten alınıyor, yükleniyor
+     * ve store'a yazılıyor; ekranda değişen tek şey yok.
+     *
+     * <p>Ayrım zamanda: yalnız bu oturumda seçilen gösteriliyor. Ekrana
+     * girerken boş, seçtikten sonra dolu.
+     */
+    const [justPicked, setJustPicked] = useState<string | null>(null);
+
     const addPhoto = async (
         source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number },
     ) => {
@@ -146,6 +161,7 @@ export default function StudioScreen() {
         // the composer opened on an empty frame that spun forever — the
         // upload had succeeded and nothing was holding the result.
         setPhoto(picked);
+        setJustPicked(picked.uri ?? null);
         if (pendingMode) goComposer(pendingMode);
     };
 
@@ -180,6 +196,7 @@ export default function StudioScreen() {
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
+                    photoUri={justPicked}
                     onAddPhoto={() => setSourceSheet(true)}
                     onSample={(m) => addPhoto({ kind: "sample", module: m })}
                 />
@@ -304,10 +321,13 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
  */
 function IntakeRow({
     busy,
+    photoUri,
     onAddPhoto,
     onSample,
 }: {
     busy: boolean;
+    /** Bu ziyarette seçilen fotoğraf; null ise karo boş "+" olarak durur. */
+    photoUri: string | null;
     onAddPhoto: () => void;
     onSample: (module: number) => void;
 }) {
@@ -320,26 +340,58 @@ function IntakeRow({
                 onPress={onAddPhoto}
                 disabled={busy}
                 accessibilityRole="button"
-                accessibilityLabel={t("studio.add_a_photo")}
+                accessibilityLabel={photoUri ? t("studio.replace") : t("studio.add_a_photo")}
                 style={{
                     flex: 2,
                     opacity: busy ? 0.6 : 1,
-                    backgroundColor: U.buttonFill,
+                    backgroundColor: photoUri ? U.surface : U.buttonFill,
                     borderRadius: R.card,
                     overflow: "hidden",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
                     paddingHorizontal: 12,
+                    borderWidth: photoUri ? 1.5 : 0,
+                    borderColor: U.accent,
                 }}
             >
-                <PlusGlyph color={U.buttonInk} />
-                <Text
-                    style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                    numberOfLines={1}
-                >
-                    {t("studio.add_a_photo")}
-                </Text>
+                {photoUri ? (
+                    <>
+                        <Image
+                            source={{ uri: photoUri }}
+                            style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                            resizeMode="cover"
+                        />
+                        {/* Fotoğrafın üstünde metin okunur kalsın diye kendi
+                            perdesi — tema rengi değil, fotoğraf kromu. */}
+                        <View
+                            style={{
+                                position: "absolute", left: 0, right: 0, bottom: 0,
+                                paddingHorizontal: 10, paddingTop: 16, paddingBottom: 8,
+                                backgroundColor: "rgba(0,0,0,0.55)",
+                                flexDirection: "row", alignItems: "center", gap: 6,
+                            }}
+                        >
+                            <Text style={{ color: U.accentBright, fontSize: 12 }}>✓</Text>
+                            <Text
+                                style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}
+                                numberOfLines={1}
+                            >
+                                {t("studio.replace")}
+                            </Text>
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        <PlusGlyph color={U.buttonInk} />
+                        <Text
+                            style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                            numberOfLines={1}
+                        >
+                            {t("studio.add_a_photo")}
+                        </Text>
+                    </>
+                )}
             </Pressable>
 
             <View style={{ flex: 1, gap: 8 }}>

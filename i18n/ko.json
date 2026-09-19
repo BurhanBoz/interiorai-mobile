@@ -672,7 +672,8 @@
     "credits_with_bonus": "크레딧 {{total}}개 · {{bonus}}개 보너스",
     "buy_a11y": "{{name}} 구매, 크레딧 {{credits}}개",
     "secured_note": "Apple 보안 결제 · 세금 포함",
-    "subscribe_bonus_hint": "구독하면 최대 +40% 보너스 크레딧"
+    "subscribe_bonus_hint": "구독하면 최대 +40% 보너스 크레딧",
+    "promise_line": "1회 구매 · 크레딧은 만료되지 않습니다"
   },
   "credits_bridge": {
     "or_buy_credits": "또는 일회성 크레딧 구매"

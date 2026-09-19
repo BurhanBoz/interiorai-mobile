@@ -674,7 +674,8 @@
     "credits_with_bonus": "{{total}} crediti · {{bonus}} in omaggio",
     "buy_a11y": "Acquista {{name}}, {{credits}} crediti",
     "secured_note": "Pagamenti protetti da Apple · tasse incluse",
-    "subscribe_bonus_hint": "Abbonati per ottenere fino al +40% di crediti bonus"
+    "subscribe_bonus_hint": "Abbonati per ottenere fino al +40% di crediti bonus",
+    "promise_line": "Acquisto singolo · i crediti non scadono mai"
   },
   "credits_bridge": {
     "or_buy_credits": "Oppure acquista crediti una tantum"

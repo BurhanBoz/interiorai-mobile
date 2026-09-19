@@ -211,31 +211,52 @@ export default function PaywallScreen() {
      * come back, which is what {@link reloadNote} says.
      */
     const currentRank = tierRank(subscription?.planCode);
-    const offersBase = !!base && tierRank(PLAN_BASE) > currentRank;
-    const offersPro = !!pro && tierRank(PLAN_PRO) > currentRank;
-    // Until the catalog has loaded, both offers read false for the wrong
-    // reason (no plans to offer, not a subscriber who owns them) — and the
-    // no-upgrade layout would flash its "out of credits" title at everyone
-    // on a slow network. Default to the upgrade view while loading; the CTA
-    // is disabled until plans arrive anyway.
-    const hasUpgrade = !plans || offersBase || offersPro;
-    // Keep the selection inside what is actually on offer: a Base subscriber
-    // must not carry the default PRO selection into a CTA that then prices the
-    // wrong plan, and vice versa.
+    const currentCode = subscription?.planCode ?? null;
+    const subscribed = currentRank > 0;
+
+    /**
+     * Bir plan satın ALINABİLİR mi.
+     *
+     * <p>İki şey satılamaz: zaten üstünde olunan tam SKU, ve daha alt bir
+     * kademe. Aradaki üçüncü hâl kasten satılabilir bırakıldı — aynı kademede
+     * haftalıktan yıllığa geçmek gerçek bir satın alma ve %30 ucuz; onu
+     * kapatmak aboneye kendi yükseltme yolunu gizlemek olurdu.
+     */
+    const buyable = (code: string) =>
+        code !== currentCode && tierRank(code) >= currentRank;
+
+    const offersBase = !!base && buyable(baseCode);
+    const offersPro = !!pro && buyable(proCode);
+
+    /**
+     * 🔴 Plan satırları ARTIK HER ZAMAN çiziliyor — satın alınabilir olsun ya
+     * da olmasın. Önceki sürüm onları offersX arkasına saklıyordu ve ödeyen
+     * bir abone paywall'ı açtığında ortada boş bir boşluk görüyordu: kendi
+     * planını, fiyatını, merdivenin neresinde durduğunu hiçbir yerden
+     * okuyamıyordu. Fiyatı görmek satın almaktan ayrı bir ihtiyaç.
+     * Satılamayan satır sönük ve dokunulamaz; üstünde de hangisi olduğu
+     * yazıyor.
+     */
+    const anythingToBuy = !plans || offersBase || offersPro;
+
+    // Seçim, gerçekten satın alınabilir olanın içinde kalmalı: BASE abonesi
+    // varsayılan PRO seçimini yanlış planı fiyatlayan bir düğmeye taşımasın.
     const effectiveSelected = offersPro && offersBase
         ? selected
         : offersPro ? PLAN_PRO : PLAN_BASE;
-    const chosen = effectiveSelected === PLAN_BASE ? base : pro;
+    const chosen = effectiveSelected === PLAN_BASE
+        ? (offersBase ? base : undefined)
+        : (offersPro ? pro : undefined);
 
     /** When the subscriber's own weekly allocation comes back. */
     const reloadNote = useMemo(() => {
-        if (hasUpgrade || !subscription?.currentPeriodEnd) return null;
+        if (!subscription?.currentPeriodEnd) return null;
         const diffMs = new Date(subscription.currentPeriodEnd).getTime() - Date.now();
         const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
         if (days === 0) return t("paywall.reload_today");
         if (days === 1) return t("paywall.reload_tomorrow");
         return t("paywall.reload_in_days", { days });
-    }, [hasUpgrade, subscription?.currentPeriodEnd, t]);
+    }, [subscription?.currentPeriodEnd, t]);
 
     const priceOf = (plan?: typeof pro) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
@@ -396,38 +417,32 @@ export default function PaywallScreen() {
                     </Pressable>
                 </View>
 
-                {/* 🔴 hasUpgrade ve reloadNote HESAPLANIYOR ama render onlara
-                    hiç bakmıyordu — ölü koddu. Sonuç: en üst kademedeki bir
-                    abone için offersPro ve offersBase ikisi de false olunca
-                    plan satırları hiç çizilmiyor, ortada boş bir boşluk
-                    kalıyordu; üstelik effectiveSelected BASE'e düşüyor ve
-                    düğme aboneye kendi planının ALTINI satmaya çalışıyordu.
-                    Ödeyen müşteriye boş bir satın alma ekranı ve yanlış bir
-                    düğme. Zaten yazılmış olan doğru ekran artık çiziliyor. */}
-                {!hasUpgrade ? (
-                    <NothingToUpgrade
-                        // Başlık kaynağa göre: kredisi bittiği için buraya
-                        // düşen kullanıcıya "kredin bitti" doğru, Ayarlar'dan
-                        // "Plan yönetimi" diyerek gelen ve 103 kredisi olan
-                        // aboneye aynı cümle düpedüz yanlış olurdu.
-                        title={
-                            source === SOURCE_CREDITS_EXHAUSTED
+                {/* Başlık: ödemeyen için iddia, abone için konum.
+                    Ödeyen birine "Yalnızca Pro'nun yapabildiği iki şey"
+                    demenin anlamı yok — o iki şey zaten onda. */}
+                {subscribed ? (
+                    <>
+                        <Text style={{ ...theme.v2.displayL, color: U.ink }}>
+                            {source === SOURCE_CREDITS_EXHAUSTED
                                 ? t("paywall.title_out_of_credits")
-                                : t("paywall.current_plan_title", {
-                                      plan: subscription?.planName ?? "",
-                                  })
-                        }
-                        note={reloadNote}
-                        onBuyCredits={() => router.replace("/credits/packs" as never)}
-                        t={t}
-                    />
+                                : t("paywall.current_plan_title", { plan: subscription?.planName ?? "" })}
+                        </Text>
+                        {reloadNote && (
+                            <Text style={{ ...theme.v2.body, color: U.inkMuted, marginTop: 8, marginBottom: 18 }}>
+                                {reloadNote}
+                            </Text>
+                        )}
+                    </>
                 ) : (
-                <>
-                <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
-                    {t("paywall.two_things_headline")}
-                </Text>
+                    <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
+                        {t("paywall.two_things_headline")}
+                    </Text>
+                )}
 
-                {/* No descriptions. The photograph is the description. */}
+                {/* İki yetenek her iki hâlde de burada. Ödemeyene iddia,
+                    ödeyene ne için ödediğinin karşılığı — altındaki satırda
+                    "MEVCUT PLAN" yazdığı için satış gibi okunmuyor. Aboneye
+                    göstermemek, ekranın üst yarısını bomboş bırakıyordu. */}
                 <View style={{ flexDirection: "row", gap: 10 }}>
                     <ProCard
                         image={require("@/assets/features/style_after.png")}
@@ -448,36 +463,39 @@ export default function PaywallScreen() {
                     t={t}
                 />
 
+                {/* Merdivenin tamamı, her zaman, fiyatlarıyla. */}
                 <View style={{ gap: 10, marginTop: 18 }}>
-                    {offersPro && (
-                        <UmberPlanRow
-                            tier="PRO"
-                            sub={t("paywall.pro_sub")}
-                            price={proPrice}
-                            period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
-                            selected={selectedIsPro}
-                            onPress={() => {
-                                setSelected(PLAN_PRO);
-                                recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
-                            }}
-                        />
-                    )}
-                    {offersBase && (
-                        <UmberPlanRow
-                            tier="BASE"
-                            sub={t("paywall.base_sub")}
-                            price={basePrice}
-                            period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
-                            selected={!selectedIsPro}
-                            onPress={() => {
-                                setSelected(PLAN_BASE);
-                                recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
-                            }}
-                        />
-                    )}
+                    <UmberPlanRow
+                        tier="PRO"
+                        sub={t("paywall.pro_sub")}
+                        price={proPrice}
+                        period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                        selected={offersPro && selectedIsPro}
+                        current={currentCode === proCode}
+                        locked={!offersPro}
+                        currentLabel={t("plans.current_plan")}
+                        onPress={() => {
+                            if (!offersPro) return;
+                            setSelected(PLAN_PRO);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
+                        }}
+                    />
+                    <UmberPlanRow
+                        tier="BASE"
+                        sub={t("paywall.base_sub")}
+                        price={basePrice}
+                        period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                        selected={offersBase && !selectedIsPro}
+                        current={currentCode === baseCode}
+                        locked={!offersBase}
+                        currentLabel={t("plans.current_plan")}
+                        onPress={() => {
+                            if (!offersBase) return;
+                            setSelected(PLAN_BASE);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
+                        }}
+                    />
                 </View>
-                </>
-                )}
 
                 <View style={{ flex: 1 }} />
 
@@ -505,80 +523,59 @@ export default function PaywallScreen() {
                     </Pressable>
                 )}
 
-                {hasUpgrade && (
-                <Pressable
-                    onPress={handleContinue}
-                    disabled={busy || !chosen}
-                    accessibilityRole="button"
-                    style={{
-                        height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
-                        opacity: busy || !chosen ? 0.5 : 1,
-                        flexDirection: "row", alignItems: "center",
-                        justifyContent: "space-between", paddingHorizontal: 22,
-                    }}
-                >
-                    {busy ? (
-                        <ActivityIndicator color={U.buttonInk} />
-                    ) : (
-                        <>
-                            <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
-                                {selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
-                            </Text>
-                            <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-                        </>
-                    )}
-                </Pressable>
+                {/* Satın alınacak bir şey varsa abonelik düğmesi; yoksa —
+                    yani zaten en üstteyse — dürüst olan tek kapı kredi paketi.
+                    Abonelik düğmesini orada bırakmak, kullanıcıyı Apple'ın
+                    "bu abonelikte zaten varsınız" uyarısına göndermekti. */}
+                {anythingToBuy ? (
+                    <Pressable
+                        onPress={handleContinue}
+                        disabled={busy || !chosen}
+                        accessibilityRole="button"
+                        style={{
+                            height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                            opacity: busy || !chosen ? 0.5 : 1,
+                            flexDirection: "row", alignItems: "center",
+                            justifyContent: "space-between", paddingHorizontal: 22,
+                        }}
+                    >
+                        {busy ? (
+                            <ActivityIndicator color={U.buttonInk} />
+                        ) : (
+                            <>
+                                <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
+                                    {selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
+                                </Text>
+                                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                            </>
+                        )}
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        onPress={() => router.replace("/credits/packs" as never)}
+                        accessibilityRole="button"
+                        style={{
+                            height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                            flexDirection: "row", alignItems: "center",
+                            justifyContent: "space-between", paddingHorizontal: 22,
+                        }}
+                    >
+                        <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
+                            {t("profile.buy_credits")}
+                        </Text>
+                        <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                    </Pressable>
                 )}
 
-                {hasUpgrade && (
+                {/* Geri yükleme her zaman duruyor: aboneliği cihazda
+                    görünmeyen kullanıcı tam da buraya düşer. */}
                 <Pressable onPress={handleRestore} disabled={busy} hitSlop={8} accessibilityRole="button">
                     <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 12, marginBottom: 4 }}>
                         {t("paywall.footnote")}
                     </Text>
                 </Pressable>
-                )}
             </View>
         </SafeAreaView>
-    );
-}
-
-/**
- * Satacak bir şeyin olmadığı hâl.
- *
- * <p>En üst kademedeki abone için doğru cevap "abone ol" değil. İki şey
- * söylüyor: kendi haftalık kredisinin ne zaman geri geleceği ve o tarihi
- * beklemek istemiyorsa tek seferlik paketin nerede olduğu. Metnin hepsi
- * zaten on dilde yazılıydı — title_out_of_credits, reload_* — yalnız
- * hiçbir yerden çağrılmıyordu.
- */
-function NothingToUpgrade({
-    title, note, onBuyCredits, t,
-}: { title: string; note: string | null; onBuyCredits: () => void; t: (k: string) => string }) {
-    return (
-        <View>
-            <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 12 }}>
-                {title}
-            </Text>
-            {note && (
-                <Text style={{ ...theme.v2.body, color: U.inkMuted, marginBottom: 22 }}>
-                    {note}
-                </Text>
-            )}
-            <Pressable
-                onPress={onBuyCredits}
-                accessibilityRole="button"
-                style={{
-                    height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
-                    flexDirection: "row", alignItems: "center",
-                    justifyContent: "space-between", paddingHorizontal: 22,
-                }}
-            >
-                <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
-                    {t("profile.buy_credits")}
-                </Text>
-                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-            </Pressable>
-        </View>
     );
 }
 
@@ -633,30 +630,55 @@ function BillingSegment({
     );
 }
 
+/**
+ * Merdivenin bir basamağı.
+ *
+ * <p>Üç hâl: seçilebilir, seçili, ve satın alınamaz. Üçüncüsü sönük çiziliyor
+ * ama FİYATI DURUYOR — kullanıcı kendi planının ne kadar olduğunu ve bir alt
+ * basamağın ne kadar olduğunu görebilmeli; satın alma hakkının olmaması bunu
+ * gizlemek için gerekçe değil. Üstünde bulunulan basamak ayrıca etiketli,
+ * yoksa sönük satır "tükendi" gibi okunur.
+ */
 function UmberPlanRow({
-    tier, sub, price, period, selected, onPress,
+    tier, sub, price, period, selected, current, locked, currentLabel, onPress,
 }: {
     tier: "PRO" | "BASE"; sub: string; price: string; period: string;
-    selected: boolean; onPress: () => void;
+    selected: boolean; current: boolean; locked: boolean;
+    currentLabel: string; onPress: () => void;
 }) {
     return (
         <Pressable
             onPress={onPress}
+            disabled={locked}
             accessibilityRole="radio"
-            accessibilityState={{ selected }}
+            accessibilityState={{ selected, disabled: locked }}
             style={{
                 borderRadius: 18, paddingVertical: 15, paddingHorizontal: 16,
-                borderWidth: selected ? 1.5 : 1,
-                borderColor: selected ? U.accent : U.lineNeutral,
+                borderWidth: selected || current ? 1.5 : 1,
+                borderColor: selected ? U.accent : current ? U.accentBright : U.lineNeutral,
                 backgroundColor: tier === "PRO" ? U.surface : "transparent",
                 flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                 gap: 12,
+                // Üstünde olunan plan sönmez — o bir bilgi, bir kısıt değil.
+                opacity: locked && !current ? 0.45 : 1,
             }}
         >
             <View style={{ flex: 1 }}>
-                <Text style={{ ...theme.v2.tier, color: tier === "PRO" ? U.accentBright : U.inkMuted }}>
-                    {tier}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Text style={{ ...theme.v2.tier, color: tier === "PRO" ? U.accentBright : U.inkMuted }}>
+                        {tier}
+                    </Text>
+                    {current && (
+                        <View style={{
+                            paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100,
+                            backgroundColor: U.lineAccent, borderWidth: 1, borderColor: U.accent,
+                        }}>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: 0.8, color: U.accentBright }}>
+                                {currentLabel.toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
+                </View>
                 <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 3 }} numberOfLines={2}>
                     {sub}
                 </Text>
