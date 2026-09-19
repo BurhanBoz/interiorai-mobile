@@ -28,10 +28,10 @@ const DAILY_CEILING = 3;
  * A guest has a name and a plan; that is the whole of what they need to see.
  *
  * <p><b>Where the rest went.</b> Seven routed rows became four. Billing
- * history, plan management, notification detail, help, terms and account
- * deletion moved to {@code /settings/account}, opened by tapping your own
- * name. 🔴 Deletion staying reachable is not a preference — App Store
- * 5.1.1(v) requires it.
+ * history, terms, help and account deletion live on
+ * {@code /settings/profile-edit}, opened by tapping your own name — one
+ * account screen rather than two. 🔴 Deletion staying reachable is not a
+ * preference; App Store 5.1.1(v) requires it.
  */
 export default function SettingsScreen() {
     const { t, i18n } = useTranslation();
@@ -78,7 +78,7 @@ export default function SettingsScreen() {
                 <Pressable
                     onPress={() => {
                         Haptics.selectionAsync();
-                        router.push("/settings/account" as never);
+                        router.push("/settings/profile-edit" as never);
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={t("profile.account_and_data")}

@@ -66,6 +66,7 @@ export default function ComposerScreen() {
     const roomType = useStudioStore((s) => s.roomType);
     const designStyle = useStudioStore((s) => s.designStyle);
     const objectRefs = useStudioStore((s) => s.objectRefs);
+    const referencePhoto = useStudioStore((s) => s.referencePhoto);
     const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
     const setRoomType = useStudioStore((s) => s.setRoomType);
     const setDesignStyle = useStudioStore((s) => s.setDesignStyle);
@@ -239,12 +240,37 @@ export default function ComposerScreen() {
                         />
                     </View>
 
-                    <FurnitureRow
-                        picked={objectRefs}
-                        suggestions={products}
-                        onBrowse={() => router.push("/studio/furniture" as never)}
-                        onRemove={removeObjectRef}
-                    />
+                    {/* Furniture is a redesign concept. Magic Edit changes the
+                        area the user painted and Style Transfer copies a
+                        reference — dropping a catalogue sofa into either is
+                        not a thing the backend does, so offering it would be
+                        a control that cannot work. */}
+                    {mode !== "INPAINT" && mode !== "STYLE_TRANSFER" && (
+                        <FurnitureRow
+                            picked={objectRefs}
+                            suggestions={products}
+                            onBrowse={() => router.push("/studio/furniture" as never)}
+                            onRemove={removeObjectRef}
+                        />
+                    )}
+
+                    {/* What the collection step produced, shown as a fact the
+                        user can go back and change. */}
+                    {mode === "INPAINT" && (
+                        <CollectedRow
+                            label={t("studio.mask_ready")}
+                            action={t("studio.edit_mask")}
+                            onPress={() => router.push("/studio/smart-edit" as never)}
+                        />
+                    )}
+                    {mode === "STYLE_TRANSFER" && (
+                        <CollectedRow
+                            label={t("studio.reference_ready")}
+                            action={t("studio.change_reference")}
+                            thumbUri={referencePhoto?.uri}
+                            onPress={() => router.push("/studio/style-transfer" as never)}
+                        />
+                    )}
                 </View>
 
                 {/* Action bar — a real footer with its own height. */}
@@ -645,6 +671,58 @@ function FurnitureRow({
                 </Text>
             </Pressable>
         </View>
+    );
+}
+
+/**
+ * The input a mode collected elsewhere, stated plainly with a way back.
+ *
+ * <p>Magic Edit and Style Transfer gather their extra input on their own
+ * screen and then hand over here. Without this row the composer would give no
+ * sign that a mask or a reference exists, and the only way to check would be
+ * to generate and look at the result.
+ */
+function CollectedRow({
+    label,
+    action,
+    thumbUri,
+    onPress,
+}: {
+    label: string;
+    action: string;
+    thumbUri?: string | null;
+    onPress: () => void;
+}) {
+    return (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            style={{
+                marginTop: 18,
+                backgroundColor: U.surface,
+                borderWidth: 1,
+                borderColor: U.lineAccent,
+                borderRadius: R.button,
+                padding: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+            }}
+        >
+            {thumbUri ? (
+                <Image
+                    source={{ uri: thumbUri }}
+                    style={{ width: 44, height: 44, borderRadius: 9 }}
+                    resizeMode="cover"
+                />
+            ) : null}
+            <Text style={{ ...V.row, color: U.ink, flex: 1 }} numberOfLines={1}>
+                {label}
+            </Text>
+            <Text style={{ fontFamily: "Inter-Bold", fontSize: 11.5, color: U.accentBright }}>
+                {action} →
+            </Text>
+        </Pressable>
     );
 }
 

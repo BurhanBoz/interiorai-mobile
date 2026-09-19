@@ -77,43 +77,47 @@ export default function StyleTransferScreen() {
   const handleNext = () => {
     if (!canProceed) return;
     Haptics.selectionAsync();
-    if (wizard === "1") router.push("/studio/style");
-    else router.replace("/(tabs)/studio/options");
+    // The reference is collected here; the decision and the charge happen in
+    // the composer, which owns the only statement of cost in the app. This
+    // used to land on the old "Step 3 / 3" options screen.
+    router.replace("/studio/composer" as never);
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* Top App Bar — back chevron mirrors options.tsx so the wizard
-          navigation contract is consistent: left = go back one step,
-          right = profile. Drawer stays reachable from the main tabs. */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="flex-row items-center" style={{ gap: 12 }}>
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={8}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: theme.radius.lg,
-              backgroundColor: "rgba(42,42,42,0.8)",
-              borderWidth: 1,
-              borderColor: "rgba(77,70,60,0.15)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="chevron-back" size={22} color="#DDB477" />
-          </Pressable>
-          <Text
-            className="font-headline text-on-surface"
-            style={{
-              ...theme.text.label,
-            }}
-          >
-            Roomframe AI
-          </Text>
-        </View>
-        <AvatarMenu />
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.umber.ground }}>
+      {/* Composer-language header: 34px back, a kicker naming the mode, a
+          matching spacer. No step counter — this is one collection step, not
+          a numbered stage of a wizard. */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 18,
+          paddingTop: 8,
+          paddingBottom: 14,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: theme.umber.lineNeutral,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: theme.umber.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+        </Pressable>
+        <Text
+          style={{ ...theme.v2.kicker, color: theme.umber.inkMuted, flex: 1, textAlign: "center" }}
+        >
+          {t("studio.mode_style_transfer").toUpperCase()}
+        </Text>
+        <View style={{ width: 34 }} />
       </View>
 
       <ScrollView

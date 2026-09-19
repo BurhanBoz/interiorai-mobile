@@ -350,7 +350,11 @@
     "gallery": "写真ライブラリ",
     "transformation": "変化の強さ",
     "pieces_chosen": "{{count}} 点を選択中",
-    "remove_piece": "{{name}} を外す"
+    "remove_piece": "{{name}} を外す",
+    "mask_ready": "変更する範囲を設定済み",
+    "edit_mask": "編集",
+    "reference_ready": "参考写真を設定済み",
+    "change_reference": "変更"
   },
   "furniture": {
     "title": "家具",

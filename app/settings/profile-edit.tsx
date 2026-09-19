@@ -323,8 +323,87 @@ export default function ProfileEditScreen() {
               loading={loading}
             />
           </View>
+
+          {/* ── Everything else the account screen has to carry ──────────
+           *
+           * 🔴 Account deletion is an App Store requirement (5.1.1(v)) and
+           * used to be reachable only from the old settings list. That list
+           * was removed on 2026-09-19, so these rows moved here — this IS the
+           * account screen now, and deletion has to have a door.
+           *
+           * Billing history and Terms come along for the same reason in
+           * weaker form: nothing else in the app reaches them.
+           */}
+          <View
+            style={{
+              marginTop: 36,
+              borderWidth: 1,
+              borderColor: theme.umber.lineNeutral,
+              borderRadius: 16,
+              overflow: "hidden",
+            }}
+          >
+            <AccountRow
+              label={t("profile.billing_history")}
+              onPress={() => router.push("/credits" as never)}
+            />
+            <AccountRow
+              label={t("profile.terms")}
+              onPress={() => router.push("/settings/terms" as never)}
+            />
+            <AccountRow
+              label={t("drawer.help")}
+              onPress={() => router.push("/settings/help" as never)}
+            />
+            <AccountRow
+              label={t("settings.delete_account")}
+              tone="danger"
+              last
+              onPress={() => router.push("/settings/delete-account" as never)}
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/** One row of the account list. Same shape as the Settings rows. */
+function AccountRow({
+  label,
+  tone = "ink",
+  last,
+  onPress,
+}: {
+  label: string;
+  tone?: "ink" | "danger";
+  last?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={{
+        paddingVertical: 15,
+        paddingHorizontal: 16,
+        borderBottomWidth: last ? 0 : 1,
+        borderBottomColor: theme.umber.lineNeutral,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        minHeight: 44,
+      }}
+    >
+      <Text
+        style={{
+          ...theme.v2.row,
+          color: tone === "danger" ? theme.color.danger : theme.umber.ink,
+        }}
+      >
+        {label}
+      </Text>
+      <Text style={{ color: theme.umber.inkMuted, fontSize: 16 }}>›</Text>
+    </Pressable>
   );
 }

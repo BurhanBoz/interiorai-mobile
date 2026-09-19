@@ -129,10 +129,17 @@ export default function RootIndex() {
     // vanished; the server copy survives what the device cannot — deletion,
     // sign-out, a new phone. Both found the hard way (founder devices,
     // 2026-09-06/07).
-    const metOffer = metFirstOffer === true || subscription?.hasGenerated === true;
+    // 🔴 The "has generated at least once" condition was REMOVED on
+    // 2026-09-19 (founder call): a free user now meets the offer on every
+    // cold start, generated or not.
+    //
+    // It is worth knowing what it reverses. 1.4.5 gated the offer on a first
+    // result because the first-open placement had an unambiguous log: all 16
+    // taps on "buy" came from people who had rendered nothing, a median ~10s
+    // after the screen appeared, and every one of them backed out at Apple's
+    // sheet. Restoring the condition is adding `&& metOffer` back here.
     if (subscriptionResolved
-        && !tierAtLeast(subscription?.planCode, "BASE")
-        && metOffer) {
+        && !tierAtLeast(subscription?.planCode, "BASE")) {
       offerShownThisLaunch = true;
       return <Redirect href={{ pathname: "/paywall", params: { source: "APP_OPEN" } }} />;
     }

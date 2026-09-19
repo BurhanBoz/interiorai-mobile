@@ -351,7 +351,11 @@
     "gallery": "Galeri",
     "transformation": "Dönüşüm",
     "pieces_chosen": "{{count}} parça seçildi",
-    "remove_piece": "{{name}} kaldır"
+    "remove_piece": "{{name}} kaldır",
+    "mask_ready": "Değişecek alan seçildi",
+    "edit_mask": "Düzenle",
+    "reference_ready": "Referans fotoğrafı seçildi",
+    "change_reference": "Değiştir"
   },
   "furniture": {
     "title": "Mobilya",

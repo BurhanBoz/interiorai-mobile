@@ -350,7 +350,11 @@
     "gallery": "사진 보관함",
     "transformation": "변화 정도",
     "pieces_chosen": "{{count}}개 선택됨",
-    "remove_piece": "{{name}} 제거"
+    "remove_piece": "{{name}} 제거",
+    "mask_ready": "변경할 영역 설정됨",
+    "edit_mask": "편집",
+    "reference_ready": "참고 사진 설정됨",
+    "change_reference": "변경"
   },
   "furniture": {
     "title": "가구",

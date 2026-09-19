@@ -239,7 +239,9 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingTop: 10,
-                paddingBottom: 14,
+                // The intake tile used to start 14px under the lockup, which
+                // read as one block rather than a header and a first action.
+                paddingBottom: 26,
             }}
         >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>

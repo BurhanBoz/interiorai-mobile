@@ -350,7 +350,11 @@
     "gallery": "معرض الصور",
     "transformation": "مدى التغيير",
     "pieces_chosen": "تم اختيار {{count}} قطعة",
-    "remove_piece": "إزالة {{name}}"
+    "remove_piece": "إزالة {{name}}",
+    "mask_ready": "تم تحديد المنطقة المراد تغييرها",
+    "edit_mask": "تعديل",
+    "reference_ready": "تم تحديد الصورة المرجعية",
+    "change_reference": "تغيير"
   },
   "furniture": {
     "title": "الأثاث",

@@ -207,8 +207,10 @@ export default function SmartEditScreen() {
       // so the user SEES what will change before generating.
       setMask(mask.id, strokes, maskMode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (wizard === "1") router.push("/studio/style");
-      else router.back();
+      // The collection step hands over to the composer, which owns the
+      // final decision and the only statement of cost. It used to push the
+      // old "/studio/style" wizard when it was a sub-step of it.
+      router.replace("/studio/composer" as never);
     } catch (e: any) {
       const msg = e?.response?.data?.message;
       Alert.alert(
@@ -529,41 +531,48 @@ function StrokeShape({
   );
 }
 
+/**
+ * Composer-language header: a 34px back button, a kicker naming the mode, and
+ * a matching spacer so the kicker is optically centred. No step counter and no
+ * screen title — the wizard numbering said only how much bureaucracy was left.
+ */
 function Header({ title }: { title: string }) {
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: theme.space.gutter,
-        paddingVertical: 16,
+        paddingHorizontal: 18,
+        paddingTop: 8,
+        paddingBottom: 14,
       }}
     >
       <Pressable
         onPress={() => router.back()}
-        hitSlop={8}
+        accessibilityRole="button"
+        hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: theme.radius.lg,
-          backgroundColor: "rgba(42,42,42,0.8)",
-          borderWidth: 1,
-          borderColor: "rgba(77,70,60,0.15)",
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: theme.umber.lineNeutral,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Ionicons name="chevron-back" size={22} color={GOLD} />
+        <Text style={{ color: theme.umber.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
       </Pressable>
       <Text
         style={{
-          ...theme.text.subtitle,
-          color: "#EDE4D7",
-          marginLeft: 16,
+          ...theme.v2.kicker,
+          color: theme.umber.inkMuted,
+          flex: 1,
+          textAlign: "center",
         }}
       >
-        {title}
+        {title.toUpperCase()}
       </Text>
+      <View style={{ width: 34 }} />
     </View>
   );
 }

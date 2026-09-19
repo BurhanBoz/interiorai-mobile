@@ -351,7 +351,11 @@
     "gallery": "Galleria",
     "transformation": "Trasformazione",
     "pieces_chosen": "{{count}} pezzi scelti",
-    "remove_piece": "Rimuovi {{name}}"
+    "remove_piece": "Rimuovi {{name}}",
+    "mask_ready": "Area da modificare impostata",
+    "edit_mask": "Modifica",
+    "reference_ready": "Foto di riferimento impostata",
+    "change_reference": "Cambia"
   },
   "furniture": {
     "title": "Arredamento",
