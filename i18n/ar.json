@@ -315,7 +315,24 @@
     "add_reference": "إضافة مرجع",
     "step_of": "الخطوة {{current}} / {{total}}",
     "furniture_needs_free_layout": "أوقف «الحفاظ على التخطيط» لإضافة أثاث",
-    "turn_off": "إيقاف"
+    "turn_off": "إيقاف",
+    "shoot_the_room": "صوّر\nالغرفة",
+    "choose_a_photo": "اختر\nصورة",
+    "try_a_sample": "جرّب نموذجًا",
+    "put_this_sofa": "ضع هذه الأريكة في غرفتك",
+    "your_own": "قطعتك\nالخاصة",
+    "refill_in": "+1 خلال {{hours}} ساعة",
+    "catalogue_count": "{{count}} ←",
+    "advanced": "إعدادات متقدمة",
+    "photo_and_privacy": "الصورة والخصوصية",
+    "change": "تغيير",
+    "replace": "استبدال",
+    "place_a_real_piece": "ضع قطعة حقيقية",
+    "browse": "تصفّح",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · قطعة واحدة",
+    "credit_cost": "{{count}} رصيد",
+    "credit_cost_other": "{{count}} رصيد"
   },
   "furniture": {
     "title": "الأثاث",
@@ -576,7 +593,9 @@
     "empty_filtered_title": "لا شيء في هذا العرض",
     "empty_filtered_subtitle": "بدّل الفلتر أو عد بعد نشاطك القادم.",
     "ref_outdoor": "تصميم المساحات الخارجية",
-    "ledger.weekly_renewal": "رصيد أسبوعي +{{count}}"
+    "ledger.weekly_renewal": "رصيد أسبوعي +{{count}}",
+    "balance_label": "{{count}} رصيد",
+    "balance_label_other": "{{count}} رصيد"
   },
   "credit_packs": {
     "title": "حزم الرصيد",
@@ -1115,5 +1134,16 @@
     "preprompt_body": "نخبرك عندما يصبح رصيدك المجاني جاهزًا. لا شيء آخر.",
     "preprompt_yes": "نعم، أعلمني",
     "preprompt_later": "ليس الآن"
+  },
+  "consent": {
+    "title": "كيف تُعالَج صورك",
+    "sent_lead": "المُرسَل:",
+    "sent_body": "صورة غرفتك وخياراتك التصميمية. بلا اسم أو بريد أو جهات اتصال أو موقع.",
+    "to_lead": "إلى:",
+    "to_body": "‏Replicate وAnthropic (الولايات المتحدة) بصفتهما معالِجَين لدينا. تُحفظ لثوانٍ، ولا تُخزَّن، ولا تُستخدم للتدريب.",
+    "kept_lead": "المحفوظ:",
+    "kept_body": "نتائجك، في فرانكفورت، إلى أن تحذفها.",
+    "privacy_policy": "سياسة الخصوصية",
+    "got_it": "فهمت"
   }
 }

@@ -315,7 +315,24 @@
     "add_reference": "참고 추가",
     "step_of": "단계 {{current}} / {{total}}",
     "furniture_needs_free_layout": "가구를 추가하려면 '레이아웃 유지'를 끄세요",
-    "turn_off": "끄기"
+    "turn_off": "끄기",
+    "shoot_the_room": "방\n촬영",
+    "choose_a_photo": "사진\n선택",
+    "try_a_sample": "샘플 사용해보기",
+    "put_this_sofa": "이 소파를 내 방에 놓아보세요",
+    "your_own": "내\n가구",
+    "refill_in": "{{hours}}시간 후 +1",
+    "catalogue_count": "{{count}} →",
+    "advanced": "고급 설정",
+    "photo_and_privacy": "사진 및 개인정보",
+    "change": "변경",
+    "replace": "교체",
+    "place_a_real_piece": "실제 가구 배치",
+    "browse": "둘러보기",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · 가구 1점",
+    "credit_cost": "크레딧 {{count}}개",
+    "credit_cost_other": "크레딧 {{count}}개"
   },
   "furniture": {
     "title": "가구",
@@ -576,7 +593,9 @@
     "empty_filtered_title": "이 보기에 없음",
     "empty_filtered_subtitle": "다른 필터로 전환하거나 다음 활동 후 다시 오세요.",
     "ref_outdoor": "아웃도어 디자인",
-    "ledger.weekly_renewal": "주간 크레딧 +{{count}}"
+    "ledger.weekly_renewal": "주간 크레딧 +{{count}}",
+    "balance_label": "크레딧 {{count}}개",
+    "balance_label_other": "크레딧 {{count}}개"
   },
   "credit_packs": {
     "title": "크레딧 팩",
@@ -1115,5 +1134,16 @@
     "preprompt_body": "무료 크레딧이 준비되면 알려드려요. 그 외에는 보내지 않아요.",
     "preprompt_yes": "네, 알려주세요",
     "preprompt_later": "나중에"
+  },
+  "consent": {
+    "title": "사진이 처리되는 방식",
+    "sent_lead": "전송:",
+    "sent_body": "방 사진과 디자인 선택 항목. 이름, 이메일, 연락처, 위치는 포함되지 않습니다.",
+    "to_lead": "수신:",
+    "to_body": "처리자인 Replicate와 Anthropic(미국). 몇 초간만 보유하며 저장하거나 학습에 사용하지 않습니다.",
+    "kept_lead": "보관:",
+    "kept_body": "결과물은 프랑크푸르트에 삭제하실 때까지 보관됩니다.",
+    "privacy_policy": "개인정보처리방침",
+    "got_it": "확인"
   }
 }

@@ -315,7 +315,25 @@
     "add_reference": "Ajouter une référence",
     "step_of": "ÉTAPE {{current}} / {{total}}",
     "furniture_needs_free_layout": "Désactivez « Conserver l'agencement » pour ajouter du mobilier",
-    "turn_off": "Désactiver"
+    "turn_off": "Désactiver",
+    "shoot_the_room": "Photographier\nla pièce",
+    "choose_a_photo": "Choisir une\nphoto",
+    "try_a_sample": "Essayer un exemple",
+    "put_this_sofa": "Mettez ce canapé chez vous",
+    "your_own": "Le\nvôtre",
+    "refill_in": "+1 dans {{hours}} h",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Avancé",
+    "photo_and_privacy": "Photo et confidentialité",
+    "change": "modifier",
+    "replace": "Remplacer",
+    "place_a_real_piece": "Placer un vrai meuble",
+    "browse": "Parcourir",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 meuble",
+    "credit_cost": "{{count}} crédit",
+    "credit_cost_one": "{{count}} crédit",
+    "credit_cost_other": "{{count}} crédits"
   },
   "furniture": {
     "title": "Mobilier",
@@ -579,7 +597,10 @@
     "empty_filtered_title": "Rien dans cette vue",
     "empty_filtered_subtitle": "Changez de filtre ou revenez après votre prochaine activité.",
     "ref_outdoor": "Design extérieur",
-    "ledger.weekly_renewal": "Crédits hebdomadaires +{{count}}"
+    "ledger.weekly_renewal": "Crédits hebdomadaires +{{count}}",
+    "balance_label": "{{count}} crédit",
+    "balance_label_one": "{{count}} crédit",
+    "balance_label_other": "{{count}} crédits"
   },
   "credit_packs": {
     "title": "Packs de crédits",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "Nous vous prévenons quand votre crédit gratuit est prêt. Rien d'autre.",
     "preprompt_yes": "Oui, prévenez-moi",
     "preprompt_later": "Pas maintenant"
+  },
+  "consent": {
+    "title": "Comment vos photos sont traitées",
+    "sent_lead": "Envoyé :",
+    "sent_body": "la photo de votre pièce et vos choix de design. Ni nom, ni e-mail, ni contacts, ni localisation.",
+    "to_lead": "À :",
+    "to_body": "Replicate et Anthropic (États-Unis), nos sous-traitants. Conservé quelques secondes, jamais stocké, jamais utilisé pour l'entraînement.",
+    "kept_lead": "Conservé :",
+    "kept_body": "vos résultats, à Francfort, jusqu'à ce que vous les supprimiez.",
+    "privacy_policy": "Politique de confidentialité",
+    "got_it": "J'ai compris"
   }
 }

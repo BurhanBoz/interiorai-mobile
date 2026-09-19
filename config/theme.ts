@@ -318,8 +318,102 @@ export const text = {
   },
 } as const;
 
+/* ───── Umber — the v2 palette (2026-09-19 redesign) ─────
+ *
+ * The v1 ground was #131313, a neutral near-black. Umber keeps the dark theme
+ * and the sand accent but warms the ground so it shares hue with the wood and
+ * leather in the product photography, and lifts the accent for contrast.
+ *
+ * 🔴 Measured, not picked: `inkMuted` on `ground` is 5.7:1 and `accentBright`
+ * on `ground` is 9.4:1. Lightening `ground` breaks both — re-check before you
+ * touch it.
+ *
+ * `photoChrome` is deliberately NOT a theme colour. Pills that sit on top of a
+ * photograph have to work on any photograph, so they carry their own dark fill
+ * and light hairline rather than a token that assumes a known background.
+ */
+export const umber = {
+  ground: "#191510",
+  surface: "#241F18",
+  sheetSurface: "#201B15",
+  ink: "#F6F1E7",
+  inkMuted: "#9A8F7D",
+  accent: "#DDB477",
+  accentBright: "#F0CE99",
+  buttonFill: "#E4BE86",
+  buttonInk: "#231B10",
+  lineAccent: "rgba(221,180,119,0.15)",
+  lineNeutral: "rgba(246,241,231,0.10)",
+  productPlate: "#F6F1E7",
+  overlayScrim: "rgba(25,21,16,0.5)",
+  sheetScrim: "rgba(0,0,0,0.55)",
+  /** Pills over photography. Pair with `photoChromeBorder`. */
+  photoChrome: "rgba(14,13,12,0.7)",
+  photoChromeBorder: "rgba(255,255,255,0.2)",
+} as const;
+
+/* ───── v2 type scale ─────
+ *
+ * The v1 scale above is eight steps and forbids raw `fontSize` in components.
+ * The redesign spec fixes exact sizes per element, which would otherwise mean
+ * exactly the raw values that rule exists to prevent — so they live here as
+ * tokens instead. Both scales are valid; v2 is for redesigned screens.
+ *
+ * Fonts are Instrument Serif (display) and Archivo (text) — the faces the
+ * website already uses. 🔴 Neither covers Arabic, Japanese or Korean; those
+ * locales fall through to the system face, which is correct behaviour but
+ * means an Arabic headline is NOT Instrument Serif. Check ar/ja/ko renders
+ * before claiming a screen is done.
+ */
+export const v2 = {
+  /** Onboarding headline. */
+  displayXL: { fontFamily: "InstrumentSerif", fontSize: 44, lineHeight: 45, letterSpacing: -0.6 },
+  /** Paywall headline; the Settings credit numeral also uses 44. */
+  displayL: { fontFamily: "InstrumentSerif", fontSize: 36, lineHeight: 38, letterSpacing: -0.4 },
+  /** Gallery title. */
+  displayM: { fontFamily: "InstrumentSerif", fontSize: 34, lineHeight: 38, letterSpacing: -0.3 },
+  /** Section headers, sheet titles, the account name. */
+  displayS: { fontFamily: "InstrumentSerif", fontSize: 26, lineHeight: 30, letterSpacing: -0.2 },
+  /** Prices. */
+  price: { fontFamily: "InstrumentSerif", fontSize: 28, lineHeight: 30 },
+  /** "Put this sofa in your room". */
+  displayXS: { fontFamily: "InstrumentSerif", fontSize: 20, lineHeight: 25 },
+  /** Onboarding body. */
+  body: { fontFamily: "Archivo-400", fontSize: 16, lineHeight: 23 },
+  /** Primary button labels. */
+  button: { fontFamily: "Archivo-700", fontSize: 15, letterSpacing: 1.4, textTransform: "uppercase" as const },
+  /** Feature tile labels, plan tier labels. */
+  tile: { fontFamily: "Archivo-700", fontSize: 12.5, lineHeight: 16 },
+  tier: { fontFamily: "Archivo-700", fontSize: 12, letterSpacing: 1.6, textTransform: "uppercase" as const },
+  /** List rows, chips, style labels. */
+  row: { fontFamily: "Archivo-600", fontSize: 13, lineHeight: 18 },
+  rowQuiet: { fontFamily: "Archivo-400", fontSize: 12.5, lineHeight: 17 },
+  /** Screen kickers. */
+  kicker: { fontFamily: "Archivo-600", fontSize: 11.5, letterSpacing: 2.2, textTransform: "uppercase" as const },
+  /** The brand lockup — wider tracking than a kicker. */
+  brand: { fontFamily: "Archivo-600", fontSize: 11.5, letterSpacing: 2.6, textTransform: "uppercase" as const },
+  /** Captions, dimensions, tab labels. 10.5 is the floor; nothing goes below. */
+  caption: { fontFamily: "Archivo-400", fontSize: 11, lineHeight: 15 },
+  captionStrong: { fontFamily: "Archivo-600", fontSize: 10.5, lineHeight: 14 },
+} as const;
+
+/* ───── v2 geometry ─────
+ * Every redesigned screen must fit 393 x 852 with no vertical scroll. These
+ * are the fixed chrome heights that budget is measured against.
+ */
+export const v2Layout = {
+  statusBar: 52,
+  tabBar: 78,
+  gutterWide: 20,
+  gutterNarrow: 18,
+  radius: { card: 18, button: 16, tile: 14, inline: 13, thumb: 12, pill: 100, sheet: 26 },
+} as const;
+
 export const theme = {
   color,
+  umber,
+  v2,
+  v2Layout,
   gradient,
   elevation,
   motion,

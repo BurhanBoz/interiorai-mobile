@@ -315,7 +315,25 @@
     "add_reference": "Riferimento",
     "step_of": "PASSO {{current}} / {{total}}",
     "furniture_needs_free_layout": "Disattiva «Mantieni Layout» per aggiungere arredi",
-    "turn_off": "Disattiva"
+    "turn_off": "Disattiva",
+    "shoot_the_room": "Fotografa\nla stanza",
+    "choose_a_photo": "Scegli una\nfoto",
+    "try_a_sample": "Prova un esempio",
+    "put_this_sofa": "Metti questo divano in casa tua",
+    "your_own": "Il\ntuo",
+    "refill_in": "+1 tra {{hours}} h",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Avanzate",
+    "photo_and_privacy": "Foto e privacy",
+    "change": "cambia",
+    "replace": "Sostituisci",
+    "place_a_real_piece": "Inserisci un mobile reale",
+    "browse": "Sfoglia",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 pezzo",
+    "credit_cost": "{{count}} credito",
+    "credit_cost_one": "{{count}} credito",
+    "credit_cost_other": "{{count}} crediti"
   },
   "furniture": {
     "title": "Arredamento",
@@ -576,7 +594,10 @@
     "empty_filtered_title": "Niente in questa vista",
     "empty_filtered_subtitle": "Cambia filtro o torna dopo la prossima attività.",
     "ref_outdoor": "Design Esterni",
-    "ledger.weekly_renewal": "Crediti settimanali +{{count}}"
+    "ledger.weekly_renewal": "Crediti settimanali +{{count}}",
+    "balance_label": "{{count}} credito",
+    "balance_label_one": "{{count}} credito",
+    "balance_label_other": "{{count}} crediti"
   },
   "credit_packs": {
     "title": "Pacchetti di Crediti",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "Ti avvisiamo quando il credito gratuito è pronto. Nient'altro.",
     "preprompt_yes": "Sì, avvisami",
     "preprompt_later": "Non ora"
+  },
+  "consent": {
+    "title": "Come vengono trattate le tue foto",
+    "sent_lead": "Inviato:",
+    "sent_body": "la foto della tua stanza e le tue scelte di design. Nessun nome, email, contatti o posizione.",
+    "to_lead": "A:",
+    "to_body": "Replicate e Anthropic (USA), come nostri responsabili. Trattenuto per secondi, mai memorizzato, mai usato per l'addestramento.",
+    "kept_lead": "Conservato:",
+    "kept_body": "i tuoi risultati, a Francoforte, finché non li elimini.",
+    "privacy_policy": "Informativa sulla privacy",
+    "got_it": "Ho capito"
   }
 }

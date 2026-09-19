@@ -1,3 +1,4 @@
+import { usePathname } from "expo-router";
 import { View, Text, Pressable, Platform, Animated, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useRef } from "react";
@@ -57,9 +58,23 @@ export const BOTTOM_SAFE_GAP = Math.round(
   Math.min(48, Math.max(32, Dimensions.get("window").height * 0.05)),
 );
 
+/**
+ * Routes that own the whole screen (Umber redesign, 2026-09-19).
+ *
+ * <p>The bar is absolutely positioned, so it does not take space — it covers
+ * whatever is under it. On the composer that was the GENERATE bar: the footer
+ * rendered correctly and was simply invisible beneath the dock. These screens
+ * are a single task with their own bottom action, and the spec has no tab bar
+ * on any of them.
+ */
+const FULL_SCREEN_ROUTES = ["/studio/composer", "/studio/furniture"];
+
 export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const pathname = usePathname();
+
+    if (FULL_SCREEN_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
     // Edge-to-edge dock seated on the very bottom (2026-07 founder call —
     // the floating pill read as "hovering"; mainstream consumer apps dock

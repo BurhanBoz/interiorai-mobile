@@ -1,6 +1,7 @@
 import { Stack, usePathname } from "expo-router";
 import { useEffect, useRef } from "react";
 import { track } from "@/services/analytics";
+import { theme } from "@/config/theme";
 
 /**
  * The studio flow, and the one place that reports which step of it someone is
@@ -34,8 +35,19 @@ export default function StudioLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#131313" },
+        // Umber ground (2026-09-19). The literal was the v1 near-black and is
+        // what shows for the frame of a push transition, so leaving it behind
+        // makes every navigation flash the old palette.
+        contentStyle: { backgroundColor: theme.umber.ground },
       }}
-    />
+    >
+      {/* The catalogue is presented over the composer, not pushed beside it —
+          the spec's sheet. Its own screen is untouched (464 lines, rebuilt in
+          1.5.2); only how it arrives changed. */}
+      <Stack.Screen
+        name="furniture"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
+    </Stack>
   );
 }

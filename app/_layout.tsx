@@ -58,6 +58,17 @@ export default function RootLayout() {
     "Inter-Medium": require("../assets/fonts/Inter-Medium.ttf"),
     "Inter-SemiBold": require("../assets/fonts/Inter-SemiBold.ttf"),
     "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"),
+    // Umber redesign (2026-09-19): the two faces the website already uses.
+    // Archivo ships only as a variable font upstream; these are static
+    // instances cut with fontTools so React Native can pick a weight — a
+    // single variable file registers as one weight and silently ignores the
+    // other three.
+    InstrumentSerif: require("../assets/fonts/InstrumentSerif-Regular.ttf"),
+    "InstrumentSerif-Italic": require("../assets/fonts/InstrumentSerif-Italic.ttf"),
+    "Archivo-400": require("../assets/fonts/Archivo-400.ttf"),
+    "Archivo-500": require("../assets/fonts/Archivo-500.ttf"),
+    "Archivo-600": require("../assets/fonts/Archivo-600.ttf"),
+    "Archivo-700": require("../assets/fonts/Archivo-700.ttf"),
   });
 
   const { isAuthenticated, isLoading, hydrate, user } = useAuthStore();

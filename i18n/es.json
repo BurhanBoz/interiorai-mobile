@@ -315,7 +315,25 @@
     "add_reference": "Referencia",
     "step_of": "PASO {{current}} / {{total}}",
     "furniture_needs_free_layout": "Desactiva «Preservar Distribución» para añadir muebles",
-    "turn_off": "Desactivar"
+    "turn_off": "Desactivar",
+    "shoot_the_room": "Fotografiar\nla sala",
+    "choose_a_photo": "Elegir una\nfoto",
+    "try_a_sample": "Probar un ejemplo",
+    "put_this_sofa": "Pon este sofá en tu sala",
+    "your_own": "El\ntuyo",
+    "refill_in": "+1 en {{hours}} h",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Avanzado",
+    "photo_and_privacy": "Foto y privacidad",
+    "change": "cambiar",
+    "replace": "Reemplazar",
+    "place_a_real_piece": "Coloca un mueble real",
+    "browse": "Explorar",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 mueble",
+    "credit_cost": "{{count}} crédito",
+    "credit_cost_one": "{{count}} crédito",
+    "credit_cost_other": "{{count}} créditos"
   },
   "furniture": {
     "title": "Muebles",
@@ -576,7 +594,10 @@
     "empty_filtered_title": "Nada en esta vista",
     "empty_filtered_subtitle": "Cambia de filtro o vuelve después de tu próxima actividad.",
     "ref_outdoor": "Diseño Exterior",
-    "ledger.weekly_renewal": "Créditos semanales +{{count}}"
+    "ledger.weekly_renewal": "Créditos semanales +{{count}}",
+    "balance_label": "{{count}} crédito",
+    "balance_label_one": "{{count}} crédito",
+    "balance_label_other": "{{count}} créditos"
   },
   "credit_packs": {
     "title": "Paquetes de Créditos",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "Te avisaremos cuando tu crédito gratis esté listo. Nada más.",
     "preprompt_yes": "Sí, avísame",
     "preprompt_later": "Ahora no"
+  },
+  "consent": {
+    "title": "Cómo se procesan tus fotos",
+    "sent_lead": "Se envía:",
+    "sent_body": "la foto de tu sala y tus elecciones de diseño. Sin nombre, correo, contactos ni ubicación.",
+    "to_lead": "A:",
+    "to_body": "Replicate y Anthropic (EE. UU.), como encargados del tratamiento. Se retiene segundos, nunca se almacena ni se usa para entrenar.",
+    "kept_lead": "Se guarda:",
+    "kept_body": "tus resultados, en Fráncfort, hasta que los borres.",
+    "privacy_policy": "Política de privacidad",
+    "got_it": "Entendido"
   }
 }

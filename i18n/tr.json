@@ -315,7 +315,25 @@
     "add_reference": "Referans ekle",
     "step_of": "ADIM {{current}} / {{total}}",
     "furniture_needs_free_layout": "Mobilya eklemek için Düzeni Koru'yu kapat",
-    "turn_off": "Kapat"
+    "turn_off": "Kapat",
+    "shoot_the_room": "Odayı\nçek",
+    "choose_a_photo": "Fotoğraf\nseç",
+    "try_a_sample": "Örneği dene",
+    "put_this_sofa": "Bu koltuğu odana koy",
+    "your_own": "Kendi\nparçan",
+    "refill_in": "{{hours}} sa sonra +1",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Gelişmiş",
+    "photo_and_privacy": "Fotoğraf ve gizlilik",
+    "change": "değiştir",
+    "replace": "Değiştir",
+    "place_a_real_piece": "Gerçek bir parça koy",
+    "browse": "Göz at",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 parça",
+    "credit_cost": "{{count}} kredi",
+    "credit_cost_one": "{{count}} kredi",
+    "credit_cost_other": "{{count}} kredi"
   },
   "furniture": {
     "title": "Mobilya",
@@ -579,7 +597,10 @@
     "empty_filtered_title": "Bu görünümde bir şey yok",
     "empty_filtered_subtitle": "Başka bir filtreye geç veya bir sonraki hareketinden sonra dön.",
     "ref_outdoor": "Dış Mekân Tasarımı",
-    "ledger.weekly_renewal": "Haftalık kredi +{{count}}"
+    "ledger.weekly_renewal": "Haftalık kredi +{{count}}",
+    "balance_label": "{{count}} kredi",
+    "balance_label_one": "{{count}} kredi",
+    "balance_label_other": "{{count}} kredi"
   },
   "credit_packs": {
     "title": "Kredi Paketleri",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "Ücretsiz kredin hazır olduğunda haber veririz. Başka bir şey için değil.",
     "preprompt_yes": "Evet, haber ver",
     "preprompt_later": "Şimdi değil"
+  },
+  "consent": {
+    "title": "Fotoğrafların nasıl işleniyor",
+    "sent_lead": "Gönderilen:",
+    "sent_body": "oda fotoğrafın ve tasarım tercihlerin. İsim, e-posta, rehber veya konum yok.",
+    "to_lead": "Kime:",
+    "to_body": "İşleyenlerimiz olarak Replicate ve Anthropic (ABD). Saniyeler boyunca tutulur, saklanmaz, eğitimde kullanılmaz.",
+    "kept_lead": "Saklanan:",
+    "kept_body": "sonuçların, Frankfurt'ta, sen silene kadar.",
+    "privacy_policy": "Gizlilik Politikası",
+    "got_it": "Anladım"
   }
 }
