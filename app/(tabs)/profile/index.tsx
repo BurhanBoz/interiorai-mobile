@@ -115,7 +115,10 @@ export default function SettingsScreen() {
                     isFree={isFree}
                     onGetPro={() => router.push("/paywall?source=SETTINGS" as never)}
                     onBuyCredits={() => router.push("/credits/packs" as never)}
-                    onManagePlan={() => router.push("/plans" as never)}
+                    // Eski "Planını Seç" ekranı yeniden tasarlanmadı ve
+                    // yükseltmeyi iki ayrı dilde anlatan iki ekran demekti.
+                    // Tek satış yüzeyi paywall.
+                    onManagePlan={() => router.push("/paywall?source=SETTINGS" as never)}
                 />
 
                 <View

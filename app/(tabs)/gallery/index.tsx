@@ -27,11 +27,9 @@ import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { EmptyState } from "@/components/ui/EmptyState";
 
 const U = theme.umber;
 const V = theme.v2;
-import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 
 const FILTER_ALL = "__ALL__";
@@ -43,10 +41,6 @@ const FILTER_FAVORITES = "__FAVORITES__";
 const FILTER_ACTIVITY = "__ACTIVITY__";
 
 /* ─────────────────── Empty State ─────────────────── */
-// The "no designs yet" state — delegates to the shared <EmptyState/>
-// primitive so every blank screen in the app reads as the same product.
-// The primitive owns the breathing-icon animation and CTA slot; we only
-// supply copy and the action.
 /**
  * The blank gallery.
  *
@@ -406,31 +400,37 @@ export default function GalleryScreen() {
           Haptics.selectionAsync();
           setActiveRoomFilter(value);
         }}
-        style={({ pressed }) => ({
-          paddingHorizontal: 18,
-          paddingVertical: 9,
-          borderRadius: theme.radius.pill,
-          backgroundColor: active ? "#DDB477" : "rgba(28,27,27,0.85)",
-          borderWidth: 1,
-          borderColor: active
-            ? "rgba(254,223,181,0.5)"
-            : "rgba(77,70,60,0.4)",
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-          // Active chip gets a soft gold glow so the selection reads as
-          // "on" at a glance, not just a color swap.
-          ...(active && {
-            shadowColor: "#DDB477",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.35,
-            shadowRadius: 10,
-          }),
-        })}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
       >
-
+        {/* 🔴 Görünüm Pressable'da DEĞİL, içerideki View'da.
+            Çip, dolgusunu ({pressed}) => ({…}) fonksiyonundan alıyordu ve o
+            stil uygulanmıyordu: seçili çipin altın zemini hiç çizilmiyor,
+            geriye yalnız o altın zemin için seçilmiş KOYU metin (#231B10)
+            kalıyordu — koyu zeminde koyu yazı, yani "seçili sekme siyaha
+            dönüyor". Metnin rengi ayrı bir Text'te düz nesne stiliyle
+            verildiği için o uygulanıyor, zemin uygulanmıyordu; ikisinin
+            ayrışması hatayı görünür kıldı.
+            Kök nedeni kanıtlayamadım: aynı dosyadaki grid karosu birebir
+            aynı formu kullanıyor ve sorunsuz çiziliyor. O yüzden neden
+            aramak yerine kırılamayacak biçime geçildi. */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            paddingHorizontal: 18,
+            paddingVertical: 9,
+            borderRadius: theme.radius.pill,
+            backgroundColor: active ? U.accent : U.surface,
+            borderWidth: 1,
+            borderColor: active ? U.accentBright : U.lineNeutral,
+          }}
+        >
         <Text
           style={{
             ...theme.text.caption,
-            color: active ? "#231B10" : "#F6F1E7",
+            color: active ? U.buttonInk : U.ink,
           }}
           numberOfLines={1}
         >
@@ -457,6 +457,7 @@ export default function GalleryScreen() {
             </Text>
           </View>
         ) : null}
+        </View>
       </Pressable>
     );
   };
@@ -525,27 +526,9 @@ export default function GalleryScreen() {
           }
           ListHeaderComponent={
             <>
-              {/* Editorial header — Curation 01 / Gallery / underline / collection */}
-              <View
-                style={{
-                  paddingHorizontal: EDGE,
-                  paddingTop: 12,
-                  paddingBottom: 22,
-                }}
-              >
-                <Text
-                  className="text-on-surface font-headline"
-                  style={{ ...theme.text.display }}
-                >
-                  {t("gallery.title")}
-                </Text>
-                <View
-                  className="bg-secondary mt-3"
-                  style={{ width: 36, height: 2, borderRadius: 1 }}
-                />
-              </View>
-
-              {/* Search bar */}
+              {/* Başlık burada DEĞİL. Ekranın tepesinde zaten bir "Galeri"
+                  var; bu blok ikincisini basıyordu — aynı kelime, iki ayrı
+                  punto, art arda. Kalan tek başlık yukarıdaki. */}
 
               {/* Filter chips — horizontally scrollable. Right-edge fade
                   gradient hints there's more content off-screen without
@@ -578,7 +561,7 @@ export default function GalleryScreen() {
                   ))}
                 </ScrollView>
                 <LinearGradient
-                  colors={["rgba(19,19,19,0)", "rgba(19,19,19,1)"]}
+                  colors={["rgba(25,21,16,0)", "rgba(25,21,16,1)"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
@@ -620,31 +603,12 @@ export default function GalleryScreen() {
 
             </>
           }
-          ListEmptyComponent={
-            activeRoomFilter === FILTER_FAVORITES ? (
-              // Favorites filter active with zero items — use the shared
-              // EmptyState primitive + a "Browse Gallery" CTA so the user
-              // isn't left in an interactional dead-end.
-              <View style={{ paddingTop: 40 }}>
-                <EmptyState
-                  icon="heart-outline"
-                  title={t("gallery.no_favorites_title")}
-                  description={t("gallery.no_favorites_description")}
-                  action={
-                    <Button
-                      title={t("gallery.filter_all", {
-                        defaultValue: "Browse Gallery",
-                      })}
-                      variant="secondary"
-                      size="sm"
-                      onPress={() => setActiveRoomFilter(FILTER_ALL)}
-                      fullWidth={false}
-                    />
-                  }
-                />
-              </View>
-            ) : null
-          }
+          // Boş filtre için ayrı bir boş-durum YOK. Kalp ikonu, iki satır
+          // açıklama ve bir "Browse Gallery" düğmesi, altında da kesikli
+          // "Yeni tasarım" hücresiyle birlikte üst üste iki ayrı çağrı
+          // demekti. Filtre çipleri zaten tepede duruyor — "Tümü"ne dönüş
+          // bir dokunuş uzakta — ve footer'daki kesikli hücre boş listede de
+          // çiziliyor, yani tek ve net bir sonraki adım kalıyor.
         />
       )}
 

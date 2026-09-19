@@ -1188,7 +1188,8 @@
     "per_week": "/주",
     "per_year": "/년",
     "footnote": "언제든 해지 가능 · 단건 크레딧 팩도 있습니다",
-    "pack_line": "또는 크레딧 {{credits}}개 한 번만"
+    "pack_line": "또는 크레딧 {{credits}}개 한 번만",
+    "current_plan_title": "현재 {{plan}} 플랜입니다"
   },
   "source": {
     "title": "어떻게 알게 되셨나요?",

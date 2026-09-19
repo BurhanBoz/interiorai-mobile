@@ -1188,7 +1188,8 @@
     "per_week": "／週",
     "per_year": "／年",
     "footnote": "いつでも解約可能 · 単発のクレジットパックもあります",
-    "pack_line": "または {{credits}} クレジットを一度だけ"
+    "pack_line": "または {{credits}} クレジットを一度だけ",
+    "current_plan_title": "現在のプランは{{plan}}です"
   },
   "source": {
     "title": "どこで知りましたか？",

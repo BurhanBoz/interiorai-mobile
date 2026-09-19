@@ -1190,7 +1190,8 @@
     "per_week": "/week",
     "per_year": "/year",
     "footnote": "Cancel any time · one-off credit packs also available",
-    "pack_line": "Or {{credits}} credits, once"
+    "pack_line": "Or {{credits}} credits, once",
+    "current_plan_title": "{{plan}} is your plan"
   },
   "source": {
     "title": "How did you find us?",

@@ -1190,7 +1190,8 @@
     "per_week": "/hafta",
     "per_year": "/yıl",
     "footnote": "İstediğin an iptal · tek seferlik kredi paketleri de var",
-    "pack_line": "Ya da tek seferlik {{credits}} kredi"
+    "pack_line": "Ya da tek seferlik {{credits}} kredi",
+    "current_plan_title": "{{plan}} planındasın"
   },
   "source": {
     "title": "Bizi nereden buldun?",

@@ -1190,7 +1190,8 @@
     "per_week": "/semana",
     "per_year": "/año",
     "footnote": "Cancela cuando quieras · también hay packs de créditos sueltos",
-    "pack_line": "O {{credits}} créditos, una vez"
+    "pack_line": "O {{credits}} créditos, una vez",
+    "current_plan_title": "Tu plan es {{plan}}"
   },
   "source": {
     "title": "¿Cómo nos encontraste?",

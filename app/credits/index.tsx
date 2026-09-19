@@ -116,6 +116,15 @@ function LedgerRow({
       disabled={!row.jobId}
       accessibilityRole={row.jobId ? "button" : "text"}
     >
+      {/* Görünüm Pressable'da DEĞİL, içerideki View'da. Satırın dolgusu,
+          ayıracı ve yön düzeni Pressable'a ({pressed}) => ({…}) fonksiyonu
+          olarak verildiğinde uygulanmıyordu: başlık, açıklama, tutar ve
+          chevron alt alta diziliyor, dolgu ve ayıraç hiç çizilmiyordu.
+          Nedenini kanıtlayamadım — aynı dosyadaki başka Pressable'lar aynı
+          formda sorunsuz çalışıyor. Bu yüzden neden aramak yerine
+          kırılamayacak biçim kullanıldı: dokunma Pressable'da, görünüm düz
+          bir nesne stiliyle içteki View'da. Uygulamadaki diğer listeler de
+          (settings/language.tsx) bu şekilde. */}
       <View
         style={{
           flexDirection: "row",
