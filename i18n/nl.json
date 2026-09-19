@@ -677,7 +677,8 @@
     "credits_with_bonus": "{{total}} credits · {{bonus}} extra",
     "buy_a11y": "{{name}} kopen, {{credits}} credits",
     "secured_note": "Betalingen beveiligd door Apple · incl. btw",
-    "subscribe_bonus_hint": "Neem een abonnement voor tot +40% bonuscredits"
+    "subscribe_bonus_hint": "Neem een abonnement voor tot +40% bonuscredits",
+    "promise_line": "Eenmalige aankoop · credits verlopen nooit"
   },
   "credits_exhausted": {
     "title": "Geen credits meer",

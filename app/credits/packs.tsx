@@ -24,6 +24,8 @@ const U = theme.umber;
 import { isDummyMode } from "@/config/revenuecat";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
+import { HexMark } from "@/components/brand/HexMark";
+import { useWindowDimensions } from "react-native";
 import type { CreditPackResponse } from "@/types/api";
 
 function PackCard({
@@ -341,6 +343,7 @@ export default function CreditPacksScreen() {
     const fetchPacks = useCreditPacksStore((s) => s.fetchPacks);
     const purchase = useCreditPacksStore((s) => s.purchase);
     const balance = useCreditStore((s) => s.balance);
+    const { height: screenH } = useWindowDimensions();
     const subscription = useSubscriptionStore((s) => s.subscription);
     const creditPackBonusPct = useSubscriptionStore((s) => s.creditPackBonusPct);
     const getCreditCost = useSubscriptionStore((s) => s.getCreditCost);
@@ -461,17 +464,56 @@ export default function CreditPacksScreen() {
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
             <View style={{ flex: 1, paddingHorizontal: 18 }}>
-                {/* Geri yuvarlağı kaldırıldı. Kenardan kaydırma zaten geri
-                    getiriyor (stack'in kendi jesti) ve başlıksız bir satırda
-                    tek başına duran daire, taşıdığı işlevden fazla yer
-                    kaplayan bir leke oluyordu. Başlık artık en üstte. */}
-                <View style={{ height: 14 }} />
+                {/* Ekranın üst çeyreği: marka işareti ve bakiye.
+                    Burası üç satır metinle başlıyordu ve altında üç kart,
+                    geri kalan yarım ekran boştu — bir alışveriş ekranından
+                    çok yarım kalmış bir liste gibi duruyordu. Bakiye artık
+                    sayfanın tepesinde ve TEK yerde: eski alt başlık aynı
+                    sayıyı cümle içinde bir kez daha söylüyordu. */}
+                <View
+                    style={{
+                        height: Math.round(screenH * 0.26),
+                        minHeight: 180,
+                        borderRadius: 24,
+                        overflow: "hidden",
+                        backgroundColor: U.surface,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: 10,
+                        marginBottom: 22,
+                    }}
+                >
+                    <LinearGradient
+                        colors={[U.lineAccent, "transparent"]}
+                        start={{ x: 0.5, y: 0 }}
+                        end={{ x: 0.5, y: 1 }}
+                        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                    />
+                    {/* İşaretin arkasındaki halka — parlama yerine çizgi,
+                        çünkü gölge bu zeminde çamur gibi okunuyor. */}
+                    <View
+                        style={{
+                            width: 78, height: 78, borderRadius: 39,
+                            borderWidth: 1, borderColor: U.accent,
+                            alignItems: "center", justifyContent: "center",
+                            marginBottom: 16,
+                        }}
+                    >
+                        <HexMark width={30} height={33} color={U.accentBright} />
+                    </View>
+                    <Text style={{ fontFamily: "NotoSerif", fontSize: 46, lineHeight: 52, color: U.ink }}>
+                        {balance}
+                    </Text>
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 2 }}>
+                        {t("credit_packs.credits_suffix")}
+                    </Text>
+                </View>
 
                 <Text style={{ ...theme.v2.displayL, color: U.ink }}>
                     {t("credit_packs.headline")}
                 </Text>
-                <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 10, marginBottom: 22 }}>
-                    {t("credit_packs.balance_line", { count: balance })}
+                <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 8, marginBottom: 20 }}>
+                    {t("credit_packs.promise_line")}
                 </Text>
 
                 {loading ? (

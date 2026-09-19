@@ -677,7 +677,8 @@
     "credits_with_bonus": "{{total}} kredi · {{bonus}} hediye",
     "buy_a11y": "{{name}} al, {{credits}} kredi",
     "secured_note": "Ödemeler Apple güvencesinde · vergiler dahil",
-    "subscribe_bonus_hint": "Abone ol, %40'a varan hediye kredi kazan"
+    "subscribe_bonus_hint": "Abone ol, %40'a varan hediye kredi kazan",
+    "promise_line": "Tek seferlik alım · krediler süresiz"
   },
   "credits_exhausted": {
     "title": "Kredin Tükendi",

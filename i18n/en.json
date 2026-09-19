@@ -677,7 +677,8 @@
     "credits_with_bonus": "{{total}} credits · {{bonus}} bonus",
     "buy_a11y": "Buy {{name}}, {{credits}} credits",
     "secured_note": "Payments secured by Apple · taxes included",
-    "subscribe_bonus_hint": "Subscribe for up to +40% bonus credits"
+    "subscribe_bonus_hint": "Subscribe for up to +40% bonus credits",
+    "promise_line": "One-time purchase · credits never expire"
   },
   "credits_exhausted": {
     "title": "Out of Credits",

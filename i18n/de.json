@@ -674,7 +674,8 @@
     "credits_with_bonus": "{{total}} Guthaben · {{bonus}} extra",
     "buy_a11y": "{{name}} kaufen, {{credits}} Guthaben",
     "secured_note": "Zahlungen über Apple · inkl. Steuern",
-    "subscribe_bonus_hint": "Abonnieren und bis zu +40 % Bonusguthaben sichern"
+    "subscribe_bonus_hint": "Abonnieren und bis zu +40 % Bonusguthaben sichern",
+    "promise_line": "Einmalkauf · Credits verfallen nie"
   },
   "credits_bridge": {
     "or_buy_credits": "Oder Credits einmalig kaufen"
