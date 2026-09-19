@@ -730,7 +730,8 @@
     "minutes_seconds": "{{mins}} min {{secs}} s",
     "about_this_style": "À propos de ce style",
     "style_hint_generic": "Une esthétique composée par Roomframe AI. Lumière, proportion et matière s'accordent pour un résultat à la fois personnel et intemporel.",
-    "timeout_generic": "Erreur inattendue. Veuillez réessayer."
+    "timeout_generic": "Erreur inattendue. Veuillez réessayer.",
+    "failed_body": "Le rendu n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie."
   },
   "styles": {
     "scandinavian": "Le design scandinave célèbre un minimalisme chaleureux — bois clairs, neutres doux et lumière naturelle généreuse. Chaque objet gagne sa place par son utilité et son artisanat honnête.",
@@ -993,14 +994,12 @@
     "help_param_variants_title": "Variantes par génération",
     "help_param_variants_desc": "Le nombre de résultats différents que l'IA renvoie pour une même consigne. Deux variantes permettent de comparer les interprétations côte à côte ; le coût en crédits suit le nombre de variantes.",
     "help_param_variants_gate": "1 en GRATUIT · jusqu'à 2 sur BASE/PRO",
-    "help_param_strength_title": "Intensité",
+    "help_param_strength_title": "Transformation",
     "help_param_strength_desc": "À quel point l'IA transforme la pièce. 10-30 % préserve presque intégralement l'agencement et les matériaux. 60-80 % est le réglage idéal pour un restylage net. 100 % ne traite votre photo que comme une vague inspiration.",
     "help_param_strength_gate": "PRO+",
     "help_param_preserve_layout_title": "Conserver l'agencement",
     "help_param_preserve_layout_desc": "Activé par défaut — l'IA laisse les murs, fenêtres et meubles à leur place et ne change que les finitions. Désactivez-le pour obtenir une organisation spatiale totalement différente.",
     "help_param_preserve_layout_gate": "Toutes les offres",
-    "help_param_custom_prompt_title": "Consigne personnalisée",
-    "help_param_custom_prompt_desc": "Décrivez le résultat avec vos mots — matériaux, ambiance, moment de la journée, objets précis. Les consignes courtes (« parquet chêne clair, canapé en lin, lumière d'aube ») fonctionnent mieux que les longues.",
     "help_param_custom_prompt_gate": "BASIC+",
     "help_param_negative_prompt_title": "Consigne négative",
     "help_param_negative_prompt_desc": "Listez ce que vous ne voulez PAS voir. Idéal pour supprimer les artefacts récurrents (« désordre, texte, fenêtres déformées ») ou des matériaux indésirables (« pas de plastique, pas de moquette beige »).",

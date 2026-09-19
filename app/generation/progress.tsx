@@ -113,7 +113,17 @@ export default function GenerationProgressScreen() {
         // balance and users read it as "it failed AND ate my credits"
         // (2026-07-07 tester report).
         fetchBalance();
-        setErrorMessage(polled.errorMessage || t("generation.failed"));
+        // 🔴 NOT polled.errorMessage. That field carries the provider's own
+        // string, and a failed render was showing the user
+        // `Replicate API error 401 UNAUTHORIZED: {"title":"Unauthenticated"…}` —
+        // our vendor's name and its JSON, in place of an explanation. The raw
+        // text goes to the log, where it is useful; the screen says what
+        // happened and that the credits came back, which is the thing testers
+        // ask about first (2026-07-07 report).
+        if (polled.errorMessage) {
+          console.warn("[generation] job failed:", polled.errorCode, polled.errorMessage);
+        }
+        setErrorMessage(t("generation.failed_body"));
       } else if (polled.status === "CANCELLED") {
         fetchBalance();
         setErrorMessage(t("history.status_cancelled"));
