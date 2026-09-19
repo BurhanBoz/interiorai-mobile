@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
         if (!this.state.error) return this.props.children;
 
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: "#131313" }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: "#191510" }}>
                 <ScrollView
                     contentContainerStyle={{
                         flexGrow: 1,
@@ -82,7 +82,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         <Text
                             style={{
                                 ...theme.text.headline,
-                                color: "#E5E2E1",
+                                color: "#F6F1E7",
                                 textAlign: "center",
                                 marginBottom: 8,
                               }}
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         <Text
                             style={{
                                 ...theme.text.body,
-                                color: "#998F84",
+                                color: "#9A8F7D",
                                 textAlign: "center",
                                 maxWidth: 320,
                               }}
@@ -116,7 +116,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             <Text
                                 style={{
                                     ...theme.text.caption,
-                                    color: "#E0C29A",
+                                    color: "#DDB477",
                                     marginBottom: 8,
                                   }}
                             >
@@ -125,7 +125,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             <Text
                                 style={{
                                     fontSize: 12,
-                                    color: "#E5E2E1",
+                                    color: "#F6F1E7",
                                     fontFamily: "Courier",
                                     marginBottom: 8,
                                 }}
@@ -136,7 +136,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                 <Text
                                     style={{
                                         fontSize: 10,
-                                        color: "#998F84",
+                                        color: "#9A8F7D",
                                         fontFamily: "Courier",
                                         lineHeight: 14,
                                     }}
@@ -150,7 +150,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                     <Pressable onPress={this.handleRestart}>
                         <LinearGradient
-                            colors={["#C4A882", "#A68A62"]}
+                            colors={["#DDB477", "#C09B62"]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={{
@@ -165,12 +165,12 @@ export class ErrorBoundary extends Component<Props, State> {
                             <Text
                                 style={{
                                     ...theme.text.caption,
-                                    color: "#3F2D11",
+                                    color: "#231B10",
                                   }}
                             >
                                 Return Home
                             </Text>
-                            <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
+                            <Ionicons name="arrow-forward" size={18} color="#231B10" />
                         </LinearGradient>
                     </Pressable>
                 </ScrollView>

@@ -25,7 +25,9 @@
     "selected": "Seleccionado",
     "offline_banner": "Sin señal. Tu trabajo está a salvo.",
     "coming_soon": "Próximamente",
-    "next_step": "Siguiente Paso"
+    "next_step": "Siguiente Paso",
+    "on": "Activado",
+    "off": "Desactivado"
   },
   "tabs": {
     "studio": "Estudio",
@@ -346,7 +348,8 @@
     "photo_source_title": "Añade una foto de tu habitación",
     "photo_source_body": "Haz una nueva o elige una que ya tengas.",
     "camera": "Cámara",
-    "gallery": "Galería"
+    "gallery": "Galería",
+    "transformation": "Transformación"
   },
   "furniture": {
     "title": "Muebles",

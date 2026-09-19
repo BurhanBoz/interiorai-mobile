@@ -322,7 +322,7 @@ export default function AccountScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#E0C29A"
+            tintColor="#DDB477"
           />
         }
       >

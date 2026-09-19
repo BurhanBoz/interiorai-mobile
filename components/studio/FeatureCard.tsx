@@ -246,7 +246,7 @@ function TransferTeaser({
                                 position: "absolute",
                                 left: 0,
                                 right: 0,
-                                color: "#D0C5B8",
+                                color: "#CFC4B0",
                                 opacity: beforeTagOpacity,
                               }}
                         >
@@ -431,7 +431,7 @@ function PaintTeaser({
                                 position: "absolute",
                                 left: 0,
                                 right: 0,
-                                color: "#D0C5B8",
+                                color: "#CFC4B0",
                                 opacity: beforeTagOpacity,
                               }}
                         >
@@ -597,7 +597,7 @@ function BeforeAfterTeaser({ media }: { media: FeatureMedia }) {
                                 position: "absolute",
                                 left: 0,
                                 right: 0,
-                                color: "#D0C5B8",
+                                color: "#CFC4B0",
                                 opacity: fade.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: [1, 0],

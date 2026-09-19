@@ -15,26 +15,41 @@
 
 import { Easing } from "react-native";
 
-/* ───── Color aliases ───── */
+/* ───── Color aliases ─────
+ *
+ * 🔴 These carry UMBER values as of 2026-09-19, under their original names.
+ * The redesign changed one thing about the palette — the ground warmed from
+ * a neutral #131313 to #191510 and the accent lifted — and every screen that
+ * has not been rebuilt yet reads its colours through this object or through
+ * the Tailwind classes mirrored from it. Renaming the keys would have meant
+ * touching twenty-two files to change one decision; changing the values here
+ * moved the whole app at once.
+ *
+ * New work should use `theme.umber` directly. This object exists so the
+ * screens written before it do not look like a different product.
+ *
+ * Semantic colours (success / warning / danger / info) are deliberately
+ * untouched: they belong to the state, not to the brand.
+ */
 export const color = {
   // Neutral surface stack (matches tailwind.config.js)
-  surface: "#131313",
-  surfaceContainer: "#201F1F",
-  surfaceContainerLow: "#1C1B1B",
-  surfaceContainerHigh: "#2A2A2A",
-  surfaceContainerHighest: "#353534",
+  surface: "#191510",
+  surfaceContainer: "#241F18",
+  surfaceContainerLow: "#201B15",
+  surfaceContainerHigh: "#2C2519",
+  surfaceContainerHighest: "#332B1E",
 
   // Gold / primary palette — always reference this
-  goldDawn: "#FDDEB5",
-  goldMidday: "#E1C39B",
-  goldContainer: "#C4A882",
-  goldDusk: "#A68A62",
-  onGold: "#3F2D11",
+  goldDawn: "#F0CE99",
+  goldMidday: "#DDB477",
+  goldContainer: "#DDB477",
+  goldDusk: "#C09B62",
+  onGold: "#231B10",
 
   // Text
-  onSurface: "#E5E2E1",
-  onSurfaceVariant: "#D0C5B8",
-  onSurfaceMuted: "#998F84",
+  onSurface: "#F6F1E7",
+  onSurfaceVariant: "#CFC4B0",
+  onSurfaceMuted: "#9A8F7D",
 
   // Semantic
   success: "#7BB38A",
@@ -43,8 +58,8 @@ export const color = {
   info: "#8FB3CC",
 
   // Outline / dividers
-  outline: "#998F84",
-  outlineVariant: "#4D463C",
+  outline: "#9A8F7D",
+  outlineVariant: "#3D362A",
   divider: "rgba(77,70,60,0.35)",
 
   // Overlays
@@ -80,7 +95,7 @@ export const gradient = {
   // than competing. Taupe instead of gold: same value range, chroma pulled out.
   //
   // The lightness is constrained, not chosen for taste. PrimaryButton hardcodes
-  // its label to `onGold` (#3F2D11), so a muted palette that merely looks calmer
+  // its label to `onGold` (#231B10), so a muted palette that merely looks calmer
   // can quietly fail contrast. Both stops were measured against that label:
   // 6.0:1 at the top, 4.9:1 at the bottom — clear of WCAG AA (4.5:1) across the
   // whole gradient, since a 14px label is not "large text". Darken these and the
@@ -320,7 +335,7 @@ export const text = {
 
 /* ───── Umber — the v2 palette (2026-09-19 redesign) ─────
  *
- * The v1 ground was #131313, a neutral near-black. Umber keeps the dark theme
+ * The v1 ground was #191510, a neutral near-black. Umber keeps the dark theme
  * and the sand accent but warms the ground so it shares hue with the wood and
  * leather in the product photography, and lifts the accent for contrast.
  *

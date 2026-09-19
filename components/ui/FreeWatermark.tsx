@@ -46,7 +46,7 @@ export function FreeWatermark({
                     <Ionicons
                         name="sparkles"
                         size={isSmall ? 10 : 12}
-                        color="#E0C29A"
+                        color="#DDB477"
                     />
                     <Text
                         style={{
@@ -54,7 +54,7 @@ export function FreeWatermark({
                             fontWeight: "700",
                             letterSpacing: isSmall ? 1 : 1.5,
                             textTransform: "uppercase",
-                            color: "#E0C29A",
+                            color: "#DDB477",
                         }}
                     >
                         Interior AI

@@ -307,7 +307,7 @@ export function SourceSheet({ enabled }: { enabled: boolean }) {
                                                 <Ionicons
                                                     name={active ? "checkmark-circle" : opt.icon}
                                                     size={Math.round(TILE * 0.36)}
-                                                    color={active ? "#E1C39B" : "#CFC0AC"}
+                                                    color={active ? "#DDB477" : "#CFC0AC"}
                                                 />
                                             </Pressable>
                                         );

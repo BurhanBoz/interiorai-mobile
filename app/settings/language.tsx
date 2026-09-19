@@ -129,7 +129,7 @@ export default function LanguageScreen() {
       {/* Bottom CTA */}
       <View className="absolute bottom-0 left-0 right-0">
         <LinearGradient
-          colors={["transparent", "rgba(19,19,19,0.9)", "#131313"]}
+          colors={["transparent", "rgba(19,19,19,0.9)", "#191510"]}
           locations={[0, 0.35, 1]}
           style={{ paddingHorizontal: theme.space.gutter, paddingTop: 64, paddingBottom: 40 }}
         >

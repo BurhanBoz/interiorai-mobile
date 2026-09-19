@@ -25,7 +25,9 @@
     "selected": "선택됨",
     "offline_banner": "연결 끊김. 작업은 안전합니다.",
     "coming_soon": "곧 공개",
-    "next_step": "다음 단계"
+    "next_step": "다음 단계",
+    "on": "켜짐",
+    "off": "꺼짐"
   },
   "tabs": {
     "studio": "스튜디오",
@@ -345,7 +347,8 @@
     "photo_source_title": "방 사진 추가하기",
     "photo_source_body": "새로 찍거나 이미 있는 사진을 선택하세요.",
     "camera": "카메라",
-    "gallery": "사진 보관함"
+    "gallery": "사진 보관함",
+    "transformation": "변화 정도"
   },
   "furniture": {
     "title": "가구",

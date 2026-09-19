@@ -79,7 +79,7 @@ function statusPalette(status: string): {
         bg: "rgba(153,143,132,0.08)",
         border: "rgba(153,143,132,0.25)",
         text: "#D1C5B8",
-        dot: "#998F84",
+        dot: "#9A8F7D",
       };
   }
 }
@@ -150,7 +150,7 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
               height: 96,
               borderRadius: theme.radius.md,
               overflow: "hidden",
-              backgroundColor: "#2A2A2A",
+              backgroundColor: "#2C2519",
             }}
           >
             {thumbnail ? (
@@ -180,12 +180,12 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
                       : "image-outline"
                   }
                   size={26}
-                  color={item.status === "FAILED" ? "#D98A7B" : "#998F84"}
+                  color={item.status === "FAILED" ? "#D98A7B" : "#9A8F7D"}
                 />
                 <Text
                   style={{
                     ...theme.text.caption,
-                    color: "#998F84",
+                    color: "#9A8F7D",
                     textAlign: "center",
                   }}
                   numberOfLines={2}
@@ -212,7 +212,7 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
                 <Text
                   style={{
                     ...theme.text.label,
-                    color: "#E0C29A",
+                    color: "#DDB477",
                   }}
                 >
                   {item.qualityTier === "ULTRA_HD" ? "4K" : "HD"}
@@ -306,7 +306,7 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
               <Ionicons
                 name="chevron-forward"
                 size={14}
-                color="#E0C29A"
+                color="#DDB477"
                 style={{ opacity: 0.5 }}
               />
             </View>

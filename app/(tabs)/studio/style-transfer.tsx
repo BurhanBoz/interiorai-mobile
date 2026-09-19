@@ -102,7 +102,7 @@ export default function StyleTransferScreen() {
               justifyContent: "center",
             }}
           >
-            <Ionicons name="chevron-back" size={22} color="#E1C39B" />
+            <Ionicons name="chevron-back" size={22} color="#DDB477" />
           </Pressable>
           <Text
             className="font-headline text-on-surface"
@@ -261,12 +261,12 @@ export default function StyleTransferScreen() {
                   }}
                 >
                   {isUploading ? (
-                    <ActivityIndicator size="small" color="#E1C39B" style={{ marginBottom: 16 }} />
+                    <ActivityIndicator size="small" color="#DDB477" style={{ marginBottom: 16 }} />
                   ) : (
                     <Ionicons
                       name="cloud-upload-outline"
                       size={36}
-                      color="#998F84"
+                      color="#9A8F7D"
                       style={{ marginBottom: 16 }}
                     />
                   )}
@@ -274,7 +274,7 @@ export default function StyleTransferScreen() {
                     className="font-label"
                     style={{
                       ...theme.text.caption,
-                      color: isUploading ? "#E1C39B" : "#998F84",
+                      color: isUploading ? "#DDB477" : "#9A8F7D",
                     }}
                   >
                     {isUploading
@@ -342,7 +342,7 @@ export default function StyleTransferScreen() {
                           }}
                         >
                           {isUploading ? (
-                            <ActivityIndicator size="small" color="#E1C39B" />
+                            <ActivityIndicator size="small" color="#DDB477" />
                           ) : (
                             <>
                               <Ionicons name="images-outline" size={22} color="#8C8378" />
@@ -413,8 +413,8 @@ export default function StyleTransferScreen() {
             value={strength}
             onValueChange={setStrength}
             onSlidingStart={() => Haptics.selectionAsync()}
-            minimumTrackTintColor="#E1C39B"
-            maximumTrackTintColor="#353534"
+            minimumTrackTintColor="#DDB477"
+            maximumTrackTintColor="#332B1E"
             thumbTintColor="#FDDEB4"
           />
 
@@ -423,7 +423,7 @@ export default function StyleTransferScreen() {
             style={{
               ...theme.text.caption,
               fontStyle: "italic",
-              color: "#998F84",
+              color: "#9A8F7D",
               marginTop: 8,
             }}
           >
@@ -475,7 +475,7 @@ export default function StyleTransferScreen() {
               className="font-label"
               style={{
                 ...theme.text.caption,
-                color: "#998F84",
+                color: "#9A8F7D",
               }}
             >
               {t("studio.style_transfer_cost_label")}
@@ -487,7 +487,7 @@ export default function StyleTransferScreen() {
                 style={{
                   ...theme.text.title,
                   fontStyle: "italic",
-                  color: "#E5E2E1",
+                  color: "#F6F1E7",
                 }}
               >
                 {t("studio.cost_credits", { count: cost })}
@@ -505,7 +505,7 @@ export default function StyleTransferScreen() {
             })}
           >
             <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
+              colors={["#DDB477", "#C09B62"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -517,7 +517,7 @@ export default function StyleTransferScreen() {
                 paddingHorizontal: 22,
                 borderWidth: 1,
                 borderColor: "rgba(254,223,181,0.35)",
-                shadowColor: "#C4A882",
+                shadowColor: "#DDB477",
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.35,
                 shadowRadius: 14,
@@ -528,7 +528,7 @@ export default function StyleTransferScreen() {
                 numberOfLines={1}
                 style={{
                   ...theme.text.caption,
-                  color: "#3F2D11",
+                  color: "#231B10",
                 }}
               >
                 {canProceed
@@ -538,7 +538,7 @@ export default function StyleTransferScreen() {
               <Ionicons
                 name={canProceed ? "arrow-forward" : "cloud-upload-outline"}
                 size={20}
-                color="#3F2D11"
+                color="#231B10"
               />
             </LinearGradient>
           </Pressable>

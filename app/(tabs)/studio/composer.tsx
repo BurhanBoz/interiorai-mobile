@@ -22,7 +22,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import { furnitureService } from "@/services/furniture";
 import type { FurnitureItem, CatalogItemResponse } from "@/types/api";
 import { RoomTypeSheet } from "@/components/studio/RoomTypeSheet";
-import { ConsentSheet } from "@/components/studio/ConsentSheet";
+import { AdvancedSheet } from "@/components/studio/AdvancedSheet";
 import { getStyleImage } from "@/components/studio/styleImages";
 
 const U = theme.umber;
@@ -77,7 +77,7 @@ export default function ComposerScreen() {
     const { generate, isSubmitting } = useGenerate();
     const { cost } = useCreditCost();
 
-    const [sheet, setSheet] = useState<null | "room" | "consent">(null);
+    const [sheet, setSheet] = useState<null | "room" | "advanced">(null);
 
     // Arriving from the Furniture tile opens the catalogue straight away.
     // It is a route presented modally rather than a component, so it opens by
@@ -125,6 +125,20 @@ export default function ComposerScreen() {
             roomTypes.find((r) => r.code === DEFAULT_ROOM_CODE) ?? roomTypes[0];
         if (fallback) setRoomType(fallback);
     }, [roomType, roomTypes, setRoomType]);
+
+    /**
+     * One output per run (2026-09-19 founder call).
+     *
+     * <p>Pinned here rather than removed from the store, because the request
+     * body and the pricing rules still carry a count — the server-side
+     * cleanup is a separate pass. Pinning is the half that is safe to do
+     * first: nothing in the UI can ask for two, so nothing can be charged
+     * for two.
+     */
+    const setNumOutputs = useStudioStore((s) => s.setNumOutputs);
+    useEffect(() => {
+        setNumOutputs(1);
+    }, [setNumOutputs]);
 
     /** Modern is preselected — the user can generate without touching the strip. */
     useEffect(() => {
@@ -208,24 +222,27 @@ export default function ComposerScreen() {
                         }}
                     />
 
+                    {/* Advanced first, the pieces it produced underneath —
+                        a chosen sofa is the RESULT of opening the catalogue,
+                        so it belongs below the controls, not above them.
+                        "Photo & privacy" came off this screen: the consent
+                        gate lives in useImagePicker and fires before any
+                        photo leaves the device, so this button was a second
+                        copy of a statement that had already been made. It is
+                        still reachable from Settings. */}
+                    <View style={{ marginTop: 18 }}>
+                        <SecondaryButton
+                            label={t("studio.advanced")}
+                            tone="ink"
+                            onPress={() => setSheet("advanced")}
+                        />
+                    </View>
+
                     <FurnitureRow
                         products={products}
                         picked={pickedProduct}
                         onBrowse={() => router.push("/studio/furniture" as never)}
                     />
-
-                    <View style={{ flexDirection: "row", gap: 9, marginTop: 12 }}>
-                        <SecondaryButton
-                            label={t("studio.advanced")}
-                            tone="ink"
-                            onPress={() => router.push("/studio/options" as never)}
-                        />
-                        <SecondaryButton
-                            label={t("studio.photo_and_privacy")}
-                            tone="muted"
-                            onPress={() => setSheet("consent")}
-                        />
-                    </View>
                 </View>
 
                 {/* Action bar — a real footer with its own height. */}
@@ -307,7 +324,7 @@ export default function ComposerScreen() {
                     onClose={() => setSheet(null)}
                 />
             )}
-            {sheet === "consent" && <ConsentSheet onClose={() => setSheet(null)} />}
+            {sheet === "advanced" && <AdvancedSheet onClose={() => setSheet(null)} />}
         </SafeAreaView>
     );
 }
@@ -559,7 +576,6 @@ function SecondaryButton({
             onPress={onPress}
             accessibilityRole="button"
             style={{
-                flex: 1,
                 borderWidth: 1,
                 borderColor: U.lineNeutral,
                 borderRadius: R.inline,

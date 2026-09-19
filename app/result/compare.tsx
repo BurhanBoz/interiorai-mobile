@@ -132,12 +132,12 @@ function BeforeAfterSlider({
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "#1C1B1B",
+            backgroundColor: "#201B15",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Ionicons name="image-outline" size={32} color="#998F84" />
+          <Ionicons name="image-outline" size={32} color="#9A8F7D" />
         </View>
       )}
 
@@ -164,12 +164,12 @@ function BeforeAfterSlider({
           <View
             style={{
               flex: 1,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: "#2C2519",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Ionicons name="image-outline" size={32} color="#998F84" />
+            <Ionicons name="image-outline" size={32} color="#9A8F7D" />
           </View>
         )}
       </Animated.View>
@@ -297,7 +297,7 @@ export default function CompareScreen() {
       <View className="flex-row items-center justify-between px-6 py-6">
         <View className="flex-row items-center" style={{ gap: 16 }}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={24} color="#E0C29A" />
+            <Ionicons name="arrow-back" size={24} color="#DDB477" />
           </Pressable>
           <Text
             className="font-headline text-primary-container"
@@ -327,7 +327,7 @@ export default function CompareScreen() {
             className="rounded-xl overflow-hidden bg-surface-container-low items-center justify-center"
             style={{ aspectRatio: 4 / 5, width: "100%" }}
           >
-            <Ionicons name="hourglass-outline" size={32} color="#998F84" />
+            <Ionicons name="hourglass-outline" size={32} color="#9A8F7D" />
           </View>
         )}
 

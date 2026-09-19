@@ -18,7 +18,7 @@ export function MaskOverlay({
   strokes,
   imageWidth,
   imageHeight,
-  color = "#E1C39B",
+  color = "#DDB477",
   opacity = 0.45,
 }: {
   strokes: MaskStroke[];

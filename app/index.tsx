@@ -99,12 +99,12 @@ export default function RootIndex() {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#131313",
+        backgroundColor: "#191510",
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <ActivityIndicator size="large" color="#C4A882" />
+      <ActivityIndicator size="large" color="#DDB477" />
     </View>
   );
 

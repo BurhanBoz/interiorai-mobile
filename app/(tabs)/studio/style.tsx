@@ -199,7 +199,7 @@ export default function StyleScreen() {
       presentationStyle="pageSheet"
       onRequestClose={() => setRoomPickerVisible(false)}
     >
-      <View style={{ flex: 1, backgroundColor: "#131313" }}>
+      <View style={{ flex: 1, backgroundColor: "#191510" }}>
         {/* Modal Header — X left, title centered */}
         <View
           style={{
@@ -224,7 +224,7 @@ export default function StyleScreen() {
               zIndex: 1,
             }}
           >
-            <Ionicons name="close" size={18} color="#E5E2E1" />
+            <Ionicons name="close" size={18} color="#F6F1E7" />
           </Pressable>
           <Text
             style={{
@@ -233,7 +233,7 @@ export default function StyleScreen() {
               left: 0,
               right: 0,
               textAlign: "center",
-              color: "#E5E2E1",
+              color: "#F6F1E7",
             }}
           >
             {t("studio.select_space")}
@@ -265,13 +265,13 @@ export default function StyleScreen() {
                     width: 3,
                     height: 14,
                     borderRadius: 2,
-                    backgroundColor: "#E0C29A",
+                    backgroundColor: "#DDB477",
                   }}
                 />
                 <Text
                   style={{
                     ...theme.text.caption,
-                    color: "#E0C29A",
+                    color: "#DDB477",
                   }}
                 >
                   {group.category}
@@ -317,7 +317,7 @@ export default function StyleScreen() {
                           <Ionicons
                             name={getRoomIcon(room.code)}
                             size={26}
-                            color={isSelected ? "#E1C39B" : "#998F84"}
+                            color={isSelected ? "#DDB477" : "#9A8F7D"}
                           />
                         </View>
                         {/* Name & description */}
@@ -331,7 +331,7 @@ export default function StyleScreen() {
                           <Text
                             style={{
                               ...theme.text.title,
-                              color: isSelected ? "#E1C39B" : "#E5E2E1",
+                              color: isSelected ? "#DDB477" : "#F6F1E7",
                             }}
                           >
                             {catalogName(t, "room", room)}
@@ -353,7 +353,7 @@ export default function StyleScreen() {
                           <Ionicons
                             name="checkmark-circle"
                             size={24}
-                            color="#E1C39B"
+                            color="#DDB477"
                             style={{ flexShrink: 0, marginLeft: 12 }}
                           />
                         )}
@@ -383,7 +383,7 @@ export default function StyleScreen() {
   return (
     <SafeAreaView
       edges={["top"]}
-      style={{ flex: 1, backgroundColor: "#131313" }}
+      style={{ flex: 1, backgroundColor: "#191510" }}
     >
       {/* App Header */}
       <View
@@ -409,7 +409,7 @@ export default function StyleScreen() {
             justifyContent: "center",
           }}
         >
-          <Ionicons name="chevron-back" size={22} color="#E1C39B" />
+          <Ionicons name="chevron-back" size={22} color="#DDB477" />
         </Pressable>
         <Text style={{ display: "none" }}>{""}</Text>
         <Brand variant="inline" size="sm" tone="gold" />
@@ -429,7 +429,7 @@ export default function StyleScreen() {
           <Text
             style={{
               ...theme.text.label,
-              color: "#998F84",
+              color: "#9A8F7D",
               marginBottom: 8,
             }}
           >
@@ -438,7 +438,7 @@ export default function StyleScreen() {
           <Text
             style={{
               ...theme.text.display,
-              color: "#E5E2E1",
+              color: "#F6F1E7",
             }}
           >
             {t("studio.step2_title")}
@@ -447,12 +447,12 @@ export default function StyleScreen() {
 
         {isLoading ? (
           <View style={{ marginTop: 64, alignItems: "center" }}>
-            <ActivityIndicator size="large" color="#C4A882" />
+            <ActivityIndicator size="large" color="#DDB477" />
             <Text
               style={{
                 ...theme.text.caption,
                 marginTop: 16,
-                color: "#998F84",
+                color: "#9A8F7D",
               }}
             >
               {t("studio.loading_catalog")}
@@ -466,7 +466,7 @@ export default function StyleScreen() {
                 style={{
                   ...theme.text.caption,
                   marginBottom: 12,
-                  color: "#998F84",
+                  color: "#9A8F7D",
                 }}
               >
                 {t("studio.room_type")}
@@ -505,7 +505,7 @@ export default function StyleScreen() {
                       <Ionicons
                         name={getRoomIcon(roomType.code)}
                         size={16}
-                        color="#E1C39B"
+                        color="#DDB477"
                       />
                     </View>
                   )}
@@ -513,7 +513,7 @@ export default function StyleScreen() {
                     style={{
                       ...theme.text.caption,
                       flex: 1,
-                      color: roomType ? "#E1C39B" : "#998F84",
+                      color: roomType ? "#DDB477" : "#9A8F7D",
                     }}
                     numberOfLines={1}
                   >
@@ -524,7 +524,7 @@ export default function StyleScreen() {
                   <Ionicons
                     name="chevron-down"
                     size={18}
-                    color={roomType ? "#E1C39B" : "#E0C29A"}
+                    color={roomType ? "#DDB477" : "#DDB477"}
                   />
                 </View>
               </Pressable>
@@ -552,7 +552,7 @@ export default function StyleScreen() {
                 style={{
                   ...theme.text.caption,
                   marginBottom: 20,
-                  color: "#998F84",
+                  color: "#9A8F7D",
                 }}
               >
                 {t("studio.design_style")}
@@ -611,7 +611,7 @@ export default function StyleScreen() {
                             overflow: "hidden",
                             borderWidth: isSelected ? 2 : 1,
                             borderColor: isSelected
-                              ? "#E1C39B"
+                              ? "#DDB477"
                               : "rgba(77,70,60,0.2)",
                             backgroundColor: "#1E1E1E",
                           }}
@@ -629,13 +629,13 @@ export default function StyleScreen() {
                                 flex: 1,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                backgroundColor: "#2A2A2A",
+                                backgroundColor: "#2C2519",
                               }}
                             >
                               <Ionicons
                                 name={iconName}
                                 size={40}
-                                color={isSelected ? "#E1C39B" : "#998F84"}
+                                color={isSelected ? "#DDB477" : "#9A8F7D"}
                               />
                             </View>
                           )}
@@ -657,7 +657,7 @@ export default function StyleScreen() {
                               <Text
                                 style={{
                                   ...theme.text.caption,
-                                  color: "#E1C39B",
+                                  color: "#DDB477",
                                 }}
                               >
                                 {t("common.selected")}
@@ -678,7 +678,7 @@ export default function StyleScreen() {
                           <Text
                             style={{
                               ...theme.text.body,
-                              color: isSelected ? "#E5E2E1" : "#E5E2E1",
+                              color: isSelected ? "#F6F1E7" : "#F6F1E7",
                               flex: 1,
                             }}
                             numberOfLines={1}
@@ -689,7 +689,7 @@ export default function StyleScreen() {
                             <Ionicons
                               name="checkmark-circle"
                               size={20}
-                              color="#E1C39B"
+                              color="#DDB477"
                               style={{ marginLeft: 6 }}
                             />
                           )}

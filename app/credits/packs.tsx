@@ -98,8 +98,8 @@ function PackCard({
                 marginBottom: 22,
                 borderRadius: theme.radius.lg,
                 // Only the featured card was reading as a card (founder
-                // screenshot 2026-08-07): surfaceContainerLow (#1C1B1B) sits
-                // nine values off the page (#131313), which an OLED panel at
+                // screenshot 2026-08-07): surfaceContainerLow (#201B15) sits
+                // nine values off the page (#191510), which an OLED panel at
                 // normal brightness simply does not show, and a 26%-gold hairline
                 // disappeared with it. The others therefore looked like three
                 // paragraphs of loose text with prices floating beside them —
@@ -319,12 +319,12 @@ function PackCard({
                         <Text
                             style={{
                                 ...theme.text.caption,
-                                color: "#E0C29A",
+                                color: "#DDB477",
                               }}
                         >
                             {formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency)}
                         </Text>
-                        <Ionicons name="arrow-forward" size={14} color="#E0C29A" />
+                        <Ionicons name="arrow-forward" size={14} color="#DDB477" />
                     </View>
                 )}
             </View>

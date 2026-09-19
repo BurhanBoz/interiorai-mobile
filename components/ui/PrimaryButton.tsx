@@ -9,8 +9,8 @@ import type { ComponentProps, ReactNode } from "react";
  *
  * Visual contract (matches Studio "Continue to Architecture" / Step 1 of 4):
  *   - height 56, radius 16, 1px warm border
- *   - warm tan gradient #C4A882 → #A68A62
- *   - uppercase label, 14px, weight 700, letterSpacing 1.5, color #3F2D11
+ *   - warm tan gradient #DDB477 → #C09B62
+ *   - uppercase label, 14px, weight 700, letterSpacing 1.5, color #231B10
  *   - right-aligned caret icon (overrideable)
  *   - scale 0.98 on press for tactile feedback
  *
@@ -37,7 +37,7 @@ interface PrimaryButtonProps {
     children?: ReactNode;
 }
 
-const DEFAULT_COLORS: readonly [string, string] = ["#C4A882", "#A68A62"];
+const DEFAULT_COLORS: readonly [string, string] = ["#DDB477", "#C09B62"];
 
 export function PrimaryButton({
     label,
@@ -78,14 +78,14 @@ export function PrimaryButton({
                 }}
             >
                 <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
-                    {leftIcon && <Ionicons name={leftIcon} size={20} color="#3F2D11" />}
+                    {leftIcon && <Ionicons name={leftIcon} size={20} color="#231B10" />}
                     <View style={{ flex: 1 }}>
                         {children}
                         <Text
                             numberOfLines={1}
                             style={{
                                 ...theme.text.label,
-                                color: "#3F2D11",
+                                color: "#231B10",
                               }}
                         >
                             {label}
@@ -93,9 +93,9 @@ export function PrimaryButton({
                     </View>
                 </View>
                 {loading ? (
-                    <ActivityIndicator color="#3F2D11" />
+                    <ActivityIndicator color="#231B10" />
                 ) : icon && !leftIcon ? (
-                    <Ionicons name={icon} size={20} color="#3F2D11" />
+                    <Ionicons name={icon} size={20} color="#231B10" />
                 ) : null}
             </LinearGradient>
         </Pressable>

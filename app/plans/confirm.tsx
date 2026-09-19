@@ -245,7 +245,7 @@ export default function PlanConfirmScreen() {
     if (!plan) {
         return (
             <SafeAreaView edges={["bottom"]} className="flex-1 bg-surface items-center justify-center">
-                <ActivityIndicator color="#E0C29A" />
+                <ActivityIndicator color="#DDB477" />
             </SafeAreaView>
         );
     }
@@ -314,7 +314,7 @@ export default function PlanConfirmScreen() {
                         borderColor: "rgba(225,195,155,0.35)",
                         backgroundColor: "rgba(225,195,155,0.07)",
                     }}>
-                        <Ionicons name="time-outline" size={18} color="#E0C29A" style={{ marginTop: 1 }} />
+                        <Ionicons name="time-outline" size={18} color="#DDB477" style={{ marginTop: 1 }} />
                         <Text className="font-body" style={{ ...theme.text.body, flex: 1, color: "#EDE4D7" }}>
                             {t("plans.deferred_notice", {
                                 defaultValue:
@@ -341,7 +341,7 @@ export default function PlanConfirmScreen() {
                             <Ionicons
                                 name={feature.icon}
                                 size={24}
-                                color="#E0C29A"
+                                color="#DDB477"
                                 style={{ marginTop: 2 }}
                             />
                             <View className="flex-1" style={{ gap: 4 }}>
@@ -375,7 +375,7 @@ export default function PlanConfirmScreen() {
                             borderColor: "rgba(224,194,154,0.2)",
                         }}
                     >
-                        <Ionicons name="flask-outline" size={20} color="#E0C29A" />
+                        <Ionicons name="flask-outline" size={20} color="#DDB477" />
                         <Text
                             className="flex-1 font-body text-on-surface-variant"
                             style={{ ...theme.text.caption }}
@@ -394,7 +394,7 @@ export default function PlanConfirmScreen() {
                     className="rounded-xl bg-surface-container-high flex-row items-center"
                     style={{ padding: 16, gap: 16, marginBottom: 32 }}
                 >
-                    <Ionicons name="flash-outline" size={22} color="#E0C29A" />
+                    <Ionicons name="flash-outline" size={22} color="#DDB477" />
                     <View className="flex-1">
                         <Text
                             className="font-body text-on-surface"
@@ -409,7 +409,7 @@ export default function PlanConfirmScreen() {
                             {t("plans.confirm_buy_packs_instead")}
                         </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color="#998F84" />
+                    <Ionicons name="chevron-forward" size={16} color="#9A8F7D" />
                 </Pressable>
             </ScrollView>
 
@@ -424,7 +424,7 @@ export default function PlanConfirmScreen() {
                     })}
                 >
                     <LinearGradient
-                        colors={["#C4A882", "#A68A62"]}
+                        colors={["#DDB477", "#C09B62"]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
@@ -440,19 +440,19 @@ export default function PlanConfirmScreen() {
                         }}
                     >
                         {submitting ? (
-                            <ActivityIndicator color="#3F2D11" />
+                            <ActivityIndicator color="#231B10" />
                         ) : (
                             <>
                                 <Text
                                     numberOfLines={1}
                                     style={{
                                         ...theme.text.label,
-                                        color: "#3F2D11",
+                                        color: "#231B10",
                                       }}
                                 >
                                     {t("plans.confirm")}
                                 </Text>
-                                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+                                <Ionicons name="arrow-forward" size={20} color="#231B10" />
                             </>
                         )}
                     </LinearGradient>

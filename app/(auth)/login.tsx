@@ -31,7 +31,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Audit fixes:
  *   - Hand-rolled TextInputs → <Input/> with label + icon + error
  *   - Gradient button + social button hand-roll → <Button/> variants
- *   - Hardcoded #D0C5B8 / #998F84 / #E5E2E1 / "rgba(77,70,60,...)" →
+ *   - Hardcoded #CFC4B0 / #9A8F7D / #F6F1E7 / "rgba(77,70,60,...)" →
  *     theme tokens
  *   - Inline email validation via <Input error={...}> (no Alert.alert
  *     for empty fields; the inline error is kinder)

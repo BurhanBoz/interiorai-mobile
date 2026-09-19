@@ -45,7 +45,7 @@ export default function NotFoundScreen() {
             className="font-label font-medium mb-6"
             style={{
               ...theme.text.caption,
-              color: "#E0C29A",
+              color: "#DDB477",
             }}
           >
             ERROR 404
@@ -76,7 +76,7 @@ export default function NotFoundScreen() {
             })}
           >
             <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
+              colors={["#DDB477", "#C09B62"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -94,12 +94,12 @@ export default function NotFoundScreen() {
                 numberOfLines={1}
                 style={{
                   ...theme.text.caption,
-                  color: "#3F2D11",
+                  color: "#231B10",
                 }}
               >
                 Return to Studio
               </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+              <Ionicons name="arrow-forward" size={20} color="#231B10" />
             </LinearGradient>
           </Pressable>
         </View>
@@ -114,7 +114,7 @@ export default function NotFoundScreen() {
             className="font-label"
             style={{
               ...theme.text.caption,
-              color: "#E5E2E1",
+              color: "#F6F1E7",
             }}
           >
             VOID

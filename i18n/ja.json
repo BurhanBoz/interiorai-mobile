@@ -25,7 +25,9 @@
     "selected": "選択済み",
     "offline_banner": "接続なし。作業は保存されています。",
     "coming_soon": "近日公開",
-    "next_step": "次のステップ"
+    "next_step": "次のステップ",
+    "on": "オン",
+    "off": "オフ"
   },
   "tabs": {
     "studio": "スタジオ",
@@ -345,7 +347,8 @@
     "photo_source_title": "お部屋の写真を追加",
     "photo_source_body": "新しく撮るか、すでにある写真を選んでください。",
     "camera": "カメラ",
-    "gallery": "写真ライブラリ"
+    "gallery": "写真ライブラリ",
+    "transformation": "変化の強さ"
   },
   "furniture": {
     "title": "家具",

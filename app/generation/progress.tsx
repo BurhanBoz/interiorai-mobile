@@ -287,7 +287,7 @@ export default function GenerationProgressScreen() {
               width: 160,
               height: 160,
               borderWidth: 1,
-              borderColor: "#C4A882",
+              borderColor: "#DDB477",
               opacity: pulse,
               shadowColor: "#FEDFB5",
               shadowOffset: { width: 0, height: 0 },
@@ -328,7 +328,7 @@ export default function GenerationProgressScreen() {
           className="text-center mt-4"
           style={{
             ...theme.text.caption,
-            color: phase === "error" ? "#FFB4AB" : "#E0C29A",
+            color: phase === "error" ? "#FFB4AB" : "#DDB477",
           }}
         >
           {errorMessage ?? phaseLabel}
@@ -343,7 +343,7 @@ export default function GenerationProgressScreen() {
             <Animated.View style={{ height: "100%", width: progressWidth }}>
               <LinearGradient
                 colors={
-                  phase === "error" ? ["#93000A", "#FFB4AB"] : ["#C4A882", "#FEDFB5"]
+                  phase === "error" ? ["#93000A", "#FFB4AB"] : ["#DDB477", "#FEDFB5"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -390,7 +390,7 @@ export default function GenerationProgressScreen() {
             style={{
               paddingHorizontal: theme.space.gutter,
               paddingVertical: 14,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: "#2C2519",
               borderWidth: 1,
               borderColor: "rgba(196,168,130,0.3)",
             }}
@@ -431,7 +431,7 @@ export default function GenerationProgressScreen() {
           <Text
             style={{
               ...theme.text.caption,
-              color: "#E0C29A",
+              color: "#DDB477",
             }}
           >
             {t("generation.about_this_style")}

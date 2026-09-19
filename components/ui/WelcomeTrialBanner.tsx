@@ -41,7 +41,7 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "rgba(225,195,155,0.4)",
-                shadowColor: "#E1C39B",
+                shadowColor: "#DDB477",
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.18,
                 shadowRadius: 8,
@@ -55,10 +55,10 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                 style={{ padding: 18, gap: 8 }}
             >
                 <View className="flex-row items-center" style={{ gap: 10 }}>
-                    <Ionicons name="sparkles" size={18} color="#E0C29A" />
+                    <Ionicons name="sparkles" size={18} color="#DDB477" />
                     <Text
                         className="font-headline"
-                        style={{ ...theme.text.title, color: "#E5E2E1", flex: 1 }}
+                        style={{ ...theme.text.title, color: "#F6F1E7", flex: 1 }}
                     >
                         {t("studio.welcome_banner_title")}
                     </Text>
@@ -77,13 +77,13 @@ export function WelcomeTrialBanner({ onClose }: { onClose?: () => void }) {
                             backgroundColor: "rgba(19,19,19,0.35)",
                         }}
                     >
-                        <Ionicons name="close" size={16} color="#D0C5B8" />
+                        <Ionicons name="close" size={16} color="#CFC4B0" />
                     </Pressable>
                     )}
                 </View>
                 <Text
                     className="font-body"
-                    style={{ ...theme.text.body, color: "#D0C5B8" }}
+                    style={{ ...theme.text.body, color: "#CFC4B0" }}
                 >
                     {t("studio.welcome_banner_body")}
                 </Text>
@@ -132,12 +132,12 @@ export function TrialCountdownBadge() {
                 borderColor: "rgba(225,195,155,0.45)",
             }}
         >
-            <Ionicons name="star" size={11} color="#E0C29A" />
+            <Ionicons name="star" size={11} color="#DDB477" />
             <Text
                 className="font-label"
                 style={{
                     ...theme.text.caption,
-                    color: "#E0C29A",
+                    color: "#DDB477",
                   }}
             >
                 {t("studio.trial_countdown_label")} · {remainingLabel}

@@ -146,9 +146,9 @@ function PlanFeatureSheet({
     const tierLabel = plan ? plan.code.replace("_ANNUAL", "") : "";
 
     const tierColor: Record<string, string> = {
-        PRO: "#FDDEB4", BASE: "#E0C29A", FREE: "#998F84",
+        PRO: "#FDDEB4", BASE: "#DDB477", FREE: "#9A8F7D",
     };
-    const accentColor = tierColor[tierLabel] ?? "#998F84";
+    const accentColor = tierColor[tierLabel] ?? "#9A8F7D";
 
     return (
         <Modal
@@ -211,7 +211,7 @@ function PlanFeatureSheet({
                                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
                                     <Text style={{
                                         ...theme.text.display,
-                                        color: "#E5E2E1",
+                                        color: "#F6F1E7",
                                       }}>
                                         {priceLabel(plan, storePrices, t)}
                                     </Text>
@@ -335,7 +335,7 @@ function PlanFeatureSheet({
                                                     ) : (!isCheck && !isDash) ? (
                                                         <Text style={{
                                                             ...theme.text.subtitle,
- color: "#E0C29A",
+ color: "#DDB477",
  marginLeft: 8,
                                                           }}>
                                                             {val}
@@ -355,13 +355,13 @@ function PlanFeatureSheet({
                             }}>
                                 {isCurrent ? (
                                     <View style={{
-                                        height: 56, borderRadius: theme.radius.md, backgroundColor: "#2A2A2A",
+                                        height: 56, borderRadius: theme.radius.md, backgroundColor: "#2C2519",
                                         alignItems: "center", justifyContent: "center",
                                         borderWidth: 1, borderColor: "rgba(77,70,60,0.4)",
                                     }}>
                                         <Text style={{
                                             ...theme.text.subtitle,
-                                            color: "#998F84",
+                                            color: "#9A8F7D",
                                           }}>
                                             {t("plans.current_plan")}
                                         </Text>
@@ -372,7 +372,7 @@ function PlanFeatureSheet({
                                         style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
                                     >
                                         <LinearGradient
-                                            colors={["#C4A882", "#A68A62"]}
+                                            colors={["#DDB477", "#C09B62"]}
                                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                                             style={{
                                                 height: 56, borderRadius: theme.radius.md,
@@ -382,11 +382,11 @@ function PlanFeatureSheet({
                                         >
                                             <Text style={{
                                                 ...theme.text.subtitle,
-                                                color: "#3F2D11",
+                                                color: "#231B10",
                                               }}>
                                                 {t("plans.confirm")}
                                             </Text>
-                                            <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+                                            <Ionicons name="arrow-forward" size={20} color="#231B10" />
                                         </LinearGradient>
                                     </Pressable>
                                 )}
@@ -394,7 +394,7 @@ function PlanFeatureSheet({
                         </>
                     ) : (
                         <View style={{ height: 200, alignItems: "center", justifyContent: "center" }}>
-                            <ActivityIndicator color="#E0C29A" />
+                            <ActivityIndicator color="#DDB477" />
                         </View>
                     )}
                 </View>
@@ -516,7 +516,7 @@ function PlanCard({
                 </Pressable>
             </View>
 
-            <Text className="font-body" style={{ ...theme.text.caption, color: "#E0C29A", marginBottom: 18 }}>
+            <Text className="font-body" style={{ ...theme.text.caption, color: "#DDB477", marginBottom: 18 }}>
                 {subtitle}
             </Text>
 
@@ -536,23 +536,23 @@ function PlanCard({
             </View>
 
             {isCurrent ? (
-                <View style={{ height: 48, borderRadius: theme.radius.md, backgroundColor: "#353534", alignItems: "center", justifyContent: "center" }}>
-                    <Text className="font-body" style={{ ...theme.text.body, color: "#998F84" }}>{cta}</Text>
+                <View style={{ height: 48, borderRadius: theme.radius.md, backgroundColor: "#332B1E", alignItems: "center", justifyContent: "center" }}>
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#9A8F7D" }}>{cta}</Text>
                 </View>
             ) : isPopular ? (
                 // Visual only — the whole card Pressable handles navigation.
                 <LinearGradient
-                    colors={["#C4A882", "#A68A62"]}
+                    colors={["#DDB477", "#C09B62"]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     style={{ height: 48, borderRadius: theme.radius.md, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: theme.space.gutter }}
                 >
-                    <Text className="font-body" style={{ ...theme.text.body, color: "#3F2D11" }}>{cta}</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#3F2D11" />
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#231B10" }}>{cta}</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#231B10" />
                 </LinearGradient>
             ) : (
                 <View style={{ height: 48, borderRadius: theme.radius.md, borderWidth: 1, borderColor: "rgba(225,195,155,0.4)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(225,195,155,0.06)", flexDirection: "row", gap: 8 }}>
-                    <Text className="font-body" style={{ ...theme.text.body, color: "#E0C29A" }}>{cta}</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
+                    <Text className="font-body" style={{ ...theme.text.body, color: "#DDB477" }}>{cta}</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#DDB477" />
                 </View>
             )}
         </Pressable>
@@ -774,7 +774,7 @@ export default function PlansScreen() {
                                             numberOfLines={1}
                                             adjustsFontSizeToFit
                                             minimumFontScale={0.8}
-                                            style={{ ...SEGMENT_LABEL_TEXT, flexShrink: 1, color: active ? "#F4DDB6" : "#998F84" }}
+                                            style={{ ...SEGMENT_LABEL_TEXT, flexShrink: 1, color: active ? "#F4DDB6" : "#9A8F7D" }}
                                         >
                                             {isAnnual
                                                 ? t("plans.toggle_annual_label")
@@ -800,7 +800,7 @@ export default function PlansScreen() {
                                                     numberOfLines={1}
                                                     adjustsFontSizeToFit
                                                     minimumFontScale={0.75}
-                                                    style={{ ...SEGMENT_BADGE_TEXT, color: active ? "#F4DDB6" : "#E0C29A" }}
+                                                    style={{ ...SEGMENT_BADGE_TEXT, color: active ? "#F4DDB6" : "#DDB477" }}
                                                 >
                                                     {t("plans.toggle_save_badge")}
                                                 </Text>
@@ -821,7 +821,7 @@ export default function PlansScreen() {
 
                 {/* Plan cards */}
                 {sortedPlans.length === 0 ? (
-                    <ActivityIndicator color="#E0C29A" style={{ marginVertical: 48 }} />
+                    <ActivityIndicator color="#DDB477" style={{ marginVertical: 48 }} />
                 ) : (
                     <View style={{ gap: 0, marginBottom: 36 }}>
                         {sortedPlans.map((plan) => (
@@ -845,7 +845,7 @@ export default function PlansScreen() {
                 <Pressable onPress={() => router.push("/credits/packs")} style={{ marginBottom: 48 }}>
                     <View className="bg-surface-container-low rounded-xl flex-row items-center" style={{ padding: 20, borderWidth: 1, borderColor: "rgba(77,70,60,0.3)" }}>
                         <View style={{ width: 40, height: 40, borderRadius: theme.radius.lg, backgroundColor: "rgba(224,194,154,0.1)", alignItems: "center", justifyContent: "center", marginRight: 16 }}>
-                            <Ionicons name="flash-outline" size={20} color="#E0C29A" />
+                            <Ionicons name="flash-outline" size={20} color="#DDB477" />
                         </View>
                         <View style={{ flex: 1 }}>
                             <Text className="font-body text-on-surface" style={{ ...theme.text.body, marginBottom: 2 }}>
@@ -855,7 +855,7 @@ export default function PlansScreen() {
                                 {t("plans.credit_pack_bridge_subtitle")}
                             </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={18} color="#998F84" />
+                        <Ionicons name="chevron-forward" size={18} color="#9A8F7D" />
                     </View>
                 </Pressable>
 
@@ -880,11 +880,11 @@ export default function PlansScreen() {
                                 paddingVertical: 14,
                             }}
                         >
-                            <Ionicons name="settings-outline" size={15} color="#998F84" />
+                            <Ionicons name="settings-outline" size={15} color="#9A8F7D" />
                             <Text
                                 style={{
                                     ...theme.text.subtitle,
-                                    color: "#998F84",
+                                    color: "#9A8F7D",
                                   }}
                             >
                                 {t("plans.manage_subscription", {

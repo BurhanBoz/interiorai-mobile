@@ -186,13 +186,13 @@ export default function UpscaleScreen() {
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="flex-row items-center" style={{ gap: 16 }}>
           <Pressable onPress={handleCancel} hitSlop={8}>
-            <Ionicons name="arrow-back" size={24} color="#E1C39B" />
+            <Ionicons name="arrow-back" size={24} color="#DDB477" />
           </Pressable>
           <Text
             className="font-headline"
             style={{
               ...theme.text.label,
-              color: "#E1C39B",
+              color: "#DDB477",
             }}
           >
             Roomframe AI
@@ -272,7 +272,7 @@ export default function UpscaleScreen() {
                 style={{ height: 2, backgroundColor: "rgba(255,255,255,0.1)" }}
               >
                 <LinearGradient
-                  colors={error || initError ? ["#93000A", "#93000A"] : ["#C4A882", "#A68A62"]}
+                  colors={error || initError ? ["#93000A", "#93000A"] : ["#DDB477", "#C09B62"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
@@ -308,7 +308,7 @@ export default function UpscaleScreen() {
           ) : (
             <View
               className="flex-row items-center rounded-xl"
-              style={{ padding: 20, backgroundColor: "#1C1B1B", gap: 16 }}
+              style={{ padding: 20, backgroundColor: "#201B15", gap: 16 }}
             >
               {/* Animated sync icon — the spinner here already conveys
                   "in progress" so the small uppercase status badge that
@@ -352,7 +352,7 @@ export default function UpscaleScreen() {
             <Pressable
               onPress={handleCancel}
               className="flex-1 rounded-xl items-center justify-center"
-              style={{ height: 52, backgroundColor: "#2A2A2A" }}
+              style={{ height: 52, backgroundColor: "#2C2519" }}
             >
               <Text
                 className="font-label text-on-surface"
@@ -397,11 +397,11 @@ export default function UpscaleScreen() {
 function LogEntry(props: { done?: boolean; error?: boolean; label: string; time: string }) {
   const iconName = props.done ? "checkmark-circle" : props.error ? "alert-circle" : "sync";
   const iconColor = props.done ? "#4CAF50" : props.error ? "#FFB4AB" : "#FEDFB5";
-  const textColor = props.error ? "#FFB4AB" : "#E5E2E1";
+  const textColor = props.error ? "#FFB4AB" : "#F6F1E7";
   return (
     <View
       className="flex-row items-center justify-between rounded-xl"
-      style={{ padding: 20, backgroundColor: "#1C1B1B" }}
+      style={{ padding: 20, backgroundColor: "#201B15" }}
     >
       <View className="flex-row items-center flex-1" style={{ gap: 16 }}>
         <Ionicons name={iconName as any} size={20} color={iconColor} />

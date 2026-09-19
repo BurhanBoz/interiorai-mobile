@@ -124,7 +124,7 @@ function HDUpsell() {
                 }}
               >
                 <LinearGradient
-                  colors={["#C4A882", "#A68A62"]}
+                  colors={["#DDB477", "#C09B62"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
@@ -137,7 +137,7 @@ function HDUpsell() {
                     className="font-label"
                     style={{
                       ...theme.text.caption,
-                      color: "#3F2D11",
+                      color: "#231B10",
                     }}
                   >
                     2048PX
@@ -184,7 +184,7 @@ function HDUpsell() {
           <Ionicons
             name="checkmark-circle"
             size={24}
-            color="#E0C29A"
+            color="#DDB477"
             style={{ marginTop: 2 }}
           />
           <View className="flex-1">
@@ -207,7 +207,7 @@ function HDUpsell() {
           <Ionicons
             name="checkmark-circle"
             size={24}
-            color="#E0C29A"
+            color="#DDB477"
             style={{ marginTop: 2 }}
           />
           <View className="flex-1">
@@ -324,7 +324,7 @@ function StyleTransferUpsell() {
                   elevation: 4,
                 }}
               >
-                <Ionicons name="sparkles" size={14} color="#3F2D11" />
+                <Ionicons name="sparkles" size={14} color="#231B10" />
               </View>
             </View>
             <Text
@@ -343,7 +343,7 @@ function StyleTransferUpsell() {
         {/* Transition Indicator */}
         <View className="items-center -my-4 z-10">
           <View className="bg-surface px-4 py-1">
-            <Ionicons name="arrow-down" size={24} color="#C4A882" />
+            <Ionicons name="arrow-down" size={24} color="#DDB477" />
           </View>
         </View>
 
@@ -365,7 +365,7 @@ function StyleTransferUpsell() {
             <Ionicons
               name="lock-closed"
               size={36}
-              color="#C4A882"
+              color="#DDB477"
               style={{ marginBottom: 8 }}
             />
             <Text
@@ -439,7 +439,7 @@ function SmartEditUpsell() {
             className="w-10 h-10 items-center justify-center rounded-full bg-surface-container-high"
             hitSlop={8}
           >
-            <Ionicons name="close" size={22} color="#d0c5b8" />
+            <Ionicons name="close" size={22} color="#CFC4B0" />
           </Pressable>
         </View>
 
@@ -454,7 +454,7 @@ function SmartEditUpsell() {
         >
           {/* Lock Icon */}
           <View className="mb-6">
-            <Ionicons name="lock-closed" size={48} color="#E1C39B" />
+            <Ionicons name="lock-closed" size={48} color="#DDB477" />
           </View>
 
           {/* Headline */}
@@ -565,7 +565,7 @@ function SmartEditUpsell() {
                 position: "absolute",
                 top: 16,
                 right: 16,
-                backgroundColor: "#E1C39B",
+                backgroundColor: "#DDB477",
                 paddingHorizontal: 12,
                 paddingVertical: 4,
                 borderRadius: theme.radius.pill,
@@ -574,7 +574,7 @@ function SmartEditUpsell() {
               <Text
                 style={{
                   ...theme.text.caption,
-                  color: "#3F2D11",
+                  color: "#231B10",
                 }}
               >
                 Pro Edit
@@ -599,7 +599,7 @@ function SmartEditUpsell() {
                     backgroundColor: "rgba(225,195,155,0.1)",
                   }}
                 >
-                  <Ionicons name="checkmark" size={12} color="#E1C39B" />
+                  <Ionicons name="checkmark" size={12} color="#DDB477" />
                 </View>
                 <View className="flex-1">
                   <Text
@@ -640,7 +640,7 @@ function SmartEditUpsell() {
             })}
           >
             <LinearGradient
-              colors={["#C4A882", "#A68A62"]}
+              colors={["#DDB477", "#C09B62"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -658,12 +658,12 @@ function SmartEditUpsell() {
                 numberOfLines={1}
                 style={{
                   ...theme.text.caption,
-                  color: "#3F2D11",
+                  color: "#231B10",
                 }}
               >
                 Upgrade to Pro
               </Text>
-              <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+              <Ionicons name="arrow-forward" size={20} color="#231B10" />
             </LinearGradient>
           </Pressable>
           <Pressable
@@ -735,7 +735,7 @@ export default function UpsellScreen() {
               hitSlop={12}
               style={{ padding: 8 }}
             >
-              <Ionicons name="close" size={24} color="#E0C29A" />
+              <Ionicons name="close" size={24} color="#DDB477" />
             </Pressable>
           </View>
         )}

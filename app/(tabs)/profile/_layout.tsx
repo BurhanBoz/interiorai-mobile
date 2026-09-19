@@ -5,7 +5,7 @@ export default function ProfileLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#131313" },
+        contentStyle: { backgroundColor: "#191510" },
       }}
     />
   );

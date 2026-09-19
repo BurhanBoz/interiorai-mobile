@@ -80,7 +80,7 @@ function Caption({ label }: { label: string }) {
       <Text
         style={{
           ...theme.text.caption,
-          color: "#E5E2E1",
+          color: "#F6F1E7",
         }}
       >
         {label}
@@ -132,7 +132,7 @@ export default function AnonymousTrialScreen() {
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
       <View style={{ paddingHorizontal: theme.space.gutter, paddingTop: 8, flexDirection: "row", alignItems: "center" }}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
+          <Ionicons name="arrow-back" size={24} color="#F6F1E7" />
         </Pressable>
       </View>
 

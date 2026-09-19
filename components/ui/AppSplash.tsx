@@ -82,7 +82,7 @@ export function AppSplash() {
                     opacity: logoOpacity,
                     transform: [{ scale: logoScale }],
                     marginBottom: 48,
-                    shadowColor: "#E0C29A",
+                    shadowColor: "#DDB477",
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 0.25,
                     shadowRadius: 40,
@@ -107,7 +107,7 @@ export function AppSplash() {
                 <Text
                     style={{
                         ...theme.text.headline,
-                        color: "#E0C29A",
+                        color: "#DDB477",
                         textAlign: "center",
                       }}
                 >
@@ -120,7 +120,7 @@ export function AppSplash() {
                 <Text
                     style={{
                         ...theme.text.caption,
-                        color: "#998F84",
+                        color: "#9A8F7D",
                       }}
                 >
                     DIGITAL CURATOR

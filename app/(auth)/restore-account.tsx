@@ -176,7 +176,7 @@ export default function RestoreAccountScreen() {
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="time-outline" size={32} color="#E0C29A" />
+              <Ionicons name="time-outline" size={32} color="#DDB477" />
             </View>
           </View>
 
@@ -193,7 +193,7 @@ export default function RestoreAccountScreen() {
           <Text
             style={{
               ...theme.text.display,
-              color: "#E5E2E1",
+              color: "#F6F1E7",
               textAlign: "center",
               marginBottom: 12,
             }}

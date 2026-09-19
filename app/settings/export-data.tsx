@@ -52,7 +52,7 @@ export default function ExportDataScreen() {
       <View className="px-8 pt-6 pb-4">
         <View className="flex-row items-center gap-4">
           <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
+            <Ionicons name="arrow-back" size={24} color="#F6F1E7" />
           </Pressable>
           <Text className="font-headline text-lg text-on-surface">
             {t("settings.export_data_title")}

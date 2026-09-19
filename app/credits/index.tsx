@@ -134,7 +134,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
               className="font-label"
               style={{
                 ...theme.text.caption,
-                color: "#E0C29A",
+                color: "#DDB477",
               }}
             >
               {t(`credits.kind_${kind.toLowerCase()}`)}
@@ -144,7 +144,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
             className="font-label"
             style={{
               ...theme.text.caption,
-              color: "#998F84",
+              color: "#9A8F7D",
             }}
           >
             {formatDate(item.createdAt)}
@@ -178,7 +178,7 @@ function LedgerRow({ item, t }: { item: CreditLedgerEntry; t: (k: string) => str
           <Ionicons
             name="chevron-forward"
             size={14}
-            color="#998F84"
+            color="#9A8F7D"
           />
         )}
       </View>
@@ -389,7 +389,7 @@ export default function CreditsScreen() {
               style={{ marginBottom: 12 }}
             >
               <LinearGradient
-                colors={["#C4A882", "#A68A62"]}
+                colors={["#DDB477", "#C09B62"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -407,12 +407,12 @@ export default function CreditsScreen() {
                   numberOfLines={1}
                   style={{
                     ...theme.text.caption,
-                    color: "#3F2D11",
+                    color: "#231B10",
                   }}
                 >
                   {t("credits.upgrade_banner")}
                 </Text>
-                <Ionicons name="arrow-forward" size={20} color="#3F2D11" />
+                <Ionicons name="arrow-forward" size={20} color="#231B10" />
               </LinearGradient>
             </Pressable>
 
@@ -430,7 +430,7 @@ export default function CreditsScreen() {
                   borderRadius: theme.radius.md,
                   paddingHorizontal: theme.space.gutter,
                   borderWidth: 1,
-                  borderColor: "#4D463C",
+                  borderColor: "#3D362A",
                   backgroundColor: "transparent",
                 }}
               >
@@ -443,7 +443,7 @@ export default function CreditsScreen() {
                 >
                   {t("credits.one_time_banner")}
                 </Text>
-                <Ionicons name="arrow-forward" size={20} color="#E0C29A" />
+                <Ionicons name="arrow-forward" size={20} color="#DDB477" />
               </View>
             </Pressable>
 
@@ -490,7 +490,7 @@ export default function CreditsScreen() {
                           className="font-label"
                           style={{
                             ...theme.text.caption,
-                            color: "#E0C29A",
+                            color: "#DDB477",
                           }}
                         >
                           {subscription.planName}
@@ -573,7 +573,7 @@ export default function CreditsScreen() {
                   style={{ height: 8, marginBottom: 12 }}
                 >
                   <LinearGradient
-                    colors={["#C4A882", "#A68A62"]}
+                    colors={["#DDB477", "#C09B62"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
@@ -617,7 +617,7 @@ export default function CreditsScreen() {
                 className="font-label"
                 style={{
                   ...theme.text.caption,
-                  color: "#E0C29A",
+                  color: "#DDB477",
                 }}
               >
                 {t("credits.monthly_usage")}
@@ -637,7 +637,7 @@ export default function CreditsScreen() {
                     className="font-label"
                     style={{
                       ...theme.text.caption,
-                      color: "#E0C29A",
+                      color: "#DDB477",
                     }}
                   >
                     {t("credits.billing_spent_this_month", {
@@ -675,7 +675,7 @@ export default function CreditsScreen() {
                     <Text
                       style={{
                         ...theme.text.caption,
-                        color: active ? "#E0C29A" : "#E5E2E1",
+                        color: active ? "#DDB477" : "#F6F1E7",
                       }}
                     >
                       {t(`credits.filter_${f.toLowerCase()}`)}
@@ -692,7 +692,7 @@ export default function CreditsScreen() {
               <Ionicons
                 name="receipt-outline"
                 size={36}
-                color="#998F84"
+                color="#9A8F7D"
                 style={{ marginBottom: 12 }}
               />
               <Text
@@ -727,13 +727,13 @@ export default function CreditsScreen() {
                     paddingVertical: 10,
                     borderRadius: theme.radius.pill,
                     borderWidth: 1,
-                    borderColor: "#C4A882",
+                    borderColor: "#DDB477",
                   }}
                 >
                   <Text
                     style={{
                       ...theme.text.caption,
-                      color: "#C4A882",
+                      color: "#DDB477",
                     }}
                   >
                     {t("credits.empty_cta")}
@@ -747,7 +747,7 @@ export default function CreditsScreen() {
           <View>
             {loadingLedger && (
               <ActivityIndicator
-                color="#E0C29A"
+                color="#DDB477"
                 style={{ marginVertical: 16 }}
               />
             )}
@@ -777,7 +777,7 @@ export default function CreditsScreen() {
                 <Ionicons
                   name={promoExpanded ? "chevron-up" : "chevron-down"}
                   size={20}
-                  color="#E0C29A"
+                  color="#DDB477"
                 />
               </Pressable>
 
@@ -805,19 +805,19 @@ export default function CreditsScreen() {
                       paddingVertical: 12,
                       borderRadius: theme.radius.sm,
                       borderWidth: 1,
-                      borderColor: "#C4A882",
+                      borderColor: "#DDB477",
                       justifyContent: "center",
                       alignItems: "center",
                       opacity: promoLoading ? 0.5 : 1,
                     }}
                   >
                     {promoLoading ? (
-                      <ActivityIndicator color="#C4A882" size="small" />
+                      <ActivityIndicator color="#DDB477" size="small" />
                     ) : (
                       <Text
                         style={{
                           ...theme.text.caption,
-                          color: "#C4A882",
+                          color: "#DDB477",
                         }}
                       >
                         {t("credits.promo_apply")}

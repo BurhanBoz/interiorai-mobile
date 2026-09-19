@@ -73,7 +73,7 @@ export default function DeleteAccountScreen() {
             onPress={() => (step === "confirm" ? setStep("details") : router.back())}
             hitSlop={12}
           >
-            <Ionicons name="arrow-back" size={24} color="#E5E2E1" />
+            <Ionicons name="arrow-back" size={24} color="#F6F1E7" />
           </Pressable>
           <Text className="font-headline text-lg text-on-surface">
             {t("settings.delete_account_title")}
@@ -109,7 +109,7 @@ export default function DeleteAccountScreen() {
                 <TextInput
                   className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface min-h-[80px]"
                   placeholder={t("settings.delete_account_reason_placeholder")}
-                  placeholderTextColor="#4D463C"
+                  placeholderTextColor="#3D362A"
                   value={reason}
                   onChangeText={setReason}
                   multiline
@@ -126,7 +126,7 @@ export default function DeleteAccountScreen() {
                 <TextInput
                   className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
                   placeholder={t("settings.delete_account_password_placeholder")}
-                  placeholderTextColor="#4D463C"
+                  placeholderTextColor="#3D362A"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -162,7 +162,7 @@ export default function DeleteAccountScreen() {
                 <TextInput
                   className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
                   placeholder={t("settings.delete_account_final_placeholder")}
-                  placeholderTextColor="#4D463C"
+                  placeholderTextColor="#3D362A"
                   value={confirmText}
                   onChangeText={setConfirmText}
                   autoCapitalize="characters"

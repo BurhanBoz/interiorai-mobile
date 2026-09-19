@@ -99,8 +99,8 @@ export default function DesignDeepLink() {
     }, [ensureLoaded, params.room, params.style, params.mode]);
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#131313", alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator size="large" color="#C4A882" />
+        <View style={{ flex: 1, backgroundColor: "#191510", alignItems: "center", justifyContent: "center" }}>
+            <ActivityIndicator size="large" color="#DDB477" />
         </View>
     );
 }

@@ -50,7 +50,7 @@ const MIN_POINT_DISTANCE = 3;
 /** Hard cap per stroke — backend rejects >2000; finger drawing stays ≪ this. */
 const MAX_POINTS_PER_STROKE = 600;
 
-const GOLD = "#E1C39B";
+const GOLD = "#DDB477";
 /** PROTECT-mode stroke tint — cool green reads as "safe/kept". */
 const PROTECT_GREEN = "#9CC5B0";
 
@@ -223,7 +223,7 @@ export default function SmartEditScreen() {
   // No photo yet — the mask belongs to an uploaded input image.
   if (!photo?.uri || !photo.fileId) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#131313" }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#191510" }}>
         <Header title={t("studio.smart_edit_title")} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Ionicons name="image-outline" size={40} color={GOLD} />
@@ -236,7 +236,7 @@ export default function SmartEditScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#131313" }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#191510" }}>
       <Header title={t("studio.smart_edit_title")} />
 
       <ScrollView

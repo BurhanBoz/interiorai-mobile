@@ -90,14 +90,14 @@ function ParameterRow({
           <Ionicons
             name={icon}
             size={18}
-            color={open ? "#E1C39B" : "#C4A882"}
+            color={open ? "#DDB477" : "#DDB477"}
           />
         </View>
         <View style={{ flex: 1 }}>
           <Text
             style={{
               ...theme.text.subtitle,
-              color: open ? "#E1C39B" : "#E5E2E1",
+              color: open ? "#DDB477" : "#F6F1E7",
             }}
           >
             {t(titleKey)}
@@ -117,7 +117,7 @@ function ParameterRow({
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={16}
-          color={open ? "#E1C39B" : "#998F84"}
+          color={open ? "#DDB477" : "#9A8F7D"}
         />
       </View>
       {open ? (
@@ -126,7 +126,7 @@ function ParameterRow({
             ...theme.text.body,
             marginTop: 14,
             paddingLeft: 50,
-            color: "#D0C5B8",
+            color: "#CFC4B0",
           }}
         >
           {t(descKey)}
@@ -161,14 +161,14 @@ function AccordionItem({
       <View className="flex-row items-center justify-between">
         <Text
           className="font-body font-medium flex-1 mr-3"
-          style={{ ...theme.text.subtitle, color: open ? "#E1C39B" : "#E5E2E1" }}
+          style={{ ...theme.text.subtitle, color: open ? "#DDB477" : "#F6F1E7" }}
         >
           {t(questionKey)}
         </Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={20}
-          color={open ? "#E1C39B" : "#998F84"}
+          color={open ? "#DDB477" : "#9A8F7D"}
         />
       </View>
       {open && (
@@ -229,13 +229,13 @@ export default function HelpScreen() {
           hitSlop={12}
           className="w-10 h-10 items-center justify-center rounded-full"
         >
-          <Ionicons name="arrow-back" size={24} color="#C4A882" />
+          <Ionicons name="arrow-back" size={24} color="#DDB477" />
         </Pressable>
         <Text
           className="font-headline flex-1 text-center"
           style={{
             ...theme.text.caption,
-            color: "#E1C39B",
+            color: "#DDB477",
           }}
         >
           {t("settings.help_title_header")}
@@ -259,7 +259,7 @@ export default function HelpScreen() {
           </Text>
           <View
             className="mb-6"
-            style={{ width: 96, height: 4, backgroundColor: "#C4A882" }}
+            style={{ width: 96, height: 4, backgroundColor: "#DDB477" }}
           />
           <Text
             className="font-body text-on-surface-variant"
@@ -284,7 +284,7 @@ export default function HelpScreen() {
               <Ionicons
                 name="search"
                 size={20}
-                color="#998F84"
+                color="#9A8F7D"
                 style={{ position: "absolute", left: 16, zIndex: 1 }}
               />
               <TextInput
@@ -306,7 +306,7 @@ export default function HelpScreen() {
                   hitSlop={8}
                   style={{ position: "absolute", right: 16 }}
                 >
-                  <Ionicons name="close-circle" size={18} color="#998F84" />
+                  <Ionicons name="close-circle" size={18} color="#9A8F7D" />
                 </Pressable>
               )}
             </View>
@@ -400,7 +400,7 @@ export default function HelpScreen() {
                 className="font-label font-bold"
                 style={{
                   ...theme.text.caption,
-                  color: "#C4A882",
+                  color: "#DDB477",
                 }}
               >
                 {SUPPORT_EMAIL}
@@ -415,7 +415,7 @@ export default function HelpScreen() {
             className="font-label text-center"
             style={{
               ...theme.text.caption,
-              color: "#998F84",
+              color: "#9A8F7D",
               opacity: 0.5,
             }}
           >

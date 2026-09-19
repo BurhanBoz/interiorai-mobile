@@ -276,7 +276,7 @@ export default function RootLayout() {
               key={i18nInstance.language}
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: "#131313" },
+                contentStyle: { backgroundColor: "#191510" },
               }}
             />
             <OfflineBanner />

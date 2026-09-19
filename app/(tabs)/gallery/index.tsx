@@ -303,7 +303,7 @@ export default function GalleryScreen() {
           height: tileHeight,
           borderRadius: theme.radius.md,
           overflow: "hidden",
-          backgroundColor: "#1C1B1B",
+          backgroundColor: "#201B15",
           borderWidth: 1,
           borderColor: "rgba(225,195,155,0.08)",
           transform: [{ scale: pressed ? 0.97 : 1 }],
@@ -360,7 +360,7 @@ export default function GalleryScreen() {
             <Text
               style={{
                 ...theme.text.caption,
-                color: "#E0C29A",
+                color: "#DDB477",
               }}
             >
               {item.qualityTier === "ULTRA_HD" ? "4K" : "HD"}
@@ -410,7 +410,7 @@ export default function GalleryScreen() {
           paddingHorizontal: 18,
           paddingVertical: 9,
           borderRadius: theme.radius.pill,
-          backgroundColor: active ? "#C4A882" : "rgba(28,27,27,0.85)",
+          backgroundColor: active ? "#DDB477" : "rgba(28,27,27,0.85)",
           borderWidth: 1,
           borderColor: active
             ? "rgba(254,223,181,0.5)"
@@ -419,7 +419,7 @@ export default function GalleryScreen() {
           // Active chip gets a soft gold glow so the selection reads as
           // "on" at a glance, not just a color swap.
           ...(active && {
-            shadowColor: "#E0C29A",
+            shadowColor: "#DDB477",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.35,
             shadowRadius: 10,
@@ -430,7 +430,7 @@ export default function GalleryScreen() {
         <Text
           style={{
             ...theme.text.caption,
-            color: active ? "#3F2D11" : "#E5E2E1",
+            color: active ? "#231B10" : "#F6F1E7",
           }}
           numberOfLines={1}
         >
@@ -468,7 +468,7 @@ export default function GalleryScreen() {
         edges={["top"]}
         className="flex-1 bg-surface items-center justify-center"
       >
-        <ActivityIndicator size="large" color="#E1C39B" />
+        <ActivityIndicator size="large" color="#DDB477" />
       </SafeAreaView>
     );
   }
@@ -519,8 +519,8 @@ export default function GalleryScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#E0C29A"
-              colors={["#E0C29A"]}
+              tintColor="#DDB477"
+              colors={["#DDB477"]}
             />
           }
           ListHeaderComponent={
@@ -613,7 +613,7 @@ export default function GalleryScreen() {
               {loadingMore ? (
                 <ActivityIndicator
                   size="small"
-                  color="#E1C39B"
+                  color="#DDB477"
                   style={{ paddingVertical: 16 }}
                 />
               ) : null}

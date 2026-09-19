@@ -25,7 +25,9 @@
     "selected": "محدد",
     "offline_banner": "لا إشارة. عملك في أمان.",
     "coming_soon": "قريبًا",
-    "next_step": "الخطوة التالية"
+    "next_step": "الخطوة التالية",
+    "on": "مفعّل",
+    "off": "معطّل"
   },
   "tabs": {
     "studio": "الاستوديو",
@@ -345,7 +347,8 @@
     "photo_source_title": "أضف صورة لغرفتك",
     "photo_source_body": "التقط صورة جديدة أو اختر واحدة لديك.",
     "camera": "الكاميرا",
-    "gallery": "معرض الصور"
+    "gallery": "معرض الصور",
+    "transformation": "مدى التغيير"
   },
   "furniture": {
     "title": "الأثاث",

@@ -50,6 +50,7 @@ export default function StudioScreen() {
     const { t } = useTranslation();
     const setMode = useStudioStore((s) => s.setMode);
     const setPhoto = useStudioStore((s) => s.setPhoto);
+    const photo = useStudioStore((s) => s.photo);
     const planCode = useEffectivePlanCode();
     // 🔴 The lock comes from the SERVER's plan_features, not from the client
     // catalogue's `minPlan`. The two had already drifted: only Outdoor carried
@@ -118,8 +119,22 @@ export default function StudioScreen() {
      * <p>A cancelled picker returns null and we stay put; navigating anyway
      * is how the old flow produced a dead "Analyze Your Space" screen.
      */
-    const openComposer = async (
-        mode: string,
+    /**
+     * Two choices, then go.
+     *
+     * <p>Tapping a feature used to navigate on its own, so the composer
+     * opened on an empty frame and the first thing it did was ask for the
+     * photo the user had not been asked for yet. A mode without a photo is
+     * half a request; so is a photo without a mode.
+     *
+     * <p>So each tap records one half and the SECOND one navigates, in
+     * whichever order they arrive. Nothing is preselected — a default mode
+     * would mean picking a photo navigates after a single tap, which is the
+     * behaviour this replaces.
+     */
+    const [pendingMode, setPendingMode] = useState<string | null>(null);
+
+    const addPhoto = async (
         source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number },
     ) => {
         Haptics.selectionAsync();
@@ -128,23 +143,27 @@ export default function StudioScreen() {
                 ? await useSampleImage(source.module)
                 : await pickImage(source.kind);
         if (!picked) return;
-        // 🔴 The picker RETURNS the photo; it does not store it. Navigating
-        // without this line opened the composer on an empty frame that spun
-        // forever — the upload had succeeded and nothing was holding the
-        // result.
+        // 🔴 The picker RETURNS the photo; it does not store it. Without this
+        // the composer opened on an empty frame that spun forever — the
+        // upload had succeeded and nothing was holding the result.
         setPhoto(picked);
-        goComposer(mode);
+        if (pendingMode) goComposer(pendingMode);
     };
 
     const onFeature = (key: string, locked: boolean) => {
+        Haptics.selectionAsync();
         if (locked) {
-            Haptics.selectionAsync();
             router.push("/paywall?source=FEATURE_TILE" as never);
             return;
         }
-        goComposer(key === "FURNITURE" ? "REDESIGN" : key, {
-            catalogue: key === "FURNITURE",
-        });
+        // Tapping the selected one again clears it — a selection you cannot
+        // undo is a trap on a screen with no Back.
+        if (pendingMode === key) {
+            setPendingMode(null);
+            return;
+        }
+        setPendingMode(key);
+        if (photo?.fileId) goComposer(key);
     };
 
     return (
@@ -153,8 +172,9 @@ export default function StudioScreen() {
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
+                    photoUri={photo?.uri ?? null}
                     onAddPhoto={() => setSourceSheet(true)}
-                    onSample={(m) => openComposer("REDESIGN", { kind: "sample", module: m })}
+                    onSample={(m) => addPhoto({ kind: "sample", module: m })}
                 />
                 <FeatureGrid
                     isLocked={(code) =>
@@ -163,7 +183,7 @@ export default function StudioScreen() {
                     }
                     onPress={onFeature}
                     t={t}
-                    sofa={catalogue?.find((i) => i.category === "SOFA") ?? null}
+                    selectedMode={pendingMode}
                 />
                 <FurnitureBand
                     products={products}
@@ -176,8 +196,8 @@ export default function StudioScreen() {
             {sourceSheet && (
                 <PhotoSourceSheet
                     onClose={() => setSourceSheet(false)}
-                    onCamera={() => openComposer("REDESIGN", { kind: "camera" })}
-                    onGallery={() => openComposer("REDESIGN", { kind: "gallery" })}
+                    onCamera={() => addPhoto({ kind: "camera" })}
+                    onGallery={() => addPhoto({ kind: "gallery" })}
                 />
             )}
         </SafeAreaView>
@@ -274,10 +294,14 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
  */
 function IntakeRow({
     busy,
+    photoUri,
     onAddPhoto,
     onSample,
 }: {
     busy: boolean;
+    /** Once a photo is held, the tile shows it — the pending half of the
+        request has to be visible, or the screen looks like it did nothing. */
+    photoUri: string | null;
     onAddPhoto: () => void;
     onSample: (module: number) => void;
 }) {
@@ -296,19 +320,49 @@ function IntakeRow({
                     opacity: busy ? 0.6 : 1,
                     backgroundColor: U.buttonFill,
                     borderRadius: R.card,
+                    overflow: "hidden",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
                     paddingHorizontal: 12,
                 }}
             >
-                <PlusGlyph color={U.buttonInk} />
-                <Text
-                    style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                    numberOfLines={1}
-                >
-                    {t("studio.add_a_photo")}
-                </Text>
+                {photoUri ? (
+                    <>
+                        <Image
+                            source={{ uri: photoUri }}
+                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                            resizeMode="cover"
+                        />
+                        <View
+                            style={{
+                                position: "absolute",
+                                bottom: 10,
+                                alignSelf: "center",
+                                backgroundColor: U.photoChrome,
+                                borderWidth: 1,
+                                borderColor: U.photoChromeBorder,
+                                borderRadius: R.pill,
+                                paddingVertical: 6,
+                                paddingHorizontal: 14,
+                            }}
+                        >
+                            <Text style={{ fontFamily: "Archivo-600", fontSize: 12.5, color: "#fff" }}>
+                                {t("studio.replace")}
+                            </Text>
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        <PlusGlyph color={U.buttonInk} />
+                        <Text
+                            style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                            numberOfLines={1}
+                        >
+                            {t("studio.add_a_photo")}
+                        </Text>
+                    </>
+                )}
             </Pressable>
 
             <View style={{ flex: 1, gap: 8 }}>
@@ -379,105 +433,119 @@ function FeatureGrid({
     isLocked,
     onPress,
     t,
-    sofa,
+    selectedMode,
 }: {
     /** Server truth. Returns false until plan_features has loaded — an
         unlocked flash is recoverable, a wrongly locked tile is not. */
     isLocked: (featureCode: string) => boolean;
     onPress: (key: string, locked: boolean) => void;
     t: (k: string) => string;
-    sofa: FurnitureItem | null;
+    selectedMode: string | null;
 }) {
     const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
 
-    const tiles = [
-        { key: "REDESIGN", label: t("studio.mode_redesign"), image: imageFor(byKey.REDESIGN) },
-        { key: "EMPTY_ROOM", label: t("studio.mode_empty_room"), image: imageFor(byKey.EMPTY_ROOM) },
-        { key: "INPAINT", label: t("studio.mode_inpaint"), image: imageFor(byKey.INPAINT) },
-        { key: "FURNITURE", label: t("studio.add_furniture"), image: null, emphasis: true },
-        { key: "STYLE_TRANSFER", label: t("studio.mode_style_transfer"), image: imageFor(byKey.STYLE_TRANSFER) },
-        { key: "OUTDOOR", label: t("studio.mode_outdoor"), image: imageFor(byKey.OUTDOOR) },
+    /**
+     * Five, not six. The Furniture tile came off (2026-09-19): the catalogue
+     * is offered inside the composer, where the room it goes into already
+     * exists, and a tile that jumped straight past the photo was asking for
+     * the piece before the space.
+     *
+     * <p>Three across, then two wide. The wide pair is the paid pair — the
+     * extra width is the point, since this is the only place a free user
+     * meets what a plan buys.
+     */
+    const row1 = [
+        { key: "REDESIGN", label: t("studio.mode_redesign") },
+        { key: "EMPTY_ROOM", label: t("studio.mode_empty_room") },
+        { key: "INPAINT", label: t("studio.mode_inpaint") },
+    ];
+    const row2 = [
+        { key: "STYLE_TRANSFER", label: t("studio.mode_style_transfer") },
+        { key: "OUTDOOR", label: t("studio.mode_outdoor") },
     ];
 
-    return (
-        <View
-            style={{
-                marginTop: 18,
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 8,
-            }}
-        >
-            {tiles.map((tile) => {
-                // The tile keys are the app's own; the server names two of
-                // them differently (OUTDOOR_DESIGN, INPAINT).
-                const featureCode =
-                    tile.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : tile.key;
-                const locked = tile.key === "FURNITURE" ? false : isLocked(featureCode);
-                const emphasised = tile.emphasis === true;
-                return (
-                    <Pressable
-                        key={tile.key}
-                        onPress={() => onPress(tile.key, locked)}
-                        accessibilityRole="button"
-                        accessibilityLabel={tile.label}
-                        style={{
-                            width: "31.5%",
-                            backgroundColor: U.surface,
-                            borderWidth: 1,
-                            borderColor: emphasised ? U.accent : U.lineNeutral,
-                            borderRadius: R.tile,
-                            overflow: "hidden",
-                        }}
-                    >
-                        <View style={{ height: 72, backgroundColor: emphasised ? U.productPlate : U.surface }}>
-                            {emphasised ? (
-                                <FurnitureTileArt item={sofa} />
-                            ) : tile.image ? (
-                                <Image source={tile.image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                            ) : null}
-                            {locked && (
-                                <View
-                                    style={{
-                                        position: "absolute",
-                                        top: 6,
-                                        right: 6,
-                                        backgroundColor: U.ground,
-                                        borderWidth: 1,
-                                        borderColor: U.accent,
-                                        borderRadius: 5,
-                                        paddingVertical: 3,
-                                        paddingHorizontal: 6,
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontFamily: "Archivo-700",
-                                            fontSize: 8.5,
-                                            letterSpacing: 1,
-                                            color: U.accentBright,
-                                        }}
-                                    >
-                                        PRO
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                        {/* The tile's height is set by the image, never by the
-                            label — German "Stilübertragung" and Dutch
-                            "Buitenontwerp" wrap to two lines and must not
-                            change the grid. */}
-                        <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
-                            <Text
-                                numberOfLines={2}
-                                style={{ ...V.tile, color: emphasised ? U.accentBright : U.ink }}
-                            >
-                                {tile.label}
+    const tile = (item: { key: string; label: string }, width: string) => {
+        const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
+        const locked = isLocked(featureCode);
+        const selected = selectedMode === item.key;
+        const image = imageFor(byKey[item.key]);
+        return (
+            <Pressable
+                key={item.key}
+                onPress={() => onPress(item.key, locked)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={item.label}
+                style={{
+                    width: width as never,
+                    backgroundColor: U.surface,
+                    borderWidth: selected ? 1.5 : 1,
+                    borderColor: selected ? U.accent : U.lineNeutral,
+                    borderRadius: R.tile,
+                    overflow: "hidden",
+                }}
+            >
+                <View style={{ height: 72 }}>
+                    {image ? (
+                        <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    ) : null}
+                    {locked && (
+                        <View
+                            style={{
+                                position: "absolute",
+                                top: 6,
+                                right: 6,
+                                backgroundColor: U.ground,
+                                borderWidth: 1,
+                                borderColor: U.accent,
+                                borderRadius: 5,
+                                paddingVertical: 3,
+                                paddingHorizontal: 6,
+                            }}
+                        >
+                            <Text style={{ fontFamily: "Archivo-700", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
+                                PRO
                             </Text>
                         </View>
-                    </Pressable>
-                );
-            })}
+                    )}
+                    {selected && (
+                        <View
+                            style={{
+                                position: "absolute",
+                                top: 6,
+                                left: 6,
+                                width: 20,
+                                height: 20,
+                                borderRadius: 10,
+                                backgroundColor: U.accent,
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Text style={{ color: U.buttonInk, fontSize: 11, fontWeight: "700" }}>✓</Text>
+                        </View>
+                    )}
+                </View>
+                {/* The tile's height is set by the image, never by the label —
+                    German "Stilübertragung" and Dutch "Buitenontwerp" wrap to
+                    two lines and must not change the grid. */}
+                <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
+                    <Text numberOfLines={2} style={{ ...V.tile, color: selected ? U.accentBright : U.ink }}>
+                        {item.label}
+                    </Text>
+                </View>
+            </Pressable>
+        );
+    };
+
+    return (
+        <View style={{ marginTop: 18, gap: 8 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+                {row1.map((i) => tile(i, "31.5%"))}
+            </View>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+                {row2.map((i) => tile(i, "48.7%"))}
+            </View>
         </View>
     );
 }
@@ -488,17 +556,6 @@ function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
     const m = feature.media;
     if (m.kind === "single") return m.image;
     return m.after;
-}
-
-function FurnitureTileArt({ item }: { item: FurnitureItem | null }) {
-    if (!item) return null;
-    return (
-        <Image
-            source={{ uri: item.imageUrl }}
-            style={{ width: "100%", height: 62, marginTop: 5 }}
-            resizeMode="contain"
-        />
-    );
 }
 
 /* ── furniture band ─────────────────────────────────────────────────── */

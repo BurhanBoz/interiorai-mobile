@@ -66,7 +66,7 @@ export function OneShotSpotlight({
                     {
                         width: "100%",
                         borderRadius: theme.radius.lg,
-                        backgroundColor: "#1C1B1B",
+                        backgroundColor: "#201B15",
                         borderWidth: 1,
                         borderColor: "rgba(225,195,155,0.35)",
                         padding: 24,
@@ -87,7 +87,7 @@ export function OneShotSpotlight({
                     accessibilityLabel={t("common.close")}
                     style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
                 >
-                    <Ionicons name="close" size={18} color="#998F84" />
+                    <Ionicons name="close" size={18} color="#9A8F7D" />
                 </Pressable>
                 {icon ? (
                     <Ionicons

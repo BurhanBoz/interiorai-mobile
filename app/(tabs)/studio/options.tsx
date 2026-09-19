@@ -411,7 +411,7 @@ export default function OptionsScreen() {
             justifyContent: "center",
           }}
         >
-          <Ionicons name="chevron-back" size={22} color="#E1C39B" />
+          <Ionicons name="chevron-back" size={22} color="#DDB477" />
         </Pressable>
         <Brand variant="inline" size="sm" tone="gold" />
         <AvatarMenu />
@@ -458,7 +458,7 @@ export default function OptionsScreen() {
             style={{
               padding: 24,
               borderRadius: theme.radius.sm,
-              backgroundColor: "#1C1B1B",
+              backgroundColor: "#201B15",
             }}
           >
             <Text
@@ -473,7 +473,7 @@ export default function OptionsScreen() {
             <View
               className="flex-row"
               style={{
-                backgroundColor: "#131313",
+                backgroundColor: "#191510",
                 borderRadius: theme.radius.sm,
                 padding: 4,
               }}
@@ -508,17 +508,17 @@ export default function OptionsScreen() {
                     }}
                   >
                     {locked && (
-                      <Ionicons name="lock-closed" size={10} color="#998F84" />
+                      <Ionicons name="lock-closed" size={10} color="#9A8F7D" />
                     )}
                     <Text
                       className="font-label"
                       style={{
                         ...theme.text.caption,
                         color: locked
-                          ? "#998F84"
+                          ? "#9A8F7D"
                           : isSelected
-                            ? "#E1C39B"
-                            : "#998F84",
+                            ? "#DDB477"
+                            : "#9A8F7D",
                       }}
                     >
                       {t(tier.labelKey)}
@@ -536,7 +536,7 @@ export default function OptionsScreen() {
                         <Text
                           style={{
                             ...theme.text.caption,
-                            color: "#E0C29A",
+                            color: "#DDB477",
                           }}
                         >
                           {"BASE"}
@@ -588,7 +588,7 @@ export default function OptionsScreen() {
               <Text style={{ ...TILE_CAPTION, flex: 1, textAlign: "left" }}>
                 {t("studio.furniture_needs_free_layout")}
               </Text>
-              <Text style={{ ...TILE_CAPTION, color: "#E1C39B" }}>
+              <Text style={{ ...TILE_CAPTION, color: "#DDB477" }}>
                 {t("studio.turn_off")}
               </Text>
             </Pressable>
@@ -663,7 +663,7 @@ export default function OptionsScreen() {
                       }}
                     >
                       {isObjectUploading ? (
-                        <ActivityIndicator size="small" color="#E1C39B" />
+                        <ActivityIndicator size="small" color="#DDB477" />
                       ) : referenceImageAllowed ? (
                         <>
                           <Ionicons name="bed-outline" size={Math.round(TILE_SIZE * 0.32)} color="#8C8378" />
@@ -718,7 +718,7 @@ export default function OptionsScreen() {
             style={{
               padding: 24,
               borderRadius: theme.radius.sm,
-              backgroundColor: "#1C1B1B",
+              backgroundColor: "#201B15",
               opacity: strengthAllowed ? 1 : 0.55,
             }}
           >
@@ -728,7 +728,7 @@ export default function OptionsScreen() {
             >
               <View className="flex-row items-center" style={{ gap: 8 }}>
                 {!strengthAllowed && (
-                  <Ionicons name="lock-closed" size={12} color="#998F84" />
+                  <Ionicons name="lock-closed" size={12} color="#9A8F7D" />
                 )}
                 <Text
                   className="font-label text-on-surface-variant"
@@ -743,7 +743,7 @@ export default function OptionsScreen() {
                 className="font-headline"
                 style={{
                   ...theme.text.title,
-                  color: strengthAllowed ? "#E0C29A" : "#998F84",
+                  color: strengthAllowed ? "#DDB477" : "#9A8F7D",
                 }}
               >
                 {strengthAllowed ? `${aiStrengthPercent}%` : "PRO+"}
@@ -768,9 +768,9 @@ export default function OptionsScreen() {
               // 0.05 (18 stops): the slider is gated `disabled` for
               // them anyway, so step value only matters defensively.
               step={strengthAllowed ? 0.025 : 0.05}
-              minimumTrackTintColor="#E1C39B"
-              maximumTrackTintColor="#353534"
-              thumbTintColor={strengthAllowed ? "#FDDEB4" : "#998F84"}
+              minimumTrackTintColor="#DDB477"
+              maximumTrackTintColor="#332B1E"
+              thumbTintColor={strengthAllowed ? "#FDDEB4" : "#9A8F7D"}
               disabled={!strengthAllowed}
               style={{ width: "100%", height: 32 }}
             />
@@ -780,7 +780,7 @@ export default function OptionsScreen() {
             <View className="flex-row justify-between" style={{ marginTop: 4 }}>
               <Text
                 className="font-label"
-                style={{ ...theme.text.caption, color: "#998F84" }}
+                style={{ ...theme.text.caption, color: "#9A8F7D" }}
               >
                 {t(`studio.strength_min_${mode.toLowerCase()}`, {
                   defaultValue: t("studio.strength_subtle"),
@@ -788,7 +788,7 @@ export default function OptionsScreen() {
               </Text>
               <Text
                 className="font-label"
-                style={{ ...theme.text.caption, color: "#998F84" }}
+                style={{ ...theme.text.caption, color: "#9A8F7D" }}
               >
                 {t(`studio.strength_max_${mode.toLowerCase()}`, {
                   defaultValue: t("studio.strength_dramatic"),
@@ -803,7 +803,7 @@ export default function OptionsScreen() {
                 className="font-body"
                 style={{
                   ...theme.text.caption,
-                  color: "#998F84",
+                  color: "#9A8F7D",
                   marginTop: 14,
                   fontStyle: "italic",
                 }}
@@ -817,7 +817,7 @@ export default function OptionsScreen() {
 
         {/* Color Palette — Strength-card sibling.
             Re-housed inside the same panel chrome that wraps Transformation
-            (#1C1B1B / radius 12 / padding 24) so the two adjacent controls
+            (#201B15 / radius 12 / padding 24) so the two adjacent controls
             read as one design language: header row (label + resolved value),
             primary affordance row (swatch / slider), helper paragraph.
             Tapping anywhere in the panel opens the palette picker sheet —
@@ -836,13 +836,13 @@ export default function OptionsScreen() {
             style={({ pressed }) => ({
               padding: 24,
               borderRadius: theme.radius.sm,
-              backgroundColor: "#1C1B1B",
+              backgroundColor: "#201B15",
               transform: [{ scale: pressed ? 0.995 : 1 }],
               // Subtle gold halo when a palette is active — mirrors the
               // selection idiom from the modal sheet rows without
               // overshooting into a "hero card".
               ...(selectedPaletteTheme && {
-                shadowColor: "#E1C39B",
+                shadowColor: "#DDB477",
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.18,
                 shadowRadius: 6,
@@ -873,7 +873,7 @@ export default function OptionsScreen() {
                   className="font-headline"
                   style={{
                     ...theme.text.title,
-                    color: selectedPaletteTheme ? "#E0C29A" : "#998F84",
+                    color: selectedPaletteTheme ? "#DDB477" : "#9A8F7D",
                   }}
                 >
                   {selectedPaletteTheme
@@ -883,7 +883,7 @@ export default function OptionsScreen() {
                 <Ionicons
                   name="chevron-down"
                   size={16}
-                  color={selectedPaletteTheme ? "#E0C29A" : "#998F84"}
+                  color={selectedPaletteTheme ? "#DDB477" : "#9A8F7D"}
                 />
               </View>
             </View>
@@ -922,10 +922,10 @@ export default function OptionsScreen() {
                   gap: 8,
                 }}
               >
-                <Ionicons name="color-palette-outline" size={14} color="#998F84" />
+                <Ionicons name="color-palette-outline" size={14} color="#9A8F7D" />
                 <Text
                   className="font-label"
-                  style={{ ...theme.text.caption, color: "#998F84" }}
+                  style={{ ...theme.text.caption, color: "#9A8F7D" }}
                 >
                   {t("studio.palette_placeholder")}
                 </Text>
@@ -941,7 +941,7 @@ export default function OptionsScreen() {
               style={{
                 ...theme.text.caption,
                 fontStyle: "italic",
-                color: "#998F84",
+                color: "#9A8F7D",
                 marginTop: 12,
               }}
             >
@@ -958,7 +958,7 @@ export default function OptionsScreen() {
             style={{
               padding: 24,
               borderRadius: theme.radius.sm,
-              backgroundColor: "#1C1B1B",
+              backgroundColor: "#201B15",
             }}
           >
             <Text
@@ -971,7 +971,7 @@ export default function OptionsScreen() {
             </Text>
             {outputsLocked ? (
               <View className="flex-row items-center" style={{ gap: 10 }}>
-                <Ionicons name="lock-closed" size={13} color="#998F84" />
+                <Ionicons name="lock-closed" size={13} color="#9A8F7D" />
                 <Text
                   className="font-headline text-on-surface"
                   style={{ ...theme.text.headline }}
@@ -988,13 +988,13 @@ export default function OptionsScreen() {
                   height: 32,
                   borderRadius: theme.radius.md,
                   borderWidth: 1,
-                  borderColor: "#4D463C",
+                  borderColor: "#3D362A",
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Ionicons name="remove" size={16} color="#E0C29A" />
+                <Ionicons name="remove" size={16} color="#DDB477" />
               </Pressable>
               <Text
                 className="font-headline text-on-surface"
@@ -1011,13 +1011,13 @@ export default function OptionsScreen() {
                   height: 32,
                   borderRadius: theme.radius.md,
                   borderWidth: 1,
-                  borderColor: "#4D463C",
+                  borderColor: "#3D362A",
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Ionicons name="add" size={16} color="#E0C29A" />
+                <Ionicons name="add" size={16} color="#DDB477" />
               </Pressable>
             </View>
             )}
@@ -1026,7 +1026,7 @@ export default function OptionsScreen() {
             <Text
               style={{
                 ...theme.text.caption,
-                color: "#998F84",
+                color: "#9A8F7D",
                 paddingHorizontal: 4,
                 marginTop: -6,
               }}
@@ -1052,7 +1052,7 @@ export default function OptionsScreen() {
                 style={{
                   padding: 24,
                   borderRadius: theme.radius.sm,
-                  backgroundColor: "#1C1B1B",
+                  backgroundColor: "#201B15",
                   opacity: preserveLayoutApplicable ? 1 : 0.5,
                 }}
               >
@@ -1062,7 +1062,7 @@ export default function OptionsScreen() {
                       <Ionicons
                         name="lock-closed"
                         size={12}
-                        color="#998F84"
+                        color="#9A8F7D"
                       />
                     )}
                     <Text
@@ -1078,11 +1078,11 @@ export default function OptionsScreen() {
                     value={preserveLayoutApplicable && preserveLayout}
                     onValueChange={setPreserveLayout}
                     disabled={!preserveLayoutApplicable}
-                    trackColor={{ false: "#353534", true: "#584325" }}
+                    trackColor={{ false: "#332B1E", true: "#584325" }}
                     thumbColor={
-                      preserveLayoutApplicable ? "#E1C39B" : "#998F84"
+                      preserveLayoutApplicable ? "#DDB477" : "#9A8F7D"
                     }
-                    ios_backgroundColor="#353534"
+                    ios_backgroundColor="#332B1E"
                   />
                 </View>
                 {!preserveLayoutApplicable && (
@@ -1090,7 +1090,7 @@ export default function OptionsScreen() {
                     className="font-body"
                     style={{
                       ...theme.text.caption,
-                      color: "#998F84",
+                      color: "#9A8F7D",
                       marginTop: 12,
                       fontStyle: "italic",
                     }}
@@ -1168,7 +1168,7 @@ export default function OptionsScreen() {
                           style={{
                             ...theme.text.caption,
                             marginTop: 10,
-                            color: "#998F84",
+                            color: "#9A8F7D",
                           }}
                         >
                           {prompt.trim()}
@@ -1539,7 +1539,7 @@ export default function OptionsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setPaletteSheetOpen(false)}
       >
-        <View style={{ flex: 1, backgroundColor: "#131313" }}>
+        <View style={{ flex: 1, backgroundColor: "#191510" }}>
           {/* Sheet header — X left, title centered */}
           <View
             style={{
@@ -1564,7 +1564,7 @@ export default function OptionsScreen() {
                 zIndex: 1,
               }}
             >
-              <Ionicons name="close" size={18} color="#E5E2E1" />
+              <Ionicons name="close" size={18} color="#F6F1E7" />
             </Pressable>
             <Text
               style={{
@@ -1573,7 +1573,7 @@ export default function OptionsScreen() {
                 left: 0,
                 right: 0,
                 textAlign: "center",
-                color: "#E5E2E1",
+                color: "#F6F1E7",
               }}
             >
               {t("studio.choose_palette")}
@@ -1582,7 +1582,7 @@ export default function OptionsScreen() {
 
           {/*
             Sheet rows are visual siblings of the trigger panel on the
-            studio screen — same `#1C1B1B` chrome, header (label + check),
+            studio screen — same `#201B15` chrome, header (label + check),
             full-width gradient swatch, and gold border on selection.
             That way the moment a user taps a row in the sheet, the
             trigger they came from updates with a swatch that's already
@@ -1602,15 +1602,15 @@ export default function OptionsScreen() {
               marginHorizontal: 20,
               padding: 18,
               borderRadius: theme.radius.md,
-              backgroundColor: "#1C1B1B",
+              backgroundColor: "#201B15",
               borderWidth: colorPalette === "" ? 1.5 : 1,
               borderColor:
                 colorPalette === ""
-                  ? "#E1C39B"
+                  ? "#DDB477"
                   : "rgba(77,70,60,0.22)",
               transform: [{ scale: pressed ? 0.995 : 1 }],
               ...(colorPalette === "" && {
-                shadowColor: "#E1C39B",
+                shadowColor: "#DDB477",
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.22,
                 shadowRadius: 7,
@@ -1626,13 +1626,13 @@ export default function OptionsScreen() {
                 className="font-headline"
                 style={{
                   ...theme.text.title,
-                  color: colorPalette === "" ? "#E0C29A" : "#D0C5B8",
+                  color: colorPalette === "" ? "#DDB477" : "#CFC4B0",
                 }}
               >
                 {t("studio.palette_none")}
               </Text>
               {colorPalette === "" ? (
-                <Ionicons name="checkmark-circle" size={20} color="#E0C29A" />
+                <Ionicons name="checkmark-circle" size={20} color="#DDB477" />
               ) : null}
             </View>
             <View
@@ -1649,10 +1649,10 @@ export default function OptionsScreen() {
                 gap: 8,
               }}
             >
-              <Ionicons name="color-palette-outline" size={14} color="#998F84" />
+              <Ionicons name="color-palette-outline" size={14} color="#9A8F7D" />
               <Text
                 className="font-label"
-                style={{ ...theme.text.caption, color: "#998F84" }}
+                style={{ ...theme.text.caption, color: "#9A8F7D" }}
               >
                 {t("studio.palette_placeholder")}
               </Text>
@@ -1684,14 +1684,14 @@ export default function OptionsScreen() {
                   style={({ pressed }) => ({
                     padding: 18,
                     borderRadius: theme.radius.md,
-                    backgroundColor: "#1C1B1B",
+                    backgroundColor: "#201B15",
                     borderWidth: isSelected ? 1.5 : 1,
                     borderColor: isSelected
-                      ? "#E1C39B"
+                      ? "#DDB477"
                       : "rgba(77,70,60,0.22)",
                     transform: [{ scale: pressed ? 0.995 : 1 }],
                     ...(isSelected && {
-                      shadowColor: "#E1C39B",
+                      shadowColor: "#DDB477",
                       shadowOffset: { width: 0, height: 0 },
                       shadowOpacity: 0.22,
                       shadowRadius: 7,
@@ -1709,14 +1709,14 @@ export default function OptionsScreen() {
                       style={{
                         ...theme.text.title,
                         flex: 1,
-                        color: isSelected ? "#E0C29A" : "#D0C5B8",
+                        color: isSelected ? "#DDB477" : "#CFC4B0",
                         marginRight: 12,
                       }}
                     >
                       {t(palette.labelKey)}
                     </Text>
                     {isSelected ? (
-                      <Ionicons name="checkmark-circle" size={20} color="#E0C29A" />
+                      <Ionicons name="checkmark-circle" size={20} color="#DDB477" />
                     ) : null}
                   </View>
                   <LinearGradient

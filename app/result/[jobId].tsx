@@ -410,7 +410,7 @@ export default function ResultDetailScreen() {
         edges={[]}
         className="flex-1 bg-surface items-center justify-center"
       >
-        <ActivityIndicator size="large" color="#C4A882" />
+        <ActivityIndicator size="large" color="#DDB477" />
       </SafeAreaView>
     );
   }
@@ -421,7 +421,7 @@ export default function ResultDetailScreen() {
         edges={[]}
         className="flex-1 bg-surface items-center justify-center px-8"
       >
-        <Ionicons name="alert-circle-outline" size={48} color="#998F84" />
+        <Ionicons name="alert-circle-outline" size={48} color="#9A8F7D" />
         <Text
           className="font-headline text-on-surface mt-4"
           style={{ ...theme.text.headline }}

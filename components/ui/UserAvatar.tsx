@@ -90,7 +90,7 @@ export function UserAvatar({ size = "sm", initialsOverride, style, onPress }: Us
             overflow: "hidden",
             borderWidth: 1,
             borderColor: "rgba(77,70,60,0.20)",
-            backgroundColor: "#2A2A2A",
+            backgroundColor: "#2C2519",
             alignItems: "center",
             justifyContent: "center",
         },
@@ -111,14 +111,14 @@ export function UserAvatar({ size = "sm", initialsOverride, style, onPress }: Us
             style={{
                 fontFamily: "Inter-SemiBold",
                 fontSize: dims.fontSize,
-                color: "#E0C29A",
+                color: "#DDB477",
                 letterSpacing: 0.5,
             }}
         >
             {initials}
         </Text>
     ) : (
-        <Ionicons name="person" size={dims.iconSize} color="#998F84" />
+        <Ionicons name="person" size={dims.iconSize} color="#9A8F7D" />
     );
 
     if (onPress) {
