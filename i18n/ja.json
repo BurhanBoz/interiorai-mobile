@@ -315,7 +315,24 @@
     "add_reference": "参考を追加",
     "step_of": "ステップ {{current}} / {{total}}",
     "furniture_needs_free_layout": "家具を追加するには「レイアウトを保持」をオフにしてください",
-    "turn_off": "オフにする"
+    "turn_off": "オフにする",
+    "shoot_the_room": "部屋を\n撮る",
+    "choose_a_photo": "写真を\n選ぶ",
+    "try_a_sample": "サンプルを試す",
+    "put_this_sofa": "このソファをあなたの部屋に",
+    "your_own": "自分の\n家具",
+    "refill_in": "{{hours}}時間後に+1",
+    "catalogue_count": "{{count}} →",
+    "advanced": "詳細設定",
+    "photo_and_privacy": "写真とプライバシー",
+    "change": "変更",
+    "replace": "差し替え",
+    "place_a_real_piece": "実物の家具を置く",
+    "browse": "一覧を見る",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · 家具1点",
+    "credit_cost": "{{count}} クレジット",
+    "credit_cost_other": "{{count}} クレジット"
   },
   "furniture": {
     "title": "家具",
@@ -576,7 +593,9 @@
     "empty_filtered_title": "このビューには何もありません",
     "empty_filtered_subtitle": "別のフィルターに切り替えるか、次のアクティビティ後に戻ってきてください。",
     "ref_outdoor": "アウトドアデザイン",
-    "ledger.weekly_renewal": "週間クレジット +{{count}}"
+    "ledger.weekly_renewal": "週間クレジット +{{count}}",
+    "balance_label": "{{count}} クレジット",
+    "balance_label_other": "{{count}} クレジット"
   },
   "credit_packs": {
     "title": "クレジットパック",
@@ -1115,5 +1134,16 @@
     "preprompt_body": "無料クレジットの準備ができたときにお知らせします。それ以外はありません。",
     "preprompt_yes": "はい、お知らせする",
     "preprompt_later": "今はしない"
+  },
+  "consent": {
+    "title": "写真の処理方法",
+    "sent_lead": "送信:",
+    "sent_body": "お部屋の写真とデザインの選択内容。氏名・メール・連絡先・位置情報は含みません。",
+    "to_lead": "送信先:",
+    "to_body": "当社の処理者である Replicate と Anthropic（米国）。数秒間のみ保持し、保存も学習もしません。",
+    "kept_lead": "保管:",
+    "kept_body": "生成結果はフランクフルトに、削除するまで保管されます。",
+    "privacy_policy": "プライバシーポリシー",
+    "got_it": "了解"
   }
 }

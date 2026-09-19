@@ -1,335 +1,612 @@
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
-import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef } from "react";
 import * as Haptics from "expo-haptics";
-import { useStudioStore } from "@/stores/studioStore";
-import { useDismissible } from "@/hooks/useDismissible";
-import { useEffectivePlanCode } from "@/hooks/useEntitlement";
-import { AvatarMenu } from "@/components/ui/AvatarMenu";
-import { WelcomeTrialBanner, TrialCountdownBadge } from "@/components/ui/WelcomeTrialBanner";
-import { Brand } from "@/components/brand/Brand";
-import { FeatureCard } from "@/components/studio/FeatureCard";
-import { STUDIO_FEATURES, isFeatureLocked } from "@/components/studio/featureCatalog";
-import type { StudioFeature } from "@/components/studio/featureCatalog";
-import { theme } from "@/config/theme";
-import type { ComponentProps } from "react";
 
-type IconName = ComponentProps<typeof Ionicons>["name"];
+import { theme } from "@/config/theme";
+import { useStudioStore } from "@/stores/studioStore";
+import { useCreditStore } from "@/stores/creditStore";
+import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
+import { STUDIO_FEATURES } from "@/components/studio/featureCatalog";
+import { SAMPLE_ROOMS } from "@/components/studio/sampleRooms";
+import { furnitureService } from "@/services/furniture";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import type { FurnitureItem } from "@/types/api";
+import { HexMark } from "@/components/brand/HexMark";
+
+const U = theme.umber;
+const V = theme.v2;
+const R = theme.v2Layout.radius;
+const GUTTER = theme.v2Layout.gutterWide;
 
 /**
- * Studio home — the flow picker (2026-07 IA rework).
+ * Studio — the home screen (Umber redesign, 2026-09-19).
  *
- * <p>The user chooses WHAT to do first (Redesign / Empty Room / Smart Edit
- * / Style Transfer as rich feature cards with live before/after teasers),
- * THEN uploads the photo (/studio/upload). Mode lands in the store here,
- * and the wizard chain (uploaded → style → options → review) stays fully
- * mode-agnostic — review's INPAINT/STYLE_TRANSFER guards pull the user
- * into the mask / reference steps exactly when they're needed.
+ * <p><b>What changed and why.</b> The previous home showed five features as
+ * one full-width card each. Two were visible without scrolling; Style Transfer
+ * was the fourth card and Outdoor the fifth, two swipes down, and the first
+ * time a user met either was as a padlock. The furniture catalogue — the one
+ * thing no competitor has — had no entry point here at all.
  *
- * <p>Locked features (plan-gated) still show — tapping routes to /plans
- * (conversion surface), mirroring options.tsx chip behavior.
+ * <p>That screen could not answer "what does this app do?", and the number
+ * that matters says nobody stayed to find out: of 126 people who ever produced
+ * a design, 118 produced all of them on a single day and 64 generated exactly
+ * once.
+ *
+ * <p>So: six capabilities in one glance, the catalogue promoted to a tile AND
+ * a band, and the locked pair shown as photographs with a PRO tag rather than
+ * hidden behind a lock. Nothing is withheld visually; the tag says what costs
+ * money.
+ *
+ * <p>🔴 <b>The height budget is a contract.</b> Everything below must fit
+ * 393 × 852 with no vertical scroll — there is no ScrollView on this screen
+ * on purpose. Content runs ~637px against a tab-bar top of 774px. Adding a
+ * block means removing one.
  */
-
-const tips: Array<{
-  icon: IconName;
-  titleKey: string;
-  textKey: string;
-}> = [
-  {
-    icon: "sunny-outline",
-    titleKey: "studio.tip_lighting_title",
-    textKey: "studio.tip_lighting_description",
-  },
-  {
-    icon: "scan-outline",
-    titleKey: "studio.tip_perspective_title",
-    textKey: "studio.tip_perspective_description",
-  },
-  {
-    icon: "navigate-outline",
-    titleKey: "studio.tip_pathways_title",
-    textKey: "studio.tip_pathways_description",
-  },
-];
-
 export default function StudioScreen() {
-  // First-visit intro (2026-07 review round 2): the trial banner + tips form
-  // ONE spotlight moment floating over a blurred, dimmed backdrop. ANY exit —
-  // either X, a tap outside the cards, or leaving the screen — dismisses BOTH
-  // permanently, revealing the feature list behind.
-  const [introVisible, markIntroSeen] = useDismissible("studio_intro_seen");
-  const introVisibleRef = useRef(false);
-  introVisibleRef.current = introVisible;
+    const { t } = useTranslation();
+    const setMode = useStudioStore((s) => s.setMode);
+    const setPhoto = useStudioStore((s) => s.setPhoto);
+    const planCode = useEffectivePlanCode();
+    // 🔴 The lock comes from the SERVER's plan_features, not from the client
+    // catalogue's `minPlan`. The two had already drifted: only Outdoor carried
+    // minPlan, so Style Transfer rendered unlocked here while the backend
+    // refuses it — a user could walk the whole flow and be turned away at the
+    // charge. The catalogue file's own comment warns about exactly this
+    // ("never re-hardcode a lock list, it drifted in both directions").
+    const features = useEffectiveFeatures();
 
-  const introAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (introVisible) {
-      Animated.timing(introAnim, {
-        toValue: 1,
-        duration: 520,
-        easing: theme.motion.easing.standard,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [introVisible, introAnim]);
+    const balance = useCreditStore((s) => s.balance);
+    const fetchBalance = useCreditStore((s) => s.fetchBalance);
 
-  /** Any explicit exit (either X, backdrop tap): fade the spotlight out,
-      then persist "seen" so it never returns. */
-  const dismissingRef = useRef(false);
-  const dismissIntro = useCallback(() => {
-    if (dismissingRef.current) return;
-    dismissingRef.current = true;
-    Animated.timing(introAnim, {
-      toValue: 0,
-      duration: 220,
-      easing: theme.motion.easing.standard,
-      useNativeDriver: true,
-    }).start(() => markIntroSeen());
-  }, [introAnim, markIntroSeen]);
+    const [products, setProducts] = useState<FurnitureItem[]>([]);
+    const [catalogue, setCatalogue] = useState<FurnitureItem[] | null>(null);
 
-  // Leaving the screen while the intro is up also counts as "seen" — next
-  // visit opens clean.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        if (introVisibleRef.current) markIntroSeen();
-      };
-    }, [markIntroSeen]),
-  );
+    useFocusEffect(
+        useCallback(() => {
+            fetchBalance().catch(() => {});
+        }, [fetchBalance]),
+    );
 
-  const { t } = useTranslation();
-  const setMode = useStudioStore((s) => s.setMode);
+    // Four cut-outs for the band. A failure here must not take the screen
+    // with it — the band simply renders its plates empty.
+    // One request for the whole screen. The band and the Furniture tile used
+    // to fetch /api/furniture independently, so every visit made the same
+    // call twice.
+    useEffect(() => {
+        let cancelled = false;
+        furnitureService
+            .browse()
+            .then((items) => {
+                if (cancelled) return;
+                const curated = items.filter((i) => !i.mine);
+                setCatalogue(curated);
+                setProducts(curated.slice(0, 4));
+            })
+            .catch(() => {
+                if (!cancelled) setCatalogue([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
-  // Coming back to the tab always opens at the top (2026-07 finding:
-  // a stale scroll position made the home feel "stuck mid-list").
-  const scrollRef = useRef<ScrollView>(null);
-  useFocusEffect(
-    useCallback(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: false });
-    }, []),
-  );
-  const planCode = useEffectivePlanCode();
+    const { pickImage, useSampleImage, isUploading } = useImagePicker();
 
-  const handleFeaturePress = (feature: StudioFeature, locked: boolean) => {
-    Haptics.selectionAsync();
-    if (locked) {
-      // Same conversion route as options.tsx locked chips.
-      router.push("/plans");
-      return;
-    }
-    setMode(feature.key);
-    router.push("/studio/upload");
-  };
+    const goComposer = (mode: string, opts?: { catalogue?: boolean }) => {
+        setMode(mode as never);
+        router.push({
+            pathname: "/studio/composer",
+            params: opts?.catalogue ? { sheet: "catalogue" } : undefined,
+        } as never);
+    };
 
-  return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
-      {/* Top bar */}
-      <View
-        style={{
-          height: 56,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: theme.space.gutter,
-        }}
-      >
-        {/* Spacer keeps the brand centered — the hamburger is retired
-            (2026-07 round 2: drawer removed, tab bar is sole navigation). */}
-        <View style={{ width: 40 }} />
-        <Brand variant="inline" size="sm" tone="gold" />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <TrialCountdownBadge />
-          <AvatarMenu />
-        </View>
-      </View>
+    /**
+     * Intake: get the photo FIRST, then open the composer.
+     *
+     * <p>The composer has no upload step of its own — that is the point of
+     * folding seven screens into three — so arriving without a photo would
+     * leave it showing an empty frame with nothing to do. Every one of these
+     * paths goes through {@link useImagePicker}, which is also where the
+     * consent gate lives, so no photo can leave the device unasked whichever
+     * button was pressed.
+     *
+     * <p>A cancelled picker returns null and we stay put; navigating anyway
+     * is how the old flow produced a dead "Analyze Your Space" screen.
+     */
+    const openComposer = async (
+        mode: string,
+        source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number },
+    ) => {
+        Haptics.selectionAsync();
+        const picked =
+            source.kind === "sample"
+                ? await useSampleImage(source.module)
+                : await pickImage(source.kind);
+        if (!picked) return;
+        // 🔴 The picker RETURNS the photo; it does not store it. Navigating
+        // without this line opened the composer on an empty frame that spun
+        // forever — the upload had succeeded and nothing was holding the
+        // result.
+        setPhoto(picked);
+        goComposer(mode);
+    };
 
-      <ScrollView
-        ref={scrollRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: theme.space.gutter,
-          paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Headline. The eyebrow above it ("AI STUDIO") was removed
-            2026-08-07: it said what the headline already says, in 10pt
-            uppercase, and cost 35pt of the only 544pt this screen has for
-            the five feature cards — on a product whose entire pitch is the
-            before/after imagery inside them. */}
-        <Text
-          style={{
-            ...theme.text.display,
-            color: theme.color.onSurface,
-            marginTop: 12,
-            marginBottom: 16,
-            textAlign: "center",
-          }}
-        >
-          {t("studio.home_title")}
-        </Text>
+    const onFeature = (key: string, locked: boolean) => {
+        if (locked) {
+            Haptics.selectionAsync();
+            router.push("/paywall?source=FEATURE_TILE" as never);
+            return;
+        }
+        goComposer(key === "FURNITURE" ? "REDESIGN" : key, {
+            catalogue: key === "FURNITURE",
+        });
+    };
 
-        {/* Feature cards — one per generation flow, registry-driven */}
-        <View style={{ gap: 20 }}>
-          {STUDIO_FEATURES.map((feature) => {
-            const locked = isFeatureLocked(feature.key, planCode);
-            return (
-              <FeatureCard
-                key={feature.key}
-                feature={feature}
-                locked={locked}
-                onPress={() => handleFeaturePress(feature, locked)}
-              />
-            );
-          })}
-        </View>
-      </ScrollView>
+    return (
+        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
+            <View style={{ flex: 1, paddingHorizontal: GUTTER }}>
+                <Header balance={balance} planCode={planCode} />
+                <IntakeRow
+                    busy={isUploading}
+                    onShoot={() => openComposer("REDESIGN", { kind: "camera" })}
+                    onChoose={() => openComposer("REDESIGN", { kind: "gallery" })}
+                    onSample={(m) => openComposer("REDESIGN", { kind: "sample", module: m })}
+                />
+                <FeatureGrid
+                    isLocked={(code) =>
+                        features.length > 0 &&
+                        !(features.find((f) => f.featureCode === code)?.enabled ?? true)
+                    }
+                    onPress={onFeature}
+                    t={t}
+                    sofa={catalogue?.find((i) => i.category === "SOFA") ?? null}
+                />
+                <FurnitureBand
+                    products={products}
+                    loaded={catalogue !== null}
+                    catalogueSize={catalogue?.length ?? 0}
+                    onOpen={() => goComposer("REDESIGN", { catalogue: true })}
+                />
+            </View>
+        </SafeAreaView>
+    );
+}
 
-      {/* ── First-visit spotlight (2026-07 review round 2) ──────────────
-          Trial banner + tips float above a blurred, dimmed backdrop so
-          they read as THE thing on screen. The backdrop itself is a
-          dismiss target (tap anywhere outside the cards); both X buttons
-          route here too. The tab bar renders above this overlay, and
-          switching tabs also dismisses via the focus-loss hook. */}
-      {introVisible && (
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: introAnim,
-          }}
-        >
-          <Pressable
-            onPress={dismissIntro}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.close")}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          >
-            <BlurView
-              intensity={34}
-              tint="dark"
-              style={{ flex: 1, backgroundColor: "rgba(12,11,10,0.55)" }}
-            />
-          </Pressable>
+/* ── header ─────────────────────────────────────────────────────────── */
 
-          {/* box-none: empty space between/around cards falls through to
-              the dismiss backdrop; the cards themselves stay inert. */}
-          <Animated.View
-            pointerEvents="box-none"
+/**
+ * The credit pill is the ONLY place credits appear on this screen. The v1
+ * design repeated the balance on three surfaces; repeating a number the user
+ * has no feel for is worse than stating it once.
+ */
+function Header({ balance, planCode }: { balance: number; planCode: string | null }) {
+    const { t } = useTranslation();
+    // The drip grant is stamped against the UTC calendar day
+    // (CreditServiceImpl.maybeGrantDailyDrip), so the next one lands at the
+    // next UTC midnight — not at a local hour. Showing a local time here
+    // would be a friendly lie.
+    const hoursToRefill = (() => {
+        const now = new Date();
+        const next = Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() + 1,
+        );
+        return Math.max(1, Math.ceil((next - now.getTime()) / 3_600_000));
+    })();
+    // Above the ceiling the drip does not fire, so promising one would be
+    // wrong. FREE only — a subscriber's credits do not trickle.
+    const showRefill = planCode === "FREE" && balance < 3;
+
+    return (
+        <View
             style={{
-              flex: 1,
-              justifyContent: "center",
-              paddingBottom: 32,
-              transform: [
-                {
-                  translateY: introAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [24, 0],
-                  }),
-                },
-              ],
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingTop: 10,
+                paddingBottom: 14,
             }}
-          >
-            <WelcomeTrialBanner onClose={dismissIntro} />
+        >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <HexMark width={16} height={18} color={U.accent} />
+                <Text style={{ ...V.brand, color: U.accentBright }}>ROOMFRAME</Text>
+            </View>
 
-            {/* Professional tips — same one-shot intro, second card group. */}
-            <View
-              pointerEvents="box-none"
-              style={{ paddingHorizontal: theme.space.gutter, gap: 18, marginTop: 8 }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+            <Pressable
+                onPress={() => {
+                    Haptics.selectionAsync();
+                    router.push("/paywall?source=CREDIT_PILL" as never);
                 }}
-              >
-                <Text
-                  style={{
-                    ...theme.text.subtitle,
-                    color: theme.color.onSurfaceVariant,
-                  }}
-                >
-                  {t("studio.professional_tips")}
+                accessibilityRole="button"
+                accessibilityLabel={t("credits.balance_label", { count: balance })}
+                hitSlop={12}
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    backgroundColor: U.lineAccent,
+                    borderWidth: 1,
+                    borderColor: U.lineAccent,
+                    borderRadius: R.pill,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                }}
+            >
+                <Text style={{ fontFamily: "Archivo-700", fontSize: 13, color: U.accentBright }}>
+                    {balance}
                 </Text>
-                <Pressable
-                  onPress={dismissIntro}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("common.close")}
-                >
-                  <Ionicons name="close" size={18} color={theme.color.onSurfaceVariant} />
-                </Pressable>
-              </View>
+                {showRefill && (
+                    <Text style={{ fontFamily: "Archivo-500", fontSize: 11, color: U.inkMuted }}>
+                        {t("studio.refill_in", { hours: hoursToRefill })}
+                    </Text>
+                )}
+            </Pressable>
+        </View>
+    );
+}
 
-              <View style={{ gap: 12 }}>
-                {tips.map((tip) => (
-                  <View
-                    key={tip.icon}
-                    style={{
-                      padding: 18,
-                      borderRadius: theme.radius.md,
-                      backgroundColor: theme.color.surfaceContainerLow,
-                      borderWidth: 1,
-                      borderColor: "rgba(77,70,60,0.25)",
-                      flexDirection: "row",
-                      alignItems: "flex-start",
-                      gap: 16,
-                    }}
-                  >
+/* ── intake ─────────────────────────────────────────────────────────── */
+
+function IntakeRow({
+    busy,
+    onShoot,
+    onChoose,
+    onSample,
+}: {
+    busy: boolean;
+    onShoot: () => void;
+    onChoose: () => void;
+    onSample: (module: number) => void;
+}) {
+    const { t } = useTranslation();
+    const samples = SAMPLE_ROOMS.slice(0, 2);
+
+    return (
+        <View style={{ flexDirection: "row", gap: 10, height: 100 }}>
+            <Pressable
+                onPress={onShoot}
+                disabled={busy}
+                accessibilityRole="button"
+                style={{
+                    flex: 1,
+                    opacity: busy ? 0.6 : 1,
+                    backgroundColor: U.buttonFill,
+                    borderRadius: R.card,
+                    padding: 14,
+                    justifyContent: "space-between",
+                }}
+            >
+                <CameraGlyph color={U.buttonInk} />
+                <Text style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk }}>
+                    {t("studio.shoot_the_room")}
+                </Text>
+            </Pressable>
+
+            <Pressable
+                onPress={onChoose}
+                disabled={busy}
+                accessibilityRole="button"
+                style={{
+                    flex: 1,
+                    opacity: busy ? 0.6 : 1,
+                    backgroundColor: U.surface,
+                    borderWidth: 1,
+                    borderColor: U.lineAccent,
+                    borderRadius: R.card,
+                    padding: 14,
+                    justifyContent: "space-between",
+                }}
+            >
+                <LibraryGlyph color={U.accent} />
+                <Text style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.ink }}>
+                    {t("studio.choose_a_photo")}
+                </Text>
+            </Pressable>
+
+            <View style={{ flex: 1, gap: 8 }}>
+                {samples.map((s, i) => (
+                    <Pressable
+                        key={s.key}
+                        onPress={() => onSample(s.module)}
+                        disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("studio.try_a_sample")}
+                        style={{ flex: 1, borderRadius: R.tile, overflow: "hidden" }}
+                    >
+                        <Image source={s.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                        {i === 0 && (
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    paddingHorizontal: 6,
+                                    paddingBottom: 4,
+                                    paddingTop: 12,
+                                    backgroundColor: "rgba(0,0,0,0.55)",
+                                }}
+                            >
+                                <Text style={{ fontFamily: "Archivo-600", fontSize: 9.5, color: "#fff" }}>
+                                    {t("studio.try_a_sample")}
+                                </Text>
+                            </View>
+                        )}
+                    </Pressable>
+                ))}
+            </View>
+        </View>
+    );
+}
+
+/* ── feature grid ───────────────────────────────────────────────────── */
+
+/**
+ * Six tiles, three across. Furniture is not a {@code DesignMode} on the
+ * server — it is a modifier on Redesign — but it is a capability from the
+ * user's side, so it gets a tile and opens the composer with the catalogue
+ * already up.
+ */
+function FeatureGrid({
+    isLocked,
+    onPress,
+    t,
+    sofa,
+}: {
+    /** Server truth. Returns false until plan_features has loaded — an
+        unlocked flash is recoverable, a wrongly locked tile is not. */
+    isLocked: (featureCode: string) => boolean;
+    onPress: (key: string, locked: boolean) => void;
+    t: (k: string) => string;
+    sofa: FurnitureItem | null;
+}) {
+    const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
+
+    const tiles = [
+        { key: "REDESIGN", label: t("studio.mode_redesign"), image: imageFor(byKey.REDESIGN) },
+        { key: "EMPTY_ROOM", label: t("studio.mode_empty_room"), image: imageFor(byKey.EMPTY_ROOM) },
+        { key: "INPAINT", label: t("studio.mode_inpaint"), image: imageFor(byKey.INPAINT) },
+        { key: "FURNITURE", label: t("studio.add_furniture"), image: null, emphasis: true },
+        { key: "STYLE_TRANSFER", label: t("studio.mode_style_transfer"), image: imageFor(byKey.STYLE_TRANSFER) },
+        { key: "OUTDOOR", label: t("studio.mode_outdoor"), image: imageFor(byKey.OUTDOOR) },
+    ];
+
+    return (
+        <View
+            style={{
+                marginTop: 18,
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 8,
+            }}
+        >
+            {tiles.map((tile) => {
+                // The tile keys are the app's own; the server names two of
+                // them differently (OUTDOOR_DESIGN, INPAINT).
+                const featureCode =
+                    tile.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : tile.key;
+                const locked = tile.key === "FURNITURE" ? false : isLocked(featureCode);
+                const emphasised = tile.emphasis === true;
+                return (
+                    <Pressable
+                        key={tile.key}
+                        onPress={() => onPress(tile.key, locked)}
+                        accessibilityRole="button"
+                        accessibilityLabel={tile.label}
+                        style={{
+                            width: "31.5%",
+                            backgroundColor: U.surface,
+                            borderWidth: 1,
+                            borderColor: emphasised ? U.accent : U.lineNeutral,
+                            borderRadius: R.tile,
+                            overflow: "hidden",
+                        }}
+                    >
+                        <View style={{ height: 72, backgroundColor: emphasised ? U.productPlate : U.surface }}>
+                            {emphasised ? (
+                                <FurnitureTileArt item={sofa} />
+                            ) : tile.image ? (
+                                <Image source={tile.image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                            ) : null}
+                            {locked && (
+                                <View
+                                    style={{
+                                        position: "absolute",
+                                        top: 6,
+                                        right: 6,
+                                        backgroundColor: U.ground,
+                                        borderWidth: 1,
+                                        borderColor: U.accent,
+                                        borderRadius: 5,
+                                        paddingVertical: 3,
+                                        paddingHorizontal: 6,
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontFamily: "Archivo-700",
+                                            fontSize: 8.5,
+                                            letterSpacing: 1,
+                                            color: U.accentBright,
+                                        }}
+                                    >
+                                        PRO
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        {/* The tile's height is set by the image, never by the
+                            label — German "Stilübertragung" and Dutch
+                            "Buitenontwerp" wrap to two lines and must not
+                            change the grid. */}
+                        <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
+                            <Text
+                                numberOfLines={2}
+                                style={{ ...V.tile, color: emphasised ? U.accentBright : U.ink }}
+                            >
+                                {tile.label}
+                            </Text>
+                        </View>
+                    </Pressable>
+                );
+            })}
+        </View>
+    );
+}
+
+/** The feature registry stores media in three shapes; the tile wants one still. */
+function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
+    if (!feature) return null;
+    const m = feature.media;
+    if (m.kind === "single") return m.image;
+    return m.after;
+}
+
+function FurnitureTileArt({ item }: { item: FurnitureItem | null }) {
+    if (!item) return null;
+    return (
+        <Image
+            source={{ uri: item.imageUrl }}
+            style={{ width: "100%", height: 62, marginTop: 5 }}
+            resizeMode="contain"
+        />
+    );
+}
+
+/* ── furniture band ─────────────────────────────────────────────────── */
+
+/**
+ * "Put this sofa in your room" — the sentence no competitor can say, stated
+ * once, in the product's own voice, with four real products under it.
+ */
+function FurnitureBand({
+    products,
+    loaded,
+    catalogueSize,
+    onOpen,
+}: {
+    products: FurnitureItem[];
+    /** Distinguishes "still fetching" from "fetched, and empty". */
+    loaded: boolean;
+    catalogueSize: number;
+    onOpen: () => void;
+}) {
+    const { t } = useTranslation();
+    return (
+        <Pressable
+            onPress={onOpen}
+            accessibilityRole="button"
+            style={{
+                marginTop: 18,
+                backgroundColor: U.surface,
+                borderWidth: 1,
+                borderColor: U.lineAccent,
+                borderRadius: R.button,
+                paddingVertical: 13,
+                paddingHorizontal: 14,
+            }}
+        >
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    marginBottom: 10,
+                }}
+            >
+                {/* One interpolated string, never concatenated fragments —
+                    the emphasis sits on a word the translator chooses. */}
+                <Text style={{ ...V.displayXS, color: U.ink, flex: 1 }} numberOfLines={1}>
+                    {t("studio.put_this_sofa")}
+                </Text>
+                {/* The arrow lives in the translated string so RTL can flip
+                    it; appending one here as well is what printed "39 → →". */}
+                <Text style={{ fontFamily: "Archivo-600", fontSize: 10.5, color: U.inkMuted }}>
+                    {t("studio.catalogue_count", { count: catalogueSize })}
+                </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 7 }}>
+                {Array.from({ length: 4 }).map((_, i) => (
                     <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: theme.radius.sm,
-                        backgroundColor: "rgba(225,195,155,0.08)",
+                        key={i}
+                        style={{
+                            flex: 1,
+                            height: 56,
+                            borderRadius: 9,
+                            backgroundColor: U.productPlate,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {products[i] ? (
+                            <Image
+                                source={{ uri: products[i].imageUrl }}
+                                style={{ width: "100%", height: 48 }}
+                                resizeMode="contain"
+                            />
+                        ) : loaded ? null : (
+                            /* Only while the request is in flight. An empty
+                               catalogue is a legitimate answer — a local
+                               database with no items spun these four plates
+                               forever, which reads as a hung screen. */
+                            <ActivityIndicator size="small" color={U.inkMuted} />
+                        )}
+                    </View>
+                ))}
+                <View
+                    style={{
+                        flex: 1,
+                        height: 56,
+                        borderRadius: 9,
+                        backgroundColor: U.lineAccent,
                         borderWidth: 1,
-                        borderColor: "rgba(225,195,155,0.18)",
+                        borderColor: U.accent,
+                        borderStyle: "dashed",
                         alignItems: "center",
                         justifyContent: "center",
-                        flexShrink: 0,
-                      }}
+                        paddingHorizontal: 4,
+                    }}
+                >
+                    <Text
+                        style={{ fontFamily: "Archivo-600", fontSize: 10, color: U.accentBright, textAlign: "center" }}
+                        numberOfLines={2}
                     >
-                      <Ionicons
-                        name={tip.icon}
-                        size={20}
-                        color={theme.color.goldMidday}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          ...theme.text.caption,
-                          color: theme.color.goldMidday,
-                          marginBottom: 4,
-                        }}
-                      >
-                        {t(tip.titleKey)}
-                      </Text>
-                      <Text
-                        style={{
-                          ...theme.text.body,
-                          color: theme.color.onSurfaceVariant,
-                        }}
-                      >
-                        {t(tip.textKey)}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
+                        {t("studio.your_own")}
+                    </Text>
+                </View>
             </View>
-          </Animated.View>
-        </Animated.View>
-      )}
-    </SafeAreaView>
-  );
+        </Pressable>
+    );
+}
+
+/* ── glyphs ─────────────────────────────────────────────────────────── */
+
+function CameraGlyph({ color }: { color: string }) {
+    return (
+        <View
+            style={{
+                width: 30,
+                height: 26,
+                borderWidth: 2,
+                borderColor: color,
+                borderRadius: 7,
+                alignItems: "center",
+                justifyContent: "center",
+            }}
+        >
+            <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: color }} />
+        </View>
+    );
+}
+
+function LibraryGlyph({ color }: { color: string }) {
+    return (
+        <View style={{ width: 30, height: 26, borderWidth: 2, borderColor: color, borderRadius: 7 }} />
+    );
 }

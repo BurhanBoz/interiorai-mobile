@@ -315,7 +315,25 @@
     "add_reference": "Referenz",
     "step_of": "SCHRITT {{current}} / {{total}}",
     "furniture_needs_free_layout": "Zum Hinzufügen von Möbeln „Layout beibehalten“ ausschalten",
-    "turn_off": "Ausschalten"
+    "turn_off": "Ausschalten",
+    "shoot_the_room": "Raum\nfotografieren",
+    "choose_a_photo": "Foto\nwählen",
+    "try_a_sample": "Beispiel testen",
+    "put_this_sofa": "Stell dieses Sofa in dein Zimmer",
+    "your_own": "Eigenes\nStück",
+    "refill_in": "+1 in {{hours}} Std.",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Erweitert",
+    "photo_and_privacy": "Foto & Datenschutz",
+    "change": "ändern",
+    "replace": "Ersetzen",
+    "place_a_real_piece": "Echtes Möbelstück einsetzen",
+    "browse": "Durchsuchen",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 Stück",
+    "credit_cost": "{{count}} Guthaben",
+    "credit_cost_one": "{{count}} Guthaben",
+    "credit_cost_other": "{{count}} Guthaben"
   },
   "furniture": {
     "title": "Möbel",
@@ -576,7 +594,10 @@
     "empty_filtered_title": "Nichts in dieser Ansicht",
     "empty_filtered_subtitle": "Wechsle den Filter oder komm nach deiner nächsten Aktivität zurück.",
     "ref_outdoor": "Außenbereich-Design",
-    "ledger.weekly_renewal": "Wöchentliche Credits +{{count}}"
+    "ledger.weekly_renewal": "Wöchentliche Credits +{{count}}",
+    "balance_label": "{{count}} Guthaben",
+    "balance_label_one": "{{count}} Guthaben",
+    "balance_label_other": "{{count}} Guthaben"
   },
   "credit_packs": {
     "title": "Credit-Pakete",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "Wir melden uns, wenn dein Gratis-Credit da ist. Sonst nichts.",
     "preprompt_yes": "Ja, Bescheid geben",
     "preprompt_later": "Jetzt nicht"
+  },
+  "consent": {
+    "title": "Wie deine Fotos verarbeitet werden",
+    "sent_lead": "Gesendet:",
+    "sent_body": "dein Raumfoto und deine Designauswahl. Kein Name, keine E-Mail, keine Kontakte, kein Standort.",
+    "to_lead": "An:",
+    "to_body": "Replicate und Anthropic (USA) als unsere Auftragsverarbeiter. Sekundenlang gehalten, nie gespeichert, nie trainiert.",
+    "kept_lead": "Gespeichert:",
+    "kept_body": "deine Ergebnisse, in Frankfurt, bis du sie löschst.",
+    "privacy_policy": "Datenschutzerklärung",
+    "got_it": "Verstanden"
   }
 }

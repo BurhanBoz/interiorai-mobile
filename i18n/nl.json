@@ -315,7 +315,25 @@
     "add_reference": "Referentie toevoegen",
     "step_of": "STAP {{current}} / {{total}}",
     "furniture_needs_free_layout": "Schakel «Indeling behouden» uit om meubels toe te voegen",
-    "turn_off": "Uitschakelen"
+    "turn_off": "Uitschakelen",
+    "shoot_the_room": "Kamer\nfotograferen",
+    "choose_a_photo": "Foto\nkiezen",
+    "try_a_sample": "Voorbeeld proberen",
+    "put_this_sofa": "Zet deze bank in jouw kamer",
+    "your_own": "Je\neigen",
+    "refill_in": "+1 over {{hours}} uur",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Geavanceerd",
+    "photo_and_privacy": "Foto en privacy",
+    "change": "wijzigen",
+    "replace": "Vervangen",
+    "place_a_real_piece": "Plaats een echt meubel",
+    "browse": "Bladeren",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 meubel",
+    "credit_cost": "{{count}} credit",
+    "credit_cost_one": "{{count}} credit",
+    "credit_cost_other": "{{count}} credits"
   },
   "furniture": {
     "title": "Meubels",
@@ -579,7 +597,10 @@
     "empty_filtered_title": "Niets in deze weergave",
     "empty_filtered_subtitle": "Kies een ander filter of kom terug na je volgende activiteit.",
     "ref_outdoor": "Buitenontwerp",
-    "ledger.weekly_renewal": "Wekelijkse credits +{{count}}"
+    "ledger.weekly_renewal": "Wekelijkse credits +{{count}}",
+    "balance_label": "{{count}} credit",
+    "balance_label_one": "{{count}} credit",
+    "balance_label_other": "{{count}} credits"
   },
   "credit_packs": {
     "title": "Creditpakketten",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "We laten je weten wanneer je gratis credit klaarstaat. Verder niets.",
     "preprompt_yes": "Ja, laat het weten",
     "preprompt_later": "Nu niet"
+  },
+  "consent": {
+    "title": "Hoe je foto's worden verwerkt",
+    "sent_lead": "Verstuurd:",
+    "sent_body": "je kamerfoto en je ontwerpkeuzes. Geen naam, e-mail, contacten of locatie.",
+    "to_lead": "Naar:",
+    "to_body": "Replicate en Anthropic (VS), als onze verwerkers. Seconden vastgehouden, nooit opgeslagen, nooit voor training gebruikt.",
+    "kept_lead": "Bewaard:",
+    "kept_body": "je resultaten, in Frankfurt, totdat je ze verwijdert.",
+    "privacy_policy": "Privacybeleid",
+    "got_it": "Begrepen"
   }
 }

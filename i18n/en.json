@@ -315,7 +315,25 @@
     "add_reference": "Add reference",
     "step_of": "STEP {{current}} / {{total}}",
     "furniture_needs_free_layout": "Turn off Preserve Layout to add furniture",
-    "turn_off": "Turn off"
+    "turn_off": "Turn off",
+    "shoot_the_room": "Shoot the\nroom",
+    "choose_a_photo": "Choose a\nphoto",
+    "try_a_sample": "Try a sample",
+    "put_this_sofa": "Put this sofa in your room",
+    "your_own": "Your\nown",
+    "refill_in": "+1 in {{hours}}h",
+    "catalogue_count": "{{count}} →",
+    "advanced": "Advanced",
+    "photo_and_privacy": "Photo & privacy",
+    "change": "change",
+    "replace": "Replace",
+    "place_a_real_piece": "Place a real piece",
+    "browse": "Browse",
+    "summary": "{{style}} · {{room}}",
+    "summary_with_piece": "{{style}} · {{room}} · +1 piece",
+    "credit_cost": "{{count}} credit",
+    "credit_cost_one": "{{count}} credit",
+    "credit_cost_other": "{{count}} credits"
   },
   "furniture": {
     "title": "Furniture",
@@ -579,7 +597,10 @@
     "empty_filtered_title": "Nothing in this view",
     "empty_filtered_subtitle": "Switch to another filter or come back after your next activity.",
     "ref_outdoor": "Outdoor Design",
-    "ledger.weekly_renewal": "Weekly credits +{{count}}"
+    "ledger.weekly_renewal": "Weekly credits +{{count}}",
+    "balance_label": "{{count}} credit",
+    "balance_label_one": "{{count}} credit",
+    "balance_label_other": "{{count}} credits"
   },
   "credit_packs": {
     "title": "Credit Packs",
@@ -1115,5 +1136,16 @@
     "preprompt_body": "We'll tell you when your free credit is ready. Nothing else.",
     "preprompt_yes": "Yes, notify me",
     "preprompt_later": "Not now"
+  },
+  "consent": {
+    "title": "How your photos are processed",
+    "sent_lead": "Sent:",
+    "sent_body": "your room photo and your design choices. No name, email, contacts or location.",
+    "to_lead": "To:",
+    "to_body": "Replicate and Anthropic (US), as our processors. Held for seconds, never stored, never trained on.",
+    "kept_lead": "Kept:",
+    "kept_body": "your results, in Frankfurt, until you delete them.",
+    "privacy_policy": "Privacy Policy",
+    "got_it": "Got it"
   }
 }

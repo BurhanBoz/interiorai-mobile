@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { theme } from "@/config/theme";
+import { getStyleImage } from "@/components/studio/styleImages";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -131,48 +132,8 @@ function getStyleIcon(code: string): keyof typeof Ionicons.glyphMap {
   return STYLE_ICONS[code] ?? "color-palette-outline";
 }
 
-/* ── Local design style images ── */
-const STYLE_IMAGES: Record<string, ImageSource> = {
-  MODERN: require("@/assets/styles/modern.png"),
-  MINIMALIST: require("@/assets/styles/minimalist.png"),
-  SCANDINAVIAN: require("@/assets/styles/scandinavian.png"),
-  INDUSTRIAL: require("@/assets/styles/industrial.png"),
-  BOHEMIAN: require("@/assets/styles/bohemian.png"),
-  TRADITIONAL: require("@/assets/styles/traditional.png"),
-  CONTEMPORARY: require("@/assets/styles/contemporary.png"),
-  MID_CENTURY: require("@/assets/styles/mid_century.png"),
-  RUSTIC: require("@/assets/styles/rustic.png"),
-  ART_DECO: require("@/assets/styles/art_deco.png"),
-  COASTAL: require("@/assets/styles/coastal.png"),
-  MEDITERRANEAN: require("@/assets/styles/mediterranean.png"),
-  JAPANESE: require("@/assets/styles/japanese.png"),
-  TROPICAL: require("@/assets/styles/tropical.png"),
-  FARMHOUSE: require("@/assets/styles/farmhouse.png"),
-  VINTAGE: require("@/assets/styles/vintage.png"),
-  ECLECTIC: require("@/assets/styles/eclectic.png"),
-  CLASSIC: require("@/assets/styles/classic.png"),
-  FRENCH_COUNTRY: require("@/assets/styles/french_country.png"),
-  HOLLYWOOD_GLAM: require("@/assets/styles/hollywood_glam.png"),
-  SHABBY_CHIC: require("@/assets/styles/shabby_chic.png"),
-  TRANSITIONAL: require("@/assets/styles/transitional.png"),
-  URBAN: require("@/assets/styles/urban.png"),
-  ZEN: require("@/assets/styles/zen.png"),
-  BAROQUE: require("@/assets/styles/baroque.png"),
-  GOTHIC: require("@/assets/styles/gothic.png"),
-  NEOCLASSICAL: require("@/assets/styles/neoclassical.png"),
-  BIOPHILIC: require("@/assets/styles/biophilic.png"),
-  WABI_SABI: require("@/assets/styles/wabi_sabi.png"),
-  CYBERPUNK: require("@/assets/styles/cyberpunk.png"),
-  FUTURISTIC: require("@/assets/styles/futuristic.png"),
-  RETRO: require("@/assets/styles/retro.png"),
-  MAXIMALIST: require("@/assets/styles/maximalist.png"),
-  SOUTHWESTERN: require("@/assets/styles/southwestern.png"),
-  LUXURY: require("@/assets/styles/luxury_glam.png"),
-};
 
-function getStyleImage(code: string): ImageSource | null {
-  return STYLE_IMAGES[code] ?? null;
-}
+
 
 export default function StyleScreen() {
   const { t } = useTranslation();
