@@ -1,344 +1,258 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Pressable,
-  FlatList,
-  useWindowDimensions,
-  ViewToken,
-  Animated,
+    ActivityIndicator,
+    Animated,
+    FlatList,
+    Image,
+    Pressable,
+    Text,
+    useWindowDimensions,
+    View,
 } from "react-native";
-import { Image } from "expo-image";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { useAuthStore } from "@/stores/authStore";
-import * as Haptics from "expo-haptics";
-import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Brand } from "@/components/brand/Brand";
-import { Button } from "@/components/ui/Button";
-import { LegalFooter } from "@/components/ui/LegalFooter";
+import * as SecureStore from "expo-secure-store";
+
 import { theme } from "@/config/theme";
+import { useAuthStore } from "@/stores/authStore";
+import { HexMark } from "@/components/brand/HexMark";
+
+const U = theme.umber;
+const V = theme.v2;
 
 /**
- * The first-run onboarding carousel. Three slides hand the viewer the
- * brand's core promise: transform your space, preserve your layout,
- * iterate endlessly. The hero image is large, the typography is
- * editorial, and the two CTAs (primary: Get Started, tertiary: Sign In)
- * live in a calm footer.
+ * First run (Umber redesign, 2026-09-19).
  *
- * Audit fixes applied:
- *   - Brand mark routes through <Brand variant="stacked"/> instead of
- *     the `app.brand` string split on " " and joined with "\n" — which
- *     was silently creating a line break in the middle of whatever the
- *     user's current locale happened to render
- *   - Pagination dots use gold theme token instead of the secondary gray
- *   - CTA is the new <Button variant="primary">; the "sign in" link is
- *     <Button variant="tertiary"> so hierarchy reads at a glance
+ * <p><b>What it replaces.</b> A splash carrying the retired brand name
+ * "ARCHITECTURAL LENS / DIGITAL CURATOR" — dropped in April 2026 — over a
+ * logo PNG with a Photoshop transparency checkerboard baked into it. Then a
+ * three-dot carousel whose dots did not track anything: the button skipped
+ * all three pages and swiping moved nothing.
+ *
+ * <p>The dots now track the page and the button advances one page at a time,
+ * with SKIP always visible for anyone who does not want the tour.
+ *
+ * <p>🔴 The three heroes are BUNDLED. They used to be remote
+ * {@code lh3.googleusercontent.com/aida-public/…} URLs — design-tool
+ * placeholders fetched over the network on the very first screen of a first
+ * launch, where the user has the least patience and the connection is least
+ * proven, and which 404 the day that bucket is cleaned up.
  */
-
 const SLIDES = [
-  {
-    id: "1",
-    headlineKey: "onboarding.slide1_headline",
-    descriptionKey: "onboarding.slide1_description",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBRoRem4VJ4B-V1XcsHiLabwHVNWMO77W_Wtc7nUPzy6QSyGH5M9KoAe2Inp6YUBO3BmLNah-U1L6qC9a8n4EOZvS_sEgtqlJPoYdOhDxq-3mlgBzzqMGQo6sz3ek0nb_GZOzGalQKF1_kZZXaS273-BA0ZkGL1j5bDgUtyxHx72wp5ox8wDJDZfRKiwQOf22swUb8I2jwTtn_cveRW3w-Pfv4-raJmf-susQ3z5jZWobaLRTPd21vj_c4fICGFHp-jc3DxCBOULIQ",
-  },
-  {
-    id: "2",
-    headlineKey: "onboarding.slide2_headline",
-    descriptionKey: "onboarding.slide2_description",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB1T7Qq5t80xSyhu02790-CfmyDVaWoU-cfLRgFhyncMwCgUmNBm_SfbyhmWI9VYcBzV2MG1wBEK-jUTdr8MUWKGav0xdnQb7QIrmAo_Nd4aNjzUFzEoaz5PM6mOeVJITyC72vhzcSIH-t-IF8R3WVDGjjKDwmx-jSw0JdReY2ibqOXYNqUB0_DNm7wVHZaKOHnbHEI5-HMCCQLsyMohYYabcCCmU5gdSLapAp0iB2MKb6XnoHYmjctzC2jlIh30FD59kqYpEAzA_IH",
-  },
-  {
-    id: "3",
-    headlineKey: "onboarding.slide3_headline",
-    descriptionKey: "onboarding.slide3_description",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuC9tymtJNY2iXmwhyUuPE37D0Jya9D8Ad8X8I6FuEwxT1h5tJlZf5fDNkUFg-v7mIoe13PX8Fyq0YWqwqLjMhwyxQCvroZZjh3eDTJE-N4JVkG63e8jTIaR97cD1DxGBGvb8XNkmET1tmYqyyBNMuvFzW9yQ_5H3kgBr-j_eeoNcFGG_otxBhR7pjv7ll1pNNTS8HEDqhd0JXB90H7fqTwvtW-HH6oZRScvVaTS91CnEe261cFjpbOPYKRLBzQdY128s9-5tuaEsUm7",
-  },
+    {
+        id: "restyled",
+        headlineKey: "onboarding.v2_slide1_headline",
+        bodyKey: "onboarding.v2_slide1_body",
+        image: require("@/assets/onboarding/hall.png"),
+    },
+    {
+        id: "six-ways",
+        headlineKey: "onboarding.v2_slide2_headline",
+        bodyKey: "onboarding.v2_slide2_body",
+        image: require("@/assets/onboarding/restyled.png"),
+    },
+    {
+        id: "free-today",
+        headlineKey: "onboarding.v2_slide3_headline",
+        bodyKey: "onboarding.v2_slide3_body",
+        image: require("@/assets/onboarding/minimal.png"),
+    },
 ] as const;
 
-function PaginationDot({ active }: { active: boolean }) {
-  const widthAnim = useRef(new Animated.Value(active ? 28 : 6)).current;
-  const opacityAnim = useRef(new Animated.Value(active ? 1 : 0.35)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(widthAnim, {
-        toValue: active ? 28 : 6,
-        duration: theme.motion.duration.base,
-        easing: theme.motion.easing.standard,
-        useNativeDriver: false,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: active ? 1 : 0.35,
-        duration: theme.motion.duration.base,
-        easing: theme.motion.easing.standard,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [active, widthAnim, opacityAnim]);
-
-  return (
-    <Animated.View
-      style={{
-        width: widthAnim,
-        opacity: opacityAnim,
-        height: 5,
-        borderRadius: 3,
-        backgroundColor: theme.color.goldMidday,
-      }}
-    />
-  );
-}
+const HERO_HEIGHT = 455;
 
 export default function OnboardingScreen() {
-  const guestLogin = useAuthStore((st) => st.guestLogin);
-  const [guestBusy, setGuestBusy] = useState(false);
+    const { t } = useTranslation();
+    const { width } = useWindowDimensions();
+    const guestLogin = useAuthStore((st) => st.guestLogin);
 
-  // R1 companion (2026-08-09). The 2026-08-03 removal of the Sign-In link
-  // was right for NEW users — but it left returning ACCOUNT HOLDERS (session
-  // dead past the 30-day refresh window, or after a logout) with only Get
-  // Started, which silently forks them into a fresh empty guest. This link
-  // renders ONLY when a registered account has actually lived on this device
-  // (Keychain hint written by persistAuth), so the guest-first funnel for
-  // new installs is untouched.
-  const [hadRegisteredAccount, setHadRegisteredAccount] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    SecureStore.getItemAsync("last_registered_email")
-      .then((v) => { if (alive) setHadRegisteredAccount(!!v); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-  // V53 guest-first — Get Started creates a silent device account and lands
-  // straight in the Studio. Register/Sign In stay reachable (tertiary + settings).
-  const handleGetStarted = async () => {
-    if (guestBusy) return;
-    setGuestBusy(true);
-    try {
-      await guestLogin();
-      // 2026-08-31: the welcome bonus is gone and the paywall took its place.
-      // `replace` (not `push`) so the back gesture cannot walk into a
-      // half-created onboarding state behind it.
-      // Hand back to the root gate rather than naming a destination.
-      // Whether this person sees the paywall or Studio depends on their
-      // subscription, and that question is answered in exactly one place
-      // (app/index.tsx) — three screens each deciding for themselves is
-      // how the reinstall case slipped through in the first place.
-      router.replace("/");
-    } catch {
-      // Fail-open: fall back to the old register flow rather than stranding.
-      router.push("/register");
-    } finally {
-      setGuestBusy(false);
-    }
-  };
-  const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+    const [busy, setBusy] = useState(false);
+    const [index, setIndex] = useState(0);
+    const listRef = useRef<FlatList>(null);
 
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setActiveIndex(viewableItems[0].index);
-      }
-    },
-    [],
-  );
+    // Returning account holders only (R1, 2026-08-09): a dead session past the
+    // refresh window would otherwise be forked into a fresh empty guest by the
+    // only button on screen. The hint is written by persistAuth, so a new
+    // install never sees this.
+    const [hadAccount, setHadAccount] = useState(false);
+    useEffect(() => {
+        let alive = true;
+        SecureStore.getItemAsync("last_registered_email")
+            .then((v) => {
+                if (alive) setHadAccount(!!v);
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+    }, []);
 
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 50,
-  }).current;
+    /**
+     * V53 guest-first: start creates a silent device account and hands back to
+     * the root gate. The gate — not this screen — decides whether the next
+     * thing is Studio or the paywall; three screens each deciding for
+     * themselves is how the reinstall case slipped through before.
+     */
+    const start = useCallback(async () => {
+        if (busy) return;
+        setBusy(true);
+        try {
+            await guestLogin();
+            router.replace("/");
+        } catch {
+            router.push("/register");
+        } finally {
+            setBusy(false);
+        }
+    }, [busy, guestLogin]);
 
-  const slide = SLIDES[activeIndex];
+    const advance = () => {
+        if (index < SLIDES.length - 1) {
+            const next = index + 1;
+            setIndex(next);
+            listRef.current?.scrollToOffset({ offset: next * width, animated: true });
+            return;
+        }
+        start();
+    };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.color.surface }}>
-      {/* Hero carousel (top ~50% — leaves room for the full footer + legal
-          line to fit a 390×844 iPhone 13, even with a 2-line headline). */}
-      <View
-        style={{
-          height: "50%",
-          position: "relative",
-          width: "100%",
-          overflow: "hidden",
-        }}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={SLIDES}
-          renderItem={({ item }) => (
-            <View style={{ width, flex: 1 }}>
-              <Image
-                source={{ uri: item.image }}
-                contentFit="cover"
-                style={{ width, height: "100%" }}
-                transition={400}
-              />
-            </View>
-          )}
-          keyExtractor={item => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          bounces={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          getItemLayout={(_, index) => ({
-            length: width,
-            offset: width * index,
-            index,
-          })}
-        />
+    const last = index === SLIDES.length - 1;
 
-        {/* Bottom gradient fade into surface */}
-        <LinearGradient
-          colors={["transparent", "rgba(19,19,19,0.6)", theme.color.surface]}
-          locations={[0.3, 0.7, 1]}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-          pointerEvents="none"
-        />
-
-        {/* Brand mark on the hero image — inline so it stays a single
-            readable line regardless of locale. */}
-        <SafeAreaView
-          edges={["top"]}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-          }}
-          pointerEvents="box-none"
-        >
-          <View style={{ paddingHorizontal: 28, paddingTop: 16 }}>
-            <Brand variant="inline" size="sm" tone="gold" />
-          </View>
-        </SafeAreaView>
-      </View>
-
-      {/* Content Section */}
-      <SafeAreaView edges={["bottom"]} style={{ flex: 1 }}>
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: 32,
-            paddingTop: 16,
-            paddingBottom: 8,
-          }}
-        >
-          {/* Pagination dots */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 16,
-            }}
-          >
-            {SLIDES.map((_, i) => (
-              <PaginationDot key={i} active={i === activeIndex} />
-            ))}
-          </View>
-
-          {/* Headline + Description — single line since 2026-08-03 (the \n
-              breaks were stripped from all 8 locales); long translations
-              (German) shrink to fit instead of wrapping back to two lines. */}
-          <View style={{ maxWidth: 300 }}>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-              style={{
-                ...theme.text.display,
-                color: theme.color.onSurface,
-              }}
-            >
-              {t(slide.headlineKey)}
-            </Text>
-            <Text
-              style={{
-                ...theme.text.body,
-                color: theme.color.onSurfaceVariant,
-                marginTop: 10,
-              }}
-            >
-              {t(slide.descriptionKey)}
-            </Text>
-          </View>
-
-          {/* Footer Actions — three CLEARLY SEPARATED, well-spaced tap
-              targets in a deliberate hierarchy so they never crowd / mis-tap:
-                1. Get Started   → filled gold button   (primary conversion)
-                2. See examples  → gold OUTLINE button  (explore path)
-                3. Sign in       → muted text + gold     (returning users)
-              "See examples" uses the shared Button (secondary + iconLeft) so
-              the gallery glyph is laid out by the proven primitive — it can't
-              ride above the label like a hand-rolled icon row did. */}
-          {/* Every gap lives on a plain wrapper <View> (NOT on a Button's
-              style prop), so spacing is unambiguous and independent of any
-              component's internal style merge. Three distinct weights:
-                1. Get Started   → filled gold (primary)
-                2. See examples  → gold outline + icon (explore)
-                3. Sign in       → muted text + gold (returning) */}
-          <View style={{ marginTop: "auto" }}>
-            <Button
-              title={t("onboarding.get_started")}
-              variant="primary"
-              size="lg"
-              onPress={handleGetStarted}
-              icon="arrow-forward"
+    return (
+        <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: U.ground }}>
+            <FlatList
+                ref={listRef}
+                data={SLIDES}
+                keyExtractor={(s) => s.id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={{ position: "absolute", top: 0, left: 0, right: 0, height: HERO_HEIGHT }}
+                onMomentumScrollEnd={(e) =>
+                    setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
+                }
+                renderItem={({ item }) => (
+                    <View style={{ width, height: HERO_HEIGHT }}>
+                        <Image
+                            source={item.image}
+                            style={{ width: "100%", height: "100%" }}
+                            resizeMode="cover"
+                            accessible
+                            accessibilityLabel={t(item.headlineKey)}
+                        />
+                        <LinearGradient
+                            colors={[U.overlayScrim, "transparent", U.ground]}
+                            locations={[0, 0.3, 0.97]}
+                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                        />
+                    </View>
+                )}
             />
 
-            {/* NO alignItems:center here — the Button is fullWidth
-                (width:"100%"); a center-aligned parent makes that percentage
-                resolve against an indeterminate width, collapsing the button
-                so its row content (icon + label) overflows and the icon wraps
-                ABOVE the text. A plain block wrapper lets the button take full
-                width and lay the icon inline-left, exactly like GET STARTED. */}
+            {/* Brand lockup rides above the hero. */}
             <View
-              style={{
-                marginTop: 18,
-                alignItems: "center",
-              }}
+                style={{
+                    position: "absolute",
+                    top: 62,
+                    left: 26,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                }}
             >
-              <Button
-                title={t("auth.trial_entry_cta")}
-                variant="secondary"
-                size="sm"
-                onPress={() => router.push("/anonymous-trial")}
-              />
+                <HexMark width={19} height={21} color={U.accent} />
+                <Text style={{ fontFamily: "Archivo-600", fontSize: 13, letterSpacing: 3, color: U.accentBright }}>
+                    ROOMFRAME
+                </Text>
             </View>
 
-            {hadRegisteredAccount ? (
-              <View style={{ marginTop: 12, alignItems: "center" }}>
-                <Button
-                  title={t("auth.sign_in")}
-                  variant="tertiary"
-                  size="sm"
-                  onPress={() => router.push("/login")}
-                />
-              </View>
-            ) : null}
+            <View style={{ flex: 1, justifyContent: "flex-end", paddingHorizontal: 26, paddingBottom: 34 }}>
+                <View style={{ flexDirection: "row", gap: 7, marginBottom: 20 }}>
+                    {SLIDES.map((s, i) => (
+                        <Dot key={s.id} active={i === index} />
+                    ))}
+                </View>
 
-            <View style={{ marginTop: 10 }}>
-              <LegalFooter />
+                <Text style={{ ...V.displayXL, color: U.ink }}>{t(SLIDES[index].headlineKey)}</Text>
+                <Text style={{ ...V.body, color: U.inkMuted, maxWidth: 290, marginTop: 12 }}>
+                    {t(SLIDES[index].bodyKey)}
+                </Text>
+
+                <Pressable
+                    onPress={advance}
+                    disabled={busy}
+                    accessibilityRole="button"
+                    style={{
+                        height: 56,
+                        borderRadius: 16,
+                        backgroundColor: U.buttonFill,
+                        opacity: busy ? 0.6 : 1,
+                        marginTop: 28,
+                        paddingHorizontal: 22,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    {busy ? (
+                        <ActivityIndicator color={U.buttonInk} />
+                    ) : (
+                        <>
+                            <Text style={{ ...V.button, color: U.buttonInk }}>
+                                {t(last ? "onboarding.v2_start" : "onboarding.v2_next")}
+                            </Text>
+                            <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                        </>
+                    )}
+                </Pressable>
+
+                {/* Always visible — a tour nobody can leave is not a tour. */}
+                <Pressable onPress={start} disabled={busy} hitSlop={10} accessibilityRole="button">
+                    <Text
+                        style={{
+                            fontFamily: "Archivo-600",
+                            fontSize: 13,
+                            letterSpacing: 1.2,
+                            color: U.inkMuted,
+                            marginTop: 16,
+                        }}
+                    >
+                        {t("onboarding.v2_skip")}
+                    </Text>
+                </Pressable>
+
+                {hadAccount && (
+                    <Pressable onPress={() => router.push("/login")} hitSlop={10} accessibilityRole="button">
+                        <Text style={{ ...V.caption, color: U.inkMuted, marginTop: 12 }}>
+                            {t("onboarding.sign_in_existing")}
+                        </Text>
+                    </Pressable>
+                )}
             </View>
-          </View>
-        </View>
-      </SafeAreaView>
-    </View>
-  );
+        </SafeAreaView>
+    );
+}
+
+/** 28 × 4 when active, 4 × 4 when not — the spec's tracking pager. */
+function Dot({ active }: { active: boolean }) {
+    const w = useRef(new Animated.Value(active ? 28 : 4)).current;
+    useEffect(() => {
+        Animated.timing(w, {
+            toValue: active ? 28 : 4,
+            duration: 200,
+            useNativeDriver: false,
+        }).start();
+    }, [active, w]);
+    return (
+        <Animated.View
+            style={{
+                width: w,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: active ? U.accentBright : U.lineNeutral,
+            }}
+        />
+    );
 }

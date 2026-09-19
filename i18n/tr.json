@@ -52,7 +52,17 @@
     "slide3_headline": "AI Destekli Büyü",
     "slide3_description": "Yapay zeka, odalarını çarpıcı ve fotogerçekçi sonuçlarla yeniden tasarlasın.",
     "get_started": "Başla",
-    "skip": "Atla"
+    "skip": "Atla",
+    "v2_slide1_headline": "Odan, yeni bir stille",
+    "v2_slide1_body": "İçinde oturduğun odayı çek. Aynı duvarlar, aynı pencereler, yeni stil.",
+    "v2_slide2_headline": "Altı yol, bir değil",
+    "v2_slide2_body": "Yeniden tasarla, boşalt, bir köşeyi değiştir, gerçek bir koltuk koy, bir görünümü kopyala, dışarı çık.",
+    "v2_slide3_headline": "Bugün üç tane bedava",
+    "v2_slide3_body": "Günde üç tasarım. Hepsini tek odaya üç stille harca.",
+    "v2_next": "Devam",
+    "v2_start": "Başla",
+    "v2_skip": "Geç",
+    "sign_in_existing": "Var olan hesaba giriş yap"
   },
   "auth": {
     "login_title": "Tekrar Hoş Geldin",
@@ -382,7 +392,9 @@
     "curated": "Seçkili Eserler",
     "summary": "{{designCount}} tasarım · {{jobCount}} iş",
     "all_designs": "Tüm Tasarımlar",
-    "filter_activity": "İşlemler"
+    "filter_activity": "İşlemler",
+    "v2_empty_line": "Burada henüz bir şey yok.",
+    "v2_new_design": "+ Yeni tasarım"
   },
   "history": {
     "title": "Geçmiş",
@@ -443,7 +455,15 @@
     "secure_account": "Hesabını güvenceye al",
     "secure_account_hint": "E-posta ekle — tasarımların ve satın alımların güvende olsun",
     "trial_gift_label": "Hediye deneme kredisi",
-    "trial_gift_note": "Deneme bitince haftalık {{credits}} kredin yüklenir — kalan hediye krediler üstüne eklenir."
+    "trial_gift_note": "Deneme bitince haftalık {{credits}} kredin yüklenir — kalan hediye krediler üstüne eklenir.",
+    "free_plan": "Ücretsiz plan",
+    "sign_in_to_keep": "Galerini korumak için giriş yap",
+    "daily_reminder": "Günlük hatırlatma",
+    "get_pro": "Pro'ya geç",
+    "credits_refill_line": "kredi · her gün yenilenir",
+    "credits_line": "kredi",
+    "account_and_data": "Hesap ve veriler",
+    "account_fallback_name": "Hesabın"
   },
   "plans": {
     "title": "Planını Seç",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "2× uzaklaştır",
     "expand_square": "Kare yap",
     "try_another_style": "Başka stil dene",
-    "save_to_photos": "Fotoğraflara Kaydet"
+    "save_to_photos": "Fotoğraflara Kaydet",
+    "save": "Kaydet",
+    "another_style": "Aynı oda, başka bir stil",
+    "reference_style": "Referans",
+    "remind_me": "Kredi yenilenince hatırlat",
+    "reminder_on": "Hatırlatma açık",
+    "open_fullscreen": "Tam ekran aç",
+    "reminder_denied_title": "Bildirimler kapalı",
+    "reminder_denied_body": "Hatırlatmayı almak için Ayarlar'dan aç."
   },
   "settings": {
     "notifications_title": "Bildirimler",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Sadece bu odayı bitir: {{credits}} kredi · {{price}}",
     "reload_today": "Haftalık kredin bugün yenileniyor.",
     "reload_tomorrow": "Haftalık kredin yarın yenileniyor.",
-    "reload_in_days": "Haftalık kredin {{days}} gün sonra yenileniyor."
+    "reload_in_days": "Haftalık kredin {{days}} gün sonra yenileniyor.",
+    "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey",
+    "pro_sub": "Her şey, artı yukarıdaki ikisi",
+    "base_sub": "Yalnız odalar",
+    "start_pro": "Pro'ya başla",
+    "start_base": "Base'e başla",
+    "weekly": "Haftalık",
+    "annual_minus_30": "Yıllık · −%30",
+    "per_week": "/hafta",
+    "per_year": "/yıl",
+    "footnote": "İstediğin an iptal · tek seferlik kredi paketleri de var",
+    "pack_line": "Ya da tek seferlik {{credits}} kredi"
   },
   "source": {
     "title": "Bizi nereden buldun?",

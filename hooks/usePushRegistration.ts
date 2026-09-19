@@ -86,6 +86,42 @@ const ASK_DELAY_MS = 3000;
  *   two different Keychain keys do not agree for any user who predates one
  *   of them, and the rating prompt was burned twice on exactly that.
  */
+/**
+ * Ask for notification permission because the USER just asked for it.
+ *
+ * <p>Distinct from {@link usePushPermissionAsk}, which rations an unprompted
+ * ask to one per install and only after the Nth success. This one is the
+ * answer to a switch the user moved on the result screen: there is no
+ * rationing, no pre-prompt and no counter, because the user has already said
+ * yes to the idea and the OS sheet is confirming it.
+ *
+ * <p>Returns whether permission is actually held afterwards. The caller must
+ * use that rather than assume — a toggle that shows "on" over a denied
+ * permission promises a notification that will never arrive.
+ */
+export async function requestPushPermission(): Promise<boolean> {
+    if (Platform.OS !== "ios") return false;
+    // Expo Go cannot register for remote notifications.
+    if (Constants.appOwnership === "expo") return false;
+    try {
+        const existing = await Notifications.getPermissionsAsync();
+        if (existing.status === "granted") {
+            await syncPushTokenIfPermitted();
+            return true;
+        }
+        // iOS will not re-prompt after a hard denial; saying so beats a
+        // sheet that never appears.
+        if (!existing.canAskAgain) return false;
+
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") return false;
+        await syncPushTokenIfPermitted();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
     const { t } = useTranslation();
     // Flipped the moment this visit commits to showing a sheet — before the

@@ -52,7 +52,17 @@
     "slide3_headline": "Magia Impulsada por IA",
     "slide3_description": "Deja que la inteligencia artificial reimagine tus habitaciones con resultados fotorrealistas impresionantes.",
     "get_started": "Comenzar",
-    "skip": "Saltar"
+    "skip": "Saltar",
+    "v2_slide1_headline": "Tu habitación, renovada",
+    "v2_slide1_body": "Fotografía la habitación donde estás. Mismas paredes, mismas ventanas, nuevo estilo.",
+    "v2_slide2_headline": "Seis formas, no una",
+    "v2_slide2_body": "Renueva, vacía, cambia un rincón, coloca un sofá real, copia un look, sal al exterior.",
+    "v2_slide3_headline": "Hoy tres gratis",
+    "v2_slide3_body": "Tres diseños al día. Gástalos en una habitación con tres estilos.",
+    "v2_next": "Siguiente",
+    "v2_start": "Empezar",
+    "v2_skip": "Omitir",
+    "sign_in_existing": "Iniciar sesión con una cuenta existente"
   },
   "auth": {
     "login_title": "Bienvenido de Vuelta",
@@ -382,7 +392,9 @@
     "curated": "Obras Curadas",
     "summary": "{{designCount}} diseños · {{jobCount}} trabajos",
     "all_designs": "Todos los Diseños",
-    "filter_activity": "Actividad"
+    "filter_activity": "Actividad",
+    "v2_empty_line": "Aquí todavía no hay nada.",
+    "v2_new_design": "+ Nuevo diseño"
   },
   "history": {
     "title": "Historial",
@@ -443,7 +455,15 @@
     "secure_account": "Protege tu cuenta",
     "secure_account_hint": "Añade un email — protege tus diseños y compras",
     "trial_gift_label": "Créditos de prueba de regalo",
-    "trial_gift_note": "Al terminar la prueba llegan tus {{credits}} créditos semanales; los créditos de regalo restantes se suman."
+    "trial_gift_note": "Al terminar la prueba llegan tus {{credits}} créditos semanales; los créditos de regalo restantes se suman.",
+    "free_plan": "Plan gratuito",
+    "sign_in_to_keep": "Inicia sesión para conservar tu galería",
+    "daily_reminder": "Recordatorio diario",
+    "get_pro": "Obtener Pro",
+    "credits_refill_line": "créditos · se recargan a diario",
+    "credits_line": "créditos",
+    "account_and_data": "Cuenta y datos",
+    "account_fallback_name": "Tu cuenta"
   },
   "plans": {
     "title": "Elige Tu Plan",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "Alejar 2×",
     "expand_square": "Hacer cuadrada",
     "try_another_style": "Probar otro estilo",
-    "save_to_photos": "Guardar en Fotos"
+    "save_to_photos": "Guardar en Fotos",
+    "save": "Guardar",
+    "another_style": "Misma habitación, otro estilo",
+    "reference_style": "Referencia",
+    "remind_me": "Avísame al recargar créditos",
+    "reminder_on": "Recordatorio activo",
+    "open_fullscreen": "Abrir a pantalla completa",
+    "reminder_denied_title": "Notificaciones desactivadas",
+    "reminder_denied_body": "Actívalas en Ajustes para recibir el recordatorio."
   },
   "settings": {
     "notifications_title": "Notificaciones",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Solo esta habitación: {{credits}} créditos · {{price}}",
     "reload_today": "Tus créditos semanales se recargan hoy.",
     "reload_tomorrow": "Tus créditos semanales se recargan mañana.",
-    "reload_in_days": "Tus créditos semanales se recargan en {{days}} días."
+    "reload_in_days": "Tus créditos semanales se recargan en {{days}} días.",
+    "two_things_headline": "Dos cosas que solo Pro puede hacer",
+    "pro_sub": "Todo, más las dos de arriba",
+    "base_sub": "Solo habitaciones",
+    "start_pro": "Empezar Pro",
+    "start_base": "Empezar Base",
+    "weekly": "Semanal",
+    "annual_minus_30": "Anual · −30 %",
+    "per_week": "/semana",
+    "per_year": "/año",
+    "footnote": "Cancela cuando quieras · también hay packs de créditos sueltos",
+    "pack_line": "O {{credits}} créditos, una vez"
   },
   "source": {
     "title": "¿Cómo nos encontraste?",

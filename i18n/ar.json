@@ -52,7 +52,17 @@
     "slide3_headline": "سحر الذكاء الاصطناعي",
     "slide3_description": "دع الذكاء الاصطناعي يعيد تصوّر غرفك بنتائج مذهلة وواقعية للغاية.",
     "get_started": "ابدأ الآن",
-    "skip": "تخطي"
+    "skip": "تخطي",
+    "v2_slide1_headline": "غرفتك، بأسلوب جديد",
+    "v2_slide1_body": "صوّر الغرفة التي تجلس فيها. الجدران نفسها، النوافذ نفسها، أسلوب جديد.",
+    "v2_slide2_headline": "ست طرق، لا طريقة واحدة",
+    "v2_slide2_body": "أعد التصميم، أفرغ الغرفة، غيّر ركنًا، ضع أريكة حقيقية، انسخ مظهرًا، واخرج إلى الحديقة.",
+    "v2_slide3_headline": "ثلاثة مجانية اليوم",
+    "v2_slide3_body": "ثلاثة تصاميم يوميًا. أنفقها على غرفة واحدة بثلاثة أساليب.",
+    "v2_next": "التالي",
+    "v2_start": "ابدأ",
+    "v2_skip": "تخطٍ",
+    "sign_in_existing": "تسجيل الدخول بحساب موجود"
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -381,7 +391,9 @@
     "curated": "أعمال منسّقة",
     "summary": "{{designCount}} تصميم · {{jobCount}} مهمة",
     "all_designs": "جميع التصاميم",
-    "filter_activity": "النشاط"
+    "filter_activity": "النشاط",
+    "v2_empty_line": "لا شيء هنا بعد.",
+    "v2_new_design": "+ تصميم جديد"
   },
   "history": {
     "title": "السجل",
@@ -442,7 +454,15 @@
     "secure_account": "أمّن حسابك",
     "secure_account_hint": "أضف بريدك — احفظ تصاميمك ومشترياتك",
     "trial_gift_label": "أرصدة تجربة هدية",
-    "trial_gift_note": "عند انتهاء التجربة يصلك رصيدك الأسبوعي {{credits}} — وتُضاف الأرصدة الهدية المتبقية إليه."
+    "trial_gift_note": "عند انتهاء التجربة يصلك رصيدك الأسبوعي {{credits}} — وتُضاف الأرصدة الهدية المتبقية إليه.",
+    "free_plan": "الخطة المجانية",
+    "sign_in_to_keep": "سجّل الدخول للاحتفاظ بمعرضك",
+    "daily_reminder": "تذكير يومي",
+    "get_pro": "احصل على Pro",
+    "credits_refill_line": "رصيد · يتجدّد يوميًا",
+    "credits_line": "رصيد",
+    "account_and_data": "الحساب والبيانات",
+    "account_fallback_name": "حسابك"
   },
   "plans": {
     "title": "اختر خطتك",
@@ -770,7 +790,15 @@
     "expand_zoom_2": "تصغير 2×",
     "expand_square": "جعلها مربعة",
     "try_another_style": "جرّب نمطًا آخر",
-    "save_to_photos": "الحفظ في الصور"
+    "save_to_photos": "الحفظ في الصور",
+    "save": "حفظ",
+    "another_style": "الغرفة نفسها، بأسلوب آخر",
+    "reference_style": "مرجع",
+    "remind_me": "ذكّرني عند تجدّد الرصيد",
+    "reminder_on": "التذكير مفعّل",
+    "open_fullscreen": "فتح بملء الشاشة",
+    "reminder_denied_title": "الإشعارات مغلقة",
+    "reminder_denied_body": "فعّلها من الإعدادات لتصلك رسالة التذكير."
   },
   "settings": {
     "notifications_title": "الإشعارات",
@@ -1116,7 +1144,18 @@
     "pack_cta": "أكمل هذه الغرفة فقط: {{credits}} رصيد · {{price}}",
     "reload_today": "يتجدّد رصيدك الأسبوعي اليوم.",
     "reload_tomorrow": "يتجدّد رصيدك الأسبوعي غدًا.",
-    "reload_in_days": "يتجدّد رصيدك الأسبوعي بعد {{days}} أيام."
+    "reload_in_days": "يتجدّد رصيدك الأسبوعي بعد {{days}} أيام.",
+    "two_things_headline": "شيئان لا يقدر عليهما سوى Pro",
+    "pro_sub": "كل شيء، إضافةً إلى الاثنين أعلاه",
+    "base_sub": "الغرف فقط",
+    "start_pro": "ابدأ Pro",
+    "start_base": "ابدأ Base",
+    "weekly": "أسبوعي",
+    "annual_minus_30": "سنوي · −30٪",
+    "per_week": "/أسبوع",
+    "per_year": "/سنة",
+    "footnote": "يمكن الإلغاء في أي وقت · تتوفر أيضًا باقات رصيد لمرة واحدة",
+    "pack_line": "أو {{credits}} رصيد لمرة واحدة"
   },
   "source": {
     "title": "كيف وجدتنا؟",

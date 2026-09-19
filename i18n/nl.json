@@ -52,7 +52,17 @@
     "slide3_headline": "Magie op basis van AI",
     "slide3_description": "Laat kunstmatige intelligentie je kamers opnieuw bedenken, met verbluffend fotorealistische resultaten.",
     "get_started": "Aan de slag",
-    "skip": "Overslaan"
+    "skip": "Overslaan",
+    "v2_slide1_headline": "Jouw kamer, opnieuw gestyled",
+    "v2_slide1_body": "Fotografeer de kamer waarin je zit. Zelfde muren, zelfde ramen, nieuwe stijl.",
+    "v2_slide2_headline": "Zes manieren, niet één",
+    "v2_slide2_body": "Restylen, leegmaken, een hoek aanpakken, een echte bank neerzetten, een look kopiëren, naar buiten gaan.",
+    "v2_slide3_headline": "Vandaag drie gratis",
+    "v2_slide3_body": "Drie ontwerpen per dag. Besteed ze aan één kamer in drie stijlen.",
+    "v2_next": "Volgende",
+    "v2_start": "Beginnen",
+    "v2_skip": "Overslaan",
+    "sign_in_existing": "Inloggen met een bestaand account"
   },
   "auth": {
     "login_title": "Welkom terug",
@@ -382,7 +392,9 @@
     "curated": "Geselecteerd werk",
     "summary": "{{designCount}} ontwerpen · {{jobCount}} opdrachten",
     "all_designs": "Alle ontwerpen",
-    "filter_activity": "Activiteit"
+    "filter_activity": "Activiteit",
+    "v2_empty_line": "Hier staat nog niets.",
+    "v2_new_design": "+ Nieuw ontwerp"
   },
   "history": {
     "title": "Geschiedenis",
@@ -443,7 +455,15 @@
     "secure_account": "Beveilig je account",
     "secure_account_hint": "Voeg een e-mailadres toe — houd je ontwerpen en aankopen veilig",
     "trial_gift_label": "Cadeaucredits proefperiode",
-    "trial_gift_note": "Als de proefperiode eindigt, worden je {{credits}} wekelijkse credits geladen — overgebleven cadeaucredits blijven staan."
+    "trial_gift_note": "Als de proefperiode eindigt, worden je {{credits}} wekelijkse credits geladen — overgebleven cadeaucredits blijven staan.",
+    "free_plan": "Gratis abonnement",
+    "sign_in_to_keep": "Log in om je galerij te bewaren",
+    "daily_reminder": "Dagelijkse herinnering",
+    "get_pro": "Pro nemen",
+    "credits_refill_line": "credits · dagelijks aangevuld",
+    "credits_line": "credits",
+    "account_and_data": "Account en gegevens",
+    "account_fallback_name": "Je account"
   },
   "plans": {
     "title": "Kies je abonnement",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "2× uitzoomen",
     "expand_square": "Vierkant maken",
     "try_another_style": "Probeer een andere stijl",
-    "save_to_photos": "Bewaren in Foto's"
+    "save_to_photos": "Bewaren in Foto's",
+    "save": "Bewaren",
+    "another_style": "Zelfde kamer, andere stijl",
+    "reference_style": "Referentie",
+    "remind_me": "Waarschuw me bij nieuwe credits",
+    "reminder_on": "Herinnering aan",
+    "open_fullscreen": "Volledig scherm openen",
+    "reminder_denied_title": "Meldingen staan uit",
+    "reminder_denied_body": "Zet ze aan in Instellingen om de herinnering te krijgen."
   },
   "settings": {
     "notifications_title": "Meldingen",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Maak deze kamer gewoon af: {{credits}} credits · {{price}}",
     "reload_today": "Je wekelijkse credits worden vandaag aangevuld.",
     "reload_tomorrow": "Je wekelijkse credits worden morgen aangevuld.",
-    "reload_in_days": "Je wekelijkse credits worden over {{days}} dagen aangevuld."
+    "reload_in_days": "Je wekelijkse credits worden over {{days}} dagen aangevuld.",
+    "two_things_headline": "Twee dingen die alleen Pro kan",
+    "pro_sub": "Alles, plus de twee hierboven",
+    "base_sub": "Alleen kamers",
+    "start_pro": "Start Pro",
+    "start_base": "Start Base",
+    "weekly": "Wekelijks",
+    "annual_minus_30": "Jaarlijks · −30%",
+    "per_week": "/week",
+    "per_year": "/jaar",
+    "footnote": "Altijd opzegbaar · losse creditpakketten ook beschikbaar",
+    "pack_line": "Of {{credits}} credits, eenmalig"
   },
   "source": {
     "title": "Hoe heb je ons gevonden?",

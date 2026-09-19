@@ -10,11 +10,20 @@ import {
   StatusBar,
   Alert,
   AppState,
+  Animated,
+  PanResponder,
 } from "react-native";
 import { theme } from "@/config/theme";
+import { useCatalogStore } from "@/stores/catalogStore";
+import { getStyleImage } from "@/components/studio/styleImages";
+import { useGenerate } from "@/hooks/useGenerate";
+import { requestPushPermission } from "@/hooks/usePushRegistration";
+import { useSettingsStore } from "@/stores/settingsStore";
+
+const U = theme.umber;
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -324,6 +333,49 @@ export default function ResultDetailScreen() {
     });
   };
 
+  /* ── "Same room, another style" ──────────────────────────────────
+   *
+   * Re-runs the generation the user is already looking at, with the photo
+   * and room type they already chose and one style swapped. It goes through
+   * useGenerate like every other charge — the style change does not make it
+   * a different kind of transaction, and a second path to the wallet is a
+   * second place for a double-charge to live.
+   */
+  const designStyles = useCatalogStore((s) => s.designStyles);
+  const { generate, isSubmitting: restyling } = useGenerate();
+
+  const handleRestyle = async (code: string) => {
+    const style = designStyles.find((s) => s.code === code);
+    if (!style || restyling) return;
+    Haptics.selectionAsync();
+    setDesignStyle(style);
+    await generate();
+  };
+
+  /* ── The reminder toggle IS the notification opt-in ───────────────
+   *
+   * The OS prompt is requested HERE, on a switch the user just moved,
+   * rather than at launch where it arrives before the app has earned it.
+   * A refusal leaves the switch off — the toggle must never claim a
+   * permission it did not get.
+   */
+  const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
+  const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
+  const remind = notificationsEnabled;
+
+  const handleRemindChange = async (next: boolean) => {
+    Haptics.selectionAsync();
+    if (!next) {
+      setNotificationsEnabled(false);
+      return;
+    }
+    const granted = await requestPushPermission().catch(() => false);
+    setNotificationsEnabled(!!granted);
+    if (!granted) {
+      Alert.alert(t("result.reminder_denied_title"), t("result.reminder_denied_body"));
+    }
+  };
+
   const handleCompare = () => {
     if (!currentOutput) return;
     // Surface the inputFile state up front so we can diagnose missing
@@ -390,812 +442,374 @@ export default function ResultDetailScreen() {
     );
   }
 
-  const metadata = [
-    { label: t("result.room"), value: job.roomTypeName || "—" },
-    { label: t("result.style"), value: job.designStyleName || "—" },
-    { label: t("result.mode"), value: modeLabelKeys[job.designMode] ? t(modeLabelKeys[job.designMode]) : job.designMode },
-    {
-      label: t("result.quality"),
-      value: qualityLabelKeys[job.qualityTier] ? t(qualityLabelKeys[job.qualityTier]) : job.qualityTier,
-    },
-  ];
+  /* ── Umber result (2026-09-19) ─────────────────────────────────────
+   *
+   * The screen the whole redesign is aimed at. Second-day return is 6.3%:
+   * 118 of 126 people who ever rendered did it on one day. The old result
+   * screen's primary actions were Save and Share — both of which end the
+   * session — and the way back into the product was a metadata table and a
+   * bottom tab.
+   *
+   * The primary next action is now "same room, another style": four
+   * thumbnails that re-run the generation the user has already paid
+   * attention to, with the photo and room type they already chose.
+   *
+   * 🔴 Everything above this line — the prompt ladder, the rating gate, the
+   * dwell timer, the output signals — is unchanged. Only the layout moved.
+   */
+
+  const afterUrl = currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
+  const beforeUrl = job.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
 
   return (
-    <SafeAreaView edges={[]} className="flex-1 bg-surface">
-      <TopBar showBack showBranding />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Main Image Stage */}
-        <View
-          className="mb-8 rounded-xl overflow-hidden"
-          style={{ aspectRatio: 4 / 5, backgroundColor: "#2A2A2A" }}
-        >
-          {/* Loading indicator behind image */}
-          <View
-            className="absolute inset-0 items-center justify-center"
-            style={{ zIndex: 0 }}
-          >
-            <ActivityIndicator size="large" color="#C4A882" />
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                ...theme.text.caption,
-                marginTop: 12,
-              }}
-            >
-              {t("common.loading")}
-            </Text>
-          </View>
-
-          {outputs.length > 1 ? (
-            <FlatList
-              ref={flatListRef}
-              data={outputs}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={item => item.id}
-              onMomentumScrollEnd={e => {
-                const index = Math.round(
-                  e.nativeEvent.contentOffset.x / IMAGE_WIDTH,
-                );
-                setActiveIndex(index);
-              }}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => setFullscreenUrl(getOutputImageUrl(job!.id, item))}
-                  style={{ width: IMAGE_WIDTH, height: "100%", zIndex: 1 }}
-                >
-                  <Image
-                    source={getImageSource(item)}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    onError={e =>
-                      console.log(
-                        "[Result] Image load error:",
-                        getOutputImageUrl(job!.id, item),
-                        e,
-                      )
-                    }
-                  />
-                </Pressable>
-              )}
-            />
-          ) : currentOutput ? (
-            <Pressable
-              onPress={() => setFullscreenUrl(getOutputImageUrl(job!.id, currentOutput))}
-              style={{ width: "100%", height: "100%", zIndex: 1 }}
-            >
-              <Image
-                source={getImageSource(currentOutput)}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-                onError={e =>
-                  console.log(
-                    "[Result] Image load error:",
-                    getOutputImageUrl(job!.id, currentOutput),
-                    e,
-                  )
-                }
-              />
-            </Pressable>
-          ) : (
-            <View
-              className="flex-1 items-center justify-center"
-              style={{ backgroundColor: "#2A2A2A" }}
-            >
-              <Ionicons name="image-outline" size={48} color="#998F84" />
-            </View>
-          )}
-
-          {/* Credits consumed badge */}
-          {job.creditsConsumed > 0 && (
-            <View
-              className="absolute rounded-full"
-              style={{
-                top: 16,
-                left: 16,
-                backgroundColor: "rgba(53,53,52,0.8)",
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-              }}
-            >
-              <Text
-                className="font-label text-primary font-semibold"
-                style={{
-                  ...theme.text.caption,
-                }}
-              >
-                {t("studio.cost_credits", { count: job.creditsConsumed })}
-              </Text>
-            </View>
-          )}
-
-          {/* Free plan corner mark — bottom-right, non-intrusive. Replaces
-              the earlier "reklamımız" that covered the entire image. */}
-          {showWatermark && <FreeWatermark size="md" />}
-
-          {/* Pagination Dots */}
-          {outputs.length > 1 && (
-            <View
-              className="absolute left-0 right-0 flex-row items-center justify-center"
-              style={{ bottom: 24, gap: 8 }}
-            >
-              {outputs.map((_, i) => (
-                <View
-                  key={i}
-                  className="rounded-full"
-                  style={{
-                    width: 6,
-                    height: 6,
-                    backgroundColor:
-                      i === activeIndex ? "#FEDFB5" : "rgba(229,226,225,0.3)",
-                    ...(i === activeIndex
-                      ? {
-                          shadowColor: "#FEDFB5",
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: 0.6,
-                          shadowRadius: 8,
-                        }
-                      : {}),
-                  }}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* ────────── Action area ──────────
-            Three tiers, ordered by what we actually want to happen:
-              • Save to Photos — full-width primary. Keeping the render
-                is the strongest quality signal a user can give us, and
-                until 2026-09-01 it was a muted icon-circle sitting
-                between Compare and Share while UPSCALE — a paid action
-                most users cannot even reach — owned the only full-width
-                pill on the screen. We were shouting the thing that
-                costs the user money and whispering the thing that means
-                "this one was good". 81 generations had produced 2
-                downloads.
-              • Utility row — Compare and Share as icon-circles.
-                Variation is PARKED (2026-07-10 founder call) — backend
-                + VariationSheet stay intact in git history.
-              • Upscale — still its own pill below the divider, still
-                gold, just no longer the loudest thing here. It reads
-                better AFTER the save anyway: you upscale a render you
-                have decided you want, and V69 made the base output 2 MP
-                so upscale is now "print size", not "finally usable". */}
-        <View style={{ marginBottom: 24 }}>
-          {/* Three actions, one row, equal footing — Compare · Save · Share.
-              A full-width primary for Save was tried on device and read badly:
-              it crowded the two circles beneath it and made the row look like
-              leftovers. Emphasis is carried by TREATMENT instead of size — the
-              Save circle is gold-tinted with a gold glyph while its neighbours
-              stay muted — so keeping the render still reads as the main move
-              without breaking the row's rhythm.
-
-              Each action owns an equal third of the row (flex: 1) rather than
-              being spaced apart. space-around distributes the GAPS evenly, not
-              the items, so the widest label drags its neighbours off centre —
-              on device "KARŞILAŞTIR" pushed the row visibly right of centre
-              while "İNDİR" and "PAYLAŞ" bunched up. Equal thirds put each icon
-              on the centre line of its own column, which holds for any label
-              length in any language. */}
-          <View
-            className="flex-row items-start"
-            style={{ marginBottom: 18 }}
-          >
-            {/* Compare */}
-            <View className="items-center" style={{ flex: 1, gap: 8 }}>
-              <Pressable
-                onPress={handleCompare}
-                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-              >
-                <Ionicons name="git-compare-outline" size={22} color="#D1C5B8" />
-              </Pressable>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  ...theme.text.label,
-                }}
-              >
-                {t("result.compare")}
-              </Text>
-            </View>
-
-            {/* Save — same shape as its neighbours, gold-tinted. Keeping the
-                render is the strongest quality signal a user gives us, so it
-                gets the accent; it does not get a different size. */}
-            <View className="items-center" style={{ flex: 1, gap: 8 }}>
-              <Pressable
-                onPress={handleDownload}
-                disabled={isDownloading}
-                className="w-12 h-12 rounded-full items-center justify-center"
-                style={{
-                  opacity: isDownloading ? 0.5 : 1,
-                  backgroundColor: "rgba(225,195,155,0.14)",
-                  borderWidth: 1,
-                  borderColor: "rgba(225,195,155,0.32)",
-                }}
-              >
-                {isDownloading ? (
-                  <ActivityIndicator size="small" color="#E1C39B" />
-                ) : (
-                  <Ionicons name="download-outline" size={22} color="#E1C39B" />
-                )}
-              </Pressable>
-              <Text
-                className="font-label"
-                style={{
-                  ...theme.text.label,
-                  color: "#E1C39B",
-                }}
-              >
-                {t("result.download")}
-              </Text>
-            </View>
-
-            {/* Share */}
-            <View className="items-center" style={{ flex: 1, gap: 8 }}>
-              <Pressable
-                onPress={handleShare}
-                disabled={isSharing}
-                className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-                style={{ opacity: isSharing ? 0.5 : 1 }}
-              >
-                {isSharing ? (
-                  <ActivityIndicator size="small" color="#D1C5B8" />
-                ) : (
-                  <Ionicons name="share-social-outline" size={22} color="#D1C5B8" />
-                )}
-              </Pressable>
-              <Text
-                className="font-label text-on-surface-variant"
-                style={{
-                  ...theme.text.label,
-                }}
-              >
-                {t("result.share")}
-              </Text>
-            </View>
-          </View>
-
-          {/* Bottom row — Upscale full-width premium pill.
-              Free/Basic plan has no ULTRA_HD_UPSCALE credit rule so
-              the locked variant routes to /plans for upgrade.
-              Visual treatment uses a soft gold gradient wash + thin
-              gold border + sparkles icon left, arrow right — reads as
-              a premium action without screaming. Hairline divider
-              above subtly separates the two tiers of actions. */}
-          <View
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
+      <View style={{ flex: 1, paddingHorizontal: 18 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 8, paddingBottom: 14 }}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.back")}
+            hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
             style={{
-              height: 1,
-              backgroundColor: "rgba(225,195,155,0.10)",
-              marginBottom: 14,
+              width: 34, height: 34, borderRadius: 17,
+              backgroundColor: U.lineNeutral,
+              alignItems: "center", justifyContent: "center",
             }}
-          />
-          {isAlreadyUpscaled ? (
-            // Already-upscaled state — flat, non-interactive affordance.
-            // Communicates "this job has been enhanced" so the user
-            // doesn't think the action is missing or broken. We do NOT
-            // render a Pressable here because there's nothing to do; a
-            // disabled Pressable still takes hit area + ripples on
-            // Android and would suggest tappability.
-            <View
-              style={{
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: "rgba(143,227,161,0.22)",
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 18,
-                paddingVertical: 14,
-                gap: 12,
-                backgroundColor: "rgba(143,227,161,0.05)",
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: "rgba(143,227,161,0.12)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="checkmark" size={16} color="#8FE3A1" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    ...theme.text.caption,
-                    color: "#8FE3A1",
-                  }}
-                >
-                  {t("result.already_upscaled", {
-                    defaultValue: "Already upscaled",
-                  })}
-                </Text>
-                <Text
-                  style={{
-                    ...theme.text.caption,
-                    color: "rgba(143,227,161,0.65)",
-                    marginTop: 2,
-                  }}
-                  numberOfLines={1}
-                >
-                  {t("result.already_upscaled_subtitle", {
-                    defaultValue: "This render has been enhanced",
-                  })}
-                </Text>
-              </View>
-            </View>
-          ) : canUpscale ? (
-            <Pressable
-              onPress={() => {
-                if (!currentOutput?.id) return;
-                Haptics.selectionAsync();
-                // Pre-flight cost confirmation — the upscale starts a paid
-                // job, so we never debit without an explicit user OK.
-                Alert.alert(
-                  t("result.upscale_confirm_title_res", {
-                    defaultValue: "Upscale to {{resolution}}?",
-                    resolution: upscaleResolution,
-                  }),
-                  t("result.upscale_confirm_body_res", {
-                    defaultValue: "{{cost}} credits will be used to enhance this image to {{resolution}}.",
-                    resolution: upscaleResolution,
-                    cost: upscaleCost,
-                  }),
-                  [
-                    { text: t("common.cancel"), style: "cancel" },
-                    {
-                      text: t("result.upscale", { defaultValue: "Upscale" }),
-                      onPress: () =>
-                        router.push(
-                          `/generation/upscale?parentJobId=${job.id}&outputId=${currentOutput.id}` as any,
-                        ),
-                    },
-                  ],
-                );
-              }}
-              style={({ pressed }) => ({
-                borderRadius: theme.radius.md,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: pressed
-                  ? "rgba(225,195,155,0.55)"
-                  : "rgba(225,195,155,0.32)",
-                transform: [{ scale: pressed ? 0.99 : 1 }],
-              })}
-            >
-              <LinearGradient
-                colors={["rgba(253,222,181,0.10)", "rgba(225,195,155,0.04)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 18,
-                  paddingVertical: 14,
-                  gap: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: "rgba(253,222,181,0.14)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons name="sparkles" size={16} color="#FEDFB5" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      ...theme.text.label,
-                      color: "#F4DDB6",
-                    }}
-                  >
-                    {t("result.upscale")}
-                  </Text>
-                  <Text
-                    style={{
-                      ...theme.text.caption,
-                      color: "rgba(225,195,155,0.65)",
-                      marginTop: 2,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {t("result.upscale_subtitle_res", {
-                      defaultValue: "Enhance to {{resolution}} · {{cost}} credits",
-                      resolution: upscaleResolution,
-                      cost: upscaleCost,
-                    })}
-                  </Text>
-                </View>
-                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
-              </LinearGradient>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => router.push("/plans")}
-              style={({ pressed }) => ({
-                borderRadius: theme.radius.md,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: pressed
-                  ? "rgba(225,195,155,0.45)"
-                  : "rgba(225,195,155,0.22)",
-                transform: [{ scale: pressed ? 0.99 : 1 }],
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 18,
-                paddingVertical: 14,
-                gap: 12,
-                backgroundColor: "rgba(225,195,155,0.04)",
-              })}
-            >
-              {/* Deterministic inner row (2026-07-15 founder screenshot:
-                  the lock/title/subtitle/arrow rendered stacked). The inner
-                  View owns the row layout with explicit full width so no
-                  outer-style interaction can collapse it into a column. */}
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: "rgba(225,195,155,0.10)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons name="lock-closed" size={14} color="#E0C29A" />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    style={{
-                      ...theme.text.label,
-                      color: "#E0C29A",
-                    }}
-                    numberOfLines={1}
-                  >
-                    {t("result.upscale_locked")}
-                  </Text>
-                  <Text
-                    style={{
-                      ...theme.text.caption,
-                      color: "rgba(225,195,155,0.55)",
-                      marginTop: 2,
-                    }}
-                    numberOfLines={2}
-                  >
-                    {t("result.upscale_locked_subtitle", {
-                      defaultValue: "Unlock 4× Ultra HD upscaling with Pro",
-                    })}
-                  </Text>
-                </View>
-                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
-              </View>
-            </Pressable>
-          )}
-
-          {/* IO-1 — Expand pill (2026-08-11). Same premium-pill grammar as
-              Upscale, one step quieter (no gradient wash). Hidden on chain
-              jobs (backend rejects expand-of-upscale/expand — the right
-              order is expand first, then upscale). Single alert carries
-              both the mode choice and the cost consent. */}
-          {canExpand && (
-            <Pressable
-              onPress={() => {
-                if (!currentOutput?.id) return;
-                Haptics.selectionAsync();
-                Alert.alert(
-                  t("result.expand_title"),
-                  t("result.expand_body", { cost: expandCost }),
-                  [
-                    {
-                      text: t("result.expand_zoom_15"),
-                      onPress: () =>
-                        router.push(
-                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_15` as any,
-                        ),
-                    },
-                    {
-                      text: t("result.expand_zoom_2"),
-                      onPress: () =>
-                        router.push(
-                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=ZOOM_OUT_2` as any,
-                        ),
-                    },
-                    {
-                      text: t("result.expand_square"),
-                      onPress: () =>
-                        router.push(
-                          `/generation/expand?parentJobId=${job.id}&outputId=${currentOutput.id}&mode=MAKE_SQUARE` as any,
-                        ),
-                    },
-                    { text: t("common.cancel"), style: "cancel" },
-                  ],
-                );
-              }}
-              style={({ pressed }) => ({
-                marginTop: 10,
-                borderRadius: theme.radius.md,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: pressed
-                  ? "rgba(225,195,155,0.45)"
-                  : "rgba(225,195,155,0.22)",
-                transform: [{ scale: pressed ? 0.99 : 1 }],
-                backgroundColor: "rgba(225,195,155,0.04)",
-              })}
-            >
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 18,
-                  paddingVertical: 14,
-                  gap: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: "rgba(225,195,155,0.10)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons name="expand-outline" size={16} color="#E0C29A" />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ ...theme.text.label, color: "#F4DDB6" }} numberOfLines={1}>
-                    {t("result.expand")}
-                  </Text>
-                  <Text
-                    style={{
-                      ...theme.text.caption,
-                      color: "rgba(225,195,155,0.65)",
-                      marginTop: 2,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {t("result.expand_subtitle", { cost: expandCost })}
-                  </Text>
-                </View>
-                <Ionicons name="arrow-forward" size={16} color="#E0C29A" />
-              </View>
-            </Pressable>
-          )}
+          >
+            <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+          </Pressable>
+          <Text style={{ ...theme.v2.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }}>
+            {(job.designStyleName || "").toUpperCase()}
+          </Text>
+          <View style={{ width: 34 }} />
         </View>
 
-        {/* Metadata Card */}
-        <View className="bg-surface-container-low rounded-xl p-6 mb-8">
-          <View className="flex-row flex-wrap">
-            {metadata.map(item => (
-              <View key={item.label} className="w-1/2 mb-6">
-                <Text
-                  className="font-label text-on-surface-variant mb-1"
-                  style={{
-                    ...theme.text.caption,
-                  }}
-                >
-                  {item.label}
-                </Text>
-                <Text
-                  className="font-headline text-on-surface"
-                  style={{ ...theme.text.title }}
-                >
-                  {item.value}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        <BeforeAfter
+          beforeUrl={beforeUrl}
+          afterUrl={afterUrl}
+          authHeaders={authHeaders}
+          onOpen={handleCompare}
+        />
 
-        {/* Generation Info + Seed (Copy) */}
-        {currentOutput?.generationTimeMs > 0 && (
-          <View className="bg-surface-container-low rounded-xl p-6 mb-8">
-            <View className="flex-row flex-wrap">
-              <View className="w-1/2 mb-2">
-                <Text
-                  className="font-label text-on-surface-variant mb-1"
-                  style={{
-                    ...theme.text.caption,
-                  }}
-                >
-                  {t("result.generation_time")}
-                </Text>
-                <Text
-                  className="font-headline text-on-surface"
-                  style={{ ...theme.text.title }}
-                >
-                  {(currentOutput.generationTimeMs / 1000).toFixed(1)}s
-                </Text>
-              </View>
-              {currentOutput.seed ? (
-                <View className="w-1/2 mb-2">
-                  <Text
-                    className="font-label text-on-surface-variant mb-1"
-                    style={{
-                      ...theme.text.caption,
-                    }}
-                  >
-                    {t("result.seed")}
-                  </Text>
-                  {/* Seed pill — monospace for legibility, Copy icon
-                      writes the value to the clipboard + haptic tick.
-                      Lets Pro+ users lock compositions across iterations. */}
-                  <Pressable
-                    onPress={async () => {
-                      await Clipboard.setStringAsync(String(currentOutput.seed));
-                      Haptics.notificationAsync(
-                        Haptics.NotificationFeedbackType.Success,
-                      );
-                      setSeedCopied(true);
-                      setTimeout(() => setSeedCopied(false), 1600);
-                    }}
-                    className="flex-row items-center"
-                    style={{ gap: 8 }}
-                    hitSlop={6}
-                  >
-                    <Text
-                      className="font-headline text-on-surface"
-                      style={{
-                        ...theme.text.title,
-                        fontVariant: ["tabular-nums"],
-                      }}
-                    >
-                      {currentOutput.seed}
-                    </Text>
-                    <Ionicons
-                      name={seedCopied ? "checkmark-circle" : "copy-outline"}
-                      size={14}
-                      color={seedCopied ? "#8FE3A1" : "#E0C29A"}
-                    />
-                  </Pressable>
-                </View>
-              ) : null}
-              {currentOutput.width && currentOutput.height ? (
-                <View className="w-1/2 mb-2">
-                  <Text
-                    className="font-label text-on-surface-variant mb-1"
-                    style={{
-                      ...theme.text.caption,
-                    }}
-                  >
-                    {t("result.resolution")}
-                  </Text>
-                  <Text
-                    className="font-headline text-on-surface"
-                    style={{ ...theme.text.title }}
-                  >
-                    {currentOutput.width}×{currentOutput.height}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
-        )}
-
-        {/* Two ways back into the studio — they are NOT the same journey.
-            "Try another style" keeps the photo the user already uploaded and
-            only clears the style, so a second render is two taps instead of
-            the eight that re-picking a photo costs. That gap is the single
-            biggest reason a session ended at one render. "New design" stays
-            below for a genuinely fresh start. */}
-        <View style={{ marginBottom: 12 }}>
-          <PrimaryButton
-            label={t("result.try_another_style")}
-            icon="color-palette-outline"
-            onPress={() => {
-              // Keep the photo, drop the style: the studio's style step is the
-              // next screen, and everything downstream re-derives from it.
-              setDesignStyle(null);
-              router.push("/studio/style");
-            }}
+        <View style={{ flexDirection: "row", gap: 9, marginTop: 12 }}>
+          <ResultAction flex={1} label={t("result.save")} busy={isDownloading} onPress={handleDownload} />
+          <ResultAction flex={1} label={t("result.share")} busy={isSharing} onPress={handleShare} />
+          <ResultAction
+            flex={1.3}
+            label={t("studio.add_furniture")}
+            tone="accent"
+            onPress={() => router.push({ pathname: "/studio/composer", params: { sheet: "catalogue" } } as never)}
           />
         </View>
 
-        {/* Redesign Again CTA.
-            Was a `Button variant="secondary"`, which rendered the icon stacked
-            above the label with no container at all. Two attempts to force the
-            row from the outside (`iconLeft`, then an explicit flexDirection in
-            `style`) both shipped and both still came out stacked — the override
-            never reached the element doing the stacking. Pushing on it a third
-            time would have been the same guess again.
+        <Text style={{ ...theme.v2.displayS, color: U.ink, marginTop: 20, marginBottom: 12 }}>
+          {t("result.another_style")}
+        </Text>
 
-            So this stops overriding a component that resists it and uses the one
-            that already renders the exact shape we want, one row above: same 56px
-            row, label left, icon right, identical press feedback. The only thing
-            that changes is the palette. That also removes the last caller of
-            `Button`'s secondary+icon combination from this screen, so the two
-            buttons can no longer drift apart visually. */}
-        <View style={{ marginBottom: 40 }}>
-          <PrimaryButton
-            label={t("result.new_design")}
-            icon="refresh"
-            colors={theme.gradient.mutedCta}
-            onPress={() => { resetStudio(); router.push("/(tabs)/studio"); }}
-          />
-        </View>
-      </ScrollView>
+        {/* No explanatory line under the heading — the thumbnails carry it. */}
+        <AnotherStyleStrip
+          currentStyleCode={
+            designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
+          }
+          onPick={handleRestyle}
+          onLocked={() => router.push("/paywall?source=RESULT_STYLE" as never)}
+          busy={restyling}
+        />
 
-      {/* Fullscreen image viewer with pinch-to-zoom + pan + double-tap.
-          The ZoomableImage absorbs all gestures so a single tap can't
-          accidentally dismiss the modal while the user is mid-zoom. The
-          close button stays absolute-positioned and tappable above the
-          gesture surface. To dismiss without zooming, tap the X. */}
-      <Modal
-        visible={fullscreenUrl !== null}
-        transparent={false}
-        animationType="fade"
-        onRequestClose={() => setFullscreenUrl(null)}
-        statusBarTranslucent
-      >
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={{ flex: 1 }} />
+
         <View
           style={{
-            flex: 1,
-            backgroundColor: "#000",
-            justifyContent: "center",
+            borderTopWidth: 1,
+            borderTopColor: U.lineNeutral,
+            paddingTop: 14,
+            paddingBottom: 8,
+            flexDirection: "row",
             alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
           }}
         >
-          {fullscreenUrl ? (
-            <ZoomableImage
-              uri={fullscreenUrl}
-              style={{ width: "100%", height: "100%" }}
-            />
-          ) : null}
-          <Pressable
-            onPress={() => setFullscreenUrl(null)}
-            hitSlop={12}
-            style={{
-              position: "absolute",
-              top: 48,
-              right: 20,
-              width: 44,
-              height: 44,
-              borderRadius: theme.radius.lg,
-              backgroundColor: "rgba(0,0,0,0.55)",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 10,
-            }}
-          >
-            <Ionicons name="close" size={26} color="#fff" />
-          </Pressable>
+          <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }} numberOfLines={1}>
+            {remind ? t("result.reminder_on") : t("result.remind_me")}
+          </Text>
+          <ReminderToggle value={remind} onChange={handleRemindChange} />
         </View>
-      </Modal>
-
-      {/* "How did you hear about us" — the only per-user channel signal we can
-          get for anything that is not Apple Search Ads. Gated on a COMPLETED
-          job on purpose: asked after the first render the user has actually
-          seen, it costs nothing, whereas the same question on the first screen
-          would sit next to the paywall and be charged against activation.
-          The sheet handles its own once-per-identity flag. */}
-      <SourceSheet enabled={sourceSheetEligible} />
+      </View>
     </SafeAreaView>
+  );
+}
+
+/**
+ * The comparison, with the reveal following the finger.
+ *
+ * <p>Kept from v1 because it is the clearest thing in the app: the before is
+ * clipped to a left-hand window whose width the user drags. Clamped to 2–98%
+ * so neither image can be dragged entirely out of existence, and reset to 55%
+ * on every new result.
+ */
+function BeforeAfter({
+  beforeUrl, afterUrl, authHeaders, onOpen,
+}: {
+  beforeUrl: string;
+  afterUrl?: string;
+  authHeaders: Record<string, string>;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const [width, setWidth] = useState(0);
+  const [reveal, setReveal] = useState(55);
+  const enter = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setReveal(55);
+    Animated.timing(enter, { toValue: 1, duration: 450, useNativeDriver: true }).start();
+  }, [afterUrl, enter]);
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, g) => {
+        setWidth((w) => {
+          if (w > 0) {
+            const pct = Math.max(2, Math.min(98, (g.moveX - 18) / w * 100));
+            setReveal(pct);
+          }
+          return w;
+        });
+      },
+    }),
+  ).current;
+
+  return (
+    <Animated.View
+      style={{
+        height: 330,
+        borderRadius: 20,
+        overflow: "hidden",
+        backgroundColor: U.surface,
+        opacity: enter,
+        transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+      }}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      {...pan.panHandlers}
+    >
+      {afterUrl ? (
+        <Image source={{ uri: afterUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+      ) : null}
+
+      {beforeUrl ? (
+        <View style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${reveal}%`, overflow: "hidden" }}>
+          <Image
+            source={{ uri: beforeUrl, headers: authHeaders }}
+            style={{ width, height: "100%" }}
+            contentFit="cover"
+          />
+        </View>
+      ) : null}
+
+      <View style={{ position: "absolute", top: 0, bottom: 0, left: `${reveal}%`, width: 2, backgroundColor: "#fff" }} />
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: `${reveal}%`,
+          marginLeft: -18,
+          marginTop: -18,
+          width: 36, height: 36, borderRadius: 18,
+          backgroundColor: "#fff",
+          alignItems: "center", justifyContent: "center",
+        }}
+      >
+        <Text style={{ color: "#111", fontSize: 14 }}>⇄</Text>
+      </View>
+
+      <PhotoTag style={{ top: 12, left: 12 }} label={t("result.before")} />
+      <PhotoTag style={{ top: 12, right: 12 }} label={t("result.after")} />
+
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        accessibilityLabel={t("result.open_fullscreen")}
+        style={{ position: "absolute", bottom: 12, right: 12, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+      >
+        <View style={{
+          backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+          borderRadius: 100, paddingHorizontal: 10, paddingVertical: 6,
+        }}>
+          <Text style={{ color: "#fff", fontSize: 12 }}>⤢</Text>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/** A pill on a photograph: its own fill and hairline, never a theme colour. */
+function PhotoTag({ label, style }: { label: string; style: object }) {
+  return (
+    <View
+      style={{
+        position: "absolute",
+        backgroundColor: U.photoChrome,
+        borderWidth: 1,
+        borderColor: U.photoChromeBorder,
+        borderRadius: 100,
+        paddingVertical: 5,
+        paddingHorizontal: 11,
+        ...style,
+      }}
+    >
+      <Text style={{ fontFamily: "Archivo-600", fontSize: 10.5, color: "#fff", letterSpacing: 0.6 }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function ResultAction({
+  label, flex, tone = "ink", busy, onPress,
+}: {
+  label: string; flex: number; tone?: "ink" | "accent"; busy?: boolean; onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={busy}
+      accessibilityRole="button"
+      style={{
+        flex,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: U.surface,
+        borderWidth: 1,
+        borderColor: U.lineAccent,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: busy ? 0.6 : 1,
+      }}
+    >
+      {busy ? (
+        <ActivityIndicator size="small" color={U.inkMuted} />
+      ) : (
+        <Text
+          style={{ fontFamily: "Archivo-600", fontSize: 13, color: tone === "accent" ? U.accentBright : U.ink }}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+
+/**
+ * Four ways back in.
+ *
+ * <p>Three styles the user has not used on this room, plus Reference — the
+ * PRO one, which taps through to the paywall rather than pretending to be
+ * available. The current style is excluded: offering the thing they are
+ * already looking at is the one option that cannot be interesting.
+ */
+function AnotherStyleStrip({
+  currentStyleCode, onPick, onLocked, busy,
+}: {
+  currentStyleCode: string | null;
+  onPick: (code: string) => void;
+  onLocked: () => void;
+  busy: boolean;
+}) {
+  const { t } = useTranslation();
+  const styles = useCatalogStore((s) => s.designStyles);
+
+  const picks = useMemo(() => {
+    const preferred = ["MINIMALIST", "SCANDINAVIAN", "WARM_MOCHA", "MODERN", "INDUSTRIAL"];
+    const byCode = new Map(styles.map((s) => [s.code?.toUpperCase(), s]));
+    const out: { code: string; name: string }[] = [];
+    for (const code of preferred) {
+      if (out.length === 3) break;
+      if (code === currentStyleCode?.toUpperCase()) continue;
+      const s = byCode.get(code);
+      if (s) out.push({ code: s.code, name: s.name });
+    }
+    return out;
+  }, [styles, currentStyleCode]);
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 9 }}>
+      {picks.map((p) => (
+        <Pressable
+          key={p.code}
+          onPress={() => onPick(p.code)}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel={p.name}
+          style={{ width: 98, opacity: busy ? 0.5 : 1 }}
+        >
+          <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
+            {getStyleImage(p.code) ? (
+              <Image source={getStyleImage(p.code)!} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+            ) : null}
+          </View>
+          <Text style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
+            {p.name}
+          </Text>
+        </Pressable>
+      ))}
+
+      <Pressable onPress={onLocked} accessibilityRole="button" style={{ width: 98 }}>
+        <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
+          <Image
+            source={require("@/assets/features/style_after.png")}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+          />
+          <View style={{
+            position: "absolute", top: 6, right: 6,
+            backgroundColor: U.ground, borderWidth: 1, borderColor: U.accent,
+            borderRadius: 5, paddingVertical: 2, paddingHorizontal: 5,
+          }}>
+            <Text style={{ fontFamily: "Archivo-700", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
+              PRO
+            </Text>
+          </View>
+        </View>
+        <Text style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
+          {t("result.reference_style")}
+        </Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+/** 48 × 28, knob 22, 200ms on translateX. */
+function ReminderToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  const { t } = useTranslation();
+  const x = useRef(new Animated.Value(value ? 23 : 3)).current;
+  useEffect(() => {
+    Animated.timing(x, { toValue: value ? 23 : 3, duration: 200, useNativeDriver: true }).start();
+  }, [value, x]);
+  return (
+    <Pressable
+      onPress={() => onChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={t("result.remind_me")}
+      hitSlop={10}
+      style={{
+        width: 48, height: 28, borderRadius: 14,
+        backgroundColor: value ? U.accent : U.lineNeutral,
+        justifyContent: "center",
+      }}
+    >
+      <Animated.View
+        style={{
+          width: 22, height: 22, borderRadius: 11,
+          backgroundColor: U.ground,
+          transform: [{ translateX: x }],
+        }}
+      />
+    </Pressable>
   );
 }

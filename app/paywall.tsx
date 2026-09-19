@@ -23,6 +23,8 @@ import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
 import { track } from "@/services/analytics";
 import { planTier, tierRank } from "@/utils/planTier";
 
+const U = theme.umber;
+
 /**
  * First-open paywall (2026-08-31).
  *
@@ -66,6 +68,14 @@ const PRIVACY_URL = "https://roomframeai.com/privacy";
  */
 const PLAN_PRO = "PRO_WEEKLY";
 const PLAN_BASE = "BASE_WEEKLY";
+/**
+ * The annual SKUs behind the billing segment. They were always purchasable
+ * from the plans screen; the segment brings them onto the paywall without
+ * making a year's bill the first number a stranger sees — the weekly half is
+ * selected by default and the annual one is opt-in.
+ */
+const PLAN_PRO_ANNUAL = "PRO_ANNUAL";
+const PLAN_BASE_ANNUAL = "BASE_ANNUAL";
 
 /**
  * Where the paywall was opened from — stored as {@code paywall_events.source}
@@ -178,8 +188,12 @@ export default function PaywallScreen() {
         // deletion and silenced the paywall for reinstalls too.
     }, []);
 
-    const pro = useMemo(() => plans?.find((p) => p.code === PLAN_PRO), [plans]);
-    const base = useMemo(() => plans?.find((p) => p.code === PLAN_BASE), [plans]);
+    const [billing, setBilling] = useState<"weekly" | "annual">("weekly");
+    const proCode = billing === "annual" ? PLAN_PRO_ANNUAL : PLAN_PRO;
+    const baseCode = billing === "annual" ? PLAN_BASE_ANNUAL : PLAN_BASE;
+
+    const pro = useMemo(() => plans?.find((p) => p.code === proCode), [plans, proCode]);
+    const base = useMemo(() => plans?.find((p) => p.code === baseCode), [plans, baseCode]);
 
     /**
      * Never sell someone what they already own.
@@ -241,6 +255,9 @@ export default function PaywallScreen() {
 
     const priceOf = (plan?: typeof pro) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
+
+    const priceOfPack = (pack: NonNullable<typeof exhaustedPack>) =>
+        formatProductPrice(storePrices, pack.appleProductId, pack.priceCents, pack.currency);
 
     /**
      * Opened as the first screen, the app is behind the paywall: replace.
@@ -350,281 +367,217 @@ export default function PaywallScreen() {
     };
 
     /**
-     * What a paid plan actually buys, checked against plan_features in prod
-     * rather than written from memory.
+     * Umber paywall (2026-09-19).
      *
-     * <p>The previous list promised "our highest-quality AI models" and named
-     * Magic Edit and 4K upscale as things to unlock. Neither survived contact
-     * with the database: every active plan runs the same model tier, and
-     * INPAINT and ULTRA_HD_UPSCALE are enabled on FREE too (V66). A paywall
-     * charging money for what the user already has is both a lie and a 2.3.1
-     * problem. What genuinely changes is the credit budget, the watermark, and
-     * — on PRO only — Style Transfer and Outdoor Design.
+     * <p><b>What it stopped saying.</b> The old screen led with a benefits
+     * list, badged Base "MOST POPULAR" and Pro "BEST VALUE" — two superlatives
+     * that cancel each other — and gave both rows the same "Confirm &
+     * Subscribe", so the choice carried no consequence. Its benefit list had
+     * also drifted from the database twice.
      *
-     * <p>These three hold for BOTH plans on offer, so the list does not move
-     * when the selection does; the per-tier numbers live on the cards, where
-     * the two are read side by side. The credit line names the contrast with
-     * what a free account actually gets — one credit a day — because that, not
-     * an abstract "more credits", is the thing being bought.
+     * <p>It now makes one claim and shows it: Style Transfer and Outdoor
+     * Design are the only two capabilities a paid plan unlocks
+     * (plan_features, verified in prod), so they are the headline and the
+     * photographs are the description.
+     *
+     * <p><b>Deliberately absent:</b> any paragraph about credit counts,
+     * roll-over or weekly allowances. Credits are the unit the user has no
+     * feel for; the two locked capabilities are the only concrete claim
+     * available.
+     *
+     * <p>🔴 The purchase path below this line is unchanged — handleContinue,
+     * handlePack, handleRestore, the telemetry and the outcome classifier are
+     * all the code that was already running. Only the presentation moved.
      */
-    const benefits: { icon: keyof typeof Ionicons.glyphMap; key: string }[] = [
-        { icon: "flash", key: "paywall.benefit_credits" },
-        { icon: "water-outline", key: "paywall.benefit_watermark" },
-        { icon: "color-wand", key: "paywall.benefit_tools" },
-    ];
+    const proPrice = priceOf(pro);
+    const basePrice = priceOf(base);
+    const selectedIsPro = effectiveSelected === PLAN_PRO;
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.surface }} edges={["top", "bottom"]}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 18 }} showsVerticalScrollIndicator={false}>
-
-                {/* ── Hero — the app's own before/after, playing itself ──
-                    Not draggable. A paywall gets a few seconds of attention and
-                    a control the user must discover spends them; the reveal has
-                    to happen whether or not anyone touches the screen. Honours
-                    reduce-motion by holding at the midpoint instead. */}
-                <View style={{ height: 230, position: "relative" }}>
-                    <Image source={ownAfter ? { uri: ownAfter } : require("@/assets/trial/kitchen_After.png")}
-                           style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                    <Animated.View style={{
-                        position: "absolute", top: 0, left: 0, bottom: 0,
-                        width: revealWidth, overflow: "hidden",
-                    }}>
-                        <Image source={ownBefore ? { uri: ownBefore, headers: authHeaders } : require("@/assets/trial/kitchen_Before.png")}
-                               style={{ width: heroWidth, height: "100%" }} resizeMode="cover" />
-                    </Animated.View>
-                    <Animated.View style={{
-                        position: "absolute", top: 0, bottom: 0, left: revealWidth,
-                        width: 1.5, backgroundColor: theme.color.goldMidday, opacity: 0.9,
-                    }} />
-                    <LinearGradient
-                        colors={["transparent", theme.color.surface]}
-                        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 90 }}
-                    />
-                    <Text style={{
-                        position: "absolute", top: 12, left: 16, ...theme.text.caption,
-                        color: theme.color.onSurface, backgroundColor: "rgba(19,19,19,0.7)",
-                        paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
-                        overflow: "hidden",
-                    }}>{t("result.before")}</Text>
-                    <Text style={{
-                        position: "absolute", top: 12, right: 58, ...theme.text.caption,
-                        color: theme.color.onGold, backgroundColor: theme.color.goldContainer,
-                        paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
-                        overflow: "hidden",
-                    }}>{t("result.after")}</Text>
-
+        <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
+            <View style={{ flex: 1, paddingHorizontal: 18 }}>
+                <View style={{ paddingTop: 8, paddingBottom: 10 }}>
                     <Pressable
                         onPress={() => leave("DISMISSED")}
-                        hitSlop={12}
-                        accessibilityLabel={t("common.close")}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("common.back")}
+                        hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
                         style={{
-                            position: "absolute", top: 10, right: 14, width: 32, height: 32,
-                            borderRadius: 16, alignItems: "center", justifyContent: "center",
-                            backgroundColor: "rgba(19,19,19,0.6)",
+                            width: 34, height: 34, borderRadius: 17,
+                            backgroundColor: U.lineNeutral,
+                            alignItems: "center", justifyContent: "center",
                         }}
                     >
-                        <Ionicons name="close" size={19} color={theme.color.onSurface} />
+                        <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
                     </Pressable>
                 </View>
 
-                <View style={{ paddingHorizontal: theme.space.gutter, marginTop: -14 }}>
-                    <Text style={{
-                        ...theme.text.title, color: theme.color.goldMidday,
-                        textAlign: "center", marginBottom: 18,
-                    }}>
-                        {t(!hasUpgrade
-                            ? "paywall.title_out_of_credits"
-                            : source === SOURCE_FIRST_RESULT
-                            ? "paywall.title_first_result"
-                            : source === SOURCE_CREDITS_EXHAUSTED
-                                ? "paywall.title_out_of_credits"
-                                : "paywall.title")}
-                    </Text>
+                <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
+                    {t("paywall.two_things_headline")}
+                </Text>
 
-                    {/* ── Benefits ── (only when something is on offer; a top-tier
-                        subscriber already has all of them) */}
-                    {hasUpgrade && (
-                    <View style={{ gap: 10, marginBottom: 20 }}>
-                        {benefits.map((b) => (
-                            <View key={b.key} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                                <View style={{
-                                    width: 28, height: 28, borderRadius: 14,
-                                    backgroundColor: theme.color.surfaceContainerHigh,
-                                    alignItems: "center", justifyContent: "center",
-                                }}>
-                                    <Ionicons name={b.icon} size={15} color={theme.color.goldContainer} />
-                                </View>
-                                <Text style={{ ...theme.text.body, color: theme.color.onSurface, flex: 1 }}>
-                                    {t(b.key)}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
+                {/* No descriptions. The photograph is the description. */}
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                    <ProCard
+                        image={require("@/assets/features/style_after.png")}
+                        label={t("studio.mode_style_transfer")}
+                    />
+                    <ProCard
+                        image={require("@/assets/features/outdoor_card.png")}
+                        label={t("studio.mode_outdoor")}
+                    />
+                </View>
+
+                <BillingSegment
+                    annual={billing === "annual"}
+                    onChange={setBilling}
+                    t={t}
+                />
+
+                <View style={{ gap: 10, marginTop: 18 }}>
+                    {offersPro && (
+                        <UmberPlanRow
+                            tier="PRO"
+                            sub={t("paywall.pro_sub")}
+                            price={proPrice}
+                            period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                            selected={selectedIsPro}
+                            onPress={() => {
+                                setSelected(PLAN_PRO);
+                                recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
+                            }}
+                        />
                     )}
-
-                    {/* ── Plans ── */}
-                    {!plans ? (
-                        <ActivityIndicator color={theme.color.goldContainer} style={{ marginVertical: 30 }} />
-                    ) : (
-                        <View style={{ gap: 12 }}>
-                            {offersBase && (
-                            <PlanCard
-                                label={t("paywall.plan_base")}
-                                sub={t("paywall.plan_base_sub", { credits: base?.monthlyCredits ?? 0 })}
-                                price={priceOf(base)}
-                                badge={bestValueCode === PLAN_BASE ? t("paywall.best_value") : null}
-                                selected={effectiveSelected === PLAN_BASE}
-                                onPress={() => {
-                                    setSelected(PLAN_BASE);
-                                    touchedAPlan.current = true;
-                                    recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
-                                }}
-                            />
-                            )}
-                            {offersPro && (
-                            <PlanCard
-                                label={t("paywall.plan_pro")}
-                                sub={t("paywall.plan_pro_sub", { credits: pro?.monthlyCredits ?? 0 })}
-                                price={priceOf(pro)}
-                                badge={trialDays ? t("paywall.trial_badge", { days: trialDays }) : bestValueCode === PLAN_PRO ? t("paywall.best_value") : null}
-                                selected={effectiveSelected === PLAN_PRO}
-                                onPress={() => {
-                                    setSelected(PLAN_PRO);
-                                    touchedAPlan.current = true;
-                                    recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
-                                }}
-                            />
-                            )}
-                        </View>
+                    {offersBase && (
+                        <UmberPlanRow
+                            tier="BASE"
+                            sub={t("paywall.base_sub")}
+                            price={basePrice}
+                            period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                            selected={!selectedIsPro}
+                            onPress={() => {
+                                setSelected(PLAN_BASE);
+                                recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
+                            }}
+                        />
                     )}
+                </View>
 
-                    {/* The CTA names the action AND the price.
-                        It used to read "Continue", while the tap opened Apple's
-                        payment sheet for the then pre-selected annual plan. The event
-                        log showed exactly what that produced: three users tapped
-                        it 4, 7 and 11 seconds after the screen appeared — far too
-                        fast to have read an offer — and all three cancelled at
-                        the sheet, then left. One of them cancelled the annual,
-                        looked at the weekly, and still left.
-                        Nobody was rejecting the price; they were pressing what
-                        looked like "next" and meeting a bill.
+                <View style={{ flex: 1 }} />
 
-                        A button that charges money must say so before the tap,
-                        not after — the same rule Guideline 3.1.2 applies to the
-                        terms printed beneath it. The price is interpolated live
-                        from the storefront, so it always matches the sheet the
-                        user is about to see. */}
-                    {hasUpgrade && (
-                        <View style={{ marginTop: 18 }}>
-                            <PrimaryButton
-                                label={trialApplies
-                                    ? t("paywall.trial_cta", { days: trialDays, price: priceOf(pro) })
-                                    : t("paywall.subscribe_cta", { price: priceOf(chosen) })}
-                                onPress={handleContinue}
-                                loading={busy}
-                                disabled={!plans}
-                            />
-                        </View>
-                    )}
-
-                    {/* Renewal terms in plain words — Apple 3.1.2 wants the user to
-                        know what recurs before they tap, not after. */}
-                    <Text style={{
-                        ...theme.text.caption, color: theme.color.onSurfaceMuted,
-                        textAlign: "center", marginTop: 10,
-                    }}>
-                        {!hasUpgrade
-                            ? reloadNote
-                            : trialApplies
-                                ? t("paywall.renewal_note_trial", { days: trialDays })
-                                : t("paywall.renewal_note")}
-                    </Text>
-
-                    {/* Only for a wallet that has just run dry: one small, one-time
-                        purchase beside the subscription. The store's own pack
-                        screen has existed since July and sold exactly nothing,
-                        because it was never in front of anyone at the moment
-                        they wanted one more render. This is that moment. */}
-                    {exhaustedPack && !hasUpgrade && (
-                        <View style={{ marginTop: 18 }}>
-                            <PrimaryButton
-                                label={t("paywall.pack_cta", {
-                                    credits: exhaustedPack.totalCredits,
-                                    price: formatProductPrice(storePrices, exhaustedPack.appleProductId,
-                                        exhaustedPack.priceCents, exhaustedPack.currency),
-                                })}
-                                onPress={handlePack}
-                                loading={busy}
-                            />
-                        </View>
-                    )}
-
-                    {exhaustedPack && hasUpgrade && (
-                        <Pressable
-                            onPress={handlePack}
-                            disabled={busy}
-                            accessibilityRole="button"
-                            style={({ pressed }) => ({
-                                marginTop: 14,
-                                paddingVertical: 14,
-                                paddingHorizontal: 16,
-                                borderRadius: 14,
-                                borderWidth: 1,
-                                borderColor: "rgba(225,195,155,0.38)",
-                                backgroundColor: pressed
-                                    ? "rgba(225,195,155,0.16)"
-                                    : "rgba(225,195,155,0.07)",
-                                alignItems: "center",
-                                opacity: busy ? 0.6 : 1,
-                            })}
-                        >
-                            <Text style={{ ...theme.text.body, color: theme.color.goldMidday, textAlign: "center" }}>
-                                {t("paywall.pack_cta", {
-                                    credits: exhaustedPack.totalCredits,
-                                    price: formatProductPrice(storePrices, exhaustedPack.appleProductId,
-                                        exhaustedPack.priceCents, exhaustedPack.currency),
-                                })}
-                            </Text>
-                        </Pressable>
-                    )}
-
-                    <View style={{
-                        flexDirection: "row", justifyContent: "center",
-                        alignItems: "center", gap: 18, marginTop: 14,
-                    }}>
-                        <Pressable onPress={handleRestore} hitSlop={8}>
-                            <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceVariant }}>
-                                {t("paywall.restore")}
-                            </Text>
-                        </Pressable>
-                        <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
-                            <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceVariant }}>
-                                {t("paywall.terms")}
-                            </Text>
-                        </Pressable>
-                        <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>
-                            <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceVariant }}>
-                                {t("paywall.privacy")}
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    <Pressable onPress={() => leave("DISMISSED")} hitSlop={10} style={{ marginTop: 14 }}>
-                        <Text style={{
-                            ...theme.text.caption, color: theme.color.onSurfaceMuted, textAlign: "center",
-                        }}>
-                            {t("paywall.maybe_later")}
+                {/* The out-of-credits placement keeps its low-commitment step:
+                    someone who has just run dry is the one person for whom a
+                    one-off pack is the right size of decision. */}
+                {exhaustedPack && (
+                    <Pressable
+                        onPress={handlePack}
+                        disabled={busy}
+                        accessibilityRole="button"
+                        style={{
+                            borderWidth: 1, borderColor: U.lineNeutral,
+                            borderRadius: 13, paddingVertical: 12, paddingHorizontal: 14,
+                            marginBottom: 10, flexDirection: "row",
+                            alignItems: "center", justifyContent: "space-between",
+                        }}
+                    >
+                        <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted }}>
+                            {t("paywall.pack_line", { credits: exhaustedPack.credits })}
+                        </Text>
+                        <Text style={{ fontFamily: "Archivo-700", fontSize: 12.5, color: U.accentBright }}>
+                            {priceOfPack(exhaustedPack)}
                         </Text>
                     </Pressable>
-                </View>
-            </ScrollView>
+                )}
+
+                <Pressable
+                    onPress={handleContinue}
+                    disabled={busy || !chosen}
+                    accessibilityRole="button"
+                    style={{
+                        height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                        opacity: busy || !chosen ? 0.5 : 1,
+                        flexDirection: "row", alignItems: "center",
+                        justifyContent: "space-between", paddingHorizontal: 22,
+                    }}
+                >
+                    {busy ? (
+                        <ActivityIndicator color={U.buttonInk} />
+                    ) : (
+                        <>
+                            <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
+                                {selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
+                            </Text>
+                            <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                        </>
+                    )}
+                </Pressable>
+
+                <Pressable onPress={handleRestore} disabled={busy} hitSlop={8} accessibilityRole="button">
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 12, marginBottom: 4 }}>
+                        {t("paywall.footnote")}
+                    </Text>
+                </Pressable>
+            </View>
         </SafeAreaView>
     );
 }
 
-function PlanCard({ label, sub, price, badge, selected, onPress }: {
-    label: string; sub: string; price: string;
-    badge: string | null; selected: boolean; onPress: () => void;
+/** A locked capability, shown rather than described. */
+function ProCard({ image, label }: { image: number; label: string }) {
+    return (
+        <View style={{ flex: 1, height: 136, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}>
+            <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+            <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.9)"]}
+                style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingTop: 30, paddingHorizontal: 12, paddingBottom: 10 }}
+            >
+                <Text style={{ fontFamily: "Archivo-700", fontSize: 14, color: "#fff" }} numberOfLines={2}>
+                    {label}
+                </Text>
+            </LinearGradient>
+        </View>
+    );
+}
+
+function BillingSegment({
+    annual, onChange, t,
+}: { annual: boolean; onChange: (v: "weekly" | "annual") => void; t: (k: string) => string }) {
+    return (
+        <View
+            style={{
+                marginTop: 22, flexDirection: "row", borderRadius: 100,
+                borderWidth: 1, borderColor: U.lineNeutral, padding: 4,
+            }}
+        >
+            {(["weekly", "annual"] as const).map((key) => {
+                const active = (key === "annual") === annual;
+                return (
+                    <Pressable
+                        key={key}
+                        onPress={() => onChange(key)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: active }}
+                        style={{
+                            flex: 1, height: 38, borderRadius: 100,
+                            alignItems: "center", justifyContent: "center",
+                            backgroundColor: active ? U.lineAccent : "transparent",
+                        }}
+                    >
+                        <Text style={{ ...theme.v2.tier, color: active ? U.accentBright : U.inkMuted }}>
+                            {t(key === "annual" ? "paywall.annual_minus_30" : "paywall.weekly")}
+                        </Text>
+                    </Pressable>
+                );
+            })}
+        </View>
+    );
+}
+
+function UmberPlanRow({
+    tier, sub, price, period, selected, onPress,
+}: {
+    tier: "PRO" | "BASE"; sub: string; price: string; period: string;
+    selected: boolean; onPress: () => void;
 }) {
     return (
         <Pressable
@@ -632,49 +585,26 @@ function PlanCard({ label, sub, price, badge, selected, onPress }: {
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             style={{
+                borderRadius: 18, paddingVertical: 15, paddingHorizontal: 16,
                 borderWidth: selected ? 1.5 : 1,
-                borderColor: selected ? theme.color.goldContainer : theme.color.outlineVariant,
-                backgroundColor: selected ? theme.color.surfaceContainerHigh : theme.color.surfaceContainer,
-                borderRadius: theme.radius.md,
-                padding: 16,
-                flexDirection: "row",
-                alignItems: "center",
+                borderColor: selected ? U.accent : U.lineNeutral,
+                backgroundColor: tier === "PRO" ? U.surface : "transparent",
+                flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                 gap: 12,
             }}
         >
-            <Ionicons
-                name={selected ? "checkmark-circle" : "ellipse-outline"}
-                size={22}
-                color={selected ? theme.color.goldContainer : theme.color.outline}
-            />
-            {/* Label, badge and sub share one flexible column; the price keeps
-                its own. The badge used to sit in the price's row, competing
-                with it for width — fine for a four-character "41%", but this
-                badge is a translated phrase ("MEILLEUR CHOIX", "BESTER WERT")
-                and it squeezed the label into a two-line wrap on the narrow
-                screens. Inside the column it wraps under the label instead,
-                so no translation can rearrange the row. */}
             <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <Text style={{ ...theme.text.label, color: theme.color.onSurface }}>{label}</Text>
-                    {badge ? (
-                        <View style={{
-                            backgroundColor: theme.color.goldContainer, borderRadius: 999,
-                            paddingHorizontal: 8, paddingVertical: 2,
-                        }}>
-                            <Text style={{ ...theme.text.caption, color: theme.color.onGold, fontWeight: "700" }}>
-                                {badge}
-                            </Text>
-                        </View>
-                    ) : null}
-                </View>
-                <Text style={{ ...theme.text.caption, color: theme.color.onSurfaceMuted, marginTop: 2 }}>
+                <Text style={{ ...theme.v2.tier, color: tier === "PRO" ? U.accentBright : U.inkMuted }}>
+                    {tier}
+                </Text>
+                <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 3 }} numberOfLines={2}>
                     {sub}
                 </Text>
             </View>
-            {/* Never shrinks: the amount is the one thing on this card that
-                must stay legible whatever the label does. */}
-            <Text style={{ ...theme.text.label, color: theme.color.onSurface, flexShrink: 0 }}>{price}</Text>
+            <View style={{ alignItems: "flex-end" }}>
+                <Text style={{ ...theme.v2.price, color: U.ink }}>{price}</Text>
+                <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>{period}</Text>
+            </View>
         </Pressable>
     );
 }

@@ -52,7 +52,17 @@
     "slide3_headline": "KI-gestützte Magie",
     "slide3_description": "Lass künstliche Intelligenz deine Räume mit atemberaubenden, fotorealistischen Ergebnissen neu gestalten.",
     "get_started": "Loslegen",
-    "skip": "Überspringen"
+    "skip": "Überspringen",
+    "v2_slide1_headline": "Dein Raum, neu gestaltet",
+    "v2_slide1_body": "Fotografiere den Raum, in dem du sitzt. Gleiche Wände, gleiche Fenster, neuer Stil.",
+    "v2_slide2_headline": "Sechs Wege, nicht einer",
+    "v2_slide2_body": "Umgestalten, leeren, eine Ecke ändern, ein echtes Sofa einsetzen, einen Look kopieren, nach draußen gehen.",
+    "v2_slide3_headline": "Heute drei gratis",
+    "v2_slide3_body": "Drei Designs pro Tag. Gib sie für einen Raum in drei Stilen aus.",
+    "v2_next": "Weiter",
+    "v2_start": "Los",
+    "v2_skip": "Überspringen",
+    "sign_in_existing": "Mit bestehendem Konto anmelden"
   },
   "auth": {
     "login_title": "Willkommen zurück",
@@ -382,7 +392,9 @@
     "curated": "Kuratierte Werke",
     "summary": "{{designCount}} Designs · {{jobCount}} Jobs",
     "all_designs": "Alle Designs",
-    "filter_activity": "Aktivität"
+    "filter_activity": "Aktivität",
+    "v2_empty_line": "Hier ist noch nichts.",
+    "v2_new_design": "+ Neues Design"
   },
   "history": {
     "title": "Verlauf",
@@ -443,7 +455,15 @@
     "secure_account": "Konto sichern",
     "secure_account_hint": "E-Mail hinzufügen — Designs und Käufe sichern",
     "trial_gift_label": "Geschenkte Test-Credits",
-    "trial_gift_note": "Nach dem Test laden deine wöchentlichen {{credits}} Credits — übrige Geschenk-Credits bleiben erhalten."
+    "trial_gift_note": "Nach dem Test laden deine wöchentlichen {{credits}} Credits — übrige Geschenk-Credits bleiben erhalten.",
+    "free_plan": "Gratis-Tarif",
+    "sign_in_to_keep": "Anmelden, um deine Galerie zu behalten",
+    "daily_reminder": "Tägliche Erinnerung",
+    "get_pro": "Pro holen",
+    "credits_refill_line": "Guthaben · täglich aufgefüllt",
+    "credits_line": "Guthaben",
+    "account_and_data": "Konto und Daten",
+    "account_fallback_name": "Dein Konto"
   },
   "plans": {
     "title": "Tarif wählen",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "2× herauszoomen",
     "expand_square": "Quadratisch machen",
     "try_another_style": "Anderen Stil testen",
-    "save_to_photos": "In Fotos sichern"
+    "save_to_photos": "In Fotos sichern",
+    "save": "Sichern",
+    "another_style": "Gleicher Raum, anderer Stil",
+    "reference_style": "Referenz",
+    "remind_me": "Erinnern, wenn Guthaben kommt",
+    "reminder_on": "Erinnerung an",
+    "open_fullscreen": "Vollbild öffnen",
+    "reminder_denied_title": "Mitteilungen sind aus",
+    "reminder_denied_body": "Schalte sie in den Einstellungen ein, um die Erinnerung zu erhalten."
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Nur diesen Raum fertig machen: {{credits}} Credits · {{price}}",
     "reload_today": "Deine wöchentlichen Credits laden heute.",
     "reload_tomorrow": "Deine wöchentlichen Credits laden morgen.",
-    "reload_in_days": "Deine wöchentlichen Credits laden in {{days}} Tagen."
+    "reload_in_days": "Deine wöchentlichen Credits laden in {{days}} Tagen.",
+    "two_things_headline": "Zwei Dinge, die nur Pro kann",
+    "pro_sub": "Alles, plus die beiden oben",
+    "base_sub": "Nur Räume",
+    "start_pro": "Pro starten",
+    "start_base": "Base starten",
+    "weekly": "Wöchentlich",
+    "annual_minus_30": "Jährlich · −30 %",
+    "per_week": "/Woche",
+    "per_year": "/Jahr",
+    "footnote": "Jederzeit kündbar · einmalige Guthabenpakete ebenfalls erhältlich",
+    "pack_line": "Oder einmalig {{credits}} Guthaben"
   },
   "source": {
     "title": "Wie hast du uns gefunden?",

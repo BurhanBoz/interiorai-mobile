@@ -52,7 +52,17 @@
     "slide3_headline": "La magie de l'IA",
     "slide3_description": "Laissez l'intelligence artificielle réimaginer vos pièces avec un rendu photoréaliste saisissant.",
     "get_started": "Commencer",
-    "skip": "Passer"
+    "skip": "Passer",
+    "v2_slide1_headline": "Votre pièce, restylée",
+    "v2_slide1_body": "Photographiez la pièce où vous êtes assis. Mêmes murs, mêmes fenêtres, nouveau style.",
+    "v2_slide2_headline": "Six façons, pas une",
+    "v2_slide2_body": "Restyler, vider, refaire un coin, poser un vrai canapé, copier un look, sortir dehors.",
+    "v2_slide3_headline": "Trois gratuits aujourd'hui",
+    "v2_slide3_body": "Trois designs par jour. Dépensez-les sur une pièce, en trois styles.",
+    "v2_next": "Suivant",
+    "v2_start": "Commencer",
+    "v2_skip": "Passer",
+    "sign_in_existing": "Se connecter à un compte existant"
   },
   "auth": {
     "login_title": "Bon retour",
@@ -382,7 +392,9 @@
     "curated": "Œuvres sélectionnées",
     "summary": "{{designCount}} créations · {{jobCount}} générations",
     "all_designs": "Toutes les créations",
-    "filter_activity": "Activité"
+    "filter_activity": "Activité",
+    "v2_empty_line": "Rien ici pour l'instant.",
+    "v2_new_design": "+ Nouveau design"
   },
   "history": {
     "title": "Historique",
@@ -443,7 +455,15 @@
     "secure_account": "Sécurisez votre compte",
     "secure_account_hint": "Ajoutez un e-mail — vos créations et vos achats resteront protégés",
     "trial_gift_label": "Crédits d'essai offerts",
-    "trial_gift_note": "À la fin de l'essai, vos {{credits}} crédits hebdomadaires arrivent — les crédits offerts restants s'y ajoutent."
+    "trial_gift_note": "À la fin de l'essai, vos {{credits}} crédits hebdomadaires arrivent — les crédits offerts restants s'y ajoutent.",
+    "free_plan": "Forfait gratuit",
+    "sign_in_to_keep": "Connectez-vous pour garder votre galerie",
+    "daily_reminder": "Rappel quotidien",
+    "get_pro": "Passer à Pro",
+    "credits_refill_line": "crédits · rechargés chaque jour",
+    "credits_line": "crédits",
+    "account_and_data": "Compte et données",
+    "account_fallback_name": "Votre compte"
   },
   "plans": {
     "title": "Choisissez votre offre",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "Dézoomer 2×",
     "expand_square": "Format carré",
     "try_another_style": "Essayer un autre style",
-    "save_to_photos": "Enregistrer dans Photos"
+    "save_to_photos": "Enregistrer dans Photos",
+    "save": "Enregistrer",
+    "another_style": "Même pièce, autre style",
+    "reference_style": "Référence",
+    "remind_me": "Me prévenir au rechargement",
+    "reminder_on": "Rappel activé",
+    "open_fullscreen": "Ouvrir en plein écran",
+    "reminder_denied_title": "Notifications désactivées",
+    "reminder_denied_body": "Activez-les dans Réglages pour recevoir le rappel."
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Juste cette pièce : {{credits}} crédits · {{price}}",
     "reload_today": "Vos crédits hebdomadaires se rechargent aujourd'hui.",
     "reload_tomorrow": "Vos crédits hebdomadaires se rechargent demain.",
-    "reload_in_days": "Vos crédits hebdomadaires se rechargent dans {{days}} jours."
+    "reload_in_days": "Vos crédits hebdomadaires se rechargent dans {{days}} jours.",
+    "two_things_headline": "Deux choses que seul Pro fait",
+    "pro_sub": "Tout, plus les deux ci-dessus",
+    "base_sub": "Pièces uniquement",
+    "start_pro": "Démarrer Pro",
+    "start_base": "Démarrer Base",
+    "weekly": "Hebdomadaire",
+    "annual_minus_30": "Annuel · −30 %",
+    "per_week": "/semaine",
+    "per_year": "/an",
+    "footnote": "Annulable à tout moment · packs de crédits ponctuels également",
+    "pack_line": "Ou {{credits}} crédits, une fois"
   },
   "source": {
     "title": "Comment nous avez-vous trouvés ?",

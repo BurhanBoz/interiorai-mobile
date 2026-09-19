@@ -28,6 +28,9 @@ import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+
+const U = theme.umber;
+const V = theme.v2;
 import { Button } from "@/components/ui/Button";
 import { theme } from "@/config/theme";
 
@@ -44,27 +47,56 @@ const FILTER_ACTIVITY = "__ACTIVITY__";
 // primitive so every blank screen in the app reads as the same product.
 // The primitive owns the breathing-icon animation and CTA slot; we only
 // supply copy and the action.
+/**
+ * The blank gallery.
+ *
+ * <p>It used to read "Your curated architectural portfolio is currently empty.
+ * Begin your journey by shaping space and form." — two sentences of atmosphere
+ * where the user needed a door. It is now the same "+ New design" affordance
+ * that ends the populated grid, so the empty state and the full one offer the
+ * identical next step.
+ */
 function GalleryEmpty() {
-  const { t } = useTranslation();
-  return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
-      <EmptyState
-        icon="grid-outline"
-        title={t("gallery.empty_title")}
-        description={t("gallery.empty_description")}
-        action={
-          <Button
-            title={t("gallery.empty_cta")}
-            variant="primary"
-            size="md"
-            onPress={() => router.push("/(tabs)/studio")}
-            fullWidth={false}
-            icon="arrow-forward"
-          />
-        }
-      />
-    </View>
-  );
+    const { t } = useTranslation();
+    return (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>
+            <NewDesignCell width={200} height={150} onPress={() => router.push("/(tabs)/studio")} />
+            <Text style={{ ...V.rowQuiet, color: U.inkMuted, marginTop: 16, textAlign: "center" }}>
+                {t("gallery.v2_empty_line")}
+            </Text>
+        </View>
+    );
+}
+
+/** The dashed cell that closes the grid — and stands alone when it is empty. */
+function NewDesignCell({
+    width, height, onPress,
+}: { width: number; height: number; onPress: () => void }) {
+    const { t } = useTranslation();
+    return (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            style={{
+                width, height,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: U.accent,
+                borderStyle: "dashed",
+                backgroundColor: U.lineAccent,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 12,
+            }}
+        >
+            <Text
+                style={{ fontFamily: "Archivo-600", fontSize: 13, color: U.accentBright, textAlign: "center" }}
+                numberOfLines={2}
+            >
+                {t("gallery.v2_new_design")}
+            </Text>
+        </Pressable>
+    );
 }
 
 interface GalleryOutput {
@@ -286,72 +318,28 @@ export default function GalleryScreen() {
           transition={200}
         />
 
-        {/* Bottom-left gradient + label, like the editorial reference */}
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.85)"]}
+        {/* A pill, not a gradient band. The gradient darkened a third of
+            every image to carry one word; the pill carries the same word and
+            gives the photograph back. */}
+        <View
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            paddingTop: 40,
-            paddingBottom: 12,
-            paddingHorizontal: 12,
+            left: 10,
+            bottom: 10,
+            backgroundColor: "rgba(14,13,12,0.75)",
+            borderRadius: 100,
+            paddingVertical: 5,
+            paddingHorizontal: 10,
+            maxWidth: tileWidth - 20,
           }}
         >
           <Text
-            className="text-white font-headline"
-            style={{
-              ...theme.text.title,
-            }}
+            style={{ fontFamily: "Archivo-600", fontSize: 11.5, color: "#fff" }}
             numberOfLines={1}
           >
-            {item.designStyleName || "Design"}
+            {item.designStyleName || item.roomTypeName}
           </Text>
-          {item.roomTypeName ? (
-            <Text
-              style={{
-                ...theme.text.caption,
-                color: "rgba(224,194,154,0.75)",
-                marginTop: 2,
-              }}
-              numberOfLines={1}
-            >
-              {item.roomTypeName}
-            </Text>
-          ) : null}
-        </LinearGradient>
-
-        {/* Heart toggle top-right — own Pressable so tapping it favorites
-            without triggering the parent tile's navigation. RN Pressable
-            stacking handles event precedence correctly here. */}
-        <Pressable
-          onPress={() => handleToggleFavorite(item.outputId)}
-          hitSlop={8}
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            width: 34,
-            height: 34,
-            borderRadius: theme.radius.md,
-            backgroundColor: isFavorite(item.outputId)
-              ? "rgba(225,195,155,0.22)"
-              : "rgba(19,19,19,0.6)",
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: isFavorite(item.outputId)
-              ? "rgba(225,195,155,0.65)"
-              : "rgba(255,255,255,0.12)",
-          }}
-        >
-          <Ionicons
-            name={isFavorite(item.outputId) ? "heart" : "heart-outline"}
-            size={16}
-            color={isFavorite(item.outputId) ? theme.color.goldDawn : "#E5E2E1"}
-          />
-        </Pressable>
+        </View>
 
         {/* Quality chip top-LEFT — moved off top-right to make room for
             the heart toggle. Only shown above STANDARD tier. */}
@@ -486,45 +474,17 @@ export default function GalleryScreen() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-surface">
-      {/* ── Top App Bar ── */}
-      <View
-        className="flex-row items-center justify-between px-6"
-        style={{ height: 56 }}
-      >
-        <View className="flex-row items-center" style={{ gap: 14 }}>
-          <Text
-            className="font-headline text-on-surface"
-            style={{
-              ...theme.text.label,
-            }}
-          >
-            {t("app.name")}
-          </Text>
-        </View>
-        <Pressable
-          onPress={() => router.push("/(tabs)/studio")}
-          className="bg-secondary-container rounded-lg items-center justify-center"
-          style={{ width: 40, height: 40 }}
-        >
-          <Ionicons name="add" size={22} color="#E0C29A" />
-        </Pressable>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
+      {/* Title only. The old bar carried the app name, a 40px "+" button and
+          a 36 × 2 gold rule under a second heading — three pieces of chrome
+          for one word. The "+" moved into the grid, where it reads as the
+          next cell rather than as a toolbar. */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16 }}>
+        <Text style={{ ...V.displayM, color: U.ink }}>{t("gallery.title")}</Text>
       </View>
 
       {allOutputs.length === 0 && !loading ? (
         <View className="flex-1">
-          <View className="px-6 pt-4 mb-8">
-            <Text
-              className="text-on-surface font-headline"
-              style={{ ...theme.text.display }}
-            >
-              {t("gallery.title")}
-            </Text>
-            <View
-              className="bg-secondary mt-3"
-              style={{ width: 36, height: 2, borderRadius: 1 }}
-            />
-          </View>
           <GalleryEmpty />
         </View>
       ) : (
@@ -638,6 +598,18 @@ export default function GalleryScreen() {
           }
           ListFooterComponent={
             <>
+              {/* The grid's last cell, not a floating button: the spec's
+                  "+ New design". Only on the image grid — the activity list
+                  is rows, and a dashed tile in a list of rows is noise. */}
+              {!showActivity && (
+                <View style={{ paddingHorizontal: EDGE, paddingTop: GAP }}>
+                  <NewDesignCell
+                    width={tileWidth}
+                    height={tileHeight}
+                    onPress={() => router.push("/(tabs)/studio")}
+                  />
+                </View>
+              )}
               {loadingMore ? (
                 <ActivityIndicator
                   size="small"

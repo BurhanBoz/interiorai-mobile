@@ -52,7 +52,17 @@
     "slide3_headline": "AI가 만드는 마법",
     "slide3_description": "인공지능이 당신의 방을 놀랍고 사실적인 결과물로 재상상합니다.",
     "get_started": "시작하기",
-    "skip": "건너뛰기"
+    "skip": "건너뛰기",
+    "v2_slide1_headline": "당신의 공간, 새로운 스타일로",
+    "v2_slide1_body": "지금 앉아 있는 방을 찍어보세요. 같은 벽, 같은 창, 새로운 스타일.",
+    "v2_slide2_headline": "방법은 여섯 가지",
+    "v2_slide2_body": "스타일 변경, 비우기, 한 부분만 수정, 실제 소파 배치, 분위기 복사, 야외까지.",
+    "v2_slide3_headline": "오늘 세 번 무료",
+    "v2_slide3_body": "하루 세 개의 디자인. 한 공간을 세 가지 스타일로 시도해 보세요.",
+    "v2_next": "다음",
+    "v2_start": "시작",
+    "v2_skip": "건너뛰기",
+    "sign_in_existing": "기존 계정으로 로그인"
   },
   "auth": {
     "login_title": "다시 오셨군요",
@@ -381,7 +391,9 @@
     "curated": "큐레이션 작품",
     "summary": "{{designCount}}개 디자인 · {{jobCount}}개 작업",
     "all_designs": "모든 디자인",
-    "filter_activity": "진행 상황"
+    "filter_activity": "진행 상황",
+    "v2_empty_line": "아직 아무것도 없습니다.",
+    "v2_new_design": "+ 새 디자인"
   },
   "history": {
     "title": "기록",
@@ -442,7 +454,15 @@
     "secure_account": "계정 보호하기",
     "secure_account_hint": "이메일 추가 — 디자인과 구매 내역을 안전하게",
     "trial_gift_label": "선물 체험 크레딧",
-    "trial_gift_note": "체험이 끝나면 주간 {{credits}} 크레딧이 들어와요 — 남은 선물 크레딧은 그대로 더해집니다."
+    "trial_gift_note": "체험이 끝나면 주간 {{credits}} 크레딧이 들어와요 — 남은 선물 크레딧은 그대로 더해집니다.",
+    "free_plan": "무료 플랜",
+    "sign_in_to_keep": "로그인하고 갤러리 보관하기",
+    "daily_reminder": "매일 알림",
+    "get_pro": "Pro 이용",
+    "credits_refill_line": "크레딧 · 매일 충전",
+    "credits_line": "크레딧",
+    "account_and_data": "계정 및 데이터",
+    "account_fallback_name": "내 계정"
   },
   "plans": {
     "title": "플랜 선택",
@@ -770,7 +790,15 @@
     "expand_zoom_2": "2× 축소",
     "expand_square": "정사각형으로",
     "try_another_style": "다른 스타일 시도",
-    "save_to_photos": "사진에 저장"
+    "save_to_photos": "사진에 저장",
+    "save": "저장",
+    "another_style": "같은 공간, 다른 스타일",
+    "reference_style": "참고 이미지",
+    "remind_me": "크레딧 충전되면 알림",
+    "reminder_on": "알림 켜짐",
+    "open_fullscreen": "전체 화면으로 보기",
+    "reminder_denied_title": "알림이 꺼져 있습니다",
+    "reminder_denied_body": "알림을 받으려면 설정에서 켜주세요."
   },
   "settings": {
     "notifications_title": "알림",
@@ -1116,7 +1144,18 @@
     "pack_cta": "이 방만 완성하기: {{credits}} 크레딧 · {{price}}",
     "reload_today": "주간 크레딧이 오늘 충전됩니다.",
     "reload_tomorrow": "주간 크레딧이 내일 충전됩니다.",
-    "reload_in_days": "주간 크레딧이 {{days}}일 후 충전됩니다."
+    "reload_in_days": "주간 크레딧이 {{days}}일 후 충전됩니다.",
+    "two_things_headline": "Pro만 할 수 있는 두 가지",
+    "pro_sub": "모든 기능에 위 두 가지까지",
+    "base_sub": "공간만",
+    "start_pro": "Pro 시작",
+    "start_base": "Base 시작",
+    "weekly": "주간",
+    "annual_minus_30": "연간 · −30%",
+    "per_week": "/주",
+    "per_year": "/년",
+    "footnote": "언제든 해지 가능 · 단건 크레딧 팩도 있습니다",
+    "pack_line": "또는 크레딧 {{credits}}개 한 번만"
   },
   "source": {
     "title": "어떻게 알게 되셨나요?",

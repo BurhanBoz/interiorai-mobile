@@ -52,7 +52,17 @@
     "slide3_headline": "AI-Powered Magic",
     "slide3_description": "Let artificial intelligence reimagine your rooms with stunning, photorealistic results.",
     "get_started": "Get Started",
-    "skip": "Skip"
+    "skip": "Skip",
+    "v2_slide1_headline": "Your room, restyled",
+    "v2_slide1_body": "Photograph the room you are sitting in. Same walls, same windows, new style.",
+    "v2_slide2_headline": "Six ways, not one",
+    "v2_slide2_body": "Restyle, empty, repaint a corner, drop in a real sofa, copy a look, go outside.",
+    "v2_slide3_headline": "Three free today",
+    "v2_slide3_body": "Three designs a day. Spend them on one room in three styles.",
+    "v2_next": "Next",
+    "v2_start": "Start",
+    "v2_skip": "Skip",
+    "sign_in_existing": "Sign in to an existing account"
   },
   "auth": {
     "login_title": "Welcome Back",
@@ -382,7 +392,9 @@
     "curated": "Curated Works",
     "summary": "{{designCount}} designs · {{jobCount}} jobs",
     "all_designs": "All Designs",
-    "filter_activity": "Activity"
+    "filter_activity": "Activity",
+    "v2_empty_line": "Nothing here yet.",
+    "v2_new_design": "+ New design"
   },
   "history": {
     "title": "History",
@@ -443,7 +455,15 @@
     "secure_account": "Secure your account",
     "secure_account_hint": "Add an email — keep your designs and purchases safe",
     "trial_gift_label": "Gift trial credits",
-    "trial_gift_note": "When the trial ends, your weekly {{credits}} credits load — leftover gift credits carry over."
+    "trial_gift_note": "When the trial ends, your weekly {{credits}} credits load — leftover gift credits carry over.",
+    "free_plan": "Free plan",
+    "sign_in_to_keep": "Sign in to keep your gallery",
+    "daily_reminder": "Daily reminder",
+    "get_pro": "Get Pro",
+    "credits_refill_line": "credits · refills daily",
+    "credits_line": "credits",
+    "account_and_data": "Account and data",
+    "account_fallback_name": "Your account"
   },
   "plans": {
     "title": "Choose Your Plan",
@@ -772,7 +792,15 @@
     "expand_zoom_2": "Zoom out 2×",
     "expand_square": "Make square",
     "try_another_style": "Try another style",
-    "save_to_photos": "Save to Photos"
+    "save_to_photos": "Save to Photos",
+    "save": "Save",
+    "another_style": "Same room, another style",
+    "reference_style": "Reference",
+    "remind_me": "Remind me when credits refill",
+    "reminder_on": "Reminder on",
+    "open_fullscreen": "Open full screen",
+    "reminder_denied_title": "Notifications are off",
+    "reminder_denied_body": "Turn them on in Settings to get the reminder."
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1118,7 +1146,18 @@
     "pack_cta": "Just finish this room: {{credits}} credits · {{price}}",
     "reload_today": "Your weekly credits reload today.",
     "reload_tomorrow": "Your weekly credits reload tomorrow.",
-    "reload_in_days": "Your weekly credits reload in {{days}} days."
+    "reload_in_days": "Your weekly credits reload in {{days}} days.",
+    "two_things_headline": "Two things only Pro can do",
+    "pro_sub": "Everything, plus the two above",
+    "base_sub": "Rooms only",
+    "start_pro": "Start Pro",
+    "start_base": "Start Base",
+    "weekly": "Weekly",
+    "annual_minus_30": "Annual · −30%",
+    "per_week": "/week",
+    "per_year": "/year",
+    "footnote": "Cancel any time · one-off credit packs also available",
+    "pack_line": "Or {{credits}} credits, once"
   },
   "source": {
     "title": "How did you find us?",

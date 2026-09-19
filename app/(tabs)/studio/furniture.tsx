@@ -1,3 +1,11 @@
+/*
+ * Umber palette (2026-09-19). The colour literals below were the v1 near-black
+ * set; they are mapped onto the new tokens one for one.
+ *
+ * 🔴 The product plate stays LIGHT (#F6F1E7). Every catalogue image is a
+ * cut-out shot against white, so a plate that darkened with the rest of the
+ * palette would leave each sofa floating on its own pale halo.
+ */
 import {
   ActivityIndicator,
   Alert,
@@ -146,7 +154,7 @@ export default function FurnitureScreen() {
   // ── V178: name the piece you just photographed ──────────────────────
   if (pending) {
     const input = {
-      color: "#F5F0EB",
+      color: "#F6F1E7",
       backgroundColor: "rgba(255,255,255,0.05)",
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.10)",
@@ -165,11 +173,11 @@ export default function FurnitureScreen() {
             className="flex-row items-center justify-between"
             style={{ paddingHorizontal: theme.space.gutter, paddingBottom: 10 }}
           >
-            <Text style={{ ...theme.text.headline, color: "#F5F0EB" }}>
+            <Text style={{ ...theme.text.headline, color: "#F6F1E7" }}>
               {t("furniture.save_title")}
             </Text>
             <Pressable onPress={() => setPending(null)} hitSlop={10}>
-              <Ionicons name="close" size={24} color="#A79C8E" />
+              <Ionicons name="close" size={24} color="#9A8F7D" />
             </Pressable>
           </View>
 
@@ -182,7 +190,7 @@ export default function FurnitureScreen() {
             </View>
 
             <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_name")}</Text>
+              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_name")}</Text>
               <TextInput
                 value={form.name}
                 onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
@@ -194,7 +202,7 @@ export default function FurnitureScreen() {
             </View>
 
             <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_category")}</Text>
+              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_category")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -216,7 +224,7 @@ export default function FurnitureScreen() {
                         borderColor: on ? "rgba(225,195,155,0.42)" : "rgba(255,255,255,0.08)",
                       }}
                     >
-                      <Text style={{ ...theme.text.caption, color: on ? "#E1C39B" : "#A79C8E" }}>
+                      <Text style={{ ...theme.text.caption, color: on ? "#DDB477" : "#9A8F7D" }}>
                         {t(`furniture.category.${c.toLowerCase()}`)}
                       </Text>
                     </Pressable>
@@ -229,7 +237,7 @@ export default function FurnitureScreen() {
                 they are the one fact the model otherwise has to guess, and
                 scale is what it guesses wrong. Optional, but asked for. */}
             <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.field_size")}</Text>
+              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_size")}</Text>
               <View className="flex-row" style={{ gap: 8 }}>
                 {(["w", "d", "h"] as const).map((k) => (
                   <TextInput
@@ -252,17 +260,17 @@ export default function FurnitureScreen() {
               className="rounded-xl items-center justify-center"
               style={{
                 paddingVertical: 15,
-                backgroundColor: "#E1C39B",
+                backgroundColor: "#DDB477",
                 opacity: saving || !form.name.trim() ? 0.45 : 1,
               }}
             >
               {saving
-                ? <ActivityIndicator size="small" color="#131313" />
-                : <Text style={{ ...theme.text.title, color: "#131313" }}>{t("furniture.save_action")}</Text>}
+                ? <ActivityIndicator size="small" color="#191510" />
+                : <Text style={{ ...theme.text.title, color: "#191510" }}>{t("furniture.save_action")}</Text>}
             </Pressable>
 
             <Pressable onPress={useOnce} disabled={saving} style={{ alignItems: "center", paddingVertical: 8 }}>
-              <Text style={{ ...theme.text.caption, color: "#A79C8E" }}>{t("furniture.use_once")}</Text>
+              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.use_once")}</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -277,11 +285,11 @@ export default function FurnitureScreen() {
         className="flex-row items-center justify-between"
         style={{ paddingHorizontal: theme.space.gutter, paddingBottom: 10 }}
       >
-        <Text style={{ ...theme.text.headline, color: "#F5F0EB" }}>
+        <Text style={{ ...theme.text.headline, color: "#F6F1E7" }}>
           {t("furniture.title")}
         </Text>
         <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button">
-          <Ionicons name="close" size={24} color="#A79C8E" />
+          <Ionicons name="close" size={24} color="#9A8F7D" />
         </Pressable>
       </View>
 
@@ -316,7 +324,7 @@ export default function FurnitureScreen() {
                 borderColor: active ? "rgba(225,195,155,0.42)" : "rgba(255,255,255,0.08)",
               }}
             >
-              <Text style={{ ...theme.text.caption, color: active ? "#E1C39B" : "#A79C8E" }}>
+              <Text style={{ ...theme.text.caption, color: active ? "#DDB477" : "#9A8F7D" }}>
                 {c === null ? t("furniture.all") : t(`furniture.category.${c.toLowerCase()}`)}
               </Text>
             </Pressable>
@@ -328,7 +336,7 @@ export default function FurnitureScreen() {
         <Text
           style={{
             ...theme.text.caption,
-            color: "#C9A227",
+            color: "#F0CE99",
             paddingHorizontal: theme.space.gutter,
             paddingBottom: 10,
           }}
@@ -362,15 +370,15 @@ export default function FurnitureScreen() {
                 }}
               >
                 {isUploading ? (
-                  <ActivityIndicator size="small" color="#E1C39B" />
+                  <ActivityIndicator size="small" color="#DDB477" />
                 ) : (
-                  <Ionicons name="camera-outline" size={22} color="#E1C39B" />
+                  <Ionicons name="camera-outline" size={22} color="#DDB477" />
                 )}
                 <View style={{ flex: 1 }}>
-                  <Text style={{ ...theme.text.title, color: "#F5F0EB" }}>
+                  <Text style={{ ...theme.text.title, color: "#F6F1E7" }}>
                     {t("furniture.own_photo")}
                   </Text>
-                  <Text style={{ ...theme.text.caption, color: "#8C8378" }}>
+                  <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>
                     {t("furniture.own_photo_hint")}
                   </Text>
                 </View>
@@ -381,7 +389,7 @@ export default function FurnitureScreen() {
         ListEmptyComponent={
           loading ? (
             <View style={{ paddingVertical: 48, alignItems: "center" }}>
-              <ActivityIndicator size="small" color="#E1C39B" />
+              <ActivityIndicator size="small" color="#DDB477" />
             </View>
           ) : (
             <View style={{ paddingVertical: 40, alignItems: "center", gap: 6 }}>
@@ -390,12 +398,12 @@ export default function FurnitureScreen() {
                 size={28}
                 color="#6E665D"
               />
-              <Text style={{ ...theme.text.caption, color: "#8C8378", textAlign: "center" }}>
+              <Text style={{ ...theme.text.caption, color: "#9A8F7D", textAlign: "center" }}>
                 {failed ? t("furniture.load_failed") : t("furniture.empty")}
               </Text>
               {failed && (
                 <Pressable onPress={() => load(category)} hitSlop={8}>
-                  <Text style={{ ...theme.text.caption, color: "#E1C39B" }}>
+                  <Text style={{ ...theme.text.caption, color: "#DDB477" }}>
                     {t("common.retry")}
                   </Text>
                 </Pressable>
@@ -438,12 +446,12 @@ export default function FurnitureScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    <Ionicons name="checkmark" size={13} color="#E1C39B" />
+                    <Ionicons name="checkmark" size={13} color="#DDB477" />
                   </View>
                 )}
               </View>
               <Text
-                style={{ ...theme.text.caption, color: "#C4BBB0", marginTop: 5 }}
+                style={{ ...theme.text.caption, color: "#F6F1E7", marginTop: 5 }}
                 numberOfLines={1}
               >
                 {item.name}
