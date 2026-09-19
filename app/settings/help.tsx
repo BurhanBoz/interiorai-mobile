@@ -48,7 +48,6 @@ const GENERATION_PARAMS = [
   { icon: "layers-outline", key: "preserve_layout" },
   { icon: "color-palette-outline", key: "color_palette" },
   { icon: "image-outline", key: "reference_image" },
-  { icon: "create-outline", key: "custom_prompt" },
 ] as const;
 
 /**
