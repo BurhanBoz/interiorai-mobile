@@ -626,9 +626,23 @@
     "empty_filtered_title": "لا شيء في هذا العرض",
     "empty_filtered_subtitle": "بدّل الفلتر أو عد بعد نشاطك القادم.",
     "ref_outdoor": "تصميم المساحات الخارجية",
-    "ledger.weekly_renewal": "رصيد أسبوعي +{{count}}",
     "balance_label": "{{count}} رصيد",
-    "balance_label_other": "{{count}} رصيد"
+    "balance_label_other": "{{count}} رصيد",
+    "headline_balance": "{{count}} رصيد",
+    "kind_adjustment": "تسوية",
+    "kind_promo": "رمز ترويجي",
+    "kind_monthly_reset": "أرصدة شهرية",
+    "kind_welcome_bonus": "مكافأة ترحيبية",
+    "kind_daily_drip": "رصيد يومي",
+    "kind_weekly_bonus": "مكافأة أسبوعية",
+    "kind_trial_expiry": "انتهت التجربة",
+    "kind_weekly_renewal": "أرصدة أسبوعية",
+    "ledger_feature_expand_view": "توسيع المشهد",
+    "ledger_feature_generic": "تصميم",
+    "ledger_refunded": "لم يكتمل — أُعيد الرصيد",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} مكافأة",
+    "ledger_today": "اليوم",
+    "ledger_yesterday": "أمس"
   },
   "credit_packs": {
     "title": "حزم الرصيد",
@@ -1024,7 +1038,8 @@
     "profile_edit_email_cta": "تغيير البريد الإلكتروني",
     "profile_edit_email_hint": "سنُخطر عنوانك الحالي. ستسجّل الدخول بالعنوان الجديد.",
     "profile_edit_email_success": "تم تحديث البريد الإلكتروني. ستسجّل الدخول به من الآن فصاعدًا.",
-    "profile_edit_email_managed": "تتم إدارته عبر تسجيل الدخول بواسطة {{provider}}."
+    "profile_edit_email_managed": "تتم إدارته عبر تسجيل الدخول بواسطة {{provider}}.",
+    "delete_account": "حذف الحساب"
   },
   "errors": {
     "network": "خطأ في الشبكة. الرجاء التحقق من الاتصال.",

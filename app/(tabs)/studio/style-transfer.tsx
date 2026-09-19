@@ -379,61 +379,11 @@ export default function StyleTransferScreen() {
           </View>
         </View>
 
-        {/* Influence Strength Slider */}
-        <View style={{ marginBottom: 32 }}>
-          <View className="flex-row items-center justify-between mb-6">
-            <Text
-              className="font-label text-on-surface"
-              style={{
-                ...theme.text.caption,
-              }}
-            >
-              {t("studio.reference_influence")}
-            </Text>
-            <Text
-              className="font-headline text-primary"
-              style={{
-                ...theme.text.headline,
-                fontStyle: "italic",
-              }}
-            >
-              {strengthPercent}%
-            </Text>
-          </View>
-
-          {/* Native slider — matches options.tsx pattern (0.1–1.0 range).
-              Style transfer is a MAX-only entry point in the studio flow,
-              so we always run the fine-grained 0.025 step here — the
-              0.05 default would skip 18 of the 36 useful values for the
-              very tier most likely to want them. The previous dual-layer
-              custom slider dropped taps because the invisible overlay
-              was offset from the visible track; a single native slider
-              both draws and captures. */}
-          <Slider
-            style={{ width: "100%", height: 36 }}
-            minimumValue={0.1}
-            maximumValue={1.0}
-            step={0.025}
-            value={strength}
-            onValueChange={setStrength}
-            onSlidingStart={() => Haptics.selectionAsync()}
-            minimumTrackTintColor="#DDB477"
-            maximumTrackTintColor="#332B1E"
-            thumbTintColor="#FDDEB4"
-          />
-
-          <Text
-            className="font-label"
-            style={{
-              ...theme.text.caption,
-              fontStyle: "italic",
-              color: "#9A8F7D",
-              marginTop: 8,
-            }}
-          >
-            {t("studio.reference_influence_hint")}
-          </Text>
-        </View>
+        {/* The influence slider came off (2026-09-19). It is the same
+            `strength` value the composer's Advanced sheet already owns, and
+            two controls writing one field is how they drift — the user sets
+            70% here, opens Advanced, and reads 50% because that screen last
+            wrote it. One owner, on the screen that also states the cost. */}
 
       </ScrollView>
 

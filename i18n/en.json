@@ -630,10 +630,24 @@
     "empty_filtered_title": "Nothing in this view",
     "empty_filtered_subtitle": "Switch to another filter or come back after your next activity.",
     "ref_outdoor": "Outdoor Design",
-    "ledger.weekly_renewal": "Weekly credits +{{count}}",
     "balance_label": "{{count}} credit",
     "balance_label_one": "{{count}} credit",
-    "balance_label_other": "{{count}} credits"
+    "balance_label_other": "{{count}} credits",
+    "headline_balance": "{{count}} credits",
+    "kind_adjustment": "Adjustment",
+    "kind_promo": "Promo code",
+    "kind_monthly_reset": "Monthly credits",
+    "kind_welcome_bonus": "Welcome bonus",
+    "kind_daily_drip": "Daily credit",
+    "kind_weekly_bonus": "Weekly bonus",
+    "kind_trial_expiry": "Trial ended",
+    "kind_weekly_renewal": "Weekly credits",
+    "ledger_feature_expand_view": "Expand View",
+    "ledger_feature_generic": "Design",
+    "ledger_refunded": "Didn't finish — credits returned",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} bonus",
+    "ledger_today": "Today",
+    "ledger_yesterday": "Yesterday"
   },
   "credit_packs": {
     "title": "Credit Packs",
@@ -1026,7 +1040,8 @@
     "profile_edit_email_cta": "Change email",
     "profile_edit_email_hint": "We'll notify your current address. You'll sign in with the new one.",
     "profile_edit_email_success": "Email updated. You'll use it to sign in from now on.",
-    "profile_edit_email_managed": "Managed by your {{provider}} sign-in."
+    "profile_edit_email_managed": "Managed by your {{provider}} sign-in.",
+    "delete_account": "Delete account"
   },
   "errors": {
     "network": "Network error. Please check your connection.",

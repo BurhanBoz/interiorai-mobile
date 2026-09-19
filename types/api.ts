@@ -366,6 +366,7 @@ export interface CreditPackPurchaseResponse {
 }
 
 // ── Credit Ledger ──────────────────────────────
+/** Mirrors com.frame.backend.roomframe.common.enums.LedgerType. */
 export type LedgerType =
     | "RESERVE"
     | "CONSUME"
@@ -373,13 +374,31 @@ export type LedgerType =
     | "TOPUP"
     | "ADJUSTMENT"
     | "REFUND"
-    | "PROMO";
+    | "PROMO"
+    | "MONTHLY_RESET"
+    | "WELCOME_BONUS"
+    | "DAILY_DRIP"
+    | "WEEKLY_BONUS"
+    | "TRIAL_EXPIRY"
+    | "WEEKLY_RENEWAL";
 
 export interface CreditLedgerEntry {
     id: string;
     type: LedgerType;
     amount: number;
+    /**
+     * Raw server-side audit string — English prose carrying a job UUID
+     * ("Credits reserved for job 7a556623-c9…"). It is admin tooling
+     * output, NOT display copy; billing history renders `description`.
+     */
     reason: string;
+    /**
+     * Pipe-delimited i18n key the server builds for us (B-06):
+     * {@code "ledger.reserve_interior_redesign|Living Room|6"}. Parsed by
+     * {@code utils/ledger.ts}. Null on very old rows written before the
+     * builder existed — the parser falls back to the ledger type.
+     */
+    description: string | null;
     jobId: string | null;
     createdAt: string;
 }

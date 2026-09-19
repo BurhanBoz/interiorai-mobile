@@ -145,37 +145,33 @@ export default function ProfileEditScreen() {
       >
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 48 }}
+          contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 28 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Editorial hero — live avatar preview + eyebrow + serif ── */}
-          <View style={{ alignItems: "center", marginTop: 20, marginBottom: 36 }}>
+          {/* ── Hero — live avatar preview that re-inks as you type ──────
+           *
+           * The serif display title that used to sit here said "Edit Profile"
+           * directly under a TopBar already saying "Edit Profile". Three
+           * titles for one screen; the duplicate is gone and the ~90px it
+           * cost is what lets the account rows below land on screen.
+           */}
+          <View style={{ alignItems: "center", marginTop: 12, marginBottom: 24 }}>
             <UserAvatar size="hero" initialsOverride={previewInitials} />
             <Text
               style={{
                 ...theme.text.caption,
                 color: theme.color.goldMidday,
-                marginTop: 20,
+                marginTop: 14,
               }}
             >
               {t("settings.profile_edit_eyebrow")}
             </Text>
             <Text
               style={{
-                ...theme.text.display,
-                color: theme.color.onSurface,
-                marginTop: 6,
-                textAlign: "center",
-              }}
-            >
-              {t("settings.profile_edit_title")}
-            </Text>
-            <Text
-              style={{
                 ...theme.text.body,
                 color: theme.color.onSurfaceVariant,
-                marginTop: 8,
+                marginTop: 6,
                 textAlign: "center",
                 maxWidth: 300,
               }}
@@ -307,7 +303,7 @@ export default function ProfileEditScreen() {
           </View>
 
           {/* ── Save ── */}
-          <View style={{ marginTop: 32 }}>
+          <View style={{ marginTop: 24 }}>
             <Button
               title={
                 loading
@@ -336,7 +332,7 @@ export default function ProfileEditScreen() {
            */}
           <View
             style={{
-              marginTop: 36,
+              marginTop: 24,
               borderWidth: 1,
               borderColor: theme.umber.lineNeutral,
               borderRadius: 16,

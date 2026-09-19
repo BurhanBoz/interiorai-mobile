@@ -630,10 +630,24 @@
     "empty_filtered_title": "Rien dans cette vue",
     "empty_filtered_subtitle": "Changez de filtre ou revenez après votre prochaine activité.",
     "ref_outdoor": "Design extérieur",
-    "ledger.weekly_renewal": "Crédits hebdomadaires +{{count}}",
     "balance_label": "{{count}} crédit",
     "balance_label_one": "{{count}} crédit",
-    "balance_label_other": "{{count}} crédits"
+    "balance_label_other": "{{count}} crédits",
+    "headline_balance": "{{count}} crédits",
+    "kind_adjustment": "Ajustement",
+    "kind_promo": "Code promo",
+    "kind_monthly_reset": "Crédits mensuels",
+    "kind_welcome_bonus": "Bonus de bienvenue",
+    "kind_daily_drip": "Crédit quotidien",
+    "kind_weekly_bonus": "Bonus hebdomadaire",
+    "kind_trial_expiry": "Essai terminé",
+    "kind_weekly_renewal": "Crédits hebdomadaires",
+    "ledger_feature_expand_view": "Élargir la vue",
+    "ledger_feature_generic": "Design",
+    "ledger_refunded": "Non abouti — crédits restitués",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} offerts",
+    "ledger_today": "Aujourd'hui",
+    "ledger_yesterday": "Hier"
   },
   "credit_packs": {
     "title": "Packs de crédits",
@@ -1026,7 +1040,8 @@
     "profile_edit_email_cta": "Changer d'e-mail",
     "profile_edit_email_hint": "Nous préviendrons votre adresse actuelle. Vous vous connecterez avec la nouvelle.",
     "profile_edit_email_success": "E-mail mis à jour. Vous l'utiliserez désormais pour vous connecter.",
-    "profile_edit_email_managed": "Géré par votre connexion {{provider}}."
+    "profile_edit_email_managed": "Géré par votre connexion {{provider}}.",
+    "delete_account": "Supprimer le compte"
   },
   "errors": {
     "network": "Erreur réseau. Vérifiez votre connexion.",

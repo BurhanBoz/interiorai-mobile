@@ -24,6 +24,8 @@ import type { FurnitureItem, CatalogItemResponse } from "@/types/api";
 import { RoomTypeSheet } from "@/components/studio/RoomTypeSheet";
 import { AdvancedSheet } from "@/components/studio/AdvancedSheet";
 import { getStyleImage } from "@/components/studio/styleImages";
+import { catalogName } from "@/utils/catalogI18n";
+import { MaskOverlay } from "@/components/ui/MaskOverlay";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -67,6 +69,8 @@ export default function ComposerScreen() {
     const designStyle = useStudioStore((s) => s.designStyle);
     const objectRefs = useStudioStore((s) => s.objectRefs);
     const referencePhoto = useStudioStore((s) => s.referencePhoto);
+    const maskStrokes = useStudioStore((s) => s.maskStrokes);
+    const maskMode = useStudioStore((s) => s.maskMode);
     const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
     const setRoomType = useStudioStore((s) => s.setRoomType);
     const setDesignStyle = useStudioStore((s) => s.setDesignStyle);
@@ -209,10 +213,14 @@ export default function ComposerScreen() {
 
                     <PhotoFrame
                         uri={photo?.uri}
-                        roomTypeName={roomType?.name ?? ""}
+                        width={photo?.width ?? null}
+                        height={photo?.height ?? null}
+                        roomTypeName={roomType ? catalogName(t, "room", roomType) : ""}
                         onChangeRoom={() => setSheet("room")}
                         onReplace={onReplace}
                         busy={isUploading}
+                        maskStrokes={mode === "INPAINT" ? maskStrokes : null}
+                        maskMode={maskMode}
                     />
 
                     <StyleStrip
@@ -295,12 +303,12 @@ export default function ComposerScreen() {
                         <Text style={{ ...V.rowQuiet, color: U.inkMuted, flex: 1 }} numberOfLines={1}>
                             {pickedProduct
                                 ? t("studio.summary_with_piece", {
-                                      style: designStyle?.name ?? "",
-                                      room: roomType?.name ?? "",
+                                      style: designStyle ? catalogName(t, "style", designStyle) : "",
+                                      room: roomType ? catalogName(t, "room", roomType) : "",
                                   })
                                 : t("studio.summary", {
-                                      style: designStyle?.name ?? "",
-                                      room: roomType?.name ?? "",
+                                      style: designStyle ? catalogName(t, "style", designStyle) : "",
+                                      room: roomType ? catalogName(t, "room", roomType) : "",
                                   })}
                         </Text>
                         {/* The only statement of cost anywhere in the app. */}
@@ -359,18 +367,39 @@ export default function ComposerScreen() {
 
 /* ── photo ──────────────────────────────────────────────────────────── */
 
+/**
+ * The photo, and — for Magic Edit — what the user painted on it.
+ *
+ * <p>Coming back from the mask screen, the composer used to show the bare
+ * room: the strokes existed in the store and nowhere on screen, so the only
+ * way to check the mask was to spend a credit and look at the result. The
+ * overlay is the same component the mask screen draws with, at the same
+ * normalised coordinates, so what is shown here is what will be sent.
+ *
+ * <p>PROTECT strokes are drawn green and CHANGE strokes gold, matching the
+ * mask screen's own colours — the two mean opposite things and one colour
+ * for both would be worse than no overlay.
+ */
 function PhotoFrame({
     uri,
+    width,
+    height,
     roomTypeName,
     onChangeRoom,
     onReplace,
     busy,
+    maskStrokes,
+    maskMode,
 }: {
     uri?: string;
+    width: number | null;
+    height: number | null;
     roomTypeName: string;
     onChangeRoom: () => void;
     onReplace: () => void;
     busy: boolean;
+    maskStrokes?: unknown[] | null;
+    maskMode?: string | null;
 }) {
     const { t } = useTranslation();
     return (
@@ -383,7 +412,17 @@ function PhotoFrame({
             }}
         >
             {uri ? (
-                <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                <>
+                    <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    {maskStrokes && maskStrokes.length > 0 && width && height ? (
+                        <MaskOverlay
+                            strokes={maskStrokes as never}
+                            imageWidth={width}
+                            imageHeight={height}
+                            color={maskMode === "PROTECT" ? "#7BB38A" : U.accent}
+                        />
+                    ) : null}
+                </>
             ) : (
                 <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                     <ActivityIndicator color={U.inkMuted} />
@@ -464,6 +503,7 @@ function StyleStrip({
     selectedId: string | null;
     onSelect: (s: CatalogItemResponse) => void;
 }) {
+    const { t } = useTranslation();
     return (
         <ScrollView
             horizontal
@@ -478,7 +518,7 @@ function StyleStrip({
                         key={s.id}
                         onPress={() => onSelect(s)}
                         accessibilityRole="button"
-                        accessibilityLabel={s.name}
+                        accessibilityLabel={catalogName(t, "style", s)}
                         style={{ width: 96 }}
                     >
                         <View
@@ -510,7 +550,7 @@ function StyleStrip({
                                 color: selected ? U.accentBright : U.inkMuted,
                             }}
                         >
-                            {s.name}
+                            {catalogName(t, "style", s)}
                         </Text>
                     </Pressable>
                 );

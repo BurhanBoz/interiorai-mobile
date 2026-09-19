@@ -115,6 +115,7 @@ export default function SettingsScreen() {
                     isFree={isFree}
                     onGetPro={() => router.push("/paywall?source=SETTINGS" as never)}
                     onBuyCredits={() => router.push("/credits/packs" as never)}
+                    onManagePlan={() => router.push("/plans" as never)}
                 />
 
                 <View
@@ -172,11 +173,13 @@ function CreditCard({
     isFree,
     onGetPro,
     onBuyCredits,
+    onManagePlan,
 }: {
     balance: number;
     isFree: boolean;
     onGetPro: () => void;
     onBuyCredits: () => void;
+    onManagePlan: () => void;
 }) {
     const { t } = useTranslation();
     const ratio = Math.max(0, Math.min(1, balance / DAILY_CEILING));
@@ -205,9 +208,14 @@ function CreditCard({
                 </View>
             )}
 
+            {/* 🔴 A subscriber was being sold the thing they already pay for:
+                "Get Pro" rendered unconditionally, so the Pro card read
+                "500 credits · Get Pro · Buy Credits". On a paid plan the
+                filled button becomes the one that is actually useful — more
+                credits — and Pro turns into the door to the plan itself. */}
             <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
                 <Pressable
-                    onPress={onGetPro}
+                    onPress={isFree ? onGetPro : onBuyCredits}
                     accessibilityRole="button"
                     style={{
                         flex: 1,
@@ -219,11 +227,11 @@ function CreditCard({
                     }}
                 >
                     <Text style={{ fontFamily: "Inter-Bold", fontSize: 13.5, color: U.buttonInk }}>
-                        {t("profile.get_pro")}
+                        {t(isFree ? "profile.get_pro" : "profile.buy_credits")}
                     </Text>
                 </Pressable>
                 <Pressable
-                    onPress={onBuyCredits}
+                    onPress={isFree ? onBuyCredits : onManagePlan}
                     accessibilityRole="button"
                     style={{
                         flex: 1,
@@ -236,7 +244,7 @@ function CreditCard({
                     }}
                 >
                     <Text style={{ fontFamily: "Inter-Bold", fontSize: 13.5, color: U.accentBright }}>
-                        {t("profile.buy_credits")}
+                        {t(isFree ? "profile.buy_credits" : "profile.manage_plan")}
                     </Text>
                 </Pressable>
             </View>

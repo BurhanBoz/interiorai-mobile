@@ -627,10 +627,24 @@
     "empty_filtered_title": "Nichts in dieser Ansicht",
     "empty_filtered_subtitle": "Wechsle den Filter oder komm nach deiner nächsten Aktivität zurück.",
     "ref_outdoor": "Außenbereich-Design",
-    "ledger.weekly_renewal": "Wöchentliche Credits +{{count}}",
     "balance_label": "{{count}} Guthaben",
     "balance_label_one": "{{count}} Guthaben",
-    "balance_label_other": "{{count}} Guthaben"
+    "balance_label_other": "{{count}} Guthaben",
+    "headline_balance": "{{count}} Guthaben",
+    "kind_adjustment": "Korrektur",
+    "kind_promo": "Aktionscode",
+    "kind_monthly_reset": "Monatliche Credits",
+    "kind_welcome_bonus": "Willkommensbonus",
+    "kind_daily_drip": "Tages-Credit",
+    "kind_weekly_bonus": "Wochenbonus",
+    "kind_trial_expiry": "Testphase beendet",
+    "kind_weekly_renewal": "Wöchentliche Credits",
+    "ledger_feature_expand_view": "Ansicht erweitern",
+    "ledger_feature_generic": "Design",
+    "ledger_refunded": "Nicht fertiggestellt — Credits zurück",
+    "ledger_pack_bonus": "{{base}} + {{bonus}} Bonus",
+    "ledger_today": "Heute",
+    "ledger_yesterday": "Gestern"
   },
   "credit_packs": {
     "title": "Credit-Pakete",
@@ -1026,7 +1040,8 @@
     "profile_edit_email_cta": "E-Mail ändern",
     "profile_edit_email_hint": "Wir benachrichtigen deine aktuelle Adresse. Du meldest dich künftig mit der neuen an.",
     "profile_edit_email_success": "E-Mail aktualisiert. Ab jetzt meldest du dich damit an.",
-    "profile_edit_email_managed": "Wird über deine {{provider}}-Anmeldung verwaltet."
+    "profile_edit_email_managed": "Wird über deine {{provider}}-Anmeldung verwaltet.",
+    "delete_account": "Konto löschen"
   },
   "errors": {
     "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
