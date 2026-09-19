@@ -326,8 +326,6 @@
     "step_of": "الخطوة {{current}} / {{total}}",
     "furniture_needs_free_layout": "أوقف «الحفاظ على التخطيط» لإضافة أثاث",
     "turn_off": "إيقاف",
-    "shoot_the_room": "صوّر\nالغرفة",
-    "choose_a_photo": "اختر\nصورة",
     "try_a_sample": "جرّب نموذجًا",
     "put_this_sofa": "ضع هذه الأريكة في غرفتك",
     "your_own": "قطعتك\nالخاصة",
@@ -342,7 +340,12 @@
     "summary": "{{style}} · {{room}}",
     "summary_with_piece": "{{style}} · {{room}} · قطعة واحدة",
     "credit_cost": "{{count}} رصيد",
-    "credit_cost_other": "{{count}} رصيد"
+    "credit_cost_other": "{{count}} رصيد",
+    "add_a_photo": "أضف صورة",
+    "photo_source_title": "أضف صورة لغرفتك",
+    "photo_source_body": "التقط صورة جديدة أو اختر واحدة لديك.",
+    "camera": "الكاميرا",
+    "gallery": "معرض الصور"
   },
   "furniture": {
     "title": "الأثاث",

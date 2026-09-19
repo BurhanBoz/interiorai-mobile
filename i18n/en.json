@@ -326,8 +326,6 @@
     "step_of": "STEP {{current}} / {{total}}",
     "furniture_needs_free_layout": "Turn off Preserve Layout to add furniture",
     "turn_off": "Turn off",
-    "shoot_the_room": "Shoot the\nroom",
-    "choose_a_photo": "Choose a\nphoto",
     "try_a_sample": "Try a sample",
     "put_this_sofa": "Put this sofa in your room",
     "your_own": "Your\nown",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 piece",
     "credit_cost": "{{count}} credit",
     "credit_cost_one": "{{count}} credit",
-    "credit_cost_other": "{{count}} credits"
+    "credit_cost_other": "{{count}} credits",
+    "add_a_photo": "Add a photo",
+    "photo_source_title": "Add a photo of your room",
+    "photo_source_body": "Take a new one, or pick one you already have.",
+    "camera": "Camera",
+    "gallery": "Gallery"
   },
   "furniture": {
     "title": "Furniture",

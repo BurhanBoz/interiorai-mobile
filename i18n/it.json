@@ -326,8 +326,6 @@
     "step_of": "PASSO {{current}} / {{total}}",
     "furniture_needs_free_layout": "Disattiva «Mantieni Layout» per aggiungere arredi",
     "turn_off": "Disattiva",
-    "shoot_the_room": "Fotografa\nla stanza",
-    "choose_a_photo": "Scegli una\nfoto",
     "try_a_sample": "Prova un esempio",
     "put_this_sofa": "Metti questo divano in casa tua",
     "your_own": "Il\ntuo",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 pezzo",
     "credit_cost": "{{count}} credito",
     "credit_cost_one": "{{count}} credito",
-    "credit_cost_other": "{{count}} crediti"
+    "credit_cost_other": "{{count}} crediti",
+    "add_a_photo": "Aggiungi una foto",
+    "photo_source_title": "Aggiungi una foto della tua stanza",
+    "photo_source_body": "Scattane una nuova o scegline una che hai già.",
+    "camera": "Fotocamera",
+    "gallery": "Galleria"
   },
   "furniture": {
     "title": "Arredamento",

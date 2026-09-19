@@ -326,8 +326,6 @@
     "step_of": "ÉTAPE {{current}} / {{total}}",
     "furniture_needs_free_layout": "Désactivez « Conserver l'agencement » pour ajouter du mobilier",
     "turn_off": "Désactiver",
-    "shoot_the_room": "Photographier\nla pièce",
-    "choose_a_photo": "Choisir une\nphoto",
     "try_a_sample": "Essayer un exemple",
     "put_this_sofa": "Mettez ce canapé chez vous",
     "your_own": "Le\nvôtre",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 meuble",
     "credit_cost": "{{count}} crédit",
     "credit_cost_one": "{{count}} crédit",
-    "credit_cost_other": "{{count}} crédits"
+    "credit_cost_other": "{{count}} crédits",
+    "add_a_photo": "Ajouter une photo",
+    "photo_source_title": "Ajoutez une photo de votre pièce",
+    "photo_source_body": "Prenez-en une nouvelle, ou choisissez-en une existante.",
+    "camera": "Appareil photo",
+    "gallery": "Galerie"
   },
   "furniture": {
     "title": "Mobilier",

@@ -326,8 +326,6 @@
     "step_of": "SCHRITT {{current}} / {{total}}",
     "furniture_needs_free_layout": "Zum Hinzufügen von Möbeln „Layout beibehalten“ ausschalten",
     "turn_off": "Ausschalten",
-    "shoot_the_room": "Raum\nfotografieren",
-    "choose_a_photo": "Foto\nwählen",
     "try_a_sample": "Beispiel testen",
     "put_this_sofa": "Stell dieses Sofa in dein Zimmer",
     "your_own": "Eigenes\nStück",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 Stück",
     "credit_cost": "{{count}} Guthaben",
     "credit_cost_one": "{{count}} Guthaben",
-    "credit_cost_other": "{{count}} Guthaben"
+    "credit_cost_other": "{{count}} Guthaben",
+    "add_a_photo": "Foto hinzufügen",
+    "photo_source_title": "Foto deines Raums hinzufügen",
+    "photo_source_body": "Mach ein neues oder wähle eines, das du schon hast.",
+    "camera": "Kamera",
+    "gallery": "Galerie"
   },
   "furniture": {
     "title": "Möbel",

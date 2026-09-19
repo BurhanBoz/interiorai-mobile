@@ -326,8 +326,6 @@
     "step_of": "PASO {{current}} / {{total}}",
     "furniture_needs_free_layout": "Desactiva «Preservar Distribución» para añadir muebles",
     "turn_off": "Desactivar",
-    "shoot_the_room": "Fotografiar\nla sala",
-    "choose_a_photo": "Elegir una\nfoto",
     "try_a_sample": "Probar un ejemplo",
     "put_this_sofa": "Pon este sofá en tu sala",
     "your_own": "El\ntuyo",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 mueble",
     "credit_cost": "{{count}} crédito",
     "credit_cost_one": "{{count}} crédito",
-    "credit_cost_other": "{{count}} créditos"
+    "credit_cost_other": "{{count}} créditos",
+    "add_a_photo": "Añadir una foto",
+    "photo_source_title": "Añade una foto de tu habitación",
+    "photo_source_body": "Haz una nueva o elige una que ya tengas.",
+    "camera": "Cámara",
+    "gallery": "Galería"
   },
   "furniture": {
     "title": "Muebles",

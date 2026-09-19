@@ -15,6 +15,7 @@ import { furnitureService } from "@/services/furniture";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import type { FurnitureItem } from "@/types/api";
 import { HexMark } from "@/components/brand/HexMark";
+import { PhotoSourceSheet } from "@/components/studio/PhotoSourceSheet";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -63,6 +64,7 @@ export default function StudioScreen() {
 
     const [products, setProducts] = useState<FurnitureItem[]>([]);
     const [catalogue, setCatalogue] = useState<FurnitureItem[] | null>(null);
+    const [sourceSheet, setSourceSheet] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -151,8 +153,7 @@ export default function StudioScreen() {
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
-                    onShoot={() => openComposer("REDESIGN", { kind: "camera" })}
-                    onChoose={() => openComposer("REDESIGN", { kind: "gallery" })}
+                    onAddPhoto={() => setSourceSheet(true)}
                     onSample={(m) => openComposer("REDESIGN", { kind: "sample", module: m })}
                 />
                 <FeatureGrid
@@ -171,6 +172,14 @@ export default function StudioScreen() {
                     onOpen={() => goComposer("REDESIGN", { catalogue: true })}
                 />
             </View>
+
+            {sourceSheet && (
+                <PhotoSourceSheet
+                    onClose={() => setSourceSheet(false)}
+                    onCamera={() => openComposer("REDESIGN", { kind: "camera" })}
+                    onGallery={() => openComposer("REDESIGN", { kind: "gallery" })}
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -251,15 +260,25 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
 
 /* ── intake ─────────────────────────────────────────────────────────── */
 
+/**
+ * One way in, not two.
+ *
+ * <p>The row used to spend two of its three columns on "Shoot the room" and
+ * "Choose a photo" — one decision split across two tiles, asked before the
+ * user has decided they want to give a photo at all. They are now a single
+ * tile carrying a "+", wide enough to be the obvious thing on the screen, and
+ * the camera-or-library question moves to the sheet that opens on tap.
+ *
+ * <p>The label is neutral on purpose. The tile now leads to both sources, so
+ * naming the camera on it would be a promise the sheet immediately breaks.
+ */
 function IntakeRow({
     busy,
-    onShoot,
-    onChoose,
+    onAddPhoto,
     onSample,
 }: {
     busy: boolean;
-    onShoot: () => void;
-    onChoose: () => void;
+    onAddPhoto: () => void;
     onSample: (module: number) => void;
 }) {
     const { t } = useTranslation();
@@ -268,42 +287,27 @@ function IntakeRow({
     return (
         <View style={{ flexDirection: "row", gap: 10, height: 100 }}>
             <Pressable
-                onPress={onShoot}
+                onPress={onAddPhoto}
                 disabled={busy}
                 accessibilityRole="button"
+                accessibilityLabel={t("studio.add_a_photo")}
                 style={{
-                    flex: 1,
+                    flex: 2,
                     opacity: busy ? 0.6 : 1,
                     backgroundColor: U.buttonFill,
                     borderRadius: R.card,
-                    padding: 14,
-                    justifyContent: "space-between",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    paddingHorizontal: 12,
                 }}
             >
-                <CameraGlyph color={U.buttonInk} />
-                <Text style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk }}>
-                    {t("studio.shoot_the_room")}
-                </Text>
-            </Pressable>
-
-            <Pressable
-                onPress={onChoose}
-                disabled={busy}
-                accessibilityRole="button"
-                style={{
-                    flex: 1,
-                    opacity: busy ? 0.6 : 1,
-                    backgroundColor: U.surface,
-                    borderWidth: 1,
-                    borderColor: U.lineAccent,
-                    borderRadius: R.card,
-                    padding: 14,
-                    justifyContent: "space-between",
-                }}
-            >
-                <LibraryGlyph color={U.accent} />
-                <Text style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.ink }}>
-                    {t("studio.choose_a_photo")}
+                <PlusGlyph color={U.buttonInk} />
+                <Text
+                    style={{ fontFamily: "Archivo-700", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                    numberOfLines={1}
+                >
+                    {t("studio.add_a_photo")}
                 </Text>
             </Pressable>
 
@@ -339,6 +343,26 @@ function IntakeRow({
                     </Pressable>
                 ))}
             </View>
+        </View>
+    );
+}
+
+/** A rounded square holding a plus — the shape the tile is built around. */
+function PlusGlyph({ color }: { color: string }) {
+    return (
+        <View
+            style={{
+                width: 38,
+                height: 34,
+                borderWidth: 2,
+                borderColor: color,
+                borderRadius: 9,
+                alignItems: "center",
+                justifyContent: "center",
+            }}
+        >
+            <View style={{ position: "absolute", width: 16, height: 2, backgroundColor: color, borderRadius: 1 }} />
+            <View style={{ position: "absolute", width: 2, height: 16, backgroundColor: color, borderRadius: 1 }} />
         </View>
     );
 }
@@ -582,31 +606,5 @@ function FurnitureBand({
                 </View>
             </View>
         </Pressable>
-    );
-}
-
-/* ── glyphs ─────────────────────────────────────────────────────────── */
-
-function CameraGlyph({ color }: { color: string }) {
-    return (
-        <View
-            style={{
-                width: 30,
-                height: 26,
-                borderWidth: 2,
-                borderColor: color,
-                borderRadius: 7,
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: color }} />
-        </View>
-    );
-}
-
-function LibraryGlyph({ color }: { color: string }) {
-    return (
-        <View style={{ width: 30, height: 26, borderWidth: 2, borderColor: color, borderRadius: 7 }} />
     );
 }

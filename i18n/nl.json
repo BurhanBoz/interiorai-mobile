@@ -326,8 +326,6 @@
     "step_of": "STAP {{current}} / {{total}}",
     "furniture_needs_free_layout": "Schakel «Indeling behouden» uit om meubels toe te voegen",
     "turn_off": "Uitschakelen",
-    "shoot_the_room": "Kamer\nfotograferen",
-    "choose_a_photo": "Foto\nkiezen",
     "try_a_sample": "Voorbeeld proberen",
     "put_this_sofa": "Zet deze bank in jouw kamer",
     "your_own": "Je\neigen",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 meubel",
     "credit_cost": "{{count}} credit",
     "credit_cost_one": "{{count}} credit",
-    "credit_cost_other": "{{count}} credits"
+    "credit_cost_other": "{{count}} credits",
+    "add_a_photo": "Foto toevoegen",
+    "photo_source_title": "Voeg een foto van je kamer toe",
+    "photo_source_body": "Maak een nieuwe of kies er een die je al hebt.",
+    "camera": "Camera",
+    "gallery": "Galerij"
   },
   "furniture": {
     "title": "Meubels",

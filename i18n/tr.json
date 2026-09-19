@@ -326,8 +326,6 @@
     "step_of": "ADIM {{current}} / {{total}}",
     "furniture_needs_free_layout": "Mobilya eklemek için Düzeni Koru'yu kapat",
     "turn_off": "Kapat",
-    "shoot_the_room": "Odayı\nçek",
-    "choose_a_photo": "Fotoğraf\nseç",
     "try_a_sample": "Örneği dene",
     "put_this_sofa": "Bu koltuğu odana koy",
     "your_own": "Kendi\nparçan",
@@ -343,7 +341,12 @@
     "summary_with_piece": "{{style}} · {{room}} · +1 parça",
     "credit_cost": "{{count}} kredi",
     "credit_cost_one": "{{count}} kredi",
-    "credit_cost_other": "{{count}} kredi"
+    "credit_cost_other": "{{count}} kredi",
+    "add_a_photo": "Fotoğraf ekle",
+    "photo_source_title": "Odanın fotoğrafını ekle",
+    "photo_source_body": "Yeni bir tane çek ya da mevcut birini seç.",
+    "camera": "Kamera",
+    "gallery": "Galeri"
   },
   "furniture": {
     "title": "Mobilya",

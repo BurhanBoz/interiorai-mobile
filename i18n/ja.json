@@ -326,8 +326,6 @@
     "step_of": "ステップ {{current}} / {{total}}",
     "furniture_needs_free_layout": "家具を追加するには「レイアウトを保持」をオフにしてください",
     "turn_off": "オフにする",
-    "shoot_the_room": "部屋を\n撮る",
-    "choose_a_photo": "写真を\n選ぶ",
     "try_a_sample": "サンプルを試す",
     "put_this_sofa": "このソファをあなたの部屋に",
     "your_own": "自分の\n家具",
@@ -342,7 +340,12 @@
     "summary": "{{style}} · {{room}}",
     "summary_with_piece": "{{style}} · {{room}} · 家具1点",
     "credit_cost": "{{count}} クレジット",
-    "credit_cost_other": "{{count}} クレジット"
+    "credit_cost_other": "{{count}} クレジット",
+    "add_a_photo": "写真を追加",
+    "photo_source_title": "お部屋の写真を追加",
+    "photo_source_body": "新しく撮るか、すでにある写真を選んでください。",
+    "camera": "カメラ",
+    "gallery": "写真ライブラリ"
   },
   "furniture": {
     "title": "家具",

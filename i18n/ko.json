@@ -326,8 +326,6 @@
     "step_of": "단계 {{current}} / {{total}}",
     "furniture_needs_free_layout": "가구를 추가하려면 '레이아웃 유지'를 끄세요",
     "turn_off": "끄기",
-    "shoot_the_room": "방\n촬영",
-    "choose_a_photo": "사진\n선택",
     "try_a_sample": "샘플 사용해보기",
     "put_this_sofa": "이 소파를 내 방에 놓아보세요",
     "your_own": "내\n가구",
@@ -342,7 +340,12 @@
     "summary": "{{style}} · {{room}}",
     "summary_with_piece": "{{style}} · {{room}} · 가구 1점",
     "credit_cost": "크레딧 {{count}}개",
-    "credit_cost_other": "크레딧 {{count}}개"
+    "credit_cost_other": "크레딧 {{count}}개",
+    "add_a_photo": "사진 추가",
+    "photo_source_title": "방 사진 추가하기",
+    "photo_source_body": "새로 찍거나 이미 있는 사진을 선택하세요.",
+    "camera": "카메라",
+    "gallery": "사진 보관함"
   },
   "furniture": {
     "title": "가구",
