@@ -1190,7 +1190,8 @@
     "per_week": "/settimana",
     "per_year": "/anno",
     "footnote": "Disdici quando vuoi · disponibili anche pacchetti di crediti singoli",
-    "pack_line": "Oppure {{credits}} crediti, una volta"
+    "pack_line": "Oppure {{credits}} crediti, una volta",
+    "current_plan_title": "Il tuo piano è {{plan}}"
   },
   "source": {
     "title": "Come ci hai trovato?",

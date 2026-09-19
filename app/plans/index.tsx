@@ -15,7 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useState } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
-import { useBackHandler } from "@/utils/navigation";
 import { planTier } from "@/utils/planTier";
 import { formatProductPrice, type StorePriceMap } from "@/utils/price";
 import { openManageSubscriptions } from "@/services/iap";
@@ -606,7 +605,6 @@ export default function PlansScreen() {
     useEffect(() => {
         hydrateStorePrices();
     }, [hydrateStorePrices]);
-    const handleBack = useBackHandler("/(tabs)/profile");
     const [sheetPlan, setSheetPlan] = useState<PlanResponse | null>(null);
     const isUserOnAnnual = (subscription?.planCode ?? "").endsWith("_ANNUAL");
     // Pricing V4 (2026-08-11): the storefront sells WEEKLY + ANNUAL. The
@@ -659,7 +657,13 @@ export default function PlansScreen() {
 
     return (
         <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: theme.color.surface }}>
-            <TopBar title={t("plans.title")} showBack onBack={handleBack} />
+            {/* Geri oku yok — kenardan kaydırma zaten geri getiriyor.
+                🔴 Bu ekran 2026-09-20 itibarıyla ERİŞİLEMEZ: Ayarlar'daki
+                "Plan yönetimi" artık paywall'a gidiyor, tek kalan iki giriş
+                (settings/notifications ve useInbox) da kendileri erişilemez
+                durumda. Silinmedi çünkü çalışan bir satın alma yüzeyi;
+                başlığı yine de tutarlı bırakıldı. */}
+            <TopBar title={t("plans.title")} />
 
             <ScrollView
                 className="flex-1"

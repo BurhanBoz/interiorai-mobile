@@ -1190,7 +1190,8 @@
     "per_week": "/semaine",
     "per_year": "/an",
     "footnote": "Annulable à tout moment · packs de crédits ponctuels également",
-    "pack_line": "Ou {{credits}} crédits, une fois"
+    "pack_line": "Ou {{credits}} crédits, une fois",
+    "current_plan_title": "Tu es sur {{plan}}"
   },
   "source": {
     "title": "Comment nous avez-vous trouvés ?",

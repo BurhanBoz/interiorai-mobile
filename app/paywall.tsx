@@ -237,22 +237,6 @@ export default function PaywallScreen() {
         return t("paywall.reload_in_days", { days });
     }, [hasUpgrade, subscription?.currentPeriodEnd, t]);
 
-    /**
-     * Which plan gives more credit per unit of money — computed from the live
-     * pair, never asserted. Same rule the old saving badge followed: if either
-     * side is missing the badge disappears rather than claiming something we
-     * cannot stand behind. (Today PRO wins at $0.09/credit against BASE's
-     * $0.12, but a price change in the plans table moves the badge on its own.)
-     */
-    const bestValueCode = useMemo(() => {
-        const perCredit = (p?: typeof pro) =>
-            p?.priceCents && p?.monthlyCredits ? p.priceCents / p.monthlyCredits : null;
-        const proRate = perCredit(pro);
-        const baseRate = perCredit(base);
-        if (proRate == null || baseRate == null || proRate === baseRate) return null;
-        return proRate < baseRate ? PLAN_PRO : PLAN_BASE;
-    }, [pro, base]);
-
     const priceOf = (plan?: typeof pro) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
 
@@ -280,10 +264,6 @@ export default function PaywallScreen() {
         await recordPaywallEvent(event, { source, planCode });
         exit();
     };
-
-    /** Trial the STORE reports on the PRO product — never a build-time assumption. */
-    const trialDays = pro?.appleProductId ? storePrices[pro.appleProductId]?.introTrialDays ?? null : null;
-    const trialApplies = !!trialDays && effectiveSelected === PLAN_PRO && offersPro;
 
     const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
         ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
@@ -396,22 +376,53 @@ export default function PaywallScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
             <View style={{ flex: 1, paddingHorizontal: 18 }}>
-                <View style={{ paddingTop: 8, paddingBottom: 10 }}>
+                {/* Kapatma sağ üstte, bir çarpı. Sol üstteki geri oku yanlış
+                    şeyi söylüyordu: bu ekran bir yığın adımı değil, üstüne
+                    açılan bir teklif — ve açılış kapısı olarak geldiğinde
+                    arkasında dönülecek bir ekran yok. Çarpı ikisinde de doğru. */}
+                <View style={{ paddingTop: 8, paddingBottom: 10, flexDirection: "row", justifyContent: "flex-end" }}>
                     <Pressable
                         onPress={() => leave("DISMISSED")}
                         accessibilityRole="button"
-                        accessibilityLabel={t("common.back")}
-                        hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                        accessibilityLabel={t("common.close")}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         style={{
                             width: 34, height: 34, borderRadius: 17,
                             backgroundColor: U.lineNeutral,
                             alignItems: "center", justifyContent: "center",
                         }}
                     >
-                        <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+                        <Ionicons name="close" size={19} color={U.ink} />
                     </Pressable>
                 </View>
 
+                {/* 🔴 hasUpgrade ve reloadNote HESAPLANIYOR ama render onlara
+                    hiç bakmıyordu — ölü koddu. Sonuç: en üst kademedeki bir
+                    abone için offersPro ve offersBase ikisi de false olunca
+                    plan satırları hiç çizilmiyor, ortada boş bir boşluk
+                    kalıyordu; üstelik effectiveSelected BASE'e düşüyor ve
+                    düğme aboneye kendi planının ALTINI satmaya çalışıyordu.
+                    Ödeyen müşteriye boş bir satın alma ekranı ve yanlış bir
+                    düğme. Zaten yazılmış olan doğru ekran artık çiziliyor. */}
+                {!hasUpgrade ? (
+                    <NothingToUpgrade
+                        // Başlık kaynağa göre: kredisi bittiği için buraya
+                        // düşen kullanıcıya "kredin bitti" doğru, Ayarlar'dan
+                        // "Plan yönetimi" diyerek gelen ve 103 kredisi olan
+                        // aboneye aynı cümle düpedüz yanlış olurdu.
+                        title={
+                            source === SOURCE_CREDITS_EXHAUSTED
+                                ? t("paywall.title_out_of_credits")
+                                : t("paywall.current_plan_title", {
+                                      plan: subscription?.planName ?? "",
+                                  })
+                        }
+                        note={reloadNote}
+                        onBuyCredits={() => router.replace("/credits/packs" as never)}
+                        t={t}
+                    />
+                ) : (
+                <>
                 <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
                     {t("paywall.two_things_headline")}
                 </Text>
@@ -465,6 +476,8 @@ export default function PaywallScreen() {
                         />
                     )}
                 </View>
+                </>
+                )}
 
                 <View style={{ flex: 1 }} />
 
@@ -492,6 +505,7 @@ export default function PaywallScreen() {
                     </Pressable>
                 )}
 
+                {hasUpgrade && (
                 <Pressable
                     onPress={handleContinue}
                     disabled={busy || !chosen}
@@ -514,14 +528,57 @@ export default function PaywallScreen() {
                         </>
                     )}
                 </Pressable>
+                )}
 
+                {hasUpgrade && (
                 <Pressable onPress={handleRestore} disabled={busy} hitSlop={8} accessibilityRole="button">
                     <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 12, marginBottom: 4 }}>
                         {t("paywall.footnote")}
                     </Text>
                 </Pressable>
+                )}
             </View>
         </SafeAreaView>
+    );
+}
+
+/**
+ * Satacak bir şeyin olmadığı hâl.
+ *
+ * <p>En üst kademedeki abone için doğru cevap "abone ol" değil. İki şey
+ * söylüyor: kendi haftalık kredisinin ne zaman geri geleceği ve o tarihi
+ * beklemek istemiyorsa tek seferlik paketin nerede olduğu. Metnin hepsi
+ * zaten on dilde yazılıydı — title_out_of_credits, reload_* — yalnız
+ * hiçbir yerden çağrılmıyordu.
+ */
+function NothingToUpgrade({
+    title, note, onBuyCredits, t,
+}: { title: string; note: string | null; onBuyCredits: () => void; t: (k: string) => string }) {
+    return (
+        <View>
+            <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 12 }}>
+                {title}
+            </Text>
+            {note && (
+                <Text style={{ ...theme.v2.body, color: U.inkMuted, marginBottom: 22 }}>
+                    {note}
+                </Text>
+            )}
+            <Pressable
+                onPress={onBuyCredits}
+                accessibilityRole="button"
+                style={{
+                    height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                    flexDirection: "row", alignItems: "center",
+                    justifyContent: "space-between", paddingHorizontal: 22,
+                }}
+            >
+                <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
+                    {t("profile.buy_credits")}
+                </Text>
+                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+            </Pressable>
+        </View>
     );
 }
 

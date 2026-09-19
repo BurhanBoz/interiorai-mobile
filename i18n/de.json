@@ -1190,7 +1190,8 @@
     "per_week": "/Woche",
     "per_year": "/Jahr",
     "footnote": "Jederzeit kündbar · einmalige Guthabenpakete ebenfalls erhältlich",
-    "pack_line": "Oder einmalig {{credits}} Guthaben"
+    "pack_line": "Oder einmalig {{credits}} Guthaben",
+    "current_plan_title": "Du bist auf {{plan}}"
   },
   "source": {
     "title": "Wie hast du uns gefunden?",

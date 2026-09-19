@@ -38,6 +38,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { getJob, sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
@@ -376,32 +377,33 @@ export default function ResultDetailScreen() {
     }
   };
 
-  const handleCompare = () => {
-    if (!currentOutput) return;
-    // Surface the inputFile state up front so we can diagnose missing
-    // before-images in the wild. The earlier silent `return` when
-    // `inputFile.id` was absent is what prevented the compare screen
-    // from opening at all — now we at least navigate with an empty
-    // beforeUrl and the target screen can show a clear message.
-    const beforeUrl = job?.inputFile?.id
-      ? getFileDownloadUrl(job.inputFile.id)
-      : "";
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[Result] handleCompare — inputFile:",
-        job?.inputFile,
-        "beforeUrl:",
-        beforeUrl,
-      );
-    }
-    router.push({
-      pathname: "/result/compare",
-      params: {
-        beforeUrl,
-        afterUrl: getOutputImageUrl(job!.id, currentOutput),
-      },
-    } as any);
+  /**
+   * Büyüt: üretilen görseli tam ekranda, yakınlaştırılabilir olarak açar.
+   *
+   * <p>Eskiden bu bir NAVİGASYONDU — /result/compare, yani ikinci bir
+   * before/after kaydırıcısı. Kullanıcı zaten bir kaydırıcıya bakarken onu
+   * ikinci bir kaydırıcıya götürüyordu ve dönüş yolu geri düğmesiydi; hedef
+   * ekran da yeniden tasarlanmamış, eski dilde kalmıştı. Şimdi bir modal:
+   * aynı yerin üstünde açılıyor, kapanınca hiçbir şey kaybolmuyor — sonuç
+   * ekranı, kaydırıcının bırakıldığı yer, seçili stil, hepsi duruyor.
+   */
+  const openFullscreen = () => {
+    if (!currentOutput || !job) return;
+    setFullscreenUrl(getOutputImageUrl(job.id, currentOutput));
+  };
+
+  /**
+   * Yeni tasarım: Stüdyo'nun ilk ekranına döner.
+   *
+   * <p>🔴 Sonuç ekranının tek çıkışı sol üstteki geri okuydu ve o, üretim
+   * ilerleme ekranına geri dönüyordu — yani biten bir işin ilerlemesine.
+   * Kullanıcının buradan gitmek istediği tek yer bir sonraki tasarım.
+   * push değil REPLACE: sonuç ekranı yığından düşüyor, böylece Stüdyo'dan
+   * geri gelince bitmiş bir işin sonucuna düşülmüyor.
+   */
+  const handleNewDesign = () => {
+    Haptics.selectionAsync();
+    router.replace("/(tabs)/studio" as never);
   };
 
   if (loading) {
@@ -488,7 +490,8 @@ export default function ResultDetailScreen() {
           beforeUrl={beforeUrl}
           afterUrl={afterUrl}
           authHeaders={authHeaders}
-          onOpen={handleCompare}
+          onOpen={openFullscreen}
+          onTap={openFullscreen}
         />
 
         <View style={{ flexDirection: "row", gap: 9, marginTop: 12 }}>
@@ -518,10 +521,35 @@ export default function ResultDetailScreen() {
 
         <View style={{ flex: 1 }} />
 
+        {/* Buradan çıkış. Sol üstteki geri oku üretim ilerlemesine dönüyordu;
+            biten bir işten sonra kullanıcının istediği tek yer bir sonraki
+            tasarım. Dolu düğme değil — Kaydet/Paylaş hâlâ bu ekranın işi,
+            bu yalnızca kapı. */}
+        <Pressable
+          onPress={handleNewDesign}
+          accessibilityRole="button"
+          style={{
+            height: 52,
+            borderRadius: theme.v2Layout.radius.button,
+            borderWidth: 1,
+            borderColor: U.accent,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          <Text style={{ ...theme.v2.button, color: U.accentBright }}>
+            {t("result.new_design")}
+          </Text>
+          <Text style={{ color: U.accentBright, fontSize: 16 }}>→</Text>
+        </Pressable>
+
         <View
           style={{
             borderTopWidth: 1,
             borderTopColor: U.lineNeutral,
+            marginTop: 14,
             paddingTop: 14,
             paddingBottom: 8,
             flexDirection: "row",
@@ -536,6 +564,48 @@ export default function ResultDetailScreen() {
           <ReminderToggle value={remind} onChange={handleRemindChange} />
         </View>
       </View>
+
+      {/* ── Tam ekran, yakınlaştırılabilir ────────────────────────────────
+          Modal, çünkü kapanınca altındaki ekran olduğu gibi duruyor:
+          kaydırıcının bırakıldığı yer, seçili stil, kaydırma konumu.
+          🔴 GestureHandlerRootView modalın İÇİNDE olmak zorunda — iOS'ta
+          Modal ayrı bir native görünüm hiyerarşisine çiziliyor ve kökteki
+          sarmalayıcı oraya ulaşmıyor; onsuz pinch/pan sessizce ölü kalır. */}
+      <Modal
+        visible={fullscreenUrl !== null}
+        animationType="fade"
+        transparent={false}
+        statusBarTranslucent
+        onRequestClose={() => setFullscreenUrl(null)}
+      >
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000" }}>
+          <StatusBar barStyle="light-content" />
+          {fullscreenUrl && (
+            <ZoomableImage uri={fullscreenUrl} style={{ flex: 1 }} />
+          )}
+          <Pressable
+            onPress={() => setFullscreenUrl(null)}
+            hitSlop={14}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            style={{
+              position: "absolute",
+              top: 58,
+              right: 18,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: U.photoChrome,
+              borderWidth: 1,
+              borderColor: U.photoChromeBorder,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="close" size={20} color="#fff" />
+          </Pressable>
+        </GestureHandlerRootView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -549,12 +619,14 @@ export default function ResultDetailScreen() {
  * on every new result.
  */
 function BeforeAfter({
-  beforeUrl, afterUrl, authHeaders, onOpen,
+  beforeUrl, afterUrl, authHeaders, onOpen, onTap,
 }: {
   beforeUrl: string;
   afterUrl?: string;
   authHeaders: Record<string, string>;
   onOpen: () => void;
+  /** Sürüklemeden ayırt edilmiş bir dokunuş — tam ekranı açar. */
+  onTap: () => void;
 }) {
   const { t } = useTranslation();
   const [width, setWidth] = useState(0);
@@ -566,11 +638,33 @@ function BeforeAfter({
     Animated.timing(enter, { toValue: 1, duration: 450, useNativeDriver: true }).start();
   }, [afterUrl, enter]);
 
+  /**
+   * Kaydırma mı, dokunuş mu.
+   *
+   * <p>PanResponder her dokunuşu kendine alıyor (onStartShouldSet → true),
+   * o yüzden resmin üstüne konan basit bir Pressable hiç ateşlemez — el
+   * kaydırıcıya gider. Ayrımı burada yapıyoruz: parmak kalktığında toplam
+   * hareket 6 puandan küçük ve süre 250 ms'den kısaysa bu bir dokunuştur,
+   * tam ekran açılır. Aksi hâlde kaydırma olarak kalır ve reveal'i sürer.
+   *
+   * <p>Eşikler el titremesi payı: 6 pt, iOS'un kendi kaydırma eşiğinin
+   * (10 pt) altında, yani gerçek bir sürüklemeyi asla dokunuş sanmaz.
+   */
+  const onTapRef = useRef(onTap);
+  onTapRef.current = onTap;
+  const gestureMoved = useRef(false);
+  const gestureStart = useRef(0);
+
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        gestureMoved.current = false;
+        gestureStart.current = Date.now();
+      },
       onPanResponderMove: (_, g) => {
+        if (Math.abs(g.dx) > 6 || Math.abs(g.dy) > 6) gestureMoved.current = true;
         setWidth((w) => {
           if (w > 0) {
             const pct = Math.max(2, Math.min(98, (g.moveX - 18) / w * 100));
@@ -578,6 +672,11 @@ function BeforeAfter({
           }
           return w;
         });
+      },
+      onPanResponderRelease: () => {
+        if (!gestureMoved.current && Date.now() - gestureStart.current < 250) {
+          onTapRef.current();
+        }
       },
     }),
   ).current;

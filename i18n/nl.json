@@ -1190,7 +1190,8 @@
     "per_week": "/week",
     "per_year": "/jaar",
     "footnote": "Altijd opzegbaar · losse creditpakketten ook beschikbaar",
-    "pack_line": "Of {{credits}} credits, eenmalig"
+    "pack_line": "Of {{credits}} credits, eenmalig",
+    "current_plan_title": "Je zit op {{plan}}"
   },
   "source": {
     "title": "Hoe heb je ons gevonden?",

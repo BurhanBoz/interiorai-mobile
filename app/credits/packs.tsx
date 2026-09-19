@@ -22,7 +22,6 @@ import { formatProductPrice } from "@/utils/price";
 
 const U = theme.umber;
 import { isDummyMode } from "@/config/revenuecat";
-import { useBackHandler } from "@/utils/navigation";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { CreditPackResponse } from "@/types/api";
@@ -354,7 +353,6 @@ export default function CreditPacksScreen() {
     // the suppression path PackCard already had for FREE.
     const standardCost = getCreditCost("INTERIOR_REDESIGN", "STANDARD", 1);
     const hdCost = 0;
-    const handleBack = useBackHandler("/(tabs)/profile");
 
     // Set when a purchase lands, so unmount does not report a dismissal on
     // top of it. A ref, not state: it is read during teardown, when a state
@@ -463,23 +461,11 @@ export default function CreditPacksScreen() {
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
             <View style={{ flex: 1, paddingHorizontal: 18 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 8, paddingBottom: 14 }}>
-                    <Pressable
-                        onPress={handleBack}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("common.back")}
-                        hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                        style={{
-                            width: 34, height: 34, borderRadius: 17,
-                            backgroundColor: U.lineNeutral,
-                            alignItems: "center", justifyContent: "center",
-                        }}
-                    >
-                        <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
-                    </Pressable>
-                    <View style={{ flex: 1 }} />
-                    <View style={{ width: 34 }} />
-                </View>
+                {/* Geri yuvarlağı kaldırıldı. Kenardan kaydırma zaten geri
+                    getiriyor (stack'in kendi jesti) ve başlıksız bir satırda
+                    tek başına duran daire, taşıdığı işlevden fazla yer
+                    kaplayan bir leke oluyordu. Başlık artık en üstte. */}
+                <View style={{ height: 14 }} />
 
                 <Text style={{ ...theme.v2.displayL, color: U.ink }}>
                     {t("credit_packs.headline")}
