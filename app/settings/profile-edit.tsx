@@ -14,6 +14,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useBackHandler } from "@/utils/navigation";
 import * as userService from "@/services/user";
 import { theme } from "@/config/theme";
+import { GUEST_EMAIL_UPGRADE_ENABLED } from "@/config/features";
 
 /**
  * Edit profile — display-name editing surface.
@@ -59,6 +60,12 @@ export default function ProfileEditScreen() {
   const isGuest = user?.guest === true;
   const socialProvider = !isGuest && user?.externalProvider ? user.externalProvider : null;
   const canChangeEmail = !isGuest && !socialProvider;
+
+  /**
+   * Misafire "E-posta ekle" kartı gösterilmiyor. Gerekçe ve geri açma
+   * yordamı tek yerde: config/features.ts. Kod duruyor, kapısı kapalı.
+   */
+  const SHOW_EMAIL_UPGRADE = GUEST_EMAIL_UPGRADE_ENABLED;
 
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
@@ -197,6 +204,7 @@ export default function ProfileEditScreen() {
             />
 
             {isGuest ? (
+              SHOW_EMAIL_UPGRADE ? (
               /* R3 (2026-08-09): the durable upgrade path. The 3rd-generation
                  alert is one-shot by design — anyone who tapped "Later" had NO
                  discoverable way back to attaching an email. This card is that
@@ -240,6 +248,7 @@ export default function ProfileEditScreen() {
                   </View>
                 </View>
               </Pressable>
+              ) : null
             ) : socialProvider ? (
               /* Provider-owned account: our copy of the email mirrors Apple/
                  Google; changing it here would desync the identity source. */

@@ -4,6 +4,7 @@ import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFl
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { GUEST_EMAIL_UPGRADE_ENABLED } from "@/config/features";
 
 /**
  * V53 guest-first — one-shot "secure your account" ask, shown to GUESTS only
@@ -27,6 +28,10 @@ export function useAccountPrompt(jobSucceeded: boolean): boolean {
   const isGuest = useAuthStore((s) => s.user?.guest === true);
 
   useEffect(() => {
+    // Yükseltme arayüzü kapalıyken bu uyarı da çıkmamalı: kullanıcıyı
+    // gizlediğimiz akışa götüren ikinci kapı budur. Sayaç da ilerlemiyor,
+    // yani bayrak geri açıldığında ask 5. sonuçtan itibaren sayar.
+    if (!GUEST_EMAIL_UPGRADE_ENABLED) return;
     if (!jobSucceeded || !isGuest) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
