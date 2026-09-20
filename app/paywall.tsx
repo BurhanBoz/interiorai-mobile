@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
-import { theme } from "@/config/theme";
+import { theme, track as tracking } from "@/config/theme";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
@@ -286,6 +286,24 @@ export default function PaywallScreen() {
         exit();
     };
 
+    /**
+     * Mağazanın BİLDİRDİĞİ ücretsiz deneme — build zamanı varsayımı değil.
+     *
+     * <p>🔴 Bu hesap kodda duruyordu ama hiçbir yere çizilmiyordu; ölü kod
+     * sanıp geçen tur silmiştim. Metni de zaten on dilde yazılıydı
+     * (trial_badge / trial_cta / renewal_note_trial), yani ekran bir kez
+     * tasarlanmış ve bağlanmadan kalmış. Deneme rozeti abonelik ekranında
+     * en güçlü tek argüman; gösterilmemesi sessiz bir kayıptı.
+     *
+     * <p>Kaynağı StoreKit: App Store Connect'te introductory offer kapalıysa
+     * null döner ve rozet kendiliğinden kaybolur — burada hiçbir gün sayısı
+     * iddia edilmiyor.
+     */
+    const trialDays = pro?.appleProductId
+        ? storePrices[pro.appleProductId]?.introTrialDays ?? null
+        : null;
+    const trialApplies = !!trialDays && effectiveSelected === PLAN_PRO && offersPro;
+
     const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
         ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
         : null;
@@ -474,6 +492,11 @@ export default function PaywallScreen() {
                         current={currentCode === proCode}
                         locked={!offersPro}
                         currentLabel={t("plans.current_plan")}
+                        trialLabel={
+                            trialDays && offersPro
+                                ? t("paywall.trial_badge", { days: trialDays })
+                                : null
+                        }
                         onPress={() => {
                             if (!offersPro) return;
                             setSelected(PLAN_PRO);
@@ -489,6 +512,7 @@ export default function PaywallScreen() {
                         current={currentCode === baseCode}
                         locked={!offersBase}
                         currentLabel={t("plans.current_plan")}
+                        trialLabel={null}
                         onPress={() => {
                             if (!offersBase) return;
                             setSelected(PLAN_BASE);
@@ -543,8 +567,10 @@ export default function PaywallScreen() {
                             <ActivityIndicator color={U.buttonInk} />
                         ) : (
                             <>
-                                <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
-                                    {selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
+                                <Text style={{ ...theme.v2.button, color: U.buttonInk }} numberOfLines={1}>
+                                    {trialApplies
+                                        ? t("paywall.trial_cta", { days: trialDays, price: proPrice })
+                                        : selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
                                 </Text>
                                 <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
                             </>
@@ -565,6 +591,17 @@ export default function PaywallScreen() {
                         </Text>
                         <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
                     </Pressable>
+                )}
+
+                {/* 🔴 Denemeli satın almada yenileme koşulları Apple'ın
+                    zorunlu tuttuğu bilgidir (App Store 3.1.2): kaç gün
+                    ücretsiz, sonra ne kadar, hangi sıklıkta ve nasıl iptal
+                    edilir. Rozeti gösterip bunu göstermemek reddedilme
+                    sebebi. */}
+                {trialApplies && (
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 10, textAlign: "center" }}>
+                        {t("paywall.renewal_note_trial", { days: trialDays })}
+                    </Text>
                 )}
 
                 {/* Geri yükleme her zaman duruyor: aboneliği cihazda
@@ -640,11 +677,14 @@ function BillingSegment({
  * yoksa sönük satır "tükendi" gibi okunur.
  */
 function UmberPlanRow({
-    tier, sub, price, period, selected, current, locked, currentLabel, onPress,
+    tier, sub, price, period, selected, current, locked, currentLabel, trialLabel, onPress,
 }: {
     tier: "PRO" | "BASE"; sub: string; price: string; period: string;
     selected: boolean; current: boolean; locked: boolean;
-    currentLabel: string; onPress: () => void;
+    currentLabel: string;
+    /** Mağazanın bildirdiği ücretsiz deneme; yoksa null ve rozet çizilmez. */
+    trialLabel: string | null;
+    onPress: () => void;
 }) {
     return (
         <Pressable
@@ -668,16 +708,28 @@ function UmberPlanRow({
                     <Text style={{ ...theme.v2.tier, color: tier === "PRO" ? U.accentBright : U.inkMuted }}>
                         {tier}
                     </Text>
-                    {current && (
+                    {current ? (
                         <View style={{
                             paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100,
                             backgroundColor: U.lineAccent, borderWidth: 1, borderColor: U.accent,
                         }}>
-                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: 0.8, color: U.accentBright }}>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.accentBright }}>
                                 {currentLabel.toUpperCase()}
                             </Text>
                         </View>
-                    )}
+                    ) : trialLabel ? (
+                        // Dolu rozet: bu satırdaki en güçlü tek argüman ve
+                        // "mevcut plan" ile aynı anda asla görünmez — zaten
+                        // üstünde olunan plan için deneme diye bir şey yok.
+                        <View style={{
+                            paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: 100,
+                            backgroundColor: U.accent,
+                        }}>
+                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.buttonInk }}>
+                                {trialLabel}
+                            </Text>
+                        </View>
+                    ) : null}
                 </View>
                 <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 3 }} numberOfLines={2}>
                     {sub}

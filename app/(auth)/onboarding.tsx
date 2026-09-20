@@ -15,7 +15,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as SecureStore from "expo-secure-store";
 
-import { theme } from "@/config/theme";
+import { theme, track } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
 import { HexMark } from "@/components/brand/HexMark";
 
@@ -214,7 +214,7 @@ export default function OnboardingScreen() {
                         style={{
                             fontFamily: "Inter-SemiBold",
                             fontSize: 13,
-                            letterSpacing: 1.2,
+                            letterSpacing: track(1.2),
                             color: U.inkMuted,
                             marginTop: 16,
                         }}

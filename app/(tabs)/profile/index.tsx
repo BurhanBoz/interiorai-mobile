@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Alert, Animated, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ import { theme } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { ConsentSheet } from "@/components/studio/ConsentSheet";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 
@@ -41,8 +41,7 @@ export default function SettingsScreen() {
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
     const subscription = useSubscriptionStore((s) => s.subscription);
 
-    const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
-    const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
+    const notifPrefs = useNotificationPrefs();
 
     const [sheet, setSheet] = useState<null | "consent">(null);
 
@@ -139,11 +138,32 @@ export default function SettingsScreen() {
                         onPress={() => router.push("/settings/profile-edit" as never)}
                         chevron
                     />
+                    {/* 🔴 Bu satır SUNUCUYA yazıyor. Eskiden yalnız cihazdaki
+                        bir boolean'ı çeviriyordu: "Kapalı" yazıyor, sunucu
+                        göndermeye devam ediyordu. Etiketi de düzeldi —
+                        kapattığı şey günlük hatırlatma değil, isteğe bağlı
+                        bildirimlerin tamamı. */}
                     <Row
-                        label={t("profile.daily_reminder")}
-                        value={t(notificationsEnabled ? "common.on" : "common.off")}
-                        valueTone={notificationsEnabled ? "accent" : "muted"}
-                        onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+                        label={t("profile.notifications")}
+                        value={
+                            notifPrefs.enabled === null
+                                ? "…"
+                                : t(notifPrefs.enabled ? "common.on" : "common.off")
+                        }
+                        valueTone={notifPrefs.enabled ? "accent" : "muted"}
+                        onPress={async () => {
+                            const wanted = notifPrefs.enabled === false;
+                            const now = await notifPrefs.toggle();
+                            // İzin reddedildiyse anahtar açılmaz; sebebini
+                            // söylemeden bırakmak, dokunup hiçbir şey olmamış
+                            // gibi görünmek demekti.
+                            if (wanted && !now) {
+                                Alert.alert(
+                                    t("result.reminder_denied_title"),
+                                    t("result.reminder_denied_body"),
+                                );
+                            }
+                        }}
                     />
                     <Row
                         label={t("profile.language")}
