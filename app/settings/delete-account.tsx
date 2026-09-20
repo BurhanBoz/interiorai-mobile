@@ -22,6 +22,23 @@ type Step = "details" | "confirm";
 export default function DeleteAccountScreen() {
   const { t } = useTranslation();
   const logout = useAuthStore(s => s.logout);
+  const user = useAuthStore(s => s.user);
+
+  /**
+   * Parolayı yalnız parolası OLAN hesap sorar.
+   *
+   * <p>🔴 Ekran herkesten parola istiyordu ve "Devam"ı ona bağlıyordu
+   * (canContinue = password.length > 0). Misafir hesabın parolası yok —
+   * kimliği cihazın kendisi — yani App Store'un 5.1.1(v) ile zorunlu kıldığı
+   * hesap silme, uygulamanın ezici çoğunluğu için girilemez bir kutunun
+   * arkasında kalıyordu. Apple/Google ile girenlerde de parola yok.
+   *
+   * <p>Sunucu bunu ZATEN doğru yapıyor: UserDeletionServiceImpl misafir için
+   * yeniden kimlik doğrulamayı atlıyor ve gerekçesini de yazmış. Hata
+   * yalnız istemcideydi; buradaki koşul sunucununkiyle aynı hâle getirildi.
+   * Yıkıcı işlemin onayı duruyor — bir sonraki adımda DELETE yazmak.
+   */
+  const hasPassword = user?.guest !== true && !user?.externalProvider;
 
   const [step, setStep] = useState<Step>("details");
   const [reason, setReason] = useState("");
@@ -30,7 +47,7 @@ export default function DeleteAccountScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canContinue = password.trim().length > 0;
+  const canContinue = !hasPassword || password.trim().length > 0;
   const canSubmit = confirmText === "DELETE" && !submitting;
 
   const handleContinue = () => {
@@ -52,7 +69,12 @@ export default function DeleteAccountScreen() {
       // The deleted account must not keep advertising itself on the
       // onboarding screen (persistAuth's last_registered_email hint).
       await SecureStore.deleteItemAsync("last_registered_email").catch(() => {});
-      router.replace("/(auth)/login");
+      // 🔴 /(auth)/login DEĞİL. Hesabını silen kullanıcıyı bir giriş duvarıyla
+      // karşılamak, uygulamanın tamamının dayandığı "misafir önce, giriş
+      // ekranı yok" kuralını tam da en kötü anda bozuyordu: elinde artık
+      // girecek hesap YOK. Onboarding sıfırdan kurulumun yaptığını yapar —
+      // sessizce yeni bir misafir kimliği üretir ve Stüdyo'ya bırakır.
+      router.replace("/(auth)/onboarding");
     } catch (e: any) {
       const code = e?.response?.data?.errorCode;
       if (code === "INVALID_CREDENTIALS") {
@@ -119,22 +141,24 @@ export default function DeleteAccountScreen() {
                 />
               </View>
 
-              <View className="mt-6">
-                <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
-                  {t("settings.delete_account_password_label")}
-                </Text>
-                <TextInput
-                  className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
-                  placeholder={t("settings.delete_account_password_placeholder")}
-                  placeholderTextColor="#3D362A"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoComplete="current-password"
-                  editable={!submitting}
-                />
-              </View>
+              {hasPassword && (
+                <View className="mt-6">
+                  <Text className="mb-2 font-label text-[0.6875rem] uppercase tracking-[0.1em] text-on-surface-variant">
+                    {t("settings.delete_account_password_label")}
+                  </Text>
+                  <TextInput
+                    className="rounded-xl bg-surface-container-low px-4 py-3.5 font-body text-base text-on-surface"
+                    placeholder={t("settings.delete_account_password_placeholder")}
+                    placeholderTextColor="#3D362A"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="current-password"
+                    editable={!submitting}
+                  />
+                </View>
+              )}
 
               {error ? (
                 <Text className="mt-4 font-body text-sm text-red-400">{error}</Text>
