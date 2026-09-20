@@ -24,6 +24,7 @@ import type { FurnitureItem, CatalogItemResponse } from "@/types/api";
 import { RoomTypeSheet } from "@/components/studio/RoomTypeSheet";
 import { AdvancedSheet } from "@/components/studio/AdvancedSheet";
 import { getStyleImage } from "@/components/studio/styleImages";
+import { track } from "@/services/analytics";
 import { catalogName } from "@/utils/catalogI18n";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
 
@@ -229,6 +230,13 @@ export default function ComposerScreen() {
                         onSelect={(s) => {
                             Haptics.selectionAsync();
                             setDesignStyle(s);
+                            // 🔴 Bu olay 1.6.0'da KÖRLEŞMİŞTİ. Sihirbazın stil
+                            // ızgarası ekranından (studio/style.tsx) atılıyordu
+                            // ve o ekran yeniden tasarımda silindi; tipi
+                            // analytics.ts'te durdu ama çağıran kalmadı.
+                            // Son ölçümünde 7 günde 65 olay / 26 kişiydi —
+                            // hangi stilin seçildiği tek sinyal bu.
+                            track("style_selected", { style: s.code ?? s.name });
                         }}
                     />
 
