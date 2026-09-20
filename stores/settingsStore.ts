@@ -14,11 +14,17 @@ function applyRTL(language: string) {
 interface SettingsState {
     language: string;
     theme: "dark" | "light";
-    notificationsEnabled: boolean;
     setLanguage: (lang: string) => void;
     setTheme: (theme: "dark" | "light") => void;
-    setNotificationsEnabled: (v: boolean) => void;
 }
+
+/*
+ * 🔴 notificationsEnabled BURADAN KALDIRILDI (2026-09-20).
+ * Cihazda duran bir kopyaydı ve kapattığı hiçbir şey yoktu: gerçek anahtar
+ * sunucudaki notification_preferences. İki yerde iki ayrı "açık mı" cevabı
+ * tutmak, kullanıcıya "Kapalı" gösterirken bildirim göndermekle bitti.
+ * Tek kaynak artık hooks/useNotificationPrefs.
+ */
 
 export const useSettingsStore = create<SettingsState>()(
     persist(
@@ -30,14 +36,12 @@ export const useSettingsStore = create<SettingsState>()(
             // every later launch for non-English devices.
             language: resolveInitialLanguage(),
             theme: "dark",
-            notificationsEnabled: true,
             setLanguage: (language) => {
                 set({ language });
                 try { i18n.changeLanguage(language); } catch { /* ignore */ }
                 applyRTL(language);
             },
             setTheme: (theme) => set({ theme }),
-            setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
         }),
         {
             name: "settings-store",

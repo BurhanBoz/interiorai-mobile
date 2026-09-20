@@ -18,7 +18,7 @@ import { useCatalogStore } from "@/stores/catalogStore";
 import { getStyleImage } from "@/components/studio/styleImages";
 import { useGenerate } from "@/hooks/useGenerate";
 import { requestPushPermission } from "@/hooks/usePushRegistration";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const U = theme.umber;
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -360,19 +360,18 @@ export default function ResultDetailScreen() {
    * A refusal leaves the switch off — the toggle must never claim a
    * permission it did not get.
    */
-  const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
-  const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
-  const remind = notificationsEnabled;
+  // 🔴 Bu anahtar da SUNUCUYA yazıyor. Eskiden cihazdaki bir boolean'ı
+  // çeviriyordu, yani "Hatırlatma kapalı" diyen kullanıcıya hatırlatma
+  // gitmeye devam ediyordu. Ayarlar'daki ana anahtarla aynı kancayı
+  // paylaşıyor — tek gerçek, iki yüzey.
+  const notifPrefs = useNotificationPrefs();
+  const remind = notifPrefs.enabled === true;
 
   const handleRemindChange = async (next: boolean) => {
     Haptics.selectionAsync();
-    if (!next) {
-      setNotificationsEnabled(false);
-      return;
-    }
-    const granted = await requestPushPermission().catch(() => false);
-    setNotificationsEnabled(!!granted);
-    if (!granted) {
+    if (next === remind) return;
+    const now = await notifPrefs.toggle();
+    if (next && !now) {
       Alert.alert(t("result.reminder_denied_title"), t("result.reminder_denied_body"));
     }
   };

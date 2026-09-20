@@ -1,3 +1,4 @@
+import { I18nManager } from "react-native";
 /**
  * Design tokens — the single source of truth for cross-component values
  * that can't be expressed in Tailwind classes alone (shadows, motion
@@ -387,6 +388,25 @@ export const umber = {
  * and no longer required(), so they do not ship. Coming back is this map plus
  * six lines in app/_layout.tsx.
  */
+/**
+ * Harf aralığı — RTL'de sıfır.
+ *
+ * <p>🔴 Arap alfabesi BİTİŞİK yazılır: harfler komşularına bağlanır ve
+ * aralarına boşluk koymak kelimeyi kopartır. Latin tipografisinde "tracking"
+ * bir vurgu aracıdır, Arapça'da ise okunaklılığı bozan bir hatadır.
+ * 2026-09-20'de simülatörde Arapça paywall'da görüldü: "أسبوعي" ekranda
+ * "أسـبـوعـي" gibi, harfleri ayrılmış hâlde çiziliyordu.
+ *
+ * <p>Tek yerden çözülüyor çünkü sorun tek tek ekranlarda değil ölçeğin
+ * kendisinde: kicker, tier, button ve brand'in hepsi pozitif tracking
+ * taşıyor. I18nManager.isRTL modül yüklenirken zaten kesinleşmiş oluyor
+ * (forceRTL bir sonraki açılışta etkili), yani burada okumak güvenli.
+ *
+ * <p>NEGATİF değerlere dokunulmuyor: onlar başlıklardaki optik sıkılaştırma
+ * ve serif başlıkta Arapça'yı bozmuyor.
+ */
+export const track = (v: number) => (v > 0 && I18nManager.isRTL ? 0 : v);
+
 export const v2 = {
   /** Onboarding headline. */
   displayXL: { fontFamily: "NotoSerif", fontSize: 44, lineHeight: 45, letterSpacing: -0.6 },
@@ -403,17 +423,17 @@ export const v2 = {
   /** Onboarding body. */
   body: { fontFamily: "Inter", fontSize: 16, lineHeight: 23 },
   /** Primary button labels. */
-  button: { fontFamily: "Inter-Bold", fontSize: 15, letterSpacing: 1.4, textTransform: "uppercase" as const },
+  button: { fontFamily: "Inter-Bold", fontSize: 15, letterSpacing: track(1.4), textTransform: "uppercase" as const },
   /** Feature tile labels, plan tier labels. */
   tile: { fontFamily: "Inter-Bold", fontSize: 12.5, lineHeight: 16 },
-  tier: { fontFamily: "Inter-Bold", fontSize: 12, letterSpacing: 1.6, textTransform: "uppercase" as const },
+  tier: { fontFamily: "Inter-Bold", fontSize: 12, letterSpacing: track(1.6), textTransform: "uppercase" as const },
   /** List rows, chips, style labels. */
   row: { fontFamily: "Inter-SemiBold", fontSize: 13, lineHeight: 18 },
   rowQuiet: { fontFamily: "Inter", fontSize: 12.5, lineHeight: 17 },
   /** Screen kickers. */
-  kicker: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: 2.2, textTransform: "uppercase" as const },
+  kicker: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: track(2.2), textTransform: "uppercase" as const },
   /** The brand lockup — wider tracking than a kicker. */
-  brand: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: 2.6, textTransform: "uppercase" as const },
+  brand: { fontFamily: "Inter-SemiBold", fontSize: 11.5, letterSpacing: track(2.6), textTransform: "uppercase" as const },
   /** Captions, dimensions, tab labels. 10.5 is the floor; nothing goes below. */
   caption: { fontFamily: "Inter", fontSize: 11, lineHeight: 15 },
   captionStrong: { fontFamily: "Inter-SemiBold", fontSize: 10.5, lineHeight: 14 },
