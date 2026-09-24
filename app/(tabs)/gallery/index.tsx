@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -185,6 +185,21 @@ export default function GalleryScreen() {
       setLoading(false);
     })();
   }, [fetchPage]);
+
+  // V183 — a clip finishes while the user is elsewhere and lands here. The
+  // tab stays mounted, so the mount fetch above ran once and never again;
+  // every return to the tab now refreshes the first page quietly (the very
+  // first focus is the mount, already covered). Same shape as pull-to-refresh.
+  const focusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusedOnce.current) {
+        focusedOnce.current = true;
+        return;
+      }
+      fetchPage(0, true).catch(() => {});
+    }, [fetchPage]),
+  );
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loadingMore) return;

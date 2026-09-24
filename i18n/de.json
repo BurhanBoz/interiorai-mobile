@@ -737,13 +737,7 @@
     "timeout_generic": "Unerwarteter Fehler. Bitte erneut versuchen.",
     "failed_body": "Das Rendering wurde nicht fertig. Deine Credits wurden nicht verbraucht — versuch es erneut.",
     "video_creating": "Dein Raum erwacht zum Leben…",
-    "video_eta": "Dauert meist ein bis zwei Minuten",
-    "video_phase_queued": "Wird vorbereitet",
-    "video_phase_rendering": "Die Kamera bewegt sich durch deinen Raum",
-    "video_phase_polishing": "Der Clip wird fertiggestellt",
-    "video_phase_ready": "Dein Video ist fertig",
-    "video_cancel_title": "Video abbrechen?",
-    "video_cancel_body": "Das Guthaben wird dir zurückgegeben.",
+    "video_eta": "Dauert meist ein paar Minuten",
     "video_failed_body": "Das Video wurde nicht fertig. Dein Guthaben wurde nicht verwendet — versuch es noch einmal."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Zum Leben erwecken",
     "video_cta_hint": "5-Sekunden-Video · {{cost}} Guthaben",
     "video_pro_hint": "5-Sekunden-Video · Pro",
-    "video_confirm_title": "Dieses Design zum Leben erwecken?",
-    "video_confirm_body": "Für {{cost}} Guthaben entsteht ein 5-Sekunden-Video dieses Raums. Das dauert meist ein bis zwei Minuten.",
-    "video_confirm_cta": "Video erstellen",
     "video_in_progress": "Video wird erstellt…",
     "video_watch": "Video ansehen",
     "video_kicker": "Video",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Zurück zum Design",
     "video_saved_body": "Dein Video ist jetzt in deiner Fotomediathek.",
     "video_share_dialog_title": "Video teilen",
-    "video_unavailable": "Das Video ist gerade nicht verfügbar."
+    "video_unavailable": "Das Video ist gerade nicht verfügbar.",
+    "video_in_progress_hint": "Ein paar Minuten · wir sagen Bescheid"
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Dein tägliches Guthaben ist da",
     "daily_credit_body": "Dein kostenloses Guthaben für heute ist da — wähle ein Foto und gestalte einen Raum neu.",
     "try_another_style_title": "Dein Raum, ein anderer Stil",
-    "try_another_style_body": "Vor ein paar Tagen hast du einen Raum gestaltet. Sieh dasselbe Foto in einem anderen Stil."
+    "try_another_style_body": "Vor ein paar Tagen hast du einen Raum gestaltet. Sieh dasselbe Foto in einem anderen Stil.",
+    "video_ready_title": "Dein Video ist fertig",
+    "video_ready_body": "Dein Raumvideo ist fertig — du findest es in deiner Galerie.",
+    "video_failed_title": "Das Video wurde nicht fertig",
+    "video_failed_body": "Dein Guthaben ist zurück. Du kannst es vom Design aus noch einmal versuchen."
   },
   "permissions": {
     "camera_title": "Kamerazugriff erforderlich",

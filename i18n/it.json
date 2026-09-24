@@ -737,13 +737,7 @@
     "timeout_generic": "Errore imprevisto. Riprova.",
     "failed_body": "Il render non è stato completato. I tuoi crediti non sono stati usati — riprova.",
     "video_creating": "La tua stanza prende vita…",
-    "video_eta": "Di solito richiede uno o due minuti",
-    "video_phase_queued": "In preparazione",
-    "video_phase_rendering": "La camera si muove nella tua stanza",
-    "video_phase_polishing": "Rifinitura della clip",
-    "video_phase_ready": "Il tuo video è pronto",
-    "video_cancel_title": "Annullare il video?",
-    "video_cancel_body": "I crediti ti verranno restituiti.",
+    "video_eta": "Di solito richiede qualche minuto",
     "video_failed_body": "Il video non è stato completato. I tuoi crediti non sono stati usati: riprova."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Dagli vita",
     "video_cta_hint": "Video di 5 secondi · {{cost}} crediti",
     "video_pro_hint": "Video di 5 secondi · Pro",
-    "video_confirm_title": "Dare vita a questo progetto?",
-    "video_confirm_body": "Verrà creato un video di 5 secondi di questa stanza per {{cost}} crediti. Di solito richiede uno o due minuti.",
-    "video_confirm_cta": "Crea il video",
     "video_in_progress": "Video in corso…",
     "video_watch": "Guarda il video",
     "video_kicker": "Video",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Torna al progetto",
     "video_saved_body": "Il tuo video è ora nel rullino.",
     "video_share_dialog_title": "Condividi video",
-    "video_unavailable": "Il video non è disponibile al momento."
+    "video_unavailable": "Il video non è disponibile al momento.",
+    "video_in_progress_hint": "Qualche minuto · ti avvisiamo"
   },
   "settings": {
     "notifications_title": "Notifiche",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Il tuo credito giornaliero è pronto",
     "daily_credit_body": "Il credito gratuito di oggi è arrivato: scegli una foto e ridisegna una stanza.",
     "try_another_style_title": "La tua stanza, in un altro stile",
-    "try_another_style_body": "Qualche giorno fa hai progettato una stanza. Guarda la stessa foto in uno stile diverso."
+    "try_another_style_body": "Qualche giorno fa hai progettato una stanza. Guarda la stessa foto in uno stile diverso.",
+    "video_ready_title": "Il tuo video è pronto",
+    "video_ready_body": "Il video della tua stanza è finito: lo trovi nella galleria.",
+    "video_failed_title": "Il video non è stato completato",
+    "video_failed_body": "I tuoi crediti sono tornati. Puoi riprovare dal progetto."
   },
   "permissions": {
     "camera_title": "Accesso alla fotocamera richiesto",

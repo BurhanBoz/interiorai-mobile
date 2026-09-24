@@ -737,13 +737,7 @@
     "timeout_generic": "Unexpected error. Please try again.",
     "failed_body": "The render didn't finish. Your credits weren't used — try again.",
     "video_creating": "Bringing your room to life…",
-    "video_eta": "Usually takes a minute or two",
-    "video_phase_queued": "Getting ready",
-    "video_phase_rendering": "The camera is moving through your room",
-    "video_phase_polishing": "Finishing the clip",
-    "video_phase_ready": "Your video is ready",
-    "video_cancel_title": "Cancel the video?",
-    "video_cancel_body": "The credits will be returned to you.",
+    "video_eta": "Usually takes a few minutes",
     "video_failed_body": "The video didn't finish. Your credits weren't used — try again."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Bring it to life",
     "video_cta_hint": "5-second video · {{cost}} credits",
     "video_pro_hint": "5-second video · Pro",
-    "video_confirm_title": "Bring this design to life?",
-    "video_confirm_body": "A 5-second video of this room will be made for {{cost}} credits. It usually takes a minute or two.",
-    "video_confirm_cta": "Make the video",
     "video_in_progress": "Video in progress…",
     "video_watch": "Watch the video",
     "video_kicker": "Video",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Back to the design",
     "video_saved_body": "Your video is now in your camera roll.",
     "video_share_dialog_title": "Share video",
-    "video_unavailable": "The video isn't available right now."
+    "video_unavailable": "The video isn't available right now.",
+    "video_in_progress_hint": "A few minutes · we'll notify you"
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Your daily credit is ready",
     "daily_credit_body": "Today's free credit just landed — pick a photo and redesign a room.",
     "try_another_style_title": "Your room, another style",
-    "try_another_style_body": "You designed a room a couple of days ago. See the same photo in a different style."
+    "try_another_style_body": "You designed a room a couple of days ago. See the same photo in a different style.",
+    "video_ready_title": "Your video is ready",
+    "video_ready_body": "Your room video is finished — it's in your gallery.",
+    "video_failed_title": "The video didn't finish",
+    "video_failed_body": "Your credits are back. You can try again from the design."
   },
   "permissions": {
     "camera_title": "Camera Access Needed",

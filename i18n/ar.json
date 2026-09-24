@@ -735,13 +735,7 @@
     "timeout_generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
     "failed_body": "لم يكتمل التوليد. لم يُستخدم رصيدك — حاول مرة أخرى.",
     "video_creating": "غرفتك تدبّ فيها الحياة…",
-    "video_eta": "يستغرق عادةً دقيقة أو دقيقتين",
-    "video_phase_queued": "جارٍ التحضير",
-    "video_phase_rendering": "الكاميرا تتجول في غرفتك",
-    "video_phase_polishing": "جارٍ إنهاء المقطع",
-    "video_phase_ready": "الفيديو جاهز",
-    "video_cancel_title": "إلغاء الفيديو؟",
-    "video_cancel_body": "ستُعاد الأرصدة إليك.",
+    "video_eta": "يستغرق عادةً بضع دقائق",
     "video_failed_body": "لم يكتمل الفيديو. لم تُستخدم أرصدتك — حاول مرة أخرى."
   },
   "styles": {
@@ -849,9 +843,6 @@
     "video_cta": "أضِف الحياة إليه",
     "video_cta_hint": "فيديو 5 ثوانٍ · {{cost}} رصيد",
     "video_pro_hint": "فيديو 5 ثوانٍ · Pro",
-    "video_confirm_title": "هل نُضيف الحياة إلى هذا التصميم؟",
-    "video_confirm_body": "سيُنشأ فيديو مدته 5 ثوانٍ لهذه الغرفة مقابل {{cost}} رصيد. يستغرق ذلك عادةً دقيقة أو دقيقتين.",
-    "video_confirm_cta": "أنشئ الفيديو",
     "video_in_progress": "جارٍ إنشاء الفيديو…",
     "video_watch": "شاهد الفيديو",
     "video_kicker": "فيديو",
@@ -860,7 +851,8 @@
     "video_back_to_design": "العودة إلى التصميم",
     "video_saved_body": "صار الفيديو في ألبوم الكاميرا.",
     "video_share_dialog_title": "مشاركة الفيديو",
-    "video_unavailable": "الفيديو غير متاح حاليًا."
+    "video_unavailable": "الفيديو غير متاح حاليًا.",
+    "video_in_progress_hint": "بضع دقائق · سنُشعرك عند الانتهاء"
   },
   "settings": {
     "notifications_title": "الإشعارات",
@@ -1108,7 +1100,11 @@
     "daily_credit_title": "رصيدك اليومي جاهز",
     "daily_credit_body": "وصل رصيد اليوم المجاني — اختر صورة وأعد تصميم غرفتك.",
     "try_another_style_title": "غرفتك، بأسلوب آخر",
-    "try_another_style_body": "صمّمت غرفة قبل بضعة أيام. جرّب الصورة نفسها بأسلوب مختلف."
+    "try_another_style_body": "صمّمت غرفة قبل بضعة أيام. جرّب الصورة نفسها بأسلوب مختلف.",
+    "video_ready_title": "الفيديو جاهز",
+    "video_ready_body": "اكتمل فيديو غرفتك — ستجده في معرضك.",
+    "video_failed_title": "لم يكتمل الفيديو",
+    "video_failed_body": "أُعيدت أرصدتك. يمكنك المحاولة مجددًا من التصميم."
   },
   "permissions": {
     "camera_title": "يلزم الوصول إلى الكاميرا",

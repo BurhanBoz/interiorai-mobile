@@ -737,13 +737,7 @@
     "timeout_generic": "Erreur inattendue. Veuillez réessayer.",
     "failed_body": "Le rendu n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie.",
     "video_creating": "Ta pièce prend vie…",
-    "video_eta": "Prend généralement une à deux minutes",
-    "video_phase_queued": "Préparation",
-    "video_phase_rendering": "La caméra parcourt ta pièce",
-    "video_phase_polishing": "Finalisation du clip",
-    "video_phase_ready": "Ta vidéo est prête",
-    "video_cancel_title": "Annuler la vidéo ?",
-    "video_cancel_body": "Les crédits te seront rendus.",
+    "video_eta": "Prend généralement quelques minutes",
     "video_failed_body": "La vidéo n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Donne-lui vie",
     "video_cta_hint": "Vidéo de 5 secondes · {{cost}} crédits",
     "video_pro_hint": "Vidéo de 5 secondes · Pro",
-    "video_confirm_title": "Donner vie à cette création ?",
-    "video_confirm_body": "Une vidéo de 5 secondes de cette pièce sera créée pour {{cost}} crédits. Cela prend généralement une à deux minutes.",
-    "video_confirm_cta": "Créer la vidéo",
     "video_in_progress": "Vidéo en cours…",
     "video_watch": "Voir la vidéo",
     "video_kicker": "Vidéo",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Retour à la création",
     "video_saved_body": "Ta vidéo est maintenant dans ta pellicule.",
     "video_share_dialog_title": "Partager la vidéo",
-    "video_unavailable": "La vidéo n'est pas disponible pour le moment."
+    "video_unavailable": "La vidéo n'est pas disponible pour le moment.",
+    "video_in_progress_hint": "Quelques minutes · on te prévient"
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Votre crédit du jour est arrivé",
     "daily_credit_body": "Votre crédit gratuit du jour est là — choisissez une photo et réinventez une pièce.",
     "try_another_style_title": "Votre pièce, dans un autre style",
-    "try_another_style_body": "Vous avez conçu une pièce il y a quelques jours. Voyez la même photo dans un autre style."
+    "try_another_style_body": "Vous avez conçu une pièce il y a quelques jours. Voyez la même photo dans un autre style.",
+    "video_ready_title": "Ta vidéo est prête",
+    "video_ready_body": "La vidéo de ta pièce est terminée — elle est dans ta galerie.",
+    "video_failed_title": "La vidéo n'a pas abouti",
+    "video_failed_body": "Tes crédits sont revenus. Tu peux réessayer depuis la création."
   },
   "permissions": {
     "camera_title": "Accès à l'appareil photo requis",
