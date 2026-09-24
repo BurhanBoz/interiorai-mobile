@@ -405,7 +405,8 @@
     "all_designs": "جميع التصاميم",
     "filter_activity": "النشاط",
     "v2_empty_line": "لا شيء هنا بعد.",
-    "v2_new_design": "+ تصميم جديد"
+    "v2_new_design": "+ تصميم جديد",
+    "video_badge": "فيديو"
   },
   "history": {
     "title": "السجل",
@@ -642,7 +643,9 @@
     "ledger_refunded": "لم يكتمل — أُعيد الرصيد",
     "ledger_pack_bonus": "{{base}} + {{bonus}} مكافأة",
     "ledger_today": "اليوم",
-    "ledger_yesterday": "أمس"
+    "ledger_yesterday": "أمس",
+    "ledger_feature_room_video": "فيديو الغرفة",
+    "ref_room_video": "فيديو الغرفة (5 ث)"
   },
   "credit_packs": {
     "title": "حزم الرصيد",
@@ -730,7 +733,16 @@
     "about_this_style": "عن هذا الأسلوب",
     "style_hint_generic": "جمالية منسّقة تجسّدها Roomframe AI. يتشكّل الضوء والنسبة والمواد بأسلوب يبدو شخصياً وخالداً في آنٍ واحد.",
     "timeout_generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
-    "failed_body": "لم يكتمل التوليد. لم يُستخدم رصيدك — حاول مرة أخرى."
+    "failed_body": "لم يكتمل التوليد. لم يُستخدم رصيدك — حاول مرة أخرى.",
+    "video_creating": "غرفتك تدبّ فيها الحياة…",
+    "video_eta": "يستغرق عادةً دقيقة أو دقيقتين",
+    "video_phase_queued": "جارٍ التحضير",
+    "video_phase_rendering": "الكاميرا تتجول في غرفتك",
+    "video_phase_polishing": "جارٍ إنهاء المقطع",
+    "video_phase_ready": "الفيديو جاهز",
+    "video_cancel_title": "إلغاء الفيديو؟",
+    "video_cancel_body": "ستُعاد الأرصدة إليك.",
+    "video_failed_body": "لم يكتمل الفيديو. لم تُستخدم أرصدتك — حاول مرة أخرى."
   },
   "styles": {
     "scandinavian": "يحتفي التصميم الاسكندنافي بالحد الأدنى الدافئ — خشب فاتح، ألوان محايدة ناعمة، وضوء طبيعي وافر. كل قطعة تكسب مكانها من خلال الفائدة والحرفة الصادقة.",
@@ -833,7 +845,22 @@
     "reminder_on": "التذكير مفعّل",
     "open_fullscreen": "فتح بملء الشاشة",
     "reminder_denied_title": "الإشعارات مغلقة",
-    "reminder_denied_body": "فعّلها من الإعدادات لتصلك رسالة التذكير."
+    "reminder_denied_body": "فعّلها من الإعدادات لتصلك رسالة التذكير.",
+    "video_cta": "أضِف الحياة إليه",
+    "video_cta_hint": "فيديو 5 ثوانٍ · {{cost}} رصيد",
+    "video_pro_hint": "فيديو 5 ثوانٍ · Pro",
+    "video_confirm_title": "هل نُضيف الحياة إلى هذا التصميم؟",
+    "video_confirm_body": "سيُنشأ فيديو مدته 5 ثوانٍ لهذه الغرفة مقابل {{cost}} رصيد. يستغرق ذلك عادةً دقيقة أو دقيقتين.",
+    "video_confirm_cta": "أنشئ الفيديو",
+    "video_in_progress": "جارٍ إنشاء الفيديو…",
+    "video_watch": "شاهد الفيديو",
+    "video_kicker": "فيديو",
+    "video_length": "5 ث",
+    "video_cost_used": "استُخدم {{cost}} رصيد",
+    "video_back_to_design": "العودة إلى التصميم",
+    "video_saved_body": "صار الفيديو في ألبوم الكاميرا.",
+    "video_share_dialog_title": "مشاركة الفيديو",
+    "video_unavailable": "الفيديو غير متاح حاليًا."
   },
   "settings": {
     "notifications_title": "الإشعارات",
@@ -1179,8 +1206,7 @@
     "reload_today": "يتجدّد رصيدك الأسبوعي اليوم.",
     "reload_tomorrow": "يتجدّد رصيدك الأسبوعي غدًا.",
     "reload_in_days": "يتجدّد رصيدك الأسبوعي بعد {{days}} أيام.",
-    "two_things_headline": "شيئان لا يقدر عليهما سوى Pro",
-    "pro_sub": "كل شيء، إضافةً إلى الاثنين أعلاه",
+    "pro_sub": "كل شيء، إضافةً إلى الثلاثة أعلاه",
     "base_sub": "الغرف فقط",
     "start_pro": "ابدأ Pro",
     "start_base": "ابدأ Base",
@@ -1190,7 +1216,9 @@
     "per_year": "/سنة",
     "footnote": "يمكن الإلغاء في أي وقت · تتوفر أيضًا باقات رصيد لمرة واحدة",
     "pack_line": "أو {{credits}} رصيد لمرة واحدة",
-    "current_plan_title": "خطتك الحالية {{plan}}"
+    "current_plan_title": "خطتك الحالية {{plan}}",
+    "pro_only_headline": "ثلاثة أشياء لا يقدر عليها سوى Pro",
+    "pro_video_card": "فيديوهات الغرف"
   },
   "source": {
     "title": "كيف وجدتنا؟",

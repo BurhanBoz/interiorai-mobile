@@ -405,7 +405,8 @@
     "all_designs": "すべてのデザイン",
     "filter_activity": "進行中",
     "v2_empty_line": "まだ何もありません。",
-    "v2_new_design": "＋ 新しいデザイン"
+    "v2_new_design": "＋ 新しいデザイン",
+    "video_badge": "動画"
   },
   "history": {
     "title": "履歴",
@@ -642,7 +643,9 @@
     "ledger_refunded": "未完了 — クレジットを返却しました",
     "ledger_pack_bonus": "{{base}} + ボーナス{{bonus}}",
     "ledger_today": "今日",
-    "ledger_yesterday": "昨日"
+    "ledger_yesterday": "昨日",
+    "ledger_feature_room_video": "部屋の動画",
+    "ref_room_video": "部屋の動画（5秒）"
   },
   "credit_packs": {
     "title": "クレジットパック",
@@ -730,7 +733,16 @@
     "about_this_style": "このスタイルについて",
     "style_hint_generic": "Roomframe AIが生み出すキュレートされた美学。光、比率、素材は個人的でありながら時代を超えた感覚で構成されています。",
     "timeout_generic": "予期しないエラーが発生しました。もう一度お試しください。",
-    "failed_body": "生成が完了しませんでした。クレジットは消費されていません。もう一度お試しください。"
+    "failed_body": "生成が完了しませんでした。クレジットは消費されていません。もう一度お試しください。",
+    "video_creating": "部屋に命を吹き込んでいます…",
+    "video_eta": "通常1〜2分かかります",
+    "video_phase_queued": "準備中",
+    "video_phase_rendering": "カメラが部屋の中を移動しています",
+    "video_phase_polishing": "仕上げ中",
+    "video_phase_ready": "動画ができました",
+    "video_cancel_title": "動画をキャンセルしますか？",
+    "video_cancel_body": "クレジットは返却されます。",
+    "video_failed_body": "動画を完成できませんでした。クレジットは使われていません。もう一度お試しください。"
   },
   "styles": {
     "scandinavian": "スカンジナビアデザインは温かいミニマリズムを称えます — 淡い木材、柔らかなニュートラルトーン、そして豊かな自然光。すべてのオブジェクトが実用性と誠実な職人技を通じてその場所を得ます。",
@@ -833,7 +845,22 @@
     "reminder_on": "リマインダーオン",
     "open_fullscreen": "全画面で開く",
     "reminder_denied_title": "通知がオフです",
-    "reminder_denied_body": "リマインダーを受け取るには設定でオンにしてください。"
+    "reminder_denied_body": "リマインダーを受け取るには設定でオンにしてください。",
+    "video_cta": "動画にする",
+    "video_cta_hint": "5秒動画 · {{cost}}クレジット",
+    "video_pro_hint": "5秒動画 · Pro",
+    "video_confirm_title": "このデザインを動画にしますか？",
+    "video_confirm_body": "{{cost}}クレジットで、この部屋の5秒動画を作成します。通常1〜2分かかります。",
+    "video_confirm_cta": "動画を作成",
+    "video_in_progress": "動画を作成中…",
+    "video_watch": "動画を見る",
+    "video_kicker": "動画",
+    "video_length": "5秒",
+    "video_cost_used": "{{cost}}クレジット使用",
+    "video_back_to_design": "デザインに戻る",
+    "video_saved_body": "動画をカメラロールに保存しました。",
+    "video_share_dialog_title": "動画を共有",
+    "video_unavailable": "現在この動画は利用できません。"
   },
   "settings": {
     "notifications_title": "通知",
@@ -1179,8 +1206,7 @@
     "reload_today": "毎週のクレジットは本日補充されます。",
     "reload_tomorrow": "毎週のクレジットは明日補充されます。",
     "reload_in_days": "毎週のクレジットは{{days}}日後に補充されます。",
-    "two_things_headline": "Proだけができる2つのこと",
-    "pro_sub": "すべて、さらに上の2つ",
+    "pro_sub": "すべて、さらに上の3つ",
     "base_sub": "部屋のみ",
     "start_pro": "Proを開始",
     "start_base": "Baseを開始",
@@ -1190,7 +1216,9 @@
     "per_year": "／年",
     "footnote": "いつでも解約可能 · 単発のクレジットパックもあります",
     "pack_line": "または {{credits}} クレジットを一度だけ",
-    "current_plan_title": "現在のプランは{{plan}}です"
+    "current_plan_title": "現在のプランは{{plan}}です",
+    "pro_only_headline": "Proだけができる3つのこと",
+    "pro_video_card": "部屋の動画"
   },
   "source": {
     "title": "どこで知りましたか？",

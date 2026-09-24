@@ -42,6 +42,9 @@ const REFERENCE_FEATURES: {
   { code: "EMPTY_ROOM",        tier: "STANDARD", labelKey: "credits.ref_empty_room" },
   { code: "OUTDOOR_DESIGN",    tier: "STANDARD", labelKey: "credits.ref_outdoor" },
   { code: "ULTRA_HD_UPSCALE",  tier: null,       labelKey: "credits.ref_upscale" },
+  // V183 — PRO only; the plan's feature row is disabled below that, so the
+  // filter above hides the line for everyone who cannot buy it here.
+  { code: "ROOM_VIDEO",        tier: null,       labelKey: "credits.ref_room_video" },
 ];
 
 /**

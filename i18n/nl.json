@@ -406,7 +406,8 @@
     "all_designs": "Alle ontwerpen",
     "filter_activity": "Activiteit",
     "v2_empty_line": "Hier staat nog niets.",
-    "v2_new_design": "+ Nieuw ontwerp"
+    "v2_new_design": "+ Nieuw ontwerp",
+    "video_badge": "VIDEO"
   },
   "history": {
     "title": "Geschiedenis",
@@ -647,7 +648,9 @@
     "ledger_refunded": "Niet voltooid — credits terug",
     "ledger_pack_bonus": "{{base}} + {{bonus}} bonus",
     "ledger_today": "Vandaag",
-    "ledger_yesterday": "Gisteren"
+    "ledger_yesterday": "Gisteren",
+    "ledger_feature_room_video": "Kamervideo",
+    "ref_room_video": "Kamervideo (5 s)"
   },
   "credit_packs": {
     "title": "Creditpakketten",
@@ -732,7 +735,16 @@
     "about_this_style": "Over deze stijl",
     "style_hint_generic": "Een zorgvuldig samengestelde esthetiek, tot leven gebracht door Roomframe AI. Licht, verhouding en materiaal zijn zo gecomponeerd dat het zowel persoonlijk als tijdloos aanvoelt.",
     "timeout_generic": "Onverwachte fout. Probeer het opnieuw.",
-    "failed_body": "De render is niet voltooid. Je credits zijn niet gebruikt — probeer het opnieuw."
+    "failed_body": "De render is niet voltooid. Je credits zijn niet gebruikt — probeer het opnieuw.",
+    "video_creating": "Je kamer komt tot leven…",
+    "video_eta": "Duurt meestal een minuut of twee",
+    "video_phase_queued": "Voorbereiden",
+    "video_phase_rendering": "De camera beweegt door je kamer",
+    "video_phase_polishing": "De clip wordt afgemaakt",
+    "video_phase_ready": "Je video is klaar",
+    "video_cancel_title": "Video annuleren?",
+    "video_cancel_body": "Je krijgt de credits terug.",
+    "video_failed_body": "De video is niet afgemaakt. Je credits zijn niet gebruikt — probeer het opnieuw."
   },
   "styles": {
     "scandinavian": "Scandinavisch design viert warm minimalisme — licht hout, zachte neutralen en volop daglicht. Elk object verdient zijn plek door bruikbaarheid en eerlijk vakmanschap.",
@@ -835,7 +847,22 @@
     "reminder_on": "Herinnering aan",
     "open_fullscreen": "Volledig scherm openen",
     "reminder_denied_title": "Meldingen staan uit",
-    "reminder_denied_body": "Zet ze aan in Instellingen om de herinnering te krijgen."
+    "reminder_denied_body": "Zet ze aan in Instellingen om de herinnering te krijgen.",
+    "video_cta": "Breng het tot leven",
+    "video_cta_hint": "Video van 5 seconden · {{cost}} credits",
+    "video_pro_hint": "Video van 5 seconden · Pro",
+    "video_confirm_title": "Dit ontwerp tot leven brengen?",
+    "video_confirm_body": "Voor {{cost}} credits maken we een video van 5 seconden van deze kamer. Dat duurt meestal een minuut of twee.",
+    "video_confirm_cta": "Maak de video",
+    "video_in_progress": "Video wordt gemaakt…",
+    "video_watch": "Bekijk de video",
+    "video_kicker": "Video",
+    "video_length": "5 s",
+    "video_cost_used": "{{cost}} credits gebruikt",
+    "video_back_to_design": "Terug naar het ontwerp",
+    "video_saved_body": "Je video staat nu in je filmrol.",
+    "video_share_dialog_title": "Video delen",
+    "video_unavailable": "De video is nu niet beschikbaar."
   },
   "settings": {
     "notifications_title": "Meldingen",
@@ -1181,8 +1208,7 @@
     "reload_today": "Je wekelijkse credits worden vandaag aangevuld.",
     "reload_tomorrow": "Je wekelijkse credits worden morgen aangevuld.",
     "reload_in_days": "Je wekelijkse credits worden over {{days}} dagen aangevuld.",
-    "two_things_headline": "Twee dingen die alleen Pro kan",
-    "pro_sub": "Alles, plus de twee hierboven",
+    "pro_sub": "Alles, plus de drie hierboven",
     "base_sub": "Alleen kamers",
     "start_pro": "Start Pro",
     "start_base": "Start Base",
@@ -1192,7 +1218,9 @@
     "per_year": "/jaar",
     "footnote": "Altijd opzegbaar · losse creditpakketten ook beschikbaar",
     "pack_line": "Of {{credits}} credits, eenmalig",
-    "current_plan_title": "Je zit op {{plan}}"
+    "current_plan_title": "Je zit op {{plan}}",
+    "pro_only_headline": "Drie dingen die alleen Pro kan",
+    "pro_video_card": "Kamervideo's"
   },
   "source": {
     "title": "Hoe heb je ons gevonden?",

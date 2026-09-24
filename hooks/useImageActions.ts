@@ -11,6 +11,13 @@ interface DownloadOptions {
     headers?: Record<string, string>;
     /** Filename without extension — used as a hint for the saved file. */
     nameHint?: string;
+    /**
+     * V183 — a room video goes through the same two doors. Explicit rather
+     * than sniffed from the URL: the extension decides whether Photos files
+     * it as a video and which UTI the share sheet announces, and a presigned
+     * URL is not a filename.
+     */
+    media?: "image" | "video";
 }
 
 /**
@@ -29,7 +36,7 @@ export function useImageActions() {
 
     const downloadToCache = useCallback(
         async (url: string, opts: DownloadOptions = {}): Promise<string> => {
-            const ext = url.includes(".png") ? "png" : "jpg";
+            const ext = opts.media === "video" ? "mp4" : url.includes(".png") ? "png" : "jpg";
             const filename = `${opts.nameHint ?? "design"}_${Date.now()}.${ext}`;
             const dest = `${FileSystem.cacheDirectory}${filename}`;
             const result = await FileSystem.downloadAsync(url, dest, {
@@ -62,7 +69,7 @@ export function useImageActions() {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 Alert.alert(
                     t("result.saved_title"),
-                    t("result.saved_body"),
+                    t(opts.media === "video" ? "result.video_saved_body" : "result.saved_body"),
                 );
             } catch (err: any) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -92,12 +99,15 @@ export function useImageActions() {
                     return;
                 }
                 const localUri = await downloadToCache(url, opts);
+                const video = opts.media === "video";
                 await Sharing.shareAsync(localUri, {
-                    mimeType: localUri.endsWith(".png") ? "image/png" : "image/jpeg",
-                    dialogTitle: t("result.share_dialog_title"),
+                    mimeType: video ? "video/mp4"
+                        : localUri.endsWith(".png") ? "image/png" : "image/jpeg",
+                    dialogTitle: t(video ? "result.video_share_dialog_title" : "result.share_dialog_title"),
                     // iOS-only — when the user picks "Save Image" inside the share
-                    // sheet, this UTI tells the system it's a regular photo.
-                    UTI: Platform.OS === "ios" ? "public.jpeg" : undefined,
+                    // sheet, this UTI tells the system it's a regular photo (or,
+                    // for a clip, an MPEG-4 movie).
+                    UTI: Platform.OS === "ios" ? (video ? "public.mpeg-4" : "public.jpeg") : undefined,
                 });
                 Haptics.selectionAsync();
             } catch (err: any) {

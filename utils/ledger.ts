@@ -49,6 +49,9 @@ const FEATURE_LABEL: Record<string, string> = {
     outdoor_design: "studio.mode_outdoor",
     ultra_hd_upscale: "credits.ref_upscale",
     expand_view: "credits.ledger_feature_expand_view",
+    // V183 — the clip. The server walks up to the render for the room name,
+    // so the row reads "Room video · Living Room · 10".
+    room_video: "credits.ledger_feature_room_video",
 };
 
 /** The three job-scoped verbs the builder prefixes a feature onto. */

@@ -406,7 +406,8 @@
     "all_designs": "Toutes les créations",
     "filter_activity": "Activité",
     "v2_empty_line": "Rien ici pour l'instant.",
-    "v2_new_design": "+ Nouveau design"
+    "v2_new_design": "+ Nouveau design",
+    "video_badge": "VIDÉO"
   },
   "history": {
     "title": "Historique",
@@ -647,7 +648,9 @@
     "ledger_refunded": "Non abouti — crédits restitués",
     "ledger_pack_bonus": "{{base}} + {{bonus}} offerts",
     "ledger_today": "Aujourd'hui",
-    "ledger_yesterday": "Hier"
+    "ledger_yesterday": "Hier",
+    "ledger_feature_room_video": "Vidéo de la pièce",
+    "ref_room_video": "Vidéo de la pièce (5 s)"
   },
   "credit_packs": {
     "title": "Packs de crédits",
@@ -732,7 +735,16 @@
     "about_this_style": "À propos de ce style",
     "style_hint_generic": "Une esthétique composée par Roomframe AI. Lumière, proportion et matière s'accordent pour un résultat à la fois personnel et intemporel.",
     "timeout_generic": "Erreur inattendue. Veuillez réessayer.",
-    "failed_body": "Le rendu n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie."
+    "failed_body": "Le rendu n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie.",
+    "video_creating": "Ta pièce prend vie…",
+    "video_eta": "Prend généralement une à deux minutes",
+    "video_phase_queued": "Préparation",
+    "video_phase_rendering": "La caméra parcourt ta pièce",
+    "video_phase_polishing": "Finalisation du clip",
+    "video_phase_ready": "Ta vidéo est prête",
+    "video_cancel_title": "Annuler la vidéo ?",
+    "video_cancel_body": "Les crédits te seront rendus.",
+    "video_failed_body": "La vidéo n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie."
   },
   "styles": {
     "scandinavian": "Le design scandinave célèbre un minimalisme chaleureux — bois clairs, neutres doux et lumière naturelle généreuse. Chaque objet gagne sa place par son utilité et son artisanat honnête.",
@@ -835,7 +847,22 @@
     "reminder_on": "Rappel activé",
     "open_fullscreen": "Ouvrir en plein écran",
     "reminder_denied_title": "Notifications désactivées",
-    "reminder_denied_body": "Activez-les dans Réglages pour recevoir le rappel."
+    "reminder_denied_body": "Activez-les dans Réglages pour recevoir le rappel.",
+    "video_cta": "Donne-lui vie",
+    "video_cta_hint": "Vidéo de 5 secondes · {{cost}} crédits",
+    "video_pro_hint": "Vidéo de 5 secondes · Pro",
+    "video_confirm_title": "Donner vie à cette création ?",
+    "video_confirm_body": "Une vidéo de 5 secondes de cette pièce sera créée pour {{cost}} crédits. Cela prend généralement une à deux minutes.",
+    "video_confirm_cta": "Créer la vidéo",
+    "video_in_progress": "Vidéo en cours…",
+    "video_watch": "Voir la vidéo",
+    "video_kicker": "Vidéo",
+    "video_length": "5 s",
+    "video_cost_used": "{{cost}} crédits utilisés",
+    "video_back_to_design": "Retour à la création",
+    "video_saved_body": "Ta vidéo est maintenant dans ta pellicule.",
+    "video_share_dialog_title": "Partager la vidéo",
+    "video_unavailable": "La vidéo n'est pas disponible pour le moment."
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1181,8 +1208,7 @@
     "reload_today": "Vos crédits hebdomadaires se rechargent aujourd'hui.",
     "reload_tomorrow": "Vos crédits hebdomadaires se rechargent demain.",
     "reload_in_days": "Vos crédits hebdomadaires se rechargent dans {{days}} jours.",
-    "two_things_headline": "Deux choses que seul Pro fait",
-    "pro_sub": "Tout, plus les deux ci-dessus",
+    "pro_sub": "Tout, plus les trois ci-dessus",
     "base_sub": "Pièces uniquement",
     "start_pro": "Démarrer Pro",
     "start_base": "Démarrer Base",
@@ -1192,7 +1218,9 @@
     "per_year": "/an",
     "footnote": "Annulable à tout moment · packs de crédits ponctuels également",
     "pack_line": "Ou {{credits}} crédits, une fois",
-    "current_plan_title": "Tu es sur {{plan}}"
+    "current_plan_title": "Tu es sur {{plan}}",
+    "pro_only_headline": "Trois choses que seul Pro fait",
+    "pro_video_card": "Vidéos de pièces"
   },
   "source": {
     "title": "Comment nous avez-vous trouvés ?",
