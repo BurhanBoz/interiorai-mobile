@@ -735,13 +735,7 @@
     "timeout_generic": "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.",
     "failed_body": "생성이 완료되지 않았습니다. 크레딧은 사용되지 않았어요 — 다시 시도해 주세요.",
     "video_creating": "공간에 생동감을 더하는 중…",
-    "video_eta": "보통 1~2분 걸립니다",
-    "video_phase_queued": "준비 중",
-    "video_phase_rendering": "카메라가 공간을 둘러보는 중",
-    "video_phase_polishing": "마무리 중",
-    "video_phase_ready": "영상이 준비되었습니다",
-    "video_cancel_title": "영상을 취소할까요?",
-    "video_cancel_body": "크레딧은 돌려드립니다.",
+    "video_eta": "보통 몇 분 걸립니다",
     "video_failed_body": "영상을 완성하지 못했습니다. 크레딧은 사용되지 않았으니 다시 시도해 주세요."
   },
   "styles": {
@@ -849,9 +843,6 @@
     "video_cta": "영상으로 만들기",
     "video_cta_hint": "5초 영상 · 크레딧 {{cost}}개",
     "video_pro_hint": "5초 영상 · Pro",
-    "video_confirm_title": "이 디자인을 영상으로 만들까요?",
-    "video_confirm_body": "크레딧 {{cost}}개로 이 공간의 5초 영상을 만듭니다. 보통 1~2분 걸립니다.",
-    "video_confirm_cta": "영상 만들기",
     "video_in_progress": "영상 만드는 중…",
     "video_watch": "영상 보기",
     "video_kicker": "영상",
@@ -860,7 +851,8 @@
     "video_back_to_design": "디자인으로 돌아가기",
     "video_saved_body": "영상이 카메라 롤에 저장되었습니다.",
     "video_share_dialog_title": "영상 공유",
-    "video_unavailable": "지금은 영상을 볼 수 없습니다."
+    "video_unavailable": "지금은 영상을 볼 수 없습니다.",
+    "video_in_progress_hint": "몇 분 걸립니다 · 완료되면 알림을 보내고 갤러리에 담아 드립니다"
   },
   "settings": {
     "notifications_title": "알림",
@@ -1108,7 +1100,11 @@
     "daily_credit_title": "오늘의 크레딧이 도착했어요",
     "daily_credit_body": "오늘의 무료 크레딧이 도착했어요. 사진을 골라 공간을 새롭게 바꿔보세요.",
     "try_another_style_title": "같은 공간, 다른 스타일로",
-    "try_another_style_body": "며칠 전에 방을 디자인하셨죠. 같은 사진을 다른 스타일로 만나보세요."
+    "try_another_style_body": "며칠 전에 방을 디자인하셨죠. 같은 사진을 다른 스타일로 만나보세요.",
+    "video_ready_title": "영상이 준비되었습니다",
+    "video_ready_body": "공간 영상이 완성되었습니다. 갤러리에서 확인하세요.",
+    "video_failed_title": "영상을 완성하지 못했습니다",
+    "video_failed_body": "크레딧이 반환되었습니다. 디자인에서 다시 시도해 보세요."
   },
   "permissions": {
     "camera_title": "카메라 접근 권한 필요",

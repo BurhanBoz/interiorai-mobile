@@ -735,13 +735,7 @@
     "timeout_generic": "予期しないエラーが発生しました。もう一度お試しください。",
     "failed_body": "生成が完了しませんでした。クレジットは消費されていません。もう一度お試しください。",
     "video_creating": "部屋に命を吹き込んでいます…",
-    "video_eta": "通常1〜2分かかります",
-    "video_phase_queued": "準備中",
-    "video_phase_rendering": "カメラが部屋の中を移動しています",
-    "video_phase_polishing": "仕上げ中",
-    "video_phase_ready": "動画ができました",
-    "video_cancel_title": "動画をキャンセルしますか？",
-    "video_cancel_body": "クレジットは返却されます。",
+    "video_eta": "通常数分かかります",
     "video_failed_body": "動画を完成できませんでした。クレジットは使われていません。もう一度お試しください。"
   },
   "styles": {
@@ -849,9 +843,6 @@
     "video_cta": "動画にする",
     "video_cta_hint": "5秒動画 · {{cost}}クレジット",
     "video_pro_hint": "5秒動画 · Pro",
-    "video_confirm_title": "このデザインを動画にしますか？",
-    "video_confirm_body": "{{cost}}クレジットで、この部屋の5秒動画を作成します。通常1〜2分かかります。",
-    "video_confirm_cta": "動画を作成",
     "video_in_progress": "動画を作成中…",
     "video_watch": "動画を見る",
     "video_kicker": "動画",
@@ -860,7 +851,8 @@
     "video_back_to_design": "デザインに戻る",
     "video_saved_body": "動画をカメラロールに保存しました。",
     "video_share_dialog_title": "動画を共有",
-    "video_unavailable": "現在この動画は利用できません。"
+    "video_unavailable": "現在この動画は利用できません。",
+    "video_in_progress_hint": "数分かかります · 完了したら通知します。ギャラリーに入ります"
   },
   "settings": {
     "notifications_title": "通知",
@@ -1108,7 +1100,11 @@
     "daily_credit_title": "本日のクレジットが届きました",
     "daily_credit_body": "今日の無料クレジットが届きました。写真を選んでお部屋を再デザインしましょう。",
     "try_another_style_title": "同じ部屋を、別のスタイルで",
-    "try_another_style_body": "数日前にお部屋をデザインしましたね。同じ写真を違うスタイルで見てみませんか。"
+    "try_another_style_body": "数日前にお部屋をデザインしましたね。同じ写真を違うスタイルで見てみませんか。",
+    "video_ready_title": "動画ができました",
+    "video_ready_body": "部屋の動画が完成しました。ギャラリーで見られます。",
+    "video_failed_title": "動画を完成できませんでした",
+    "video_failed_body": "クレジットは返却されました。デザインからもう一度お試しください。"
   },
   "permissions": {
     "camera_title": "カメラへのアクセスが必要です",

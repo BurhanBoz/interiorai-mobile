@@ -737,13 +737,7 @@
     "timeout_generic": "Onverwachte fout. Probeer het opnieuw.",
     "failed_body": "De render is niet voltooid. Je credits zijn niet gebruikt — probeer het opnieuw.",
     "video_creating": "Je kamer komt tot leven…",
-    "video_eta": "Duurt meestal een minuut of twee",
-    "video_phase_queued": "Voorbereiden",
-    "video_phase_rendering": "De camera beweegt door je kamer",
-    "video_phase_polishing": "De clip wordt afgemaakt",
-    "video_phase_ready": "Je video is klaar",
-    "video_cancel_title": "Video annuleren?",
-    "video_cancel_body": "Je krijgt de credits terug.",
+    "video_eta": "Duurt meestal een paar minuten",
     "video_failed_body": "De video is niet afgemaakt. Je credits zijn niet gebruikt — probeer het opnieuw."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Breng het tot leven",
     "video_cta_hint": "Video van 5 seconden · {{cost}} credits",
     "video_pro_hint": "Video van 5 seconden · Pro",
-    "video_confirm_title": "Dit ontwerp tot leven brengen?",
-    "video_confirm_body": "Voor {{cost}} credits maken we een video van 5 seconden van deze kamer. Dat duurt meestal een minuut of twee.",
-    "video_confirm_cta": "Maak de video",
     "video_in_progress": "Video wordt gemaakt…",
     "video_watch": "Bekijk de video",
     "video_kicker": "Video",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Terug naar het ontwerp",
     "video_saved_body": "Je video staat nu in je filmrol.",
     "video_share_dialog_title": "Video delen",
-    "video_unavailable": "De video is nu niet beschikbaar."
+    "video_unavailable": "De video is nu niet beschikbaar.",
+    "video_in_progress_hint": "Duurt een paar minuten · we sturen een melding, daarna staat hij in je galerij"
   },
   "settings": {
     "notifications_title": "Meldingen",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Je dagelijkse credit staat klaar",
     "daily_credit_body": "De gratis credit van vandaag is binnen — kies een foto en ontwerp een kamer opnieuw.",
     "try_another_style_title": "Jouw kamer, in een andere stijl",
-    "try_another_style_body": "Een paar dagen geleden ontwierp je een kamer. Bekijk dezelfde foto in een andere stijl."
+    "try_another_style_body": "Een paar dagen geleden ontwierp je een kamer. Bekijk dezelfde foto in een andere stijl.",
+    "video_ready_title": "Je video is klaar",
+    "video_ready_body": "Je kamervideo is af — je vindt hem in je galerij.",
+    "video_failed_title": "De video is niet afgemaakt",
+    "video_failed_body": "Je credits zijn terug. Je kunt het opnieuw proberen vanuit het ontwerp."
   },
   "permissions": {
     "camera_title": "Cameratoegang nodig",

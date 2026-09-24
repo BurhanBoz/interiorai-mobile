@@ -737,13 +737,7 @@
     "timeout_generic": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
     "failed_body": "Üretim tamamlanmadı. Krediniz harcanmadı — tekrar deneyin.",
     "video_creating": "Odan canlanıyor…",
-    "video_eta": "Genellikle bir-iki dakika sürer",
-    "video_phase_queued": "Hazırlanıyor",
-    "video_phase_rendering": "Kamera odanda geziniyor",
-    "video_phase_polishing": "Klip tamamlanıyor",
-    "video_phase_ready": "Videon hazır",
-    "video_cancel_title": "Video iptal edilsin mi?",
-    "video_cancel_body": "Krediler sana geri verilecek.",
+    "video_eta": "Genellikle birkaç dakika sürer",
     "video_failed_body": "Video tamamlanamadı. Kredilerin kullanılmadı — tekrar dene."
   },
   "styles": {
@@ -851,9 +845,6 @@
     "video_cta": "Canlandır",
     "video_cta_hint": "5 saniyelik video · {{cost}} kredi",
     "video_pro_hint": "5 saniyelik video · Pro",
-    "video_confirm_title": "Bu tasarımı canlandıralım mı?",
-    "video_confirm_body": "Bu odanın 5 saniyelik videosu için {{cost}} kredi kullanılacak. Genellikle bir-iki dakika sürer.",
-    "video_confirm_cta": "Videoyu oluştur",
     "video_in_progress": "Video hazırlanıyor…",
     "video_watch": "Videoyu izle",
     "video_kicker": "Video",
@@ -862,7 +853,8 @@
     "video_back_to_design": "Tasarıma dön",
     "video_saved_body": "Videon artık film rulonda.",
     "video_share_dialog_title": "Videoyu paylaş",
-    "video_unavailable": "Video şu anda kullanılamıyor."
+    "video_unavailable": "Video şu anda kullanılamıyor.",
+    "video_in_progress_hint": "Birkaç dakika sürer · bitince bildirim gelir, galeride olur"
   },
   "settings": {
     "notifications_title": "Bildirimler",
@@ -1110,7 +1102,11 @@
     "daily_credit_title": "Günlük kredin hazır",
     "daily_credit_body": "Bugünün ücretsiz kredisi geldi — bir fotoğraf seç, odanı yeniden tasarla.",
     "try_another_style_title": "Odan, bu kez başka bir stille",
-    "try_another_style_body": "Birkaç gün önce bir oda tasarladın. Aynı fotoğrafı farklı bir stille dene."
+    "try_another_style_body": "Birkaç gün önce bir oda tasarladın. Aynı fotoğrafı farklı bir stille dene.",
+    "video_ready_title": "Videon hazır",
+    "video_ready_body": "Oda videon tamamlandı — galerinde.",
+    "video_failed_title": "Video tamamlanamadı",
+    "video_failed_body": "Kredilerin iade edildi. Tasarımdan tekrar deneyebilirsin."
   },
   "permissions": {
     "camera_title": "Kamera İzni Gerekli",

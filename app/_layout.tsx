@@ -1,5 +1,6 @@
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
+import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { AppState } from "react-native";
@@ -131,6 +132,38 @@ export default function RootLayout() {
     sendHeartbeat();
     submitAttributionToken();
     syncPushTokenIfPermitted();
+  }, [isAuthenticated, isLoading]);
+
+  // A tapped push opens the screen it names (V183). The room video renders
+  // in the background and "your video is ready" carries `arg_route` —
+  // NotificationServiceImpl prefixes every arg — pointing at the clip; a
+  // failed clip points back at the render. Any other push has no route and
+  // simply opens the app, as before.
+  //
+  // Two entry points, because iOS delivers the tap two ways: a listener
+  // while the app is alive, and the "last response" when the tap is what
+  // launched it. The banner handler is what lets a push SHOW while the app
+  // is open — without it iOS delivers foreground pushes silently, and a
+  // user browsing the gallery would never learn their clip landed.
+  useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+    const open = (response: Notifications.NotificationResponse | null) => {
+      const route = response?.notification?.request?.content?.data?.arg_route;
+      if (typeof route === "string" && route.startsWith("/")) {
+        router.push(route as never);
+      }
+    };
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
+    Notifications.getLastNotificationResponseAsync().then(open).catch(() => {});
+    return () => sub.remove();
   }, [isAuthenticated, isLoading]);
 
   // Dismiss the branded splash once fonts have loaded AND the dwell timer

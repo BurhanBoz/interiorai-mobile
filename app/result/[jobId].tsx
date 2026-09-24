@@ -47,7 +47,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
-import type { JobResponse, JobOutputResponse } from "@/types/api";
+import type { JobResponse, JobOutputResponse, JobStatus } from "@/types/api";
 import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
@@ -168,7 +168,11 @@ export default function ResultDetailScreen() {
     ?? effectiveFeatures.find((f) => f.featureCode === "ROOM_VIDEO")?.creditsPerUse
     ?? null;
   const canAfford = useCreditStore((s) => s.canAfford);
+  const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const [videoSubmitting, setVideoSubmitting] = useState(false);
+  // The clip this visit started, so the button flips to "in progress" the
+  // moment the server accepts it — without re-fetching the job.
+  const [startedVideo, setStartedVideo] = useState<{ id: string; status: JobStatus } | null>(null);
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -425,34 +429,40 @@ export default function ResultDetailScreen() {
   };
 
   /**
-   * The clip's state, from the server's own answer: a live or finished clip
-   * of this render comes back on the job itself (videoJobId / videoStatus),
-   * so "watch" and "in progress" need no second request and a second tap on
-   * a finished render can never buy a second clip.
+   * The clip's state: what this visit started, else the server's own answer
+   * — a live or finished clip of this render comes back on the job itself
+   * (videoJobId / videoStatus), so "watch" and "in progress" need no second
+   * request and a second tap on a finished render can never buy a second
+   * clip.
    */
+  const videoRef =
+    startedVideo
+    ?? (job?.videoJobId ? { id: job.videoJobId, status: job.videoStatus ?? "PENDING" } : null);
   const videoState: "make" | "progress" | "watch" =
-    job?.videoJobId && job.videoStatus === "COMPLETED" ? "watch"
-    : job?.videoJobId && job.videoStatus && !["FAILED", "CANCELLED"].includes(job.videoStatus) ? "progress"
-    : "make";
+    !videoRef ? "make"
+    : videoRef.status === "COMPLETED" ? "watch"
+    : ["FAILED", "CANCELLED"].includes(videoRef.status) ? "make"
+    : "progress";
 
   /**
-   * Bring it to life. Three doors, in this order: an existing clip is opened
-   * (nothing is charged); a plan below PRO goes to the paywall; an empty
-   * wallet goes to the credits paywall. Only then is the price put in front
-   * of the user, and only their confirmation creates the job.
+   * Bring it to life — one tap, no dialog (owner decision 2026-09-24: the
+   * price is already printed on the button). Three doors, in this order: a
+   * finished clip is opened (nothing is charged); a plan below PRO goes to
+   * the paywall; an empty wallet goes to the credits paywall. Otherwise the
+   * clip is started and the user is free to leave: it renders in the
+   * background, a push says when it is done, and it lands in the gallery.
+   * Nobody waits on a screen — the first live clip was still rendering
+   * after eight minutes.
    */
-  const handleVideo = () => {
+  const handleVideo = async () => {
     if (!job || !currentOutput || videoSubmitting) return;
     Haptics.selectionAsync();
 
-    if (videoState === "watch" && job.videoJobId) {
-      router.push(`/result/${job.videoJobId}` as never);
+    if (videoState === "watch" && videoRef) {
+      router.push(`/result/${videoRef.id}` as never);
       return;
     }
-    if (videoState === "progress" && job.videoJobId) {
-      router.push({ pathname: "/generation/video", params: { jobId: job.videoJobId } } as never);
-      return;
-    }
+    if (videoState === "progress") return;
     if (!videoFeatureEnabled) {
       router.push("/paywall?source=RESULT_VIDEO" as never);
       return;
@@ -462,36 +472,27 @@ export default function ResultDetailScreen() {
       return;
     }
 
-    Alert.alert(
-      t("result.video_confirm_title"),
-      t("result.video_confirm_body", { cost: videoCost ?? "" }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("result.video_confirm_cta"),
-          onPress: async () => {
-            setVideoSubmitting(true);
-            try {
-              const video = await createVideoJob(job.id, currentOutput.id);
-              router.push({ pathname: "/generation/video", params: { jobId: video.id } } as never);
-            } catch (e: any) {
-              // The server's own verdict on the plan wins over the client's.
-              if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
-                router.push("/paywall?source=RESULT_VIDEO" as never);
-                return;
-              }
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Alert.alert(
-                t("generation.failed"),
-                e?.response?.data?.message ?? t("errors.generic"),
-              );
-            } finally {
-              setVideoSubmitting(false);
-            }
-          },
-        },
-      ],
-    );
+    setVideoSubmitting(true);
+    try {
+      const video = await createVideoJob(job.id, currentOutput.id);
+      setStartedVideo({ id: video.id, status: video.status });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // The credits are reserved the moment the job exists; show it.
+      fetchBalance().catch(() => {});
+    } catch (e: any) {
+      // The server's own verdict on the plan wins over the client's.
+      if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
+        router.push("/paywall?source=RESULT_VIDEO" as never);
+        return;
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        t("generation.failed"),
+        e?.response?.data?.message ?? t("errors.generic"),
+      );
+    } finally {
+      setVideoSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -1014,7 +1015,8 @@ function VideoCta({
     : state === "progress" ? t("result.video_in_progress")
     : t("result.video_cta");
   const hint =
-    state !== "make" ? null
+    state === "watch" ? null
+    : state === "progress" ? t("result.video_in_progress_hint")
     : locked ? t("result.video_pro_hint")
     : t("result.video_cta_hint", { cost: cost ?? "" });
 
@@ -1022,7 +1024,9 @@ function VideoCta({
     <View style={{ alignItems: "center", marginTop: 10 }}>
       <Pressable
         onPress={onPress}
-        disabled={busy}
+        // In progress there is nothing to do here: the clip renders on its
+        // own and the push brings the user back.
+        disabled={busy || state === "progress"}
         accessibilityRole="button"
         accessibilityLabel={hint ? `${label}. ${hint}` : label}
         style={{
