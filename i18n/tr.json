@@ -406,7 +406,8 @@
     "all_designs": "Tüm Tasarımlar",
     "filter_activity": "İşlemler",
     "v2_empty_line": "Burada henüz bir şey yok.",
-    "v2_new_design": "+ Yeni tasarım"
+    "v2_new_design": "+ Yeni tasarım",
+    "video_badge": "VİDEO"
   },
   "history": {
     "title": "Geçmiş",
@@ -647,7 +648,9 @@
     "ledger_refunded": "Tamamlanmadı — krediler iade edildi",
     "ledger_pack_bonus": "{{base}} + {{bonus}} hediye",
     "ledger_today": "Bugün",
-    "ledger_yesterday": "Dün"
+    "ledger_yesterday": "Dün",
+    "ledger_feature_room_video": "Oda videosu",
+    "ref_room_video": "Oda videosu (5 sn)"
   },
   "credit_packs": {
     "title": "Kredi Paketleri",
@@ -732,7 +735,16 @@
     "about_this_style": "Bu stil hakkında",
     "style_hint_generic": "Roomframe AI tarafından özenle kürate edilmiş bir estetik. Işık, oran ve malzeme; hem kişisel hem zamansız bir atmosfer yaratmak için bir araya getirildi.",
     "timeout_generic": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
-    "failed_body": "Üretim tamamlanmadı. Krediniz harcanmadı — tekrar deneyin."
+    "failed_body": "Üretim tamamlanmadı. Krediniz harcanmadı — tekrar deneyin.",
+    "video_creating": "Odan canlanıyor…",
+    "video_eta": "Genellikle bir-iki dakika sürer",
+    "video_phase_queued": "Hazırlanıyor",
+    "video_phase_rendering": "Kamera odanda geziniyor",
+    "video_phase_polishing": "Klip tamamlanıyor",
+    "video_phase_ready": "Videon hazır",
+    "video_cancel_title": "Video iptal edilsin mi?",
+    "video_cancel_body": "Krediler sana geri verilecek.",
+    "video_failed_body": "Video tamamlanamadı. Kredilerin kullanılmadı — tekrar dene."
   },
   "styles": {
     "scandinavian": "İskandinav tasarımı sıcak minimalizmi kutlar — açık ahşaplar, yumuşak nötr tonlar ve bol doğal ışık. Her nesne, işlevi ve dürüst zanaatı sayesinde yerini kazanır.",
@@ -835,7 +847,22 @@
     "reminder_on": "Hatırlatma açık",
     "open_fullscreen": "Tam ekran aç",
     "reminder_denied_title": "Bildirimler kapalı",
-    "reminder_denied_body": "Hatırlatmayı almak için Ayarlar'dan aç."
+    "reminder_denied_body": "Hatırlatmayı almak için Ayarlar'dan aç.",
+    "video_cta": "Canlandır",
+    "video_cta_hint": "5 saniyelik video · {{cost}} kredi",
+    "video_pro_hint": "5 saniyelik video · Pro",
+    "video_confirm_title": "Bu tasarımı canlandıralım mı?",
+    "video_confirm_body": "Bu odanın 5 saniyelik videosu için {{cost}} kredi kullanılacak. Genellikle bir-iki dakika sürer.",
+    "video_confirm_cta": "Videoyu oluştur",
+    "video_in_progress": "Video hazırlanıyor…",
+    "video_watch": "Videoyu izle",
+    "video_kicker": "Video",
+    "video_length": "5 sn",
+    "video_cost_used": "{{cost}} kredi kullanıldı",
+    "video_back_to_design": "Tasarıma dön",
+    "video_saved_body": "Videon artık film rulonda.",
+    "video_share_dialog_title": "Videoyu paylaş",
+    "video_unavailable": "Video şu anda kullanılamıyor."
   },
   "settings": {
     "notifications_title": "Bildirimler",
@@ -1181,8 +1208,7 @@
     "reload_today": "Haftalık kredin bugün yenileniyor.",
     "reload_tomorrow": "Haftalık kredin yarın yenileniyor.",
     "reload_in_days": "Haftalık kredin {{days}} gün sonra yenileniyor.",
-    "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey",
-    "pro_sub": "Her şey, artı yukarıdaki ikisi",
+    "pro_sub": "Her şey, artı yukarıdaki üçü",
     "base_sub": "Yalnız odalar",
     "start_pro": "Pro'ya başla",
     "start_base": "Base'e başla",
@@ -1192,7 +1218,9 @@
     "per_year": "/yıl",
     "footnote": "İstediğin an iptal · tek seferlik kredi paketleri de var",
     "pack_line": "Ya da tek seferlik {{credits}} kredi",
-    "current_plan_title": "{{plan}} planındasın"
+    "current_plan_title": "{{plan}} planındasın",
+    "pro_only_headline": "Yalnızca Pro'nun yapabildiği üç şey",
+    "pro_video_card": "Oda videoları"
   },
   "source": {
     "title": "Bizi nereden buldun?",

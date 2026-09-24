@@ -406,7 +406,8 @@
     "all_designs": "Alle Designs",
     "filter_activity": "Aktivität",
     "v2_empty_line": "Hier ist noch nichts.",
-    "v2_new_design": "+ Neues Design"
+    "v2_new_design": "+ Neues Design",
+    "video_badge": "VIDEO"
   },
   "history": {
     "title": "Verlauf",
@@ -644,7 +645,9 @@
     "ledger_refunded": "Nicht fertiggestellt — Credits zurück",
     "ledger_pack_bonus": "{{base}} + {{bonus}} Bonus",
     "ledger_today": "Heute",
-    "ledger_yesterday": "Gestern"
+    "ledger_yesterday": "Gestern",
+    "ledger_feature_room_video": "Raumvideo",
+    "ref_room_video": "Raumvideo (5 s)"
   },
   "credit_packs": {
     "title": "Credit-Pakete",
@@ -732,7 +735,16 @@
     "about_this_style": "Über diesen Stil",
     "style_hint_generic": "Eine kuratierte Ästhetik, die von Roomframe AI zum Leben erweckt wird. Licht, Proportion und Material sind so komponiert, dass sie persönlich und zeitlos wirken.",
     "timeout_generic": "Unerwarteter Fehler. Bitte erneut versuchen.",
-    "failed_body": "Das Rendering wurde nicht fertig. Deine Credits wurden nicht verbraucht — versuch es erneut."
+    "failed_body": "Das Rendering wurde nicht fertig. Deine Credits wurden nicht verbraucht — versuch es erneut.",
+    "video_creating": "Dein Raum erwacht zum Leben…",
+    "video_eta": "Dauert meist ein bis zwei Minuten",
+    "video_phase_queued": "Wird vorbereitet",
+    "video_phase_rendering": "Die Kamera bewegt sich durch deinen Raum",
+    "video_phase_polishing": "Der Clip wird fertiggestellt",
+    "video_phase_ready": "Dein Video ist fertig",
+    "video_cancel_title": "Video abbrechen?",
+    "video_cancel_body": "Das Guthaben wird dir zurückgegeben.",
+    "video_failed_body": "Das Video wurde nicht fertig. Dein Guthaben wurde nicht verwendet — versuch es noch einmal."
   },
   "styles": {
     "scandinavian": "Skandinavisches Design feiert warmen Minimalismus — helle Hölzer, weiche Neutraltöne und reichlich natürliches Licht. Jedes Objekt verdient seinen Platz durch Nützlichkeit und ehrliches Handwerk.",
@@ -835,7 +847,22 @@
     "reminder_on": "Erinnerung an",
     "open_fullscreen": "Vollbild öffnen",
     "reminder_denied_title": "Mitteilungen sind aus",
-    "reminder_denied_body": "Schalte sie in den Einstellungen ein, um die Erinnerung zu erhalten."
+    "reminder_denied_body": "Schalte sie in den Einstellungen ein, um die Erinnerung zu erhalten.",
+    "video_cta": "Zum Leben erwecken",
+    "video_cta_hint": "5-Sekunden-Video · {{cost}} Guthaben",
+    "video_pro_hint": "5-Sekunden-Video · Pro",
+    "video_confirm_title": "Dieses Design zum Leben erwecken?",
+    "video_confirm_body": "Für {{cost}} Guthaben entsteht ein 5-Sekunden-Video dieses Raums. Das dauert meist ein bis zwei Minuten.",
+    "video_confirm_cta": "Video erstellen",
+    "video_in_progress": "Video wird erstellt…",
+    "video_watch": "Video ansehen",
+    "video_kicker": "Video",
+    "video_length": "5 s",
+    "video_cost_used": "{{cost}} Guthaben verwendet",
+    "video_back_to_design": "Zurück zum Design",
+    "video_saved_body": "Dein Video ist jetzt in deiner Fotomediathek.",
+    "video_share_dialog_title": "Video teilen",
+    "video_unavailable": "Das Video ist gerade nicht verfügbar."
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
@@ -1181,8 +1208,7 @@
     "reload_today": "Deine wöchentlichen Credits laden heute.",
     "reload_tomorrow": "Deine wöchentlichen Credits laden morgen.",
     "reload_in_days": "Deine wöchentlichen Credits laden in {{days}} Tagen.",
-    "two_things_headline": "Zwei Dinge, die nur Pro kann",
-    "pro_sub": "Alles, plus die beiden oben",
+    "pro_sub": "Alles, plus die drei oben",
     "base_sub": "Nur Räume",
     "start_pro": "Pro starten",
     "start_base": "Base starten",
@@ -1192,7 +1218,9 @@
     "per_year": "/Jahr",
     "footnote": "Jederzeit kündbar · einmalige Guthabenpakete ebenfalls erhältlich",
     "pack_line": "Oder einmalig {{credits}} Guthaben",
-    "current_plan_title": "Du bist auf {{plan}}"
+    "current_plan_title": "Du bist auf {{plan}}",
+    "pro_only_headline": "Drei Dinge, die nur Pro kann",
+    "pro_video_card": "Raumvideos"
   },
   "source": {
     "title": "Wie hast du uns gefunden?",

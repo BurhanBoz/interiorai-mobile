@@ -6,6 +6,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import type { JobResponse } from "@/types/api";
 import { theme } from "@/config/theme";
+import { getFileDownloadUrl } from "@/services/files";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 /**
  * A job row: thumbnail, what it was, and where it got to.
@@ -104,8 +106,14 @@ function useStatusLabel() {
 export function JobActivityCard({ item }: { item: JobResponse }) {
   const { t } = useTranslation();
   const statusLabel = useStatusLabel();
-  const thumbnail =
-    item.outputs?.[0]?.url ?? item.inputFile?.publicUrl ?? undefined;
+  const authHeaders = useAuthHeaders();
+  // V183 — a clip's thumbnail is the still it is made from (its input
+  // file), behind the authenticated proxy; an <Image> cannot show the mp4
+  // and while it renders there is no output at all.
+  const isVideo = item.jobType === "VIDEO";
+  const thumbnail = isVideo
+    ? (item.inputFile?.id ? getFileDownloadUrl(item.inputFile.id) : undefined)
+    : (item.outputs?.[0]?.url ?? item.inputFile?.publicUrl ?? undefined);
   const palette = statusPalette(item.status);
   const title =
     item.roomTypeName && item.designStyleName
@@ -155,7 +163,7 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
           >
             {thumbnail ? (
               <Image
-                source={{ uri: thumbnail }}
+                source={isVideo ? { uri: thumbnail, headers: authHeaders } : { uri: thumbnail }}
                 style={{ width: 96, height: 96 }}
                 contentFit="cover"
                 transition={300}
@@ -196,8 +204,24 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
                 </Text>
               </View>
             )}
-            {/* Quality badge on thumbnail */}
-            {item.qualityTier && item.qualityTier !== "STANDARD" && (
+            {/* Quality badge on thumbnail — a clip wears VIDEO there instead. */}
+            {isVideo ? (
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 6,
+                  left: 6,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ ...theme.text.label, color: "#DDB477" }}>
+                  {t("gallery.video_badge")}
+                </Text>
+              </View>
+            ) : item.qualityTier && item.qualityTier !== "STANDARD" && (
               <View
                 style={{
                   position: "absolute",

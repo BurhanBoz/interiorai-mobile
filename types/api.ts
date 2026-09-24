@@ -158,6 +158,12 @@ export interface JobResponse {
     id: string;
     status: JobStatus;
     featureCode: string;
+    /**
+     * INTERIOR_DESIGN / UPSCALE / EXPAND / BACKGROUND_REMOVAL / VIDEO (V183).
+     * A clip's outputs carry mimeType "video/mp4", but only once they exist;
+     * this says what the job is while it is still rendering.
+     */
+    jobType?: string;
     prompt: string;
     createdAt: string;
     submittedAt: string;
@@ -172,6 +178,14 @@ export interface JobResponse {
     strength: number;
     guidanceScale: number;
     parentJobId: string;
+    /**
+     * The latest room video made from this job that is live or finished
+     * (V183); absent when there is none, or the only one failed. The result
+     * screen reads it to offer "watch" instead of "make", so a second tap on
+     * a finished render is never a second charge.
+     */
+    videoJobId?: string | null;
+    videoStatus?: JobStatus | null;
     inputFile: FileResponse;
     outputs: JobOutputResponse[];
 }

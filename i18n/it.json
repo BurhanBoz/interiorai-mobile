@@ -406,7 +406,8 @@
     "all_designs": "Tutti i Design",
     "filter_activity": "Attività",
     "v2_empty_line": "Qui non c'è ancora nulla.",
-    "v2_new_design": "+ Nuovo design"
+    "v2_new_design": "+ Nuovo design",
+    "video_badge": "VIDEO"
   },
   "history": {
     "title": "Cronologia",
@@ -644,7 +645,9 @@
     "ledger_refunded": "Non completato — crediti restituiti",
     "ledger_pack_bonus": "{{base}} + {{bonus}} bonus",
     "ledger_today": "Oggi",
-    "ledger_yesterday": "Ieri"
+    "ledger_yesterday": "Ieri",
+    "ledger_feature_room_video": "Video della stanza",
+    "ref_room_video": "Video della stanza (5 s)"
   },
   "credit_packs": {
     "title": "Pacchetti di Crediti",
@@ -732,7 +735,16 @@
     "about_this_style": "Informazioni su questo stile",
     "style_hint_generic": "Un'estetica curata portata in vita da Roomframe AI. Luce, proporzione e materiale sono composti per sembrare personali e senza tempo.",
     "timeout_generic": "Errore imprevisto. Riprova.",
-    "failed_body": "Il render non è stato completato. I tuoi crediti non sono stati usati — riprova."
+    "failed_body": "Il render non è stato completato. I tuoi crediti non sono stati usati — riprova.",
+    "video_creating": "La tua stanza prende vita…",
+    "video_eta": "Di solito richiede uno o due minuti",
+    "video_phase_queued": "In preparazione",
+    "video_phase_rendering": "La camera si muove nella tua stanza",
+    "video_phase_polishing": "Rifinitura della clip",
+    "video_phase_ready": "Il tuo video è pronto",
+    "video_cancel_title": "Annullare il video?",
+    "video_cancel_body": "I crediti ti verranno restituiti.",
+    "video_failed_body": "Il video non è stato completato. I tuoi crediti non sono stati usati: riprova."
   },
   "styles": {
     "scandinavian": "Il design scandinavo celebra un minimalismo caldo — legni chiari, tonalità neutre morbide e abbondante luce naturale. Ogni oggetto guadagna il suo posto attraverso l'utilità e l'artigianato onesto.",
@@ -835,7 +847,22 @@
     "reminder_on": "Promemoria attivo",
     "open_fullscreen": "Apri a schermo intero",
     "reminder_denied_title": "Notifiche disattivate",
-    "reminder_denied_body": "Attivale in Impostazioni per ricevere il promemoria."
+    "reminder_denied_body": "Attivale in Impostazioni per ricevere il promemoria.",
+    "video_cta": "Dagli vita",
+    "video_cta_hint": "Video di 5 secondi · {{cost}} crediti",
+    "video_pro_hint": "Video di 5 secondi · Pro",
+    "video_confirm_title": "Dare vita a questo progetto?",
+    "video_confirm_body": "Verrà creato un video di 5 secondi di questa stanza per {{cost}} crediti. Di solito richiede uno o due minuti.",
+    "video_confirm_cta": "Crea il video",
+    "video_in_progress": "Video in corso…",
+    "video_watch": "Guarda il video",
+    "video_kicker": "Video",
+    "video_length": "5 s",
+    "video_cost_used": "{{cost}} crediti usati",
+    "video_back_to_design": "Torna al progetto",
+    "video_saved_body": "Il tuo video è ora nel rullino.",
+    "video_share_dialog_title": "Condividi video",
+    "video_unavailable": "Il video non è disponibile al momento."
   },
   "settings": {
     "notifications_title": "Notifiche",
@@ -1181,8 +1208,7 @@
     "reload_today": "I tuoi crediti settimanali si ricaricano oggi.",
     "reload_tomorrow": "I tuoi crediti settimanali si ricaricano domani.",
     "reload_in_days": "I tuoi crediti settimanali si ricaricano tra {{days}} giorni.",
-    "two_things_headline": "Due cose che solo Pro può fare",
-    "pro_sub": "Tutto, più le due sopra",
+    "pro_sub": "Tutto, più le tre sopra",
     "base_sub": "Solo stanze",
     "start_pro": "Inizia Pro",
     "start_base": "Inizia Base",
@@ -1192,7 +1218,9 @@
     "per_year": "/anno",
     "footnote": "Disdici quando vuoi · disponibili anche pacchetti di crediti singoli",
     "pack_line": "Oppure {{credits}} crediti, una volta",
-    "current_plan_title": "Il tuo piano è {{plan}}"
+    "current_plan_title": "Il tuo piano è {{plan}}",
+    "pro_only_headline": "Tre cose che solo Pro può fare",
+    "pro_video_card": "Video delle stanze"
   },
   "source": {
     "title": "Come ci hai trovato?",

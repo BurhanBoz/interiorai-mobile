@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import * as jobsService from "@/services/jobs";
 import { JobActivityCard } from "@/components/gallery/JobActivityCard";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
-import { getOutputDownloadUrl } from "@/services/files";
+import { getOutputDownloadUrl, getFileDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
@@ -96,7 +96,13 @@ function NewDesignCell({
 interface GalleryOutput {
   jobId: string;
   outputId: string;
+  /**
+   * For a picture: the pre-signed output URL. For a clip (V183): the still it
+   * was made from, through the authenticated /api/files proxy — the tile
+   * shows the poster under a play badge, never the mp4 itself.
+   */
   imageUrl: string;
+  kind: "image" | "video";
   roomTypeName: string;
   designStyleName: string;
   qualityTier: string;
@@ -198,20 +204,30 @@ export default function GalleryScreen() {
     return jobs
       .filter(j => j.status === "COMPLETED" && j.outputs?.length > 0)
       .flatMap(j =>
-        j.outputs.map(o => ({
-          jobId: j.id,
-          outputId: o.id,
-          // Direct pre-signed S3 URL (1-hour expiry). Going through the
-          // backend /download redirect breaks on iOS — URLSession forwards
-          // the Authorization header to the S3 redirect target and S3
-          // returns 403 because the request has both Bearer auth AND
-          // X-Amz-Signature query auth. See result/[jobId].tsx.
-          imageUrl: o.url,
-          roomTypeName: j.roomTypeName ?? "",
-          designStyleName: j.designStyleName ?? "",
-          qualityTier: j.qualityTier,
-          createdAt: j.finishedAt || j.createdAt,
-        })),
+        j.outputs.map(o => {
+          // V183 — a clip sits in the grid as its own tile, in the same room
+          // category as the render it came from (the names are inherited).
+          const isVideo = j.jobType === "VIDEO" || (o.mimeType ?? "").startsWith("video/");
+          return {
+            jobId: j.id,
+            outputId: o.id,
+            // Direct pre-signed S3 URL (1-hour expiry). Going through the
+            // backend /download redirect breaks on iOS — URLSession forwards
+            // the Authorization header to the S3 redirect target and S3
+            // returns 403 because the request has both Bearer auth AND
+            // X-Amz-Signature query auth. See result/[jobId].tsx.
+            // A clip's poster is its input file (the still), which lives
+            // behind the authenticated proxy like every input does.
+            imageUrl: isVideo
+              ? (j.inputFile?.id ? getFileDownloadUrl(j.inputFile.id) : "")
+              : o.url,
+            kind: isVideo ? "video" : "image",
+            roomTypeName: j.roomTypeName ?? "",
+            designStyleName: j.designStyleName ?? "",
+            qualityTier: j.qualityTier,
+            createdAt: j.finishedAt || j.createdAt,
+          } as GalleryOutput;
+        }),
       )
       .sort(
         (a, b) =>
@@ -282,6 +298,11 @@ export default function GalleryScreen() {
   }, []);
   const handleLongPress = useCallback((item: GalleryOutput) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // The peek is an <Image>; a clip's peek IS its result screen.
+    if (item.kind === "video") {
+      router.push(`/result/${item.jobId}`);
+      return;
+    }
     setPreviewItem(item);
   }, []);
 
@@ -305,12 +326,36 @@ export default function GalleryScreen() {
       >
         <Image
           // item.imageUrl is the pre-signed S3 URL; no Authorization
-          // header (supplying one → S3 403 on redirect target).
-          source={{ uri: item.imageUrl }}
+          // header (supplying one → S3 403 on redirect target). A clip's
+          // poster comes through the authenticated proxy and needs one.
+          source={item.kind === "video"
+            ? { uri: item.imageUrl, headers: authHeaders }
+            : { uri: item.imageUrl }}
           style={{ width: tileWidth, height: tileHeight }}
           contentFit="cover"
           transition={200}
         />
+
+        {/* V183 — the play badge says "clip" before the tile is tapped. */}
+        {item.kind === "video" && (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+              alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <View
+              style={{
+                width: 44, height: 44, borderRadius: 22,
+                backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, marginLeft: 3 }}>▶</Text>
+            </View>
+          </View>
+        )}
 
         {/* A pill, not a gradient band. The gradient darkened a third of
             every image to carry one word; the pill carries the same word and
@@ -336,8 +381,27 @@ export default function GalleryScreen() {
         </View>
 
         {/* Quality chip top-LEFT — moved off top-right to make room for
-            the heart toggle. Only shown above STANDARD tier. */}
-        {item.qualityTier !== "STANDARD" && (
+            the heart toggle. Only shown above STANDARD tier. A clip wears
+            "VIDEO" in the same spot instead — its tier is its parent's. */}
+        {item.kind === "video" ? (
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              backgroundColor: "rgba(19,19,19,0.7)",
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 4,
+              borderWidth: 1,
+              borderColor: "rgba(224,194,154,0.3)",
+            }}
+          >
+            <Text style={{ ...theme.text.caption, color: "#DDB477" }}>
+              {t("gallery.video_badge")}
+            </Text>
+          </View>
+        ) : item.qualityTier !== "STANDARD" && (
           <View
             style={{
               position: "absolute",

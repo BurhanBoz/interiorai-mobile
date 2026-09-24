@@ -406,7 +406,8 @@
     "all_designs": "Todos los Diseños",
     "filter_activity": "Actividad",
     "v2_empty_line": "Aquí todavía no hay nada.",
-    "v2_new_design": "+ Nuevo diseño"
+    "v2_new_design": "+ Nuevo diseño",
+    "video_badge": "VÍDEO"
   },
   "history": {
     "title": "Historial",
@@ -644,7 +645,9 @@
     "ledger_refunded": "No se completó — créditos devueltos",
     "ledger_pack_bonus": "{{base}} + {{bonus}} de regalo",
     "ledger_today": "Hoy",
-    "ledger_yesterday": "Ayer"
+    "ledger_yesterday": "Ayer",
+    "ledger_feature_room_video": "Vídeo de la habitación",
+    "ref_room_video": "Vídeo de la habitación (5 s)"
   },
   "credit_packs": {
     "title": "Paquetes de Créditos",
@@ -732,7 +735,16 @@
     "about_this_style": "Sobre este estilo",
     "style_hint_generic": "Una estética curada que cobra vida gracias a Roomframe AI. Luz, proporción y material se componen para sentirse personales y atemporales al mismo tiempo.",
     "timeout_generic": "Error inesperado. Por favor, inténtalo de nuevo.",
-    "failed_body": "El render no se completó. No se usaron tus créditos — inténtalo de nuevo."
+    "failed_body": "El render no se completó. No se usaron tus créditos — inténtalo de nuevo.",
+    "video_creating": "Dando vida a tu habitación…",
+    "video_eta": "Suele tardar uno o dos minutos",
+    "video_phase_queued": "Preparando",
+    "video_phase_rendering": "La cámara recorre tu habitación",
+    "video_phase_polishing": "Terminando el clip",
+    "video_phase_ready": "Tu vídeo está listo",
+    "video_cancel_title": "¿Cancelar el vídeo?",
+    "video_cancel_body": "Se te devolverán los créditos.",
+    "video_failed_body": "El vídeo no se completó. No se usaron tus créditos: inténtalo de nuevo."
   },
   "styles": {
     "scandinavian": "El diseño escandinavo celebra un minimalismo cálido: maderas claras, tonos neutros suaves y abundante luz natural. Cada objeto gana su lugar por su utilidad y una artesanía honesta.",
@@ -835,7 +847,22 @@
     "reminder_on": "Recordatorio activo",
     "open_fullscreen": "Abrir a pantalla completa",
     "reminder_denied_title": "Notificaciones desactivadas",
-    "reminder_denied_body": "Actívalas en Ajustes para recibir el recordatorio."
+    "reminder_denied_body": "Actívalas en Ajustes para recibir el recordatorio.",
+    "video_cta": "Dale vida",
+    "video_cta_hint": "Vídeo de 5 segundos · {{cost}} créditos",
+    "video_pro_hint": "Vídeo de 5 segundos · Pro",
+    "video_confirm_title": "¿Dar vida a este diseño?",
+    "video_confirm_body": "Se creará un vídeo de 5 segundos de esta habitación por {{cost}} créditos. Suele tardar uno o dos minutos.",
+    "video_confirm_cta": "Crear el vídeo",
+    "video_in_progress": "Vídeo en curso…",
+    "video_watch": "Ver el vídeo",
+    "video_kicker": "Vídeo",
+    "video_length": "5 s",
+    "video_cost_used": "{{cost}} créditos usados",
+    "video_back_to_design": "Volver al diseño",
+    "video_saved_body": "Tu vídeo ya está en tu carrete.",
+    "video_share_dialog_title": "Compartir vídeo",
+    "video_unavailable": "El vídeo no está disponible ahora mismo."
   },
   "settings": {
     "notifications_title": "Notificaciones",
@@ -1181,8 +1208,7 @@
     "reload_today": "Tus créditos semanales se recargan hoy.",
     "reload_tomorrow": "Tus créditos semanales se recargan mañana.",
     "reload_in_days": "Tus créditos semanales se recargan en {{days}} días.",
-    "two_things_headline": "Dos cosas que solo Pro puede hacer",
-    "pro_sub": "Todo, más las dos de arriba",
+    "pro_sub": "Todo, más las tres de arriba",
     "base_sub": "Solo habitaciones",
     "start_pro": "Empezar Pro",
     "start_base": "Empezar Base",
@@ -1192,7 +1218,9 @@
     "per_year": "/año",
     "footnote": "Cancela cuando quieras · también hay packs de créditos sueltos",
     "pack_line": "O {{credits}} créditos, una vez",
-    "current_plan_title": "Tu plan es {{plan}}"
+    "current_plan_title": "Tu plan es {{plan}}",
+    "pro_only_headline": "Tres cosas que solo Pro puede hacer",
+    "pro_video_card": "Vídeos de habitaciones"
   },
   "source": {
     "title": "¿Cómo nos encontraste?",

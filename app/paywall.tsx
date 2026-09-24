@@ -453,7 +453,7 @@ export default function PaywallScreen() {
                     </>
                 ) : (
                     <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
-                        {t("paywall.two_things_headline")}
+                        {t("paywall.pro_only_headline")}
                     </Text>
                 )}
 
@@ -472,6 +472,14 @@ export default function PaywallScreen() {
                         // being used as half the argument for a paid plan.
                         image={require("@/assets/features/outdoor_after.png")}
                         label={t("studio.mode_outdoor")}
+                    />
+                    <ProCard
+                        // V183 — the clip: a real render under a play glyph, since
+                        // a still cannot show motion and a bundled mp4 would be
+                        // megabytes for one card.
+                        image={require("@/assets/features/redesign_after.png")}
+                        label={t("paywall.pro_video_card")}
+                        play
                     />
                 </View>
 
@@ -617,10 +625,29 @@ export default function PaywallScreen() {
 }
 
 /** A locked capability, shown rather than described. */
-function ProCard({ image, label }: { image: number; label: string }) {
+function ProCard({ image, label, play }: { image: number; label: string; play?: boolean }) {
     return (
         <View style={{ flex: 1, height: 136, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}>
             <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+            {play ? (
+                <View
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                        alignItems: "center", justifyContent: "center",
+                    }}
+                >
+                    <View
+                        style={{
+                            width: 38, height: 38, borderRadius: 19,
+                            backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+                            alignItems: "center", justifyContent: "center",
+                        }}
+                    >
+                        <Text style={{ color: "#fff", fontSize: 14, marginLeft: 3 }}>▶</Text>
+                    </View>
+                </View>
+            ) : null}
             <LinearGradient
                 colors={["transparent", "rgba(0,0,0,0.9)"]}
                 style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingTop: 30, paddingHorizontal: 12, paddingBottom: 10 }}

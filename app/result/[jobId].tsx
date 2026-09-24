@@ -35,7 +35,8 @@ import { SourceSheet, sourceSheetWillAsk } from "@/components/ui/SourceSheet";
 import { useAuthStore } from "@/stores/authStore";
 import { track } from "@/services/analytics";
 import { TopBar } from "@/components/layout/TopBar";
-import { getJob, sendOutputSignal } from "@/services/jobs";
+import { getJob, sendOutputSignal, createVideoJob } from "@/services/jobs";
+import { VideoResult } from "@/components/result/VideoResult";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -43,7 +44,7 @@ import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
-import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode } from "@/hooks/useEntitlement";
+import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse } from "@/types/api";
@@ -150,6 +151,24 @@ export default function ResultDetailScreen() {
   // + button so the user sees the real target before spending credits.
   const effectiveTier = useEffectivePlanCode();
   const upscaleResolution = effectiveTier === "PRO" ? "4K" : "2K";
+
+  /* ── Room video (V183) ─────────────────────────────────────────────
+   *
+   * PRO-gated through plan_features (ROOM_VIDEO), read through the same
+   * trial-aware hook every other gate uses. The price comes from the
+   * effective rules first; a plan below PRO has no ROOM_VIDEO rule, so it
+   * falls back to the feature's own creditsPerUse (10) — the number the
+   * locked button shows next to its PRO tag. The backend re-checks all of it
+   * and answers 403 PLAN_UPGRADE_REQUIRED if the client is wrong.
+   */
+  const { enabled: videoFeatureEnabled } = useEntitlement("ROOM_VIDEO");
+  const effectiveFeatures = useEffectiveFeatures();
+  const videoCost =
+    creditRules.find((r) => r.featureCode === "ROOM_VIDEO")?.creditCost
+    ?? effectiveFeatures.find((f) => f.featureCode === "ROOM_VIDEO")?.creditsPerUse
+    ?? null;
+  const canAfford = useCreditStore((s) => s.canAfford);
+  const [videoSubmitting, setVideoSubmitting] = useState(false);
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -405,6 +424,76 @@ export default function ResultDetailScreen() {
     router.replace("/(tabs)/studio" as never);
   };
 
+  /**
+   * The clip's state, from the server's own answer: a live or finished clip
+   * of this render comes back on the job itself (videoJobId / videoStatus),
+   * so "watch" and "in progress" need no second request and a second tap on
+   * a finished render can never buy a second clip.
+   */
+  const videoState: "make" | "progress" | "watch" =
+    job?.videoJobId && job.videoStatus === "COMPLETED" ? "watch"
+    : job?.videoJobId && job.videoStatus && !["FAILED", "CANCELLED"].includes(job.videoStatus) ? "progress"
+    : "make";
+
+  /**
+   * Bring it to life. Three doors, in this order: an existing clip is opened
+   * (nothing is charged); a plan below PRO goes to the paywall; an empty
+   * wallet goes to the credits paywall. Only then is the price put in front
+   * of the user, and only their confirmation creates the job.
+   */
+  const handleVideo = () => {
+    if (!job || !currentOutput || videoSubmitting) return;
+    Haptics.selectionAsync();
+
+    if (videoState === "watch" && job.videoJobId) {
+      router.push(`/result/${job.videoJobId}` as never);
+      return;
+    }
+    if (videoState === "progress" && job.videoJobId) {
+      router.push({ pathname: "/generation/video", params: { jobId: job.videoJobId } } as never);
+      return;
+    }
+    if (!videoFeatureEnabled) {
+      router.push("/paywall?source=RESULT_VIDEO" as never);
+      return;
+    }
+    if (videoCost != null && !canAfford(videoCost)) {
+      router.push({ pathname: "/paywall", params: { source: "CREDITS_EXHAUSTED" } } as never);
+      return;
+    }
+
+    Alert.alert(
+      t("result.video_confirm_title"),
+      t("result.video_confirm_body", { cost: videoCost ?? "" }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("result.video_confirm_cta"),
+          onPress: async () => {
+            setVideoSubmitting(true);
+            try {
+              const video = await createVideoJob(job.id, currentOutput.id);
+              router.push({ pathname: "/generation/video", params: { jobId: video.id } } as never);
+            } catch (e: any) {
+              // The server's own verdict on the plan wins over the client's.
+              if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
+                router.push("/paywall?source=RESULT_VIDEO" as never);
+                return;
+              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert(
+                t("generation.failed"),
+                e?.response?.data?.message ?? t("errors.generic"),
+              );
+            } finally {
+              setVideoSubmitting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView
@@ -441,6 +530,14 @@ export default function ResultDetailScreen() {
         </Pressable>
       </SafeAreaView>
     );
+  }
+
+  /* ── A clip, not a picture (V183) ──────────────────────────────────
+   * Same route, different screen: the gallery pushes /result/{id} for every
+   * job, and a before/after slider of an mp4 is not a result. Every hook
+   * above has already run, so this early return is safe. */
+  if (job.jobType === "VIDEO" || (currentOutput?.mimeType ?? "").startsWith("video/")) {
+    return <VideoResult job={job} />;
   }
 
   /* ── Umber result (2026-09-19) ─────────────────────────────────────
@@ -503,6 +600,20 @@ export default function ResultDetailScreen() {
             onPress={() => router.push({ pathname: "/studio/composer", params: { sheet: "catalogue" } } as never)}
           />
         </View>
+
+        {/* Bring it to life (V183): a five-second clip of this render. 60% wide
+            and centred — narrower than "New design" on purpose, it is an
+            option, not the exit. Hidden on an upscale: the backend makes clips
+            from original renders only (Kling reads the frame at its own size). */}
+        {!isAlreadyUpscaled && (
+          <VideoCta
+            state={videoState}
+            cost={videoCost}
+            locked={!videoFeatureEnabled}
+            busy={videoSubmitting}
+            onPress={handleVideo}
+          />
+        )}
 
         <Text style={{ ...theme.v2.displayS, color: U.ink, marginTop: 20, marginBottom: 12 }}>
           {t("result.another_style")}
@@ -878,6 +989,85 @@ function AnotherStyleStrip({
         </Text>
       </Pressable>
     </ScrollView>
+  );
+}
+
+/**
+ * The clip button (V183). Three faces from one control: make (with the price,
+ * or a PRO tag when the plan is below it), in progress (opens the wait
+ * screen), watch (opens the clip). The price is printed ON the button, the
+ * same rule the composer follows for Generate — nobody is charged a number
+ * they did not see.
+ */
+function VideoCta({
+  state, cost, locked, busy, onPress,
+}: {
+  state: "make" | "progress" | "watch";
+  cost: number | null;
+  locked: boolean;
+  busy: boolean;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  const label =
+    state === "watch" ? t("result.video_watch")
+    : state === "progress" ? t("result.video_in_progress")
+    : t("result.video_cta");
+  const hint =
+    state !== "make" ? null
+    : locked ? t("result.video_pro_hint")
+    : t("result.video_cta_hint", { cost: cost ?? "" });
+
+  return (
+    <View style={{ alignItems: "center", marginTop: 10 }}>
+      <Pressable
+        onPress={onPress}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel={hint ? `${label}. ${hint}` : label}
+        style={{
+          width: "60%",
+          minHeight: 48,
+          borderRadius: 14,
+          backgroundColor: U.lineAccent,
+          borderWidth: 1,
+          borderColor: U.accent,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 7,
+          opacity: busy ? 0.6 : 1,
+        }}
+      >
+        {busy || state === "progress" ? (
+          <ActivityIndicator size="small" color={U.accentBright} />
+        ) : (
+          <Ionicons name={state === "watch" ? "play" : "videocam"} size={16} color={U.accentBright} />
+        )}
+        <View style={{ alignItems: "center", flexShrink: 1 }}>
+          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13.5, color: U.accentBright }} numberOfLines={1}>
+            {label}
+          </Text>
+          {hint ? (
+            <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 2 }} numberOfLines={1}>
+              {hint}
+            </Text>
+          ) : null}
+        </View>
+        {locked && state === "make" ? (
+          <View style={{
+            borderWidth: 1, borderColor: U.accent, borderRadius: 5,
+            paddingVertical: 2, paddingHorizontal: 5,
+          }}>
+            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
+              PRO
+            </Text>
+          </View>
+        ) : null}
+      </Pressable>
+    </View>
   );
 }
 

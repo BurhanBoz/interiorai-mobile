@@ -114,6 +114,27 @@ export async function expandJob(
 }
 
 /**
+ * V183 — a five-second video of a completed output. Same chain-job contract
+ * as upscale/expand: the backend returns the child job in PENDING and the
+ * app polls it. PRO only — below that the server answers 403 with
+ * errorCode PLAN_UPGRADE_REQUIRED and the app opens the paywall. 10 credits,
+ * reserved up front and released if the clip never lands. Idempotent per
+ * output: a clip already under way or finished comes back instead of a
+ * second charge.
+ */
+export async function createVideoJob(
+    parentJobId: string,
+    outputId?: string,
+): Promise<JobResponse> {
+    const { data } = await api.post<JobResponse>(
+        `/api/jobs/${parentJobId}/video`,
+        null,
+        { params: outputId ? { outputId } : undefined },
+    );
+    return data;
+}
+
+/**
  * Record user feedback on a specific generated output.
  * Rating: -1 (dislike), 0 (neutral / clear), 1 (like).
  * Feeds per-tier / per-style quality analytics on the backend.
