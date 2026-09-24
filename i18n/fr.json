@@ -854,7 +854,7 @@
     "video_saved_body": "Ta vidéo est maintenant dans ta pellicule.",
     "video_share_dialog_title": "Partager la vidéo",
     "video_unavailable": "La vidéo n'est pas disponible pour le moment.",
-    "video_in_progress_hint": "Prend quelques minutes · on te prévient, puis c'est dans ta galerie"
+    "video_in_progress_hint": "Quelques minutes · on te prévient"
   },
   "settings": {
     "notifications_title": "Notifications",

@@ -852,7 +852,7 @@
     "video_saved_body": "動画をカメラロールに保存しました。",
     "video_share_dialog_title": "動画を共有",
     "video_unavailable": "現在この動画は利用できません。",
-    "video_in_progress_hint": "数分かかります · 完了したら通知します。ギャラリーに入ります"
+    "video_in_progress_hint": "数分 · 完了したら通知します"
   },
   "settings": {
     "notifications_title": "通知",

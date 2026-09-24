@@ -1055,7 +1055,10 @@ function VideoCta({
             {label}
           </Text>
           {hint ? (
-            <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 2 }} numberOfLines={1}>
+            // Two lines, not one: the button is 60% wide and a hint that
+            // ends in an ellipsis told the user nothing (seen in the first
+            // simulator pass — "…bitince bildiri…").
+            <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 2, textAlign: "center" }} numberOfLines={2}>
               {hint}
             </Text>
           ) : null}
