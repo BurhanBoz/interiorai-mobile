@@ -407,7 +407,8 @@
     "filter_activity": "İşlemler",
     "v2_empty_line": "Burada henüz bir şey yok.",
     "v2_new_design": "+ Yeni tasarım",
-    "video_badge": "VİDEO"
+    "video_badge": "VİDEO",
+    "design_fallback": "Tasarım"
   },
   "history": {
     "title": "Geçmiş",

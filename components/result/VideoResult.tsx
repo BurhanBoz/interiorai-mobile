@@ -10,6 +10,7 @@ import { theme } from "@/config/theme";
 import { useImageActions } from "@/hooks/useImageActions";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { useCreditStore } from "@/stores/creditStore";
 import { sendOutputSignal } from "@/services/jobs";
 import { getFileDownloadUrl } from "@/services/files";
@@ -51,7 +52,8 @@ const isTerminal = (s: JobResponse["status"]) =>
  * files it as a video and the share sheet announces an MPEG-4.
  */
 export function VideoResult({ job: initialJob }: { job: JobResponse }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const catalogLabel = useCatalogLabel();
   const authHeaders = useAuthHeaders();
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const [job, setJob] = useState<JobResponse>(initialJob);
@@ -157,7 +159,8 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
             <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
           </Pressable>
           <Text style={{ ...theme.v2.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }} numberOfLines={1}>
-            {[job.designStyleName, t("result.video_kicker")].filter(Boolean).join(" · ").toUpperCase()}
+            {[catalogLabel("style", job.designStyleName), t("result.video_kicker")]
+              .filter(Boolean).join(" · ").toLocaleUpperCase(i18n.language)}
           </Text>
           <View style={{ width: 34 }} />
         </View>

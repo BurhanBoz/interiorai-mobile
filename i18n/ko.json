@@ -406,7 +406,8 @@
     "filter_activity": "진행 상황",
     "v2_empty_line": "아직 아무것도 없습니다.",
     "v2_new_design": "+ 새 디자인",
-    "video_badge": "영상"
+    "video_badge": "영상",
+    "design_fallback": "디자인"
   },
   "history": {
     "title": "기록",

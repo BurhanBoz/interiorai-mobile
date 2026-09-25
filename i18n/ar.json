@@ -406,7 +406,8 @@
     "filter_activity": "النشاط",
     "v2_empty_line": "لا شيء هنا بعد.",
     "v2_new_design": "+ تصميم جديد",
-    "video_badge": "فيديو"
+    "video_badge": "فيديو",
+    "design_fallback": "تصميم"
   },
   "history": {
     "title": "السجل",

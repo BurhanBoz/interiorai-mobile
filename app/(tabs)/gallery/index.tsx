@@ -26,6 +26,7 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const U = theme.umber;
@@ -112,6 +113,10 @@ interface GalleryOutput {
 /* ─────────────────── Main Screen ─────────────────── */
 export default function GalleryScreen() {
   const { t } = useTranslation();
+  // Room and style arrive as the catalogue's English names; the chip, the
+  // tile and the preview show them in the user's language. Filtering still
+  // keys on the server's name, which is stable across languages.
+  const catalogLabel = useCatalogLabel();
   const { width } = useWindowDimensions();
 
   // Layout constants — 2-col grid for the premium "editorial" aesthetic.
@@ -391,7 +396,7 @@ export default function GalleryScreen() {
             style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: "#fff" }}
             numberOfLines={1}
           >
-            {item.designStyleName || item.roomTypeName}
+            {catalogLabel("style", item.designStyleName) || catalogLabel("room", item.roomTypeName)}
           </Text>
         </View>
 
@@ -458,6 +463,7 @@ export default function GalleryScreen() {
       handleLongPress,
       handleToggleFavorite,
       isFavorite,
+      catalogLabel,
     ],
   );
 
@@ -636,7 +642,7 @@ export default function GalleryScreen() {
                     badge={activeCount || undefined}
                   />
                   {roomFilters.map(name => (
-                    <FilterChip key={name} label={name} value={name} />
+                    <FilterChip key={name} label={catalogLabel("room", name)} value={name} />
                   ))}
                 </ScrollView>
                 <LinearGradient
@@ -760,13 +766,13 @@ export default function GalleryScreen() {
                     marginBottom: 4,
                   }}
                 >
-                  {previewItem.designStyleName || "Design"}
+                  {catalogLabel("style", previewItem.designStyleName) || t("gallery.design_fallback")}
                 </Text>
                 {previewItem.roomTypeName ? (
                   <Text
                     style={{ ...theme.text.body, color: "rgba(255,255,255,0.6)" }}
                   >
-                    {previewItem.roomTypeName}
+                    {catalogLabel("room", previewItem.roomTypeName)}
                   </Text>
                 ) : null}
               </View>
