@@ -854,7 +854,8 @@
     "video_saved_body": "Il tuo video è ora nel rullino.",
     "video_share_dialog_title": "Condividi video",
     "video_unavailable": "Il video non è disponibile al momento.",
-    "video_in_progress_hint": "Qualche minuto · ti avvisiamo"
+    "video_in_progress_hint": "Qualche minuto · ti avvisiamo",
+    "video_in_progress_hint_gallery": "Qualche minuto · poi lo trovi in galleria"
   },
   "settings": {
     "notifications_title": "Notifiche",

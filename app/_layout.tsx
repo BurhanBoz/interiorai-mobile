@@ -90,7 +90,16 @@ export default function RootLayout() {
         import("@/services/api")
           .then(({ ensureFreshSession }) => ensureFreshSession())
           .then(() => {
-            if (useAuthStore.getState().isAuthenticated) sendHeartbeat();
+            if (useAuthStore.getState().isAuthenticated) {
+              sendHeartbeat();
+              // Every return, not only cold start (V183). The room video
+              // finishes while the user is away and the push is how they
+              // hear it; on 2026-09-25 the backend pushed to the tokens it
+              // had while this install's token arrived six minutes later.
+              // Cheap (one upsert), and it also catches permission granted
+              // in iOS Settings while the app was in the background.
+              syncPushTokenIfPermitted();
+            }
           })
           .catch(() => {});
       } else if (state === "background") {
@@ -160,6 +169,10 @@ export default function RootLayout() {
       if (typeof route === "string" && route.startsWith("/")) {
         router.push(route as never);
       }
+      // Consume it. iOS keeps handing back the response that launched the
+      // app, so without this every later cold start would re-open the same
+      // clip.
+      if (response) Notifications.clearLastNotificationResponse();
     };
     const sub = Notifications.addNotificationResponseReceivedListener(open);
     Notifications.getLastNotificationResponseAsync().then(open).catch(() => {});

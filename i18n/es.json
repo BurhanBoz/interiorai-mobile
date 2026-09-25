@@ -854,7 +854,8 @@
     "video_saved_body": "Tu vídeo ya está en tu carrete.",
     "video_share_dialog_title": "Compartir vídeo",
     "video_unavailable": "El vídeo no está disponible ahora mismo.",
-    "video_in_progress_hint": "Unos minutos · te avisaremos"
+    "video_in_progress_hint": "Unos minutos · te avisaremos",
+    "video_in_progress_hint_gallery": "Unos minutos · luego estará en tu galería"
   },
   "settings": {
     "notifications_title": "Notificaciones",

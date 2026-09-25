@@ -1,8 +1,8 @@
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Modal, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, useNavigation } from "expo-router";
+import { useEffect, useState } from "react";
 import { useVideoPlayer, VideoView } from "expo-video";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
@@ -80,7 +80,14 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
     p.muted = true;
     p.play();
   });
-  const viewRef = useRef<VideoView>(null);
+  // Our own fullscreen, not the platform's. expo-video enters iOS fullscreen
+  // through AVPlayerViewController's private enterFullScreen selector and
+  // never turns the controls back on, so with nativeControls={false} the
+  // fullscreen player has no Done button at all — on 2026-09-25 the only way
+  // out was killing the app. A Modal with our own close button is the same
+  // pattern the picture result uses, and it cannot trap anyone.
+  const [fullscreen, setFullscreen] = useState(false);
+  const navigation = useNavigation();
   const { saveToPhotos, shareImage, isDownloading, isSharing } = useImageActions();
   const nameHint = `${(job.designStyleName ?? "room").toLowerCase().replace(/\s+/g, "-")}-video`;
 
@@ -99,18 +106,32 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
   };
 
   /**
-   * Back to the render the clip was made from.
+   * Back to the render the clip was made from — without leaving a second
+   * copy of it in the stack.
    *
-   * <p>dismissTo, not replace: opened from "Watch the video" the render is
-   * already one screen below, and a replace would leave TWO copies of it in
-   * the stack — the user pressed back twice to reach the gallery. dismissTo
-   * pops to the render when it is there and navigates to it when it is not
-   * (a clip opened straight from a gallery tile or a push).
+   * <p>Opened from "Watch the video" the render is the screen directly
+   * below: that is a plain back. Opened from a gallery tile or a push it is
+   * not in the stack at all: that is a replace.
+   *
+   * <p>🔴 Not router.dismissTo. React Navigation 7's POP_TO matches by route
+   * NAME, and when the current screen has the same name it picks the
+   * current screen and only swaps its params (StackRouter, "POP_TO"). Both
+   * the clip and the render are `result/[jobId]`, so dismissTo turned the
+   * clip screen into the render and left the original render underneath —
+   * two back presses to reach the gallery (simulator, 2026-09-25).
    */
   const handleBackToDesign = () => {
     Haptics.selectionAsync();
-    if (job.parentJobId) router.dismissTo(`/result/${job.parentJobId}` as never);
-    else router.back();
+    const parent = job.parentJobId;
+    if (!parent) {
+      router.back();
+      return;
+    }
+    const state = navigation.getState();
+    const below = state && state.index > 0 ? state.routes[state.index - 1] : null;
+    const belowJobId = (below?.params as { jobId?: string } | undefined)?.jobId;
+    if (belowJobId === parent) router.back();
+    else router.replace(`/result/${parent}` as never);
   };
 
   const handleNewDesign = () => {
@@ -145,15 +166,36 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
             exists, the picture it is being made from with the state over it. */}
         <View style={{ height: 330, borderRadius: 20, overflow: "hidden", backgroundColor: U.surface }}>
           {url ? (
-            <VideoView
-              ref={viewRef}
-              player={player}
-              style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
-              nativeControls={false}
-              allowsFullscreen
-              accessibilityLabel={t("result.video_kicker")}
-            />
+            <>
+              {/* One view holds the player at a time: while the fullscreen
+                  modal shows it, the inline one steps aside for the still. */}
+              {fullscreen ? (
+                posterUrl ? (
+                  <Image
+                    source={{ uri: posterUrl, headers: authHeaders }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                  />
+                ) : null
+              ) : (
+                <VideoView
+                  player={player}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                  nativeControls={false}
+                  fullscreenOptions={{ enable: false }}
+                  allowsPictureInPicture={false}
+                  accessibilityLabel={t("result.video_kicker")}
+                />
+              )}
+              {/* The whole frame is a door to fullscreen, like the picture's. */}
+              <Pressable
+                onPress={() => setFullscreen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t("result.open_fullscreen")}
+                style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+              />
+            </>
           ) : (
             <>
               {posterUrl ? (
@@ -202,7 +244,7 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
 
           {url ? (
             <Pressable
-              onPress={() => viewRef.current?.enterFullscreen()}
+              onPress={() => setFullscreen(true)}
               accessibilityRole="button"
               accessibilityLabel={t("result.open_fullscreen")}
               style={{ position: "absolute", bottom: 12, right: 12, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
@@ -253,6 +295,50 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
           <Text style={{ color: U.accentBright, fontSize: 16 }}>→</Text>
         </Pressable>
       </View>
+
+      <Modal
+        visible={fullscreen && !!url}
+        animationType="fade"
+        transparent={false}
+        statusBarTranslucent
+        onRequestClose={() => setFullscreen(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <StatusBar barStyle="light-content" />
+          {url ? (
+            <VideoView
+              player={player}
+              style={{ flex: 1 }}
+              contentFit="contain"
+              nativeControls={false}
+              fullscreenOptions={{ enable: false }}
+              allowsPictureInPicture={false}
+              accessibilityLabel={t("result.video_kicker")}
+            />
+          ) : null}
+          <Pressable
+            onPress={() => setFullscreen(false)}
+            hitSlop={14}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            style={{
+              position: "absolute",
+              top: 58,
+              right: 18,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: U.photoChrome,
+              borderWidth: 1,
+              borderColor: U.photoChromeBorder,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 17, lineHeight: 19 }}>✕</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -22,8 +22,10 @@ import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const U = theme.umber;
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import * as Notifications from "expo-notifications";
+import { useJobPolling } from "@/hooks/useJobPolling";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -81,6 +83,16 @@ const IMAGE_WIDTH = SCREEN_WIDTH - 48;
 function getOutputImageUrl(_jobId: string, output: JobOutputResponse): string {
   return output.url;
 }
+
+/**
+ * Twenty minutes: the server's own watchdog for a clip
+ * (app.jobs.video-timeout-minutes). Past it the server has already failed
+ * and refunded the job; the next time this screen is focused it reads that.
+ */
+const VIDEO_POLL_TIMEOUT_MS = 20 * 60 * 1000;
+
+const isTerminalStatus = (s?: JobStatus | null) =>
+  s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
 
 const qualityLabelKeys: Record<string, string> = {
   STANDARD: "studio.quality_standard",
@@ -170,9 +182,18 @@ export default function ResultDetailScreen() {
   const canAfford = useCreditStore((s) => s.canAfford);
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const [videoSubmitting, setVideoSubmitting] = useState(false);
-  // The clip this visit started, so the button flips to "in progress" the
-  // moment the server accepts it — without re-fetching the job.
-  const [startedVideo, setStartedVideo] = useState<{ id: string; status: JobStatus } | null>(null);
+  // The clip of this render, and the button IS its status. Seeded from the
+  // server's answer on the job (videoJobId / videoStatus), set the moment
+  // the user starts one, and kept current by polling while it renders.
+  //
+  // 🔴 The polling is the fix for 2026-09-25: the button said "Video
+  // hazırlanıyor" and stayed that way after the clip had finished, because
+  // nothing on this screen ever looked at the clip again.
+  const [video, setVideo] = useState<{ id: string; status: JobStatus } | null>(null);
+  // Whether this device will hear about the finished clip — decides which
+  // promise the in-progress button makes (a push, or just the gallery).
+  const [pushGranted, setPushGranted] = useState<boolean | null>(null);
+  const videoFailureShown = useRef<string | null>(null);
 
   // Watermark — FREE plan adds a corner watermark; paid plans AND welcome
   // bonus trial users do not. useEffectiveWatermark mirrors the backend's
@@ -195,6 +216,63 @@ export default function ResultDetailScreen() {
       }
     })();
   }, [jobId]);
+
+  // Back on this screen from anywhere — the clip, the gallery, a push —
+  // read the job again. The screen stays mounted underneath the clip it
+  // opened, so without this it kept the state it had when it was left.
+  // The first focus is the mount above; only the returns re-read.
+  const focusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusedOnce.current) {
+        focusedOnce.current = true;
+        return;
+      }
+      if (!jobId) return;
+      getJob(jobId).then(setJob).catch(() => {});
+    }, [jobId]),
+  );
+
+  // The server's word on this render's clip. A clip this visit already
+  // followed to its end is not overwritten by an older read of the job.
+  useEffect(() => {
+    const id = job?.videoJobId;
+    if (!id) return;
+    setVideo((prev) =>
+      prev && prev.id === id && isTerminalStatus(prev.status)
+        ? prev
+        : { id, status: job?.videoStatus ?? "PENDING" });
+  }, [job?.videoJobId, job?.videoStatus]);
+
+  useEffect(() => {
+    Notifications.getPermissionsAsync()
+      .then((p) => setPushGranted(p.status === "granted"))
+      .catch(() => setPushGranted(false));
+  }, []);
+
+  // While the clip renders, look at it. Every five seconds is plenty for a
+  // job measured in minutes; twenty minutes matches the server's own
+  // watchdog for a clip (app.jobs.video-timeout-minutes), after which the
+  // server has failed and refunded it and the next focus reads that.
+  useJobPolling(
+    video && !isTerminalStatus(video.status) ? video.id : null,
+    (polled) => {
+      setVideo({ id: polled.id, status: polled.status });
+      if (polled.status === "COMPLETED") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        fetchBalance().catch(() => {});
+      } else if (
+        (polled.status === "FAILED" || polled.status === "CANCELLED")
+        && videoFailureShown.current !== polled.id
+      ) {
+        videoFailureShown.current = polled.id;
+        fetchBalance().catch(() => {});
+        Alert.alert(t("generation.failed"), t("generation.video_failed_body"));
+      }
+    },
+    5000,
+    { timeoutMs: VIDEO_POLL_TIMEOUT_MS },
+  );
 
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
@@ -429,19 +507,14 @@ export default function ResultDetailScreen() {
   };
 
   /**
-   * The clip's state: what this visit started, else the server's own answer
-   * — a live or finished clip of this render comes back on the job itself
-   * (videoJobId / videoStatus), so "watch" and "in progress" need no second
-   * request and a second tap on a finished render can never buy a second
-   * clip.
+   * The button's three faces, straight from the clip's status. A finished
+   * clip is "watch" — a second tap on a finished render can never buy a
+   * second clip — and a failed one is "make" again, its credits already back.
    */
-  const videoRef =
-    startedVideo
-    ?? (job?.videoJobId ? { id: job.videoJobId, status: job.videoStatus ?? "PENDING" } : null);
   const videoState: "make" | "progress" | "watch" =
-    !videoRef ? "make"
-    : videoRef.status === "COMPLETED" ? "watch"
-    : ["FAILED", "CANCELLED"].includes(videoRef.status) ? "make"
+    !video ? "make"
+    : video.status === "COMPLETED" ? "watch"
+    : video.status === "FAILED" || video.status === "CANCELLED" ? "make"
     : "progress";
 
   /**
@@ -458,8 +531,8 @@ export default function ResultDetailScreen() {
     if (!job || !currentOutput || videoSubmitting) return;
     Haptics.selectionAsync();
 
-    if (videoState === "watch" && videoRef) {
-      router.push(`/result/${videoRef.id}` as never);
+    if (videoState === "watch" && video) {
+      router.push(`/result/${video.id}` as never);
       return;
     }
     if (videoState === "progress") return;
@@ -474,11 +547,18 @@ export default function ResultDetailScreen() {
 
     setVideoSubmitting(true);
     try {
-      const video = await createVideoJob(job.id, currentOutput.id);
-      setStartedVideo({ id: video.id, status: video.status });
+      const created = await createVideoJob(job.id, currentOutput.id);
+      setVideo({ id: created.id, status: created.status });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // The credits are reserved the moment the job exists; show it.
       fetchBalance().catch(() => {});
+      // Ask for notifications NOW — the one moment the user has a reason to
+      // say yes: they just started something that finishes while they are
+      // away. On 2026-09-25 the clip finished and the push went out, but this
+      // install had never been asked, so it had no token to receive it.
+      // Already granted: this only re-syncs the token. Refused before: iOS
+      // shows nothing, and the button promises the gallery instead.
+      requestPushPermission().then(setPushGranted).catch(() => {});
     } catch (e: any) {
       // The server's own verdict on the plan wins over the client's.
       if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
@@ -612,6 +692,7 @@ export default function ResultDetailScreen() {
             cost={videoCost}
             locked={!videoFeatureEnabled}
             busy={videoSubmitting}
+            pushGranted={pushGranted}
             onPress={handleVideo}
           />
         )}
@@ -1001,12 +1082,14 @@ function AnotherStyleStrip({
  * they did not see.
  */
 function VideoCta({
-  state, cost, locked, busy, onPress,
+  state, cost, locked, busy, pushGranted, onPress,
 }: {
   state: "make" | "progress" | "watch";
   cost: number | null;
   locked: boolean;
   busy: boolean;
+  /** False = no push will come; the hint promises the gallery instead. */
+  pushGranted: boolean | null;
   onPress: () => void;
 }) {
   const { t } = useTranslation();
@@ -1016,7 +1099,8 @@ function VideoCta({
     : t("result.video_cta");
   const hint =
     state === "watch" ? null
-    : state === "progress" ? t("result.video_in_progress_hint")
+    : state === "progress"
+      ? t(pushGranted === false ? "result.video_in_progress_hint_gallery" : "result.video_in_progress_hint")
     : locked ? t("result.video_pro_hint")
     : t("result.video_cta_hint", { cost: cost ?? "" });
 

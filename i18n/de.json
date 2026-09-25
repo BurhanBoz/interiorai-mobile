@@ -854,7 +854,8 @@
     "video_saved_body": "Dein Video ist jetzt in deiner Fotomediathek.",
     "video_share_dialog_title": "Video teilen",
     "video_unavailable": "Das Video ist gerade nicht verfügbar.",
-    "video_in_progress_hint": "Ein paar Minuten · wir sagen Bescheid"
+    "video_in_progress_hint": "Ein paar Minuten · wir sagen Bescheid",
+    "video_in_progress_hint_gallery": "Ein paar Minuten · danach in deiner Galerie"
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
