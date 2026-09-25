@@ -849,6 +849,8 @@
     "video_in_progress": "Video in corso…",
     "video_watch": "Guarda il video",
     "video_kicker": "Video",
+    "video_sound_on": "Attiva audio",
+    "video_sound_off": "Disattiva audio",
     "video_length": "5 s",
     "video_cost_used": "{{cost}} crediti usati",
     "video_back_to_design": "Torna al progetto",

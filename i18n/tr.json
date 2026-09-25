@@ -849,6 +849,8 @@
     "video_in_progress": "Video hazırlanıyor…",
     "video_watch": "Videoyu izle",
     "video_kicker": "Video",
+    "video_sound_on": "Sesi aç",
+    "video_sound_off": "Sesi kapat",
     "video_length": "5 sn",
     "video_cost_used": "{{cost}} kredi kullanıldı",
     "video_back_to_design": "Tasarıma dön",

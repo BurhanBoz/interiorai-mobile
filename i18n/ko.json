@@ -847,6 +847,8 @@
     "video_in_progress": "영상 만드는 중…",
     "video_watch": "영상 보기",
     "video_kicker": "영상",
+    "video_sound_on": "소리 켜기",
+    "video_sound_off": "소리 끄기",
     "video_length": "5초",
     "video_cost_used": "크레딧 {{cost}}개 사용",
     "video_back_to_design": "디자인으로 돌아가기",

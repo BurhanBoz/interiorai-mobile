@@ -849,6 +849,8 @@
     "video_in_progress": "Video wird erstellt…",
     "video_watch": "Video ansehen",
     "video_kicker": "Video",
+    "video_sound_on": "Ton einschalten",
+    "video_sound_off": "Ton ausschalten",
     "video_length": "5 s",
     "video_cost_used": "{{cost}} Guthaben verwendet",
     "video_back_to_design": "Zurück zum Design",

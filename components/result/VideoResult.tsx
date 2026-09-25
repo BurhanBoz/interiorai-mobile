@@ -1,8 +1,10 @@
-import { View, Text, Pressable, ActivityIndicator, Modal, StatusBar } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Modal, StatusBar, AppState } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { router, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect, useNavigation } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useVideoPlayer, VideoView } from "expo-video";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
@@ -46,11 +48,18 @@ const isTerminal = (s: JobResponse["status"]) =>
  * own — for the user who opened it from the activity list rather than from
  * the push.
  *
- * <p>Looping and silent. Kling returns no audio for this model and there is
- * nothing to unmute. Save and Share go through the same two doors as a
- * picture — {@link useImageActions} with {@code media: "video"} — so Photos
- * files it as a video and the share sheet announces an MPEG-4.
+ * <p>Looping, with its sound (2026-09-25): the backend lays soft nature
+ * ambience under every clip (VideoSoundPass), so the file carries a
+ * soundtrack wherever it goes — Photos, the share sheet — and here it plays
+ * unless the user has muted it. The speaker button remembers that choice
+ * across clips. It mixes with whatever else is playing instead of stopping
+ * the user's music, and it pauses whenever this screen is not the one in
+ * front. Save and Share go through the same two doors as a picture —
+ * {@link useImageActions} with {@code media: "video"} — so Photos files it
+ * as a video and the share sheet announces an MPEG-4.
  */
+const SOUND_MUTED_KEY = "video_sound_muted";
+
 export function VideoResult({ job: initialJob }: { job: JobResponse }) {
   const { t, i18n } = useTranslation();
   const catalogLabel = useCatalogLabel();
@@ -79,9 +88,50 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
 
   const player = useVideoPlayer(url, (p) => {
     p.loop = true;
+    // Silent until the remembered choice is read (the effect below) — a
+    // user who muted it last time must not get a burst of sound first.
     p.muted = true;
+    // expo-video puts iOS in the .playback category; left on "auto" it
+    // would stop the user's music the moment the clip plays with sound.
+    p.audioMixingMode = "mixWithOthers";
     p.play();
   });
+
+  // null until read: sound is ON by default — it is what the clip is for.
+  const [muted, setMuted] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(SOUND_MUTED_KEY)
+      .then((v) => setMuted(v === "1"))
+      .catch(() => setMuted(false));
+  }, []);
+  useEffect(() => {
+    if (muted !== null) player.muted = muted;
+  }, [player, muted]);
+
+  const toggleSound = () => {
+    Haptics.selectionAsync();
+    const next = !(muted ?? false);
+    setMuted(next);
+    AsyncStorage.setItem(SOUND_MUTED_KEY, next ? "1" : "0").catch(() => {});
+    track("video_sound_toggled", { muted: next });
+  };
+
+  // A clip with sound must not keep playing under the next screen (a push
+  // tapped from here, the paywall) — pause on blur, resume on return.
+  // expo-video pauses a clip when the app goes to the background and this
+  // screen has no play button, so coming back resumes it here.
+  useFocusEffect(
+    useCallback(() => {
+      if (url) player.play();
+      const sub = AppState.addEventListener("change", (state) => {
+        if (state === "active" && url) player.play();
+      });
+      return () => {
+        sub.remove();
+        player.pause();
+      };
+    }, [player, url]),
+  );
   // Our own fullscreen, not the platform's. expo-video enters iOS fullscreen
   // through AVPlayerViewController's private enterFullScreen selector and
   // never turns the controls back on, so with nativeControls={false} the
@@ -246,6 +296,15 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
           </View>
 
           {url ? (
+            <SoundToggle
+              muted={muted ?? false}
+              onPress={toggleSound}
+              label={t(muted ? "result.video_sound_on" : "result.video_sound_off")}
+              style={{ bottom: 12, left: 12 }}
+            />
+          ) : null}
+
+          {url ? (
             <Pressable
               onPress={() => setFullscreen(true)}
               accessibilityRole="button"
@@ -340,9 +399,41 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
           >
             <Text style={{ color: "#fff", fontSize: 17, lineHeight: 19 }}>✕</Text>
           </Pressable>
+          {url ? (
+            <SoundToggle
+              muted={muted ?? false}
+              onPress={toggleSound}
+              label={t(muted ? "result.video_sound_on" : "result.video_sound_off")}
+              style={{ bottom: 44, left: 18 }}
+            />
+          ) : null}
         </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+/** The speaker over the clip — same chrome as the fullscreen button beside it. */
+function SoundToggle({
+  muted, onPress, label, style,
+}: {
+  muted: boolean; onPress: () => void; label: string; style: { bottom: number; left: number };
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{ position: "absolute", ...style, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+    >
+      <View style={{
+        backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+        borderRadius: 100, paddingHorizontal: 9, paddingVertical: 6,
+      }}>
+        <Ionicons name={muted ? "volume-mute" : "volume-high"} size={15} color="#fff" />
+      </View>
+    </Pressable>
   );
 }
 

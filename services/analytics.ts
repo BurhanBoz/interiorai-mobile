@@ -190,4 +190,6 @@ export type AnalyticsEvent =
      * event measures how often people try anyway, which is what decides
      * whether adding a link is worth the change.
      */
-    | "result_shared";
+    | "result_shared"
+    // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.
+    | "video_sound_toggled";
