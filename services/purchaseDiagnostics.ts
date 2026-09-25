@@ -79,6 +79,23 @@ const logRing: LogLine[] = [];
 let logCaptureInstalled = false;
 
 /**
+ * RevenueCat opens its lines with emoji, which the column cannot store — the
+ * first TestFlight rows read "I ? Purchasing…" and "E ??? Purchase was
+ * cancelled.". Supplementary-plane characters and the symbol blocks emoji
+ * live in are dropped; letters of any script stay, because StoreKit's own
+ * error text can arrive in the device's language. Plain ES5 on purpose.
+ */
+const EMOJI = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2100-\u214F\u2190-\u21FF\u2300-\u23FF\u2460-\u24FF\u25A0-\u27BF\u2900-\u297F\u2B00-\u2BFF\u203C\u2049\uFE0F\u200D]/g;
+
+/**
+ * Lines worth a place in the 1000 characters: every WARN and ERROR, and the
+ * INFO lines about the purchase itself. Housekeeping such as "Marking
+ * attributes as synced for App User ID: …" says nothing about why a sheet
+ * did not open.
+ */
+const RELEVANT = /purchas|transaction|storekit|payment|product|receipt|sign|cancel|fail|error|restor/i;
+
+/**
  * Keep RevenueCat's recent log lines. Release builds log at INFO, so this
  * sees INFO, WARN and ERROR — StoreKit's error descriptions among them.
  *
@@ -90,9 +107,16 @@ export function installPurchaseLogCapture(): void {
     if (logCaptureInstalled) return;
     try {
         Purchases.setLogHandler((level: LOG_LEVEL, message: string) => {
-            logRing.push({ at: Date.now(), level: String(level), msg: String(message).slice(0, 300) });
-            if (logRing.length > LOG_RING) logRing.shift();
-            if (__DEV__) console.log(`[RevenueCat] ${message}`);
+            // Runs for every line RevenueCat logs, from app start: it must
+            // never throw — an exception here is an app crash in release.
+            try {
+                const msg = String(message).replace(EMOJI, "").replace(/\s+/g, " ").trim().slice(0, 300);
+                logRing.push({ at: Date.now(), level: String(level), msg });
+                if (logRing.length > LOG_RING) logRing.shift();
+                if (__DEV__) console.log(`[RevenueCat] ${message}`);
+            } catch {
+                // A lost log line is the whole cost.
+            }
         });
         logCaptureInstalled = true;
     } catch {
@@ -192,6 +216,7 @@ function rcFields(e: unknown): Record<string, string> | null {
 function logsSince(a: PurchaseAttempt): string[] {
     return logRing
         .filter((l) => l.at >= a.startedAt - 50)
+        .filter((l) => l.level === "WARN" || l.level === "ERROR" || RELEVANT.test(l.msg))
         .slice(-LOG_LINES_KEPT)
         .map((l) => `${l.level.charAt(0)} ${l.msg.slice(0, LOG_LINE_MAX)}`);
 }
