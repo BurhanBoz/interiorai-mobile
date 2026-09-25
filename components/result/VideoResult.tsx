@@ -60,6 +60,20 @@ const isTerminal = (s: JobResponse["status"]) =>
  */
 const SOUND_MUTED_KEY = "video_sound_muted";
 
+/**
+ * Touch the player only while it exists. A player the hook has already
+ * released throws on any call (ERR_NATIVE_SHARED_OBJECT_NOT_FOUND); there is
+ * nothing to do to it then, so the error is swallowed rather than taking the
+ * screen down with it.
+ */
+function onPlayer(fn: () => void) {
+  try {
+    fn();
+  } catch {
+    // released — nothing is playing
+  }
+}
+
 export function VideoResult({ job: initialJob }: { job: JobResponse }) {
   const { t, i18n } = useTranslation();
   const catalogLabel = useCatalogLabel();
@@ -105,7 +119,7 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
       .catch(() => setMuted(false));
   }, []);
   useEffect(() => {
-    if (muted !== null) player.muted = muted;
+    if (muted !== null) onPlayer(() => { player.muted = muted; });
   }, [player, muted]);
 
   const toggleSound = () => {
@@ -120,15 +134,21 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
   // tapped from here, the paywall) — pause on blur, resume on return.
   // expo-video pauses a clip when the app goes to the background and this
   // screen has no play button, so coming back resumes it here.
+  //
+  // 🔴 Every call goes through `onPlayer`: leaving this screen runs the blur
+  // cleanup AFTER useVideoPlayer has already released the native player, and
+  // pause() on a released player throws ERR_NATIVE_SHARED_OBJECT_NOT_FOUND —
+  // 1.7.0 (82) fell into the error screen on every back from a clip. A
+  // released player plays nothing, so there is nothing to stop.
   useFocusEffect(
     useCallback(() => {
-      if (url) player.play();
+      if (url) onPlayer(() => player.play());
       const sub = AppState.addEventListener("change", (state) => {
-        if (state === "active" && url) player.play();
+        if (state === "active" && url) onPlayer(() => player.play());
       });
       return () => {
         sub.remove();
-        player.pause();
+        onPlayer(() => player.pause());
       };
     }, [player, url]),
   );
