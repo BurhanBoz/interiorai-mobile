@@ -1,6 +1,7 @@
 import * as Crypto from "expo-crypto";
 import Purchases, {
     PURCHASES_ERROR_CODE,
+    type MakePurchaseResult,
     type PurchasesError,
     type PurchasesPackage,
     type PurchasesStoreProduct,
@@ -14,6 +15,15 @@ import {
 } from "@/config/revenuecat";
 import { purchaseCreditPack } from "./creditPacks";
 import { verifySubscriptionReceipt } from "./plans";
+import {
+    beginPurchaseAttempt,
+    finishPurchaseAttempt,
+    installPurchaseLogCapture,
+    markStoreCall,
+    markStoreEnd,
+    openAttemptAgeMs,
+    type PurchaseAttempt,
+} from "./purchaseDiagnostics";
 import type {
     CreditPackPurchaseResponse,
     SubscriptionResponse,
@@ -84,7 +94,13 @@ export type IapErrorCode =
     /** RevenueCat has no current offering. */
     | "NO_OFFERING"
     /** The offering exists but carries no package for this plan. */
-    | "NO_PACKAGE";
+    | "NO_PACKAGE"
+    /**
+     * Another purchase is still waiting on StoreKit (1.7.1). Refused rather
+     * than queued: on 2026-09-25 seven attempts queued behind one sheet that
+     * never appeared, one per reopened paywall, and all ended together.
+     */
+    | "PURCHASE_IN_FLIGHT";
 
 export class IapError extends Error {
     constructor(readonly code: IapErrorCode, message: string) {
@@ -108,6 +124,10 @@ export async function initializeIAP(userId: string | null): Promise<void> {
     // that fell back to anonymous would strand the purchase on a customer the
     // webhook cannot map back to our user.
     lastUserId = userId;
+
+    // Before configure, so RevenueCat's own lines about a failed purchase are
+    // kept for its paywall event (services/purchaseDiagnostics.ts).
+    installPurchaseLogCapture();
 
     try {
         if (!isConfigured) {
@@ -136,6 +156,21 @@ export async function initializeIAP(userId: string | null): Promise<void> {
 }
 
 /**
+ * Open the one purchase attempt the app may have at a time, or refuse this
+ * one with {@link IapError} PURCHASE_IN_FLIGHT. Every screen already blocked
+ * a second tap while it was busy; the attempt is app-wide so a reopened
+ * screen cannot start a second purchase behind the first.
+ */
+function openAttempt(kind: "subscription" | "pack", productId: string | null): PurchaseAttempt {
+    const attempt = beginPurchaseAttempt(kind, productId);
+    if (!attempt) {
+        const seconds = Math.round((openAttemptAgeMs() ?? 0) / 1000);
+        throw new IapError("PURCHASE_IN_FLIGHT", `Another purchase has been open for ${seconds} s`);
+    }
+    return attempt;
+}
+
+/**
  * Guarantee the SDK is usable, retrying a failed boot-time configure.
  *
  * <p>Called at the top of every purchase. If configure still fails, this
@@ -144,6 +179,7 @@ export async function initializeIAP(userId: string | null): Promise<void> {
  */
 async function ensureConfigured(): Promise<void> {
     if (isConfigured) return;
+    installPurchaseLogCapture();
     try {
         await Purchases.configure({
             apiKey: revenueCatConfig.appleApiKey,
@@ -226,6 +262,55 @@ export async function fetchStorePrices(): Promise<StorePriceMap> {
 }
 
 /**
+ * The part of a subscription purchase that talks to RevenueCat and StoreKit:
+ * find the package, then open Apple's sheet. Kept apart so the attempt around
+ * it (one at a time, timed) reads as a single try/catch in the caller.
+ */
+async function buySubscriptionPackage(
+    attempt: PurchaseAttempt,
+    planCode: string,
+    appleProductId?: string | null,
+): Promise<MakePurchaseResult> {
+    await ensureConfigured();
+
+    // Fetch the current offering and find the target package.
+    const offerings = await Purchases.getOfferings();
+    const offering = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID];
+    if (!offering) {
+        throw new IapError("NO_OFFERING", "No RevenueCat offering available");
+    }
+
+    // Server-driven resolution first (V3 improvement): the backend already
+    // ships plans.apple_product_id, so matching the offering package by its
+    // PRODUCT identifier makes future plan/price changes binary-free — a
+    // migration updating the plans table is enough. The static package-id
+    // map stays as the fallback for offline-cached plan payloads.
+    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
+    const targetPackage = offering.availablePackages.find(
+        (p: PurchasesPackage) =>
+            (appleProductId && p.product.identifier === appleProductId) ||
+            (packageId != null && p.identifier === packageId),
+    );
+    if (!targetPackage) {
+        throw new IapError(
+            "NO_PACKAGE",
+            `No RC package matches plan ${planCode} (product ${appleProductId ?? "?"}, package ${packageId ?? "?"})`,
+        );
+    }
+
+    // Trigger Apple payment sheet. User sees Apple's native UI, enters
+    // sandbox tester credentials in dev, real Apple ID in prod. Timed on its
+    // own: a "cancel" that returns faster than a person could close the
+    // sheet means the sheet never appeared (purchaseDiagnostics.INSTANT_MS).
+    markStoreCall(attempt);
+    try {
+        return await Purchases.purchasePackage(targetPackage);
+    } finally {
+        markStoreEnd(attempt);
+    }
+}
+
+/**
  * Purchase a subscription plan via Apple StoreKit (through RevenueCat).
  *
  * <p>Flow:
@@ -258,36 +343,17 @@ export async function purchaseSubscription(
         return activateDummySubscription(planCode);
     }
 
-    await ensureConfigured();
-
-    // Fetch the current offering and find the target package.
-    const offerings = await Purchases.getOfferings();
-    const offering = offerings.current ?? offerings.all[DEFAULT_OFFERING_ID];
-    if (!offering) {
-        throw new IapError("NO_OFFERING", "No RevenueCat offering available");
+    const attempt = openAttempt("subscription", appleProductId ?? planCode);
+    let purchased: MakePurchaseResult;
+    try {
+        purchased = await buySubscriptionPackage(attempt, planCode, appleProductId);
+    } catch (e) {
+        finishPurchaseAttempt(attempt, e);
+        throw e;
     }
-
-    // Server-driven resolution first (V3 improvement): the backend already
-    // ships plans.apple_product_id, so matching the offering package by its
-    // PRODUCT identifier makes future plan/price changes binary-free — a
-    // migration updating the plans table is enough. The static package-id
-    // map stays as the fallback for offline-cached plan payloads.
-    const packageId = SUBSCRIPTION_PACKAGE_IDS[planCode];
-    const targetPackage = offering.availablePackages.find(
-        (p: PurchasesPackage) =>
-            (appleProductId && p.product.identifier === appleProductId) ||
-            (packageId != null && p.identifier === packageId),
-    );
-    if (!targetPackage) {
-        throw new IapError(
-            "NO_PACKAGE",
-            `No RC package matches plan ${planCode} (product ${appleProductId ?? "?"}, package ${packageId ?? "?"})`,
-        );
-    }
-
-    // Trigger Apple payment sheet. User sees Apple's native UI, enters
-    // sandbox tester credentials in dev, real Apple ID in prod.
-    const { customerInfo, productIdentifier } = await Purchases.purchasePackage(targetPackage);
+    // Apple's part is over; verify-receipt below is ours and never throws.
+    finishPurchaseAttempt(attempt);
+    const { customerInfo, productIdentifier } = purchased;
 
     const premium = customerInfo.entitlements.active["premium"];
     const productId = premium?.productIdentifier ?? productIdentifier;
@@ -321,6 +387,41 @@ export async function purchaseSubscription(
             status: "ACTIVE",
             provider: "REVENUECAT",
         } as unknown as SubscriptionResponse;
+    }
+}
+
+/**
+ * The part of a pack purchase that talks to RevenueCat and StoreKit: look the
+ * product up, then open Apple's sheet. Kept apart for the same reason as
+ * {@link buySubscriptionPackage}.
+ */
+async function buyPackProduct(attempt: PurchaseAttempt, productId: string): Promise<void> {
+    await ensureConfigured();
+
+    // Real RC flow — fetch the product, trigger the StoreKit purchase.
+    //
+    // 🔴 This is a DIFFERENT call from the subscription path, which reads
+    // getOfferings(). Packs are consumables and sit outside the offering, so
+    // they are looked up by identifier. The two can fail independently — and
+    // on 2026-09-15 that is exactly what the data showed: every recorded
+    // failure was a pack, none was a subscription.
+    const products = await Purchases.getProducts([productId]);
+    const product = products.find((p) => p.identifier === productId);
+    if (!product) {
+        throw new IapError(
+            "PRODUCT_NOT_FOUND",
+            `StoreKit returned no product for ${productId}`,
+        );
+    }
+
+    // StoreKit purchase — throws on user-cancel; purchaseOutcome.ts separates
+    // that from a real failure so no screen has to decide for itself. Timed on
+    // its own, like the subscription path.
+    markStoreCall(attempt);
+    try {
+        await Purchases.purchaseStoreProduct(product);
+    } finally {
+        markStoreEnd(attempt);
     }
 }
 
@@ -363,30 +464,18 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
         });
     }
 
-    await ensureConfigured();
-
-    // Real RC flow — fetch the product, trigger the StoreKit purchase.
-    //
-    // 🔴 This is a DIFFERENT call from the subscription path, which reads
-    // getOfferings(). Packs are consumables and sit outside the offering, so
-    // they are looked up by identifier. The two can fail independently — and
-    // on 2026-09-15 that is exactly what the data showed: every recorded
-    // failure was a pack, none was a subscription.
-    const products = await Purchases.getProducts([productId]);
-    const product = products.find((p) => p.identifier === productId);
-    if (!product) {
-        throw new IapError(
-            "PRODUCT_NOT_FOUND",
-            `StoreKit returned no product for ${productId}`,
-        );
-    }
-
     const { useCreditStore } = await import("@/stores/creditStore");
     const balanceBefore = useCreditStore.getState().balance ?? 0;
-
-    // StoreKit purchase — throws on user-cancel; purchaseOutcome.ts separates
-    // that from a real failure so no screen has to decide for itself.
-    await Purchases.purchaseStoreProduct(product);
+    const attempt = openAttempt("pack", productId);
+    try {
+        await buyPackProduct(attempt, productId);
+    } catch (e) {
+        finishPurchaseAttempt(attempt, e);
+        throw e;
+    }
+    // Apple's part is over; the poll below only waits for the webhook, and a
+    // second purchase need not wait for it.
+    finishPurchaseAttempt(attempt);
 
     // Poll for the webhook-driven grant. 12 tries × 2s = 24s ceiling — RC
     // usually delivers in 1-3s, but the founder's 50-credit sandbox purchase

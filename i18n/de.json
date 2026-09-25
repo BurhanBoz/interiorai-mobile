@@ -845,7 +845,7 @@
     "reminder_denied_body": "Schalte sie in den Einstellungen ein, um die Erinnerung zu erhalten.",
     "video_cta": "Zum Leben erwecken",
     "video_cta_hint": "5-Sekunden-Video · {{cost}} Guthaben",
-    "video_pro_hint": "5-Sekunden-Video · Pro",
+    "video_locked_hint": "5-Sekunden-Video · Base oder Pro",
     "video_in_progress": "Video wird erstellt…",
     "video_watch": "Video ansehen",
     "video_kicker": "Video",
@@ -1208,8 +1208,8 @@
     "reload_today": "Deine wöchentlichen Credits laden heute.",
     "reload_tomorrow": "Deine wöchentlichen Credits laden morgen.",
     "reload_in_days": "Deine wöchentlichen Credits laden in {{days}} Tagen.",
-    "pro_sub": "Alles, plus die drei oben",
-    "base_sub": "Nur Räume",
+    "pro_sub": "Alles, plus die beiden oben",
+    "base_sub": "Räume + Raumvideos",
     "start_pro": "Pro starten",
     "start_base": "Base starten",
     "weekly": "Wöchentlich",
@@ -1219,8 +1219,19 @@
     "footnote": "Jederzeit kündbar · einmalige Guthabenpakete ebenfalls erhältlich",
     "pack_line": "Oder einmalig {{credits}} Guthaben",
     "current_plan_title": "Du bist auf {{plan}}",
-    "pro_only_headline": "Drei Dinge, die nur Pro kann",
-    "pro_video_card": "Raumvideos"
+    "two_things_headline": "Zwei Dinge, die nur Pro kann"
+  },
+  "purchase_errors": {
+    "sheet_title": "Apples Zahlungsfenster hat sich nicht geöffnet",
+    "sheet_body": "Prüf in den Einstellungen (tipp auf deinen Namen), ob du mit deinem Apple Account angemeldet bist und eine Zahlungsmethode hinterlegt hast, und versuch es dann noch einmal.",
+    "not_allowed_title": "Käufe sind deaktiviert",
+    "not_allowed_body": "In-App-Käufe sind auf diesem Gerät eingeschränkt, zum Beispiel durch Bildschirmzeit. Erlaube sie in den Einstellungen und versuch es dann noch einmal.",
+    "pending_title": "Wartet auf Genehmigung",
+    "pending_body": "Dein Kauf muss noch genehmigt werden, zum Beispiel von deiner Familie. Er wird automatisch abgeschlossen, sobald er genehmigt ist.",
+    "in_flight_title": "Eine Zahlung ist bereits offen",
+    "in_flight_body": "Beende oder schließe zuerst Apples Zahlungsfenster und versuch es dann noch einmal.",
+    "network_title": "Keine Verbindung",
+    "network_body": "Prüf deine Internetverbindung und versuch es noch einmal."
   },
   "source": {
     "title": "Wie hast du uns gefunden?",

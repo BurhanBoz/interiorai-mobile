@@ -184,6 +184,13 @@ export async function recordPaywallEvent(
          */
         failureCode?: string | null;
         failureDetail?: string | null;
+        /**
+         * How long the purchase took to end, and what the device looked like
+         * when it did (V188). Produced by services/purchaseDiagnostics.ts via
+         * purchaseOutcome.ts — never at a call site.
+         */
+        durationMs?: number | null;
+        diagnostics?: string | null;
     },
 ): Promise<void> {
     try {
@@ -193,6 +200,10 @@ export async function recordPaywallEvent(
             planCode: opts?.planCode ?? null,
             failureCode: opts?.failureCode ?? null,
             failureDetail: opts?.failureDetail?.slice(0, 255) ?? null,
+            durationMs: opts?.durationMs ?? null,
+            // Already fitted to the column; the slice only guards the endpoint,
+            // which refuses a longer value and would lose the whole event.
+            diagnostics: opts?.diagnostics?.slice(0, 1000) ?? null,
             appVersion: APP_VERSION,
             locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
         });

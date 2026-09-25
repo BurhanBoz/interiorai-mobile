@@ -845,7 +845,7 @@
     "reminder_denied_body": "Attivale in Impostazioni per ricevere il promemoria.",
     "video_cta": "Dagli vita",
     "video_cta_hint": "Video di 5 secondi · {{cost}} crediti",
-    "video_pro_hint": "Video di 5 secondi · Pro",
+    "video_locked_hint": "Video di 5 secondi · Base o Pro",
     "video_in_progress": "Video in corso…",
     "video_watch": "Guarda il video",
     "video_kicker": "Video",
@@ -1208,8 +1208,8 @@
     "reload_today": "I tuoi crediti settimanali si ricaricano oggi.",
     "reload_tomorrow": "I tuoi crediti settimanali si ricaricano domani.",
     "reload_in_days": "I tuoi crediti settimanali si ricaricano tra {{days}} giorni.",
-    "pro_sub": "Tutto, più le tre sopra",
-    "base_sub": "Solo stanze",
+    "pro_sub": "Tutto, più le due sopra",
+    "base_sub": "Stanze + video delle stanze",
     "start_pro": "Inizia Pro",
     "start_base": "Inizia Base",
     "weekly": "Settimanale",
@@ -1219,8 +1219,19 @@
     "footnote": "Disdici quando vuoi · disponibili anche pacchetti di crediti singoli",
     "pack_line": "Oppure {{credits}} crediti, una volta",
     "current_plan_title": "Il tuo piano è {{plan}}",
-    "pro_only_headline": "Tre cose che solo Pro può fare",
-    "pro_video_card": "Video delle stanze"
+    "two_things_headline": "Due cose che solo Pro può fare"
+  },
+  "purchase_errors": {
+    "sheet_title": "La schermata di pagamento di Apple non si è aperta",
+    "sheet_body": "Controlla in Impostazioni (tocca il tuo nome) di aver effettuato l'accesso al tuo account Apple con un metodo di pagamento, poi riprova.",
+    "not_allowed_title": "Gli acquisti sono disattivati",
+    "not_allowed_body": "Gli acquisti in-app sono limitati su questo dispositivo, ad esempio da Tempo di utilizzo. Consentili in Impostazioni, poi riprova.",
+    "pending_title": "In attesa di approvazione",
+    "pending_body": "Il tuo acquisto è in attesa di approvazione, ad esempio dell'organizzatore della famiglia. Si completerà da solo una volta approvato.",
+    "in_flight_title": "C'è già un pagamento aperto",
+    "in_flight_body": "Completa o chiudi la schermata di pagamento di Apple, poi riprova.",
+    "network_title": "Nessuna connessione",
+    "network_body": "Controlla la connessione a internet e riprova."
   },
   "source": {
     "title": "Come ci hai trovato?",

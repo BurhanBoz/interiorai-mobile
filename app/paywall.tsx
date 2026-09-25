@@ -19,7 +19,11 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
-import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
+import {
+    purchaseAlertKeys,
+    reportPurchaseOutcome,
+    reportPurchaseSuccess,
+} from "@/services/purchaseOutcome";
 import { track } from "@/services/analytics";
 import { planTier, tierRank } from "@/utils/planTier";
 
@@ -281,8 +285,13 @@ export default function PaywallScreen() {
     };
 
     const leave = async (event: "DISMISSED" | "PURCHASED", planCode?: string) => {
-        if (event === "PURCHASED") outcome.current = "purchased";
-        await recordPaywallEvent(event, { source, planCode });
+        if (event === "PURCHASED") {
+            outcome.current = "purchased";
+            // With its evidence (timing, device state), the way a failure has it.
+            await reportPurchaseSuccess({ source, planCode });
+        } else {
+            await recordPaywallEvent(event, { source, planCode });
+        }
         exit();
     };
 
@@ -321,11 +330,17 @@ export default function PaywallScreen() {
         } catch (e) {
             // One classifier for all four purchase entry points — see
             // services/purchaseOutcome.ts for why this is not four catch blocks.
-            const { cancelled } = await reportPurchaseOutcome(e, {
+            const result = await reportPurchaseOutcome(e, {
                 source, planCode: exhaustedPack.code,
             });
-            if (!cancelled) {
-                Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
+            if (!result.cancelled) {
+                // A cause the user can act on gets its own words; the rest
+                // keeps the screen's generic message.
+                const named = purchaseAlertKeys(result);
+                Alert.alert(
+                    t(named?.title ?? "paywall.purchase_failed_title"),
+                    t(named?.body ?? "paywall.purchase_failed"),
+                );
             }
         } finally {
             setBusy(false);
@@ -348,11 +363,15 @@ export default function PaywallScreen() {
             // reported as one — it would inflate the FAILED bucket with people
             // who simply changed their mind at the last step. The classifier
             // makes that call now, identically for every screen.
-            const { cancelled } = await reportPurchaseOutcome(e, {
+            const result = await reportPurchaseOutcome(e, {
                 source, planCode: plan.code,
             });
-            if (!cancelled) {
-                Alert.alert(t("paywall.purchase_failed_title"), t("paywall.purchase_failed"));
+            if (!result.cancelled) {
+                const named = purchaseAlertKeys(result);
+                Alert.alert(
+                    t(named?.title ?? "paywall.purchase_failed_title"),
+                    t(named?.body ?? "paywall.purchase_failed"),
+                );
             }
         } finally {
             setBusy(false);
@@ -453,7 +472,7 @@ export default function PaywallScreen() {
                     </>
                 ) : (
                     <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
-                        {t("paywall.pro_only_headline")}
+                        {t("paywall.two_things_headline")}
                     </Text>
                 )}
 
@@ -472,14 +491,6 @@ export default function PaywallScreen() {
                         // being used as half the argument for a paid plan.
                         image={require("@/assets/features/outdoor_after.png")}
                         label={t("studio.mode_outdoor")}
-                    />
-                    <ProCard
-                        // V183 — the clip: a real render under a play glyph, since
-                        // a still cannot show motion and a bundled mp4 would be
-                        // megabytes for one card.
-                        image={require("@/assets/features/redesign_after.png")}
-                        label={t("paywall.pro_video_card")}
-                        play
                     />
                 </View>
 
@@ -625,29 +636,10 @@ export default function PaywallScreen() {
 }
 
 /** A locked capability, shown rather than described. */
-function ProCard({ image, label, play }: { image: number; label: string; play?: boolean }) {
+function ProCard({ image, label }: { image: number; label: string }) {
     return (
         <View style={{ flex: 1, height: 136, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}>
             <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-            {play ? (
-                <View
-                    pointerEvents="none"
-                    style={{
-                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                        alignItems: "center", justifyContent: "center",
-                    }}
-                >
-                    <View
-                        style={{
-                            width: 38, height: 38, borderRadius: 19,
-                            backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
-                            alignItems: "center", justifyContent: "center",
-                        }}
-                    >
-                        <Text style={{ color: "#fff", fontSize: 14, marginLeft: 3 }}>▶</Text>
-                    </View>
-                </View>
-            ) : null}
             <LinearGradient
                 colors={["transparent", "rgba(0,0,0,0.9)"]}
                 style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingTop: 30, paddingHorizontal: 12, paddingBottom: 10 }}

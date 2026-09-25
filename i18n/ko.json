@@ -843,7 +843,7 @@
     "reminder_denied_body": "알림을 받으려면 설정에서 켜주세요.",
     "video_cta": "영상으로 만들기",
     "video_cta_hint": "5초 영상 · 크레딧 {{cost}}개",
-    "video_pro_hint": "5초 영상 · Pro",
+    "video_locked_hint": "5초 영상 · Base 또는 Pro",
     "video_in_progress": "영상 만드는 중…",
     "video_watch": "영상 보기",
     "video_kicker": "영상",
@@ -1206,8 +1206,8 @@
     "reload_today": "주간 크레딧이 오늘 충전됩니다.",
     "reload_tomorrow": "주간 크레딧이 내일 충전됩니다.",
     "reload_in_days": "주간 크레딧이 {{days}}일 후 충전됩니다.",
-    "pro_sub": "모든 기능에 위 세 가지까지",
-    "base_sub": "공간만",
+    "pro_sub": "모든 기능에 위 두 가지까지",
+    "base_sub": "공간 + 공간 영상",
     "start_pro": "Pro 시작",
     "start_base": "Base 시작",
     "weekly": "주간",
@@ -1217,8 +1217,19 @@
     "footnote": "언제든 해지 가능 · 단건 크레딧 팩도 있습니다",
     "pack_line": "또는 크레딧 {{credits}}개 한 번만",
     "current_plan_title": "현재 {{plan}} 플랜입니다",
-    "pro_only_headline": "Pro만 할 수 있는 세 가지",
-    "pro_video_card": "공간 영상"
+    "two_things_headline": "Pro만 할 수 있는 두 가지"
+  },
+  "purchase_errors": {
+    "sheet_title": "Apple 결제 화면이 열리지 않았습니다",
+    "sheet_body": "설정에서 이름을 탭해 Apple 계정에 로그인되어 있고 결제 수단이 등록되어 있는지 확인한 후 다시 시도해 주세요.",
+    "not_allowed_title": "구매가 꺼져 있습니다",
+    "not_allowed_body": "이 기기에서 앱 내 구매가 제한되어 있습니다(예: 스크린 타임). 설정에서 허용한 후 다시 시도해 주세요.",
+    "pending_title": "승인 대기 중",
+    "pending_body": "구매가 승인을 기다리고 있습니다(예: 가족 관리자의 승인). 승인되면 자동으로 완료됩니다.",
+    "in_flight_title": "이미 진행 중인 결제가 있습니다",
+    "in_flight_body": "Apple 결제 화면을 완료하거나 닫은 후 다시 시도해 주세요.",
+    "network_title": "연결 없음",
+    "network_body": "인터넷 연결을 확인한 후 다시 시도해 주세요."
   },
   "source": {
     "title": "어떻게 알게 되셨나요?",

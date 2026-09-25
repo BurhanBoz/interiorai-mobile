@@ -845,7 +845,7 @@
     "reminder_denied_body": "Activez-les dans Réglages pour recevoir le rappel.",
     "video_cta": "Donne-lui vie",
     "video_cta_hint": "Vidéo de 5 secondes · {{cost}} crédits",
-    "video_pro_hint": "Vidéo de 5 secondes · Pro",
+    "video_locked_hint": "Vidéo de 5 secondes · Base ou Pro",
     "video_in_progress": "Vidéo en cours…",
     "video_watch": "Voir la vidéo",
     "video_kicker": "Vidéo",
@@ -1208,8 +1208,8 @@
     "reload_today": "Vos crédits hebdomadaires se rechargent aujourd'hui.",
     "reload_tomorrow": "Vos crédits hebdomadaires se rechargent demain.",
     "reload_in_days": "Vos crédits hebdomadaires se rechargent dans {{days}} jours.",
-    "pro_sub": "Tout, plus les trois ci-dessus",
-    "base_sub": "Pièces uniquement",
+    "pro_sub": "Tout, plus les deux ci-dessus",
+    "base_sub": "Pièces + vidéos de pièces",
     "start_pro": "Démarrer Pro",
     "start_base": "Démarrer Base",
     "weekly": "Hebdomadaire",
@@ -1219,8 +1219,19 @@
     "footnote": "Annulable à tout moment · packs de crédits ponctuels également",
     "pack_line": "Ou {{credits}} crédits, une fois",
     "current_plan_title": "Tu es sur {{plan}}",
-    "pro_only_headline": "Trois choses que seul Pro fait",
-    "pro_video_card": "Vidéos de pièces"
+    "two_things_headline": "Deux choses que seul Pro fait"
+  },
+  "purchase_errors": {
+    "sheet_title": "L'écran de paiement d'Apple ne s'est pas ouvert",
+    "sheet_body": "Vérifie dans Réglages (touche ton nom) que tu es connecté à ton compte Apple avec un moyen de paiement, puis réessaie.",
+    "not_allowed_title": "Les achats sont désactivés",
+    "not_allowed_body": "Les achats intégrés sont restreints sur cet appareil, par exemple par Temps d'écran. Autorise-les dans Réglages, puis réessaie.",
+    "pending_title": "En attente d'approbation",
+    "pending_body": "Ton achat attend une approbation, par exemple de l'organisateur de ta famille. Il se terminera tout seul une fois approuvé.",
+    "in_flight_title": "Un paiement est déjà ouvert",
+    "in_flight_body": "Termine ou ferme l'écran de paiement d'Apple, puis réessaie.",
+    "network_title": "Pas de connexion",
+    "network_body": "Vérifie ta connexion internet et réessaie."
   },
   "source": {
     "title": "Comment nous avez-vous trouvés ?",

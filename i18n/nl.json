@@ -845,7 +845,7 @@
     "reminder_denied_body": "Zet ze aan in Instellingen om de herinnering te krijgen.",
     "video_cta": "Breng het tot leven",
     "video_cta_hint": "Video van 5 seconden · {{cost}} credits",
-    "video_pro_hint": "Video van 5 seconden · Pro",
+    "video_locked_hint": "Video van 5 seconden · Base of Pro",
     "video_in_progress": "Video wordt gemaakt…",
     "video_watch": "Bekijk de video",
     "video_kicker": "Video",
@@ -1208,8 +1208,8 @@
     "reload_today": "Je wekelijkse credits worden vandaag aangevuld.",
     "reload_tomorrow": "Je wekelijkse credits worden morgen aangevuld.",
     "reload_in_days": "Je wekelijkse credits worden over {{days}} dagen aangevuld.",
-    "pro_sub": "Alles, plus de drie hierboven",
-    "base_sub": "Alleen kamers",
+    "pro_sub": "Alles, plus de twee hierboven",
+    "base_sub": "Kamers + kamervideo's",
     "start_pro": "Start Pro",
     "start_base": "Start Base",
     "weekly": "Wekelijks",
@@ -1219,8 +1219,19 @@
     "footnote": "Altijd opzegbaar · losse creditpakketten ook beschikbaar",
     "pack_line": "Of {{credits}} credits, eenmalig",
     "current_plan_title": "Je zit op {{plan}}",
-    "pro_only_headline": "Drie dingen die alleen Pro kan",
-    "pro_video_card": "Kamervideo's"
+    "two_things_headline": "Twee dingen die alleen Pro kan"
+  },
+  "purchase_errors": {
+    "sheet_title": "Het betaalscherm van Apple ging niet open",
+    "sheet_body": "Controleer in Instellingen (tik op je naam) of je bent ingelogd met je Apple Account en een betaalmethode hebt, en probeer het daarna opnieuw.",
+    "not_allowed_title": "Aankopen staan uit",
+    "not_allowed_body": "In-app-aankopen zijn op dit apparaat beperkt, bijvoorbeeld door Schermtijd. Sta ze toe in Instellingen en probeer het daarna opnieuw.",
+    "pending_title": "Wacht op goedkeuring",
+    "pending_body": "Je aankoop wacht op goedkeuring, bijvoorbeeld van de organisator van je gezin. Hij wordt vanzelf afgerond zodra hij is goedgekeurd.",
+    "in_flight_title": "Er staat al een betaling open",
+    "in_flight_body": "Rond het betaalscherm van Apple af of sluit het, en probeer het daarna opnieuw.",
+    "network_title": "Geen verbinding",
+    "network_body": "Controleer je internetverbinding en probeer het opnieuw."
   },
   "source": {
     "title": "Hoe heb je ons gevonden?",
