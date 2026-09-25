@@ -33,6 +33,8 @@ export function useGenerate() {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const idempotencyKeyRef = useRef<string | null>(null);
+  /** Set synchronously on the first tap; see {@link handleGenerate}. */
+  const inFlightRef = useRef(false);
 
   const photo = useStudioStore((s) => s.photo);
   const roomType = useStudioStore((s) => s.roomType);
@@ -71,7 +73,7 @@ export function useGenerate() {
      *   a style the strip never offers on a Minimalist render). The caller now
      *   hands the style in; everything else still comes from the studio.
      */
-    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
+    const run = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
       const style = overrides?.designStyle ?? designStyle;
       if (!photo?.fileId || !roomType?.id || !style?.id) {
         Alert.alert(
@@ -198,6 +200,27 @@ export function useGenerate() {
         Alert.alert(t("generation.failed"), msg);
       } finally {
         setIsSubmitting(false);
+      }
+    };
+
+    /**
+     * One generate at a time, decided synchronously on the tap.
+     *
+     * <p>isSubmitting is React state: it disables the button only on the next
+     * render, and a second tap that lands first runs generate() again — with
+     * the same idempotency key. That reached production on 2026-09-25 20:39:
+     * two POSTs 0.86 s apart; the first made the job and the second came back
+     * a 500 (the backend now answers such a second request with the first's
+     * job, but it should never have been sent). A ref is read and set in the
+     * same tick, so the second tap finds the door already shut.
+     */
+    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      try {
+        await run(overrides);
+      } finally {
+        inFlightRef.current = false;
       }
     };
 
