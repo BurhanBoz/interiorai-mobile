@@ -141,7 +141,10 @@ export default function PlanConfirmScreen() {
             // the payment sheet closes — NOT synchronously here.
             await iap.purchaseSubscription(plan.code, plan.appleProductId);
 
-            await fetchPlans();
+            // Apple has taken the payment: from here a failed refresh is a
+            // refresh to try again, never "activation failed" (the same trap
+            // the pack flow fell into during a deploy, 2026-09-25 20:46).
+            await fetchPlans().catch(() => {});
 
             // Poll for the RC webhook to reconcile. The purchase succeeded
             // on Apple's side; the backend subscription flips once RC
@@ -154,7 +157,7 @@ export default function PlanConfirmScreen() {
             let reconciled = false;
             let scheduled = false;
             for (let attempt = 0; attempt < 6; attempt++) {
-                await Promise.all([fetchSubscription(), fetchBalance()]);
+                await Promise.all([fetchSubscription(), fetchBalance()]).catch(() => {});
                 const subNow = useSubscriptionStore.getState().subscription;
                 if (subNow?.planCode === targetPlan) {
                     reconciled = true;

@@ -482,8 +482,18 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
     // (2026-07-16) landed after the old 12s window, showing the pending
     // fallback for a purchase that was seconds from reconciling. Each poll
     // refreshes the authoritative balance from the backend.
+    //
+    // 🔴 Apple has taken the payment by now, so nothing below may throw. On
+    // 2026-09-25 20:46 the first read hit a 502 while a deploy restarted the
+    // API; fetchBalance threw, the purchase was reported as failed on screen,
+    // and the 24 credits landed 2.5 minutes later through the webhook. A read
+    // that fails is a read to try again, and at worst the result is "pending".
     for (let attempt = 0; attempt < 12; attempt++) {
-        await useCreditStore.getState().fetchBalance();
+        try {
+            await useCreditStore.getState().fetchBalance();
+        } catch {
+            // Transient (deploy, dropped connection): keep waiting.
+        }
         const now = useCreditStore.getState().balance ?? 0;
         if (now > balanceBefore) {
             return {

@@ -193,21 +193,32 @@ export async function recordPaywallEvent(
         diagnostics?: string | null;
     },
 ): Promise<void> {
+    const body = {
+        eventType: event,
+        source: opts?.source ?? "ONBOARDING",
+        planCode: opts?.planCode ?? null,
+        failureCode: opts?.failureCode ?? null,
+        failureDetail: opts?.failureDetail?.slice(0, 255) ?? null,
+        durationMs: opts?.durationMs ?? null,
+        // Already fitted to the column; the slice only guards the endpoint,
+        // which refuses a longer value and would lose the whole event.
+        diagnostics: opts?.diagnostics?.slice(0, 1000) ?? null,
+        appVersion: APP_VERSION,
+        locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
+    };
     try {
-        await api.post("/api/telemetry/paywall", {
-            eventType: event,
-            source: opts?.source ?? "ONBOARDING",
-            planCode: opts?.planCode ?? null,
-            failureCode: opts?.failureCode ?? null,
-            failureDetail: opts?.failureDetail?.slice(0, 255) ?? null,
-            durationMs: opts?.durationMs ?? null,
-            // Already fitted to the column; the slice only guards the endpoint,
-            // which refuses a longer value and would lose the whole event.
-            diagnostics: opts?.diagnostics?.slice(0, 1000) ?? null,
-            appVersion: APP_VERSION,
-            locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
-        });
-    } catch {
-        // Analytics must never surface to the user.
+        await api.post("/api/telemetry/paywall", body);
+    } catch (e) {
+        // Analytics must never surface to the user — but a deploy restarts the
+        // API for ~20 s, and on 2026-09-25 20:46 the outcome of a paid pack was
+        // lost to exactly that 502. When nothing answered (no response, or the
+        // proxy's 502/503/504), send it once more a few seconds later, in the
+        // background, so no caller waits on it. A refusal (4xx) is final.
+        const status = (e as { response?: { status?: number } })?.response?.status;
+        if (status === undefined || status === 502 || status === 503 || status === 504) {
+            setTimeout(() => {
+                api.post("/api/telemetry/paywall", body).catch(() => {});
+            }, 5000);
+        }
     }
 }
