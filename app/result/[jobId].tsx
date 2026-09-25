@@ -131,6 +131,10 @@ export default function ResultDetailScreen() {
   const { enabled: upscaleFeatureEnabled } = useEntitlement("ULTRA_HD_UPSCALE");
   const resetStudio = useStudioStore(s => s.reset);
   const setDesignStyle = useStudioStore(s => s.setDesignStyle);
+  // The photo the studio holds. "Same room, another style" re-runs the studio
+  // with a new style, so it is only the SAME room when that photo is this
+  // render's own — see the strip below.
+  const studioPhotoFileId = useStudioStore(s => s.photo?.fileId ?? null);
   // An "already upscaled" job is one where the feature_code itself is the
   // upscale chain (jobType="UPSCALE" on the backend → featureCode
   // "ULTRA_HD_UPSCALE"). Allowing a second upscale on top of that produces
@@ -444,14 +448,23 @@ export default function ResultDetailScreen() {
    * second place for a double-charge to live.
    */
   const designStyles = useCatalogStore((s) => s.designStyles);
-  const { generate, isSubmitting: restyling } = useGenerate();
+  const { generate, isSubmitting: restyling, cost: restyleCost } = useGenerate();
+  // Which thumbnail is rendering, so the tap shows on the thing tapped.
+  const [restyleCode, setRestyleCode] = useState<string | null>(null);
 
   const handleRestyle = async (code: string) => {
     const style = designStyles.find((s) => s.code === code);
-    if (!style || restyling) return;
+    if (!style || restyling || videoSubmitting) return;
     Haptics.selectionAsync();
+    setRestyleCode(code);
     setDesignStyle(style);
-    await generate();
+    try {
+      // The style goes in explicitly — generate() would otherwise use the
+      // style of the render it was built in (see useGenerate).
+      await generate({ designStyle: style });
+    } finally {
+      setRestyleCode(null);
+    }
   };
 
   /* ── The reminder toggle IS the notification opt-in ───────────────
@@ -691,25 +704,41 @@ export default function ResultDetailScreen() {
             state={videoState}
             cost={videoCost}
             locked={!videoFeatureEnabled}
-            busy={videoSubmitting}
+            busy={videoSubmitting || restyling}
             pushGranted={pushGranted}
             onPress={handleVideo}
           />
         )}
 
-        <Text style={{ ...theme.v2.displayS, color: U.ink, marginTop: 20, marginBottom: 12 }}>
-          {t("result.another_style")}
-        </Text>
+        {/* "Same room, another style" re-runs the STUDIO's photo with a new
+            style. Opened from the gallery, this render's photo may not be
+            the one the studio holds any more — the strip would then render
+            a different room and charge for it. So it shows only when the
+            two match, which is always true straight after a generation. */}
+        {studioPhotoFileId != null && studioPhotoFileId === job.inputFile?.id && (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 20, marginBottom: 12, gap: 12 }}>
+              <Text style={{ ...theme.v2.displayS, color: U.ink, flexShrink: 1 }} numberOfLines={1}>
+                {t("result.another_style")}
+              </Text>
+              {/* Every tap here is a charge; the price sits where the tap is. */}
+              <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
+                {t("studio.credit_cost", { count: restyleCost })}
+              </Text>
+            </View>
 
-        {/* No explanatory line under the heading — the thumbnails carry it. */}
-        <AnotherStyleStrip
-          currentStyleCode={
-            designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
-          }
-          onPick={handleRestyle}
-          onLocked={() => router.push("/paywall?source=RESULT_STYLE" as never)}
-          busy={restyling}
-        />
+            {/* No explanatory line under the heading — the thumbnails carry it. */}
+            <AnotherStyleStrip
+              currentStyleCode={
+                designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
+              }
+              onPick={handleRestyle}
+              onLocked={() => router.push("/paywall?source=RESULT_STYLE" as never)}
+              busy={restyling || videoSubmitting}
+              pendingCode={restyleCode}
+            />
+          </>
+        )}
 
         <View style={{ flex: 1 }} />
 
@@ -1004,12 +1033,14 @@ function ResultAction({
  * already looking at is the one option that cannot be interesting.
  */
 function AnotherStyleStrip({
-  currentStyleCode, onPick, onLocked, busy,
+  currentStyleCode, onPick, onLocked, busy, pendingCode,
 }: {
   currentStyleCode: string | null;
   onPick: (code: string) => void;
   onLocked: () => void;
   busy: boolean;
+  /** The style whose render is being submitted — it carries the spinner. */
+  pendingCode: string | null;
 }) {
   const { t } = useTranslation();
   const styles = useCatalogStore((s) => s.designStyles);
@@ -1041,6 +1072,14 @@ function AnotherStyleStrip({
           <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
             {getStyleImage(p.code) ? (
               <Image source={getStyleImage(p.code)!} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+            ) : null}
+            {pendingCode === p.code ? (
+              <View style={{
+                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center",
+              }}>
+                <ActivityIndicator size="small" color={U.accentBright} />
+              </View>
             ) : null}
           </View>
           <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>

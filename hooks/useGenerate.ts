@@ -8,6 +8,7 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
+import type { CatalogItemResponse } from "@/types/api";
 
 /**
  * The generate action: validate, check the wallet, submit, navigate.
@@ -56,8 +57,23 @@ export function useGenerate() {
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
   const { cost } = useCreditCost();
 
-    const handleGenerate = async () => {
-      if (!photo?.fileId || !roomType?.id || !designStyle?.id) {
+    /**
+     * @param overrides.designStyle the style to render with, when the caller
+     *   has just chosen one.
+     *
+     *   🔴 Why this exists (2026-09-25): the result screen's "same room,
+     *   another style" strip called setDesignStyle(style) and then
+     *   generate(). But this function closes over the designStyle of the
+     *   render it was created in — a zustand set() does not reach an
+     *   already-built closure — so the request carried the OLD style. Tapping
+     *   "Scandinavian" re-rendered the Minimalist room the user was already
+     *   looking at and charged for it (job 2ea3dec5 in production: MINIMALIST,
+     *   a style the strip never offers on a Minimalist render). The caller now
+     *   hands the style in; everything else still comes from the studio.
+     */
+    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
+      const style = overrides?.designStyle ?? designStyle;
+      if (!photo?.fileId || !roomType?.id || !style?.id) {
         Alert.alert(
           "Missing Info",
           "Please complete all steps before generating.",
@@ -114,7 +130,7 @@ export function useGenerate() {
         const job = await createJob({
           inputFileId: photo.fileId,
           roomTypeId: roomType.id,
-          designStyleId: designStyle.id,
+          designStyleId: style.id,
           designMode: mode,
           qualityTier,
           speedMode,
