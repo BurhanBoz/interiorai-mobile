@@ -8,6 +8,7 @@ import type { JobResponse } from "@/types/api";
 import { theme } from "@/config/theme";
 import { getFileDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 
 /**
  * A job row: thumbnail, what it was, and where it got to.
@@ -105,6 +106,7 @@ function useStatusLabel() {
 /* ─────────────────── Job activity row ─────────────────── */
 export function JobActivityCard({ item }: { item: JobResponse }) {
   const { t } = useTranslation();
+  const catalogLabel = useCatalogLabel();
   const statusLabel = useStatusLabel();
   const authHeaders = useAuthHeaders();
   // V183 — a clip's thumbnail is the still it is made from (its input
@@ -115,10 +117,14 @@ export function JobActivityCard({ item }: { item: JobResponse }) {
     ? (item.inputFile?.id ? getFileDownloadUrl(item.inputFile.id) : undefined)
     : (item.outputs?.[0]?.url ?? item.inputFile?.publicUrl ?? undefined);
   const palette = statusPalette(item.status);
+  // The composer's own "Style · Room", in the user's language — gluing the two
+  // English names together read "Modern Living Room" in every locale.
+  const style = catalogLabel("style", item.designStyleName);
+  const room = catalogLabel("room", item.roomTypeName);
   const title =
-    item.roomTypeName && item.designStyleName
-      ? `${item.designStyleName} ${item.roomTypeName}`
-      : item.roomTypeName || item.designStyleName || t("result.new_design");
+    style && room
+      ? t("studio.summary", { style, room })
+      : room || style || t("result.new_design");
 
   return (
     <Pressable

@@ -16,6 +16,7 @@ import {
 import { theme } from "@/config/theme";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { catalogName } from "@/utils/catalogI18n";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { getStyleImage } from "@/components/studio/styleImages";
 import { useGenerate } from "@/hooks/useGenerate";
 import { requestPushPermission } from "@/hooks/usePushRegistration";
@@ -109,7 +110,8 @@ const modeLabelKeys: Record<string, string> = {
 };
 
 export default function ResultDetailScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const catalogLabel = useCatalogLabel();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const [job, setJob] = useState<JobResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -672,7 +674,7 @@ export default function ResultDetailScreen() {
             <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
           </Pressable>
           <Text style={{ ...theme.v2.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }}>
-            {(job.designStyleName || "").toUpperCase()}
+            {catalogLabel("style", job.designStyleName).toLocaleUpperCase(i18n.language)}
           </Text>
           <View style={{ width: 34 }} />
         </View>

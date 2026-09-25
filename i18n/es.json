@@ -407,7 +407,8 @@
     "filter_activity": "Actividad",
     "v2_empty_line": "Aquí todavía no hay nada.",
     "v2_new_design": "+ Nuevo diseño",
-    "video_badge": "VÍDEO"
+    "video_badge": "VÍDEO",
+    "design_fallback": "Diseño"
   },
   "history": {
     "title": "Historial",

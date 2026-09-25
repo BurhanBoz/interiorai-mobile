@@ -407,7 +407,8 @@
     "filter_activity": "Activity",
     "v2_empty_line": "Nothing here yet.",
     "v2_new_design": "+ New design",
-    "video_badge": "VIDEO"
+    "video_badge": "VIDEO",
+    "design_fallback": "Design"
   },
   "history": {
     "title": "History",

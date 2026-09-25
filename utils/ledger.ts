@@ -26,7 +26,7 @@ export interface LedgerLine {
     titleKey: string;
     /** Quiet second line. Null when the title says everything. */
     captionKey: string | null;
-    /** Not localised — a room name out of the catalogue, shown verbatim. */
+    /** The catalogue's English room name; the row localises it (useCatalogLabel). */
     room: string | null;
     /** Interpolation for `captionKey`, when it takes any. */
     captionParams?: Record<string, string | number>;

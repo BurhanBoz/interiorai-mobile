@@ -407,7 +407,8 @@
     "filter_activity": "Activiteit",
     "v2_empty_line": "Hier staat nog niets.",
     "v2_new_design": "+ Nieuw ontwerp",
-    "video_badge": "VIDEO"
+    "video_badge": "VIDEO",
+    "design_fallback": "Ontwerp"
   },
   "history": {
     "title": "Geschiedenis",

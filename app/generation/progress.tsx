@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { Brand } from "@/components/brand/Brand";
 import { theme } from "@/config/theme";
 import type { JobResponse, JobStatus } from "@/types/api";
@@ -39,6 +40,7 @@ export default function GenerationProgressScreen() {
   // transient failure cannot become a second charge.
   const { generate } = useGenerate();
   const { t } = useTranslation();
+  const catalogLabel = useCatalogLabel();
   const { jobId } = useLocalSearchParams<{ jobId?: string }>();
 
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
@@ -464,7 +466,7 @@ export default function GenerationProgressScreen() {
           className="font-headline text-on-surface"
           style={{ ...theme.text.headline }}
         >
-          {styleName}
+          {catalogLabel("style", styleName)}
         </Text>
         <Text
           className="font-body text-on-surface-variant"

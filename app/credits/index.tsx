@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitlement";
+import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
 import * as promoService from "@/services/promo";
@@ -96,6 +97,7 @@ function LedgerRow({
 }) {
   const line = parseLedgerLine(row.entry);
   const positive = row.amount > 0;
+  const catalogLabel = useCatalogLabel();
 
   // Three states, three colours: credits back is good news, credits out is
   // neutral-negative, and an annulled pair is neither — it is a non-event.
@@ -107,7 +109,7 @@ function LedgerRow({
 
   const caption = row.refunded
     ? t("credits.ledger_refunded")
-    : [line.room, line.captionKey ? t(line.captionKey, line.captionParams) : null]
+    : [catalogLabel("room", line.room), line.captionKey ? t(line.captionKey, line.captionParams) : null]
         .filter(Boolean)
         .join(" · ");
 

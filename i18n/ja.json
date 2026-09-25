@@ -406,7 +406,8 @@
     "filter_activity": "進行中",
     "v2_empty_line": "まだ何もありません。",
     "v2_new_design": "＋ 新しいデザイン",
-    "video_badge": "動画"
+    "video_badge": "動画",
+    "design_fallback": "デザイン"
   },
   "history": {
     "title": "履歴",
