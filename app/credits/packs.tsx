@@ -8,7 +8,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { recordPaywallEvent } from "@/services/telemetry";
-import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
+import {
+    purchaseAlertKeys,
+    reportPurchaseOutcome,
+    reportPurchaseSuccess,
+} from "@/services/purchaseOutcome";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -400,7 +404,7 @@ export default function CreditPacksScreen() {
         try {
             const result = await purchase(packCode);
             purchasedRef.current = true;
-            recordPaywallEvent("PURCHASED", { source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
+            reportPurchaseSuccess({ source: "PACKS_SCREEN", planCode: packCode }).catch(() => {});
             // Webhook grant hasn't reconciled within the poll window — the
             // purchase went through on Apple's side, credits land shortly.
             const pending = (result as { pending?: boolean }).pending
@@ -425,10 +429,15 @@ export default function CreditPacksScreen() {
             // failed when they had simply changed their mind. Six of the six
             // failures this table ever held came from this screen, and not one
             // of them recorded why.
-            const { cancelled } = await reportPurchaseOutcome(e, {
+            const result = await reportPurchaseOutcome(e, {
                 source: "PACKS_SCREEN", planCode: packCode,
             });
-            if (cancelled) {
+            if (result.cancelled) {
+                return;
+            }
+            const named = purchaseAlertKeys(result);
+            if (named) {
+                Alert.alert(t(named.title), t(named.body));
                 return;
             }
             const status = (e as any)?.response?.status;

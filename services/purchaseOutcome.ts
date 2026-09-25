@@ -1,5 +1,6 @@
 import { PURCHASES_ERROR_CODE, type PurchasesError } from "react-native-purchases";
 import { isIapError } from "./iap";
+import { describePurchase, INSTANT_MS } from "./purchaseDiagnostics";
 import { recordPaywallEvent } from "./telemetry";
 
 /**
@@ -26,6 +27,14 @@ import { recordPaywallEvent } from "./telemetry";
  * THE RULE: never collapse an unrecognised cause into "UNKNOWN". A code we do
  * not have a name for is the most valuable row in the table; it gets a prefix
  * and keeps its identity.
+ *
+ * A CANCEL IS NOT ALWAYS A PERSON (1.7.1)
+ * On 2026-09-25 TestFlight purchases came back "cancelled" ~210 ms after the
+ * tap, five times in a row, from someone who never saw Apple's sheet. The app
+ * showed nothing — cancelling is a choice, and a choice needs no alert — so
+ * they tapped again. A cancel faster than {@link INSTANT_MS} is now a failure
+ * of its own (CANCELLED_INSTANTLY) with a message that says what to check, and
+ * every outcome carries its timing and the device's state (purchaseDiagnostics).
  */
 
 /** What actually happened, for the caller's UI decision. */
@@ -74,8 +83,13 @@ function text(e: unknown): string {
     }
 }
 
-/** Decide what an error was. Pure — safe to call from anywhere, never throws. */
-export function classifyPurchaseError(e: unknown): PurchaseOutcome {
+/**
+ * Decide what an error was. Pure — safe to call from anywhere, never throws.
+ *
+ * @param storeMs how long the StoreKit call took, when known. A cancel faster
+ *                than {@link INSTANT_MS} was not a person closing a sheet.
+ */
+export function classifyPurchaseError(e: unknown, storeMs: number | null = null): PurchaseOutcome {
     const detail = text(e).slice(0, 255);
 
     // Ours, thrown before StoreKit was ever contacted. These carry the cause.
@@ -86,6 +100,9 @@ export function classifyPurchaseError(e: unknown): PurchaseOutcome {
     const rc = e as Partial<PurchasesError> | null | undefined;
     if (rc && rc.code != null) {
         const known = RC_CODES[rc.code as string];
+        if (known === "USER_CANCELLED" && storeMs != null && storeMs < INSTANT_MS) {
+            return { cancelled: false, code: "CANCELLED_INSTANTLY", detail };
+        }
         if (known) {
             return { cancelled: known === "USER_CANCELLED", code: known, detail };
         }
@@ -121,13 +138,16 @@ export async function reportPurchaseOutcome(
     e: unknown,
     opts: { source: string; planCode?: string | null },
 ): Promise<PurchaseOutcome> {
-    const outcome = classifyPurchaseError(e);
+    const evidence = await describePurchase(e);
+    const outcome = classifyPurchaseError(e, evidence.storeMs);
     try {
         await recordPaywallEvent(outcome.cancelled ? "DISMISSED" : "FAILED", {
             source: opts.source,
             planCode: opts.planCode ?? null,
             failureCode: outcome.code,
             failureDetail: outcome.detail,
+            durationMs: evidence.durationMs,
+            diagnostics: evidence.diagnostics,
         });
     } catch {
         // recordPaywallEvent already swallows; this is the belt to its braces.
@@ -136,4 +156,54 @@ export async function reportPurchaseOutcome(
         console.warn(`[IAP] purchase failed: ${outcome.code} — ${outcome.detail}`);
     }
     return outcome;
+}
+
+/**
+ * Record a completed purchase with its evidence — how long Apple's side took
+ * and the device as it was — so a failure can be read against what success
+ * looks like. Never throws.
+ */
+export async function reportPurchaseSuccess(opts: {
+    source: string;
+    planCode?: string | null;
+}): Promise<void> {
+    try {
+        const evidence = await describePurchase();
+        await recordPaywallEvent("PURCHASED", {
+            source: opts.source,
+            planCode: opts.planCode ?? null,
+            durationMs: evidence.durationMs,
+            diagnostics: evidence.diagnostics,
+        });
+    } catch {
+        // recordPaywallEvent already swallows; this is the belt to its braces.
+    }
+}
+
+/**
+ * What to tell the user about a failed purchase, as i18n keys — or null when
+ * the screen's own generic failure message is right. One table, so four
+ * screens say the same thing about the same cause.
+ *
+ * <p>Only causes the user can act on are named: the sheet that never opened
+ * (sign-in or payment method), purchases switched off on the device, a
+ * purchase waiting for approval, one already open, no connection.
+ */
+export function purchaseAlertKeys(outcome: PurchaseOutcome): { title: string; body: string } | null {
+    if (outcome.cancelled) return null;
+    switch (outcome.code) {
+        case "CANCELLED_INSTANTLY":
+            return { title: "purchase_errors.sheet_title", body: "purchase_errors.sheet_body" };
+        case "PURCHASE_NOT_ALLOWED":
+            return { title: "purchase_errors.not_allowed_title", body: "purchase_errors.not_allowed_body" };
+        case "PAYMENT_PENDING":
+            return { title: "purchase_errors.pending_title", body: "purchase_errors.pending_body" };
+        case "PURCHASE_IN_FLIGHT":
+        case "ALREADY_IN_PROGRESS":
+            return { title: "purchase_errors.in_flight_title", body: "purchase_errors.in_flight_body" };
+        case "NETWORK":
+            return { title: "purchase_errors.network_title", body: "purchase_errors.network_body" };
+        default:
+            return null;
+    }
 }

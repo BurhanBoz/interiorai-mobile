@@ -173,12 +173,12 @@ export default function ResultDetailScreen() {
 
   /* ── Room video (V183) ─────────────────────────────────────────────
    *
-   * PRO-gated through plan_features (ROOM_VIDEO), read through the same
-   * trial-aware hook every other gate uses. The price comes from the
-   * effective rules first; a plan below PRO has no ROOM_VIDEO rule, so it
-   * falls back to the feature's own creditsPerUse (10) — the number the
-   * locked button shows next to its PRO tag. The backend re-checks all of it
-   * and answers 403 PLAN_UPGRADE_REQUIRED if the client is wrong.
+   * Gated through plan_features (ROOM_VIDEO) — BASE and PRO since V187 —
+   * read through the same trial-aware hook every other gate uses. The price
+   * comes from the effective rules first; FREE has no ROOM_VIDEO rule, so it
+   * falls back to the feature's own creditsPerUse (15), the number the locked
+   * button shows beside its lock. The backend re-checks all of it and
+   * answers 403 PLAN_UPGRADE_REQUIRED if the client is wrong.
    */
   const { enabled: videoFeatureEnabled } = useEntitlement("ROOM_VIDEO");
   const effectiveFeatures = useEffectiveFeatures();
@@ -1145,7 +1145,7 @@ function VideoCta({
     state === "watch" ? null
     : state === "progress"
       ? t(pushGranted === false ? "result.video_in_progress_hint_gallery" : "result.video_in_progress_hint")
-    : locked ? t("result.video_pro_hint")
+    : locked ? t("result.video_locked_hint")
     : t("result.video_cta_hint", { cost: cost ?? "" });
 
   return (
@@ -1192,13 +1192,13 @@ function VideoCta({
           ) : null}
         </View>
         {locked && state === "make" ? (
+          // A lock, not a plan name: since V187 the clip is on Base and Pro,
+          // and the hint under the label says so in the user's language.
           <View style={{
             borderWidth: 1, borderColor: U.accent, borderRadius: 5,
-            paddingVertical: 2, paddingHorizontal: 5,
+            paddingVertical: 2, paddingHorizontal: 4,
           }}>
-            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
-              PRO
-            </Text>
+            <Ionicons name="lock-closed" size={10} color={U.accentBright} />
           </View>
         ) : null}
       </Pressable>

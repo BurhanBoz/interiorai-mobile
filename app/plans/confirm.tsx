@@ -14,7 +14,11 @@ import { formatProductPrice } from "@/utils/price";
 import { isDummyMode } from "@/config/revenuecat";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
-import { reportPurchaseOutcome } from "@/services/purchaseOutcome";
+import {
+    purchaseAlertKeys,
+    reportPurchaseOutcome,
+    reportPurchaseSuccess,
+} from "@/services/purchaseOutcome";
 import type { PlanResponse } from "@/types/api";
 import { SubscriptionDisclosure } from "@/components/ui/SubscriptionDisclosure";
 
@@ -169,7 +173,7 @@ export default function PlanConfirmScreen() {
                 await new Promise((r) => setTimeout(r, 1500));
             }
 
-            await recordPaywallEvent("PURCHASED", { source: "PLANS_SCREEN", planCode: plan.code });
+            await reportPurchaseSuccess({ source: "PLANS_SCREEN", planCode: plan.code });
 
             const scheduledDate = (() => {
                 const iso = useSubscriptionStore.getState().subscription?.scheduledChangeAt
@@ -225,10 +229,15 @@ export default function PlanConfirmScreen() {
             // User tapped Cancel in the Apple payment sheet — quiet dismiss,
             // no error alert needed (Apple already showed the cancel UI).
             // Everything else is recorded with its cause.
-            const { cancelled } = await reportPurchaseOutcome(e, {
+            const result = await reportPurchaseOutcome(e, {
                 source: "PLANS_SCREEN", planCode: plan.code,
             });
-            if (cancelled) {
+            if (result.cancelled) {
+                return;
+            }
+            const named = purchaseAlertKeys(result);
+            if (named) {
+                Alert.alert(t(named.title), t(named.body));
                 return;
             }
             const status = (e as any)?.response?.status;

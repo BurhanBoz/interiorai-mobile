@@ -845,7 +845,7 @@
     "reminder_denied_body": "Hatırlatmayı almak için Ayarlar'dan aç.",
     "video_cta": "Canlandır",
     "video_cta_hint": "5 saniyelik video · {{cost}} kredi",
-    "video_pro_hint": "5 saniyelik video · Pro",
+    "video_locked_hint": "5 saniyelik video · Base ya da Pro",
     "video_in_progress": "Video hazırlanıyor…",
     "video_watch": "Videoyu izle",
     "video_kicker": "Video",
@@ -1208,8 +1208,8 @@
     "reload_today": "Haftalık kredin bugün yenileniyor.",
     "reload_tomorrow": "Haftalık kredin yarın yenileniyor.",
     "reload_in_days": "Haftalık kredin {{days}} gün sonra yenileniyor.",
-    "pro_sub": "Her şey, artı yukarıdaki üçü",
-    "base_sub": "Yalnız odalar",
+    "pro_sub": "Her şey, artı yukarıdaki ikisi",
+    "base_sub": "Odalar + oda videoları",
     "start_pro": "Pro'ya başla",
     "start_base": "Base'e başla",
     "weekly": "Haftalık",
@@ -1219,8 +1219,19 @@
     "footnote": "İstediğin an iptal · tek seferlik kredi paketleri de var",
     "pack_line": "Ya da tek seferlik {{credits}} kredi",
     "current_plan_title": "{{plan}} planındasın",
-    "pro_only_headline": "Yalnızca Pro'nun yapabildiği üç şey",
-    "pro_video_card": "Oda videoları"
+    "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey"
+  },
+  "purchase_errors": {
+    "sheet_title": "Apple'ın ödeme ekranı açılmadı",
+    "sheet_body": "Ayarlar'da adına dokunup Apple hesabında oturum açık ve bir ödeme yöntemi ekli olduğunu kontrol et, sonra tekrar dene.",
+    "not_allowed_title": "Satın alma kapalı",
+    "not_allowed_body": "Bu cihazda uygulama içi satın alma kısıtlanmış, örneğin Ekran Süresi ile. Ayarlar'dan izin ver, sonra tekrar dene.",
+    "pending_title": "Onay bekleniyor",
+    "pending_body": "Satın alman onay bekliyor, örneğin aile düzenleyicisinden. Onaylanınca kendiliğinden tamamlanır.",
+    "in_flight_title": "Açık bir ödeme var",
+    "in_flight_body": "Apple'ın ödeme ekranını tamamla ya da kapat, sonra tekrar dene.",
+    "network_title": "Bağlantı yok",
+    "network_body": "İnternet bağlantını kontrol edip tekrar dene."
   },
   "source": {
     "title": "Bizi nereden buldun?",
