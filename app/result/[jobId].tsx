@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { theme } from "@/config/theme";
 import { useCatalogStore } from "@/stores/catalogStore";
+import { catalogName } from "@/utils/catalogI18n";
 import { getStyleImage } from "@/components/studio/styleImages";
 import { useGenerate } from "@/hooks/useGenerate";
 import { requestPushPermission } from "@/hooks/usePushRegistration";
@@ -1053,10 +1054,12 @@ function AnotherStyleStrip({
       if (out.length === 3) break;
       if (code === currentStyleCode?.toUpperCase()) continue;
       const s = byCode.get(code);
-      if (s) out.push({ code: s.code, name: s.name });
+      // The composer's name for it, in the user's language — the catalogue
+      // row carries only the English one.
+      if (s) out.push({ code: s.code, name: catalogName(t, "style", s) });
     }
     return out;
-  }, [styles, currentStyleCode]);
+  }, [styles, currentStyleCode, t]);
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 9 }}>
