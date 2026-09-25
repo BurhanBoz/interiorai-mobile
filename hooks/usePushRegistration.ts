@@ -113,6 +113,11 @@ export async function requestPushPermission(): Promise<boolean> {
         // sheet that never appears.
         if (!existing.canAskAgain) return false;
 
+        // The OS sheet is about to be spent. Mark it, so the rationed
+        // pre-prompt (usePushPermissionAsk) never follows with "Get a
+        // heads-up?" for a question the user has just answered — the room
+        // video asks here, on the tap that starts the clip.
+        await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== "granted") return false;
         await syncPushTokenIfPermitted();

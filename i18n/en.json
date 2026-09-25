@@ -854,7 +854,8 @@
     "video_saved_body": "Your video is now in your camera roll.",
     "video_share_dialog_title": "Share video",
     "video_unavailable": "The video isn't available right now.",
-    "video_in_progress_hint": "A few minutes · we'll notify you"
+    "video_in_progress_hint": "A few minutes · we'll notify you",
+    "video_in_progress_hint_gallery": "A few minutes · it'll be in your gallery"
   },
   "settings": {
     "notifications_title": "Notifications",

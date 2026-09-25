@@ -852,7 +852,8 @@
     "video_saved_body": "صار الفيديو في ألبوم الكاميرا.",
     "video_share_dialog_title": "مشاركة الفيديو",
     "video_unavailable": "الفيديو غير متاح حاليًا.",
-    "video_in_progress_hint": "بضع دقائق · سنُشعرك عند الانتهاء"
+    "video_in_progress_hint": "بضع دقائق · سنُشعرك عند الانتهاء",
+    "video_in_progress_hint_gallery": "بضع دقائق · ثم ستجده في معرضك"
   },
   "settings": {
     "notifications_title": "الإشعارات",

@@ -852,7 +852,8 @@
     "video_saved_body": "영상이 카메라 롤에 저장되었습니다.",
     "video_share_dialog_title": "영상 공유",
     "video_unavailable": "지금은 영상을 볼 수 없습니다.",
-    "video_in_progress_hint": "몇 분 · 완료되면 알려드립니다"
+    "video_in_progress_hint": "몇 분 · 완료되면 알려드립니다",
+    "video_in_progress_hint_gallery": "몇 분 · 완료되면 갤러리에 담깁니다"
   },
   "settings": {
     "notifications_title": "알림",

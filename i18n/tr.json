@@ -854,7 +854,8 @@
     "video_saved_body": "Videon artık film rulonda.",
     "video_share_dialog_title": "Videoyu paylaş",
     "video_unavailable": "Video şu anda kullanılamıyor.",
-    "video_in_progress_hint": "Birkaç dakika · bitince bildirim gelir"
+    "video_in_progress_hint": "Birkaç dakika · bitince bildirim gelir",
+    "video_in_progress_hint_gallery": "Birkaç dakika · bitince galerinde olur"
   },
   "settings": {
     "notifications_title": "Bildirimler",
