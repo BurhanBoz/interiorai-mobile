@@ -849,6 +849,8 @@
     "video_in_progress": "Video wordt gemaakt…",
     "video_watch": "Bekijk de video",
     "video_kicker": "Video",
+    "video_sound_on": "Geluid aan",
+    "video_sound_off": "Geluid uit",
     "video_length": "5 s",
     "video_cost_used": "{{cost}} credits gebruikt",
     "video_back_to_design": "Terug naar het ontwerp",

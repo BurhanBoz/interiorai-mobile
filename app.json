@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.roomframeai.mobile",
-      "buildNumber": "81",
+      "buildNumber": "82",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -39,6 +39,11 @@
           {
             "CFBundleURLSchemes": [
               "com.googleusercontent.apps.21314937170-kkccfujdhofi8k1c20eoct10f7l9g4c2"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "roomframeai"
             ]
           }
         ],

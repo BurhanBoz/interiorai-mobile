@@ -849,6 +849,8 @@
     "video_in_progress": "Vidéo en cours…",
     "video_watch": "Voir la vidéo",
     "video_kicker": "Vidéo",
+    "video_sound_on": "Activer le son",
+    "video_sound_off": "Couper le son",
     "video_length": "5 s",
     "video_cost_used": "{{cost}} crédits utilisés",
     "video_back_to_design": "Retour à la création",

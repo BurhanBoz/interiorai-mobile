@@ -847,6 +847,8 @@
     "video_in_progress": "動画を作成中…",
     "video_watch": "動画を見る",
     "video_kicker": "動画",
+    "video_sound_on": "サウンドをオン",
+    "video_sound_off": "サウンドをオフ",
     "video_length": "5秒",
     "video_cost_used": "{{cost}}クレジット使用",
     "video_back_to_design": "デザインに戻る",

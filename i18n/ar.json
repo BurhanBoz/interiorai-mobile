@@ -847,6 +847,8 @@
     "video_in_progress": "جارٍ إنشاء الفيديو…",
     "video_watch": "شاهد الفيديو",
     "video_kicker": "فيديو",
+    "video_sound_on": "تشغيل الصوت",
+    "video_sound_off": "كتم الصوت",
     "video_length": "5 ث",
     "video_cost_used": "استُخدم {{cost}} رصيد",
     "video_back_to_design": "العودة إلى التصميم",
