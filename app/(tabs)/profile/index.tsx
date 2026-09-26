@@ -246,7 +246,9 @@ function CreditCard({
                     {balance}
                 </Text>
                 <Text style={{ ...V.rowQuiet, color: U.inkMuted, flex: 1 }} numberOfLines={2}>
-                    {isFree ? t("profile.credits_refill_line") : t("profile.credits_line")}
+                    {isFree
+                        ? t("profile.credits_refill_line", { count: balance })
+                        : t("profile.credits_line", { count: balance })}
                 </Text>
             </View>
 
