@@ -35,12 +35,26 @@ export interface StorePrice {
      */
     pricePerMonthString: string | null;
     /**
-     * Length in days of a FREE introductory offer attached to the product,
-     * null when the store reports none (or a paid intro). Read from StoreKit
-     * via RevenueCat, never assumed: the paywall promises a trial only when
-     * the store will actually deliver one at the payment sheet.
+     * A PAID introductory offer ("pay as you go"), as the store reports it —
+     * 2.0.0 sells Pro's first week at a lower price. Null when the product has
+     * none. A free trial is deliberately not represented: Roomframe does not
+     * run one (a trial caps the credits a new subscriber receives, which is how
+     * Guest 149 hit a wall minutes after buying). Whether THIS user may take
+     * the offer is a separate question, answered by introEligibility.
      */
-    introTrialDays?: number | null;
+    intro?: StoreIntro | null;
+}
+
+/** A paid introductory price, e.g. "$6.99 for 1 week". */
+export interface StoreIntro {
+    /** Formatted by Apple for the storefront, e.g. "6,99 €". */
+    priceString: string;
+    price: number;
+    /** DAY | WEEK | MONTH | YEAR */
+    periodUnit: string;
+    periodUnits: number;
+    /** How many periods run at the intro price. */
+    cycles: number;
 }
 
 /** productId → StorePrice map, as held by storePricesStore. */

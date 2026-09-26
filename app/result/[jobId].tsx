@@ -35,7 +35,6 @@ import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { SourceSheet, sourceSheetWillAsk } from "@/components/ui/SourceSheet";
 import { useAuthStore } from "@/stores/authStore";
 import { track } from "@/services/analytics";
 import { TopBar } from "@/components/layout/TopBar";
@@ -53,10 +52,11 @@ import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse, JobStatus } from "@/types/api";
 import { useReviewPrompt } from "@/hooks/useReviewPrompt";
+import { useResumeNote } from "@/hooks/useResumeNote";
+import { ResumeNote } from "@/components/ui/ResumeNote";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 import { useFirstResultPaywall } from "@/hooks/useFirstResultPaywall";
-import { useSuccessCount } from "@/hooks/useSuccessCount";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
@@ -284,73 +284,49 @@ export default function ResultDetailScreen() {
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
 
-  // Post-result prompts are rationed one per visit, in this order: the offer
-  // (1st result, below), the notification ask (2nd), the channel question
-  // (3rd), the rating (4th). Two sheets in one visit get both dismissed.
-  const successCount = useSuccessCount(outputs.length > 0);
+  // Post-result prompts: the offer (1st result, below), the notification ask
+  // (2nd), the account ask (5th, guests, when enabled) — and the rating,
+  // which is keyed to a value signal rather than a visit number.
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
-  const paywallFiredThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
-  // The rating ask waits for a value signal instead of a render count (see
-  // useReviewPrompt), which makes it the ONLY prompt here keyed to behaviour
-  // rather than to a visit number — and therefore the only one that can land
-  // on a visit another prompt already owns. Until 2026-09-16 it guarded
-  // against exactly one of them (the push ask) and collided with the rest;
-  // worst of all with the first-result paywall, because iOS refuses to
-  // present the review sheet over a modal and we recorded the ask anyway.
-  //
-  // The ladder below is the whole policy, in one place. Each entry is a visit
-  // some other prompt has already claimed:
-  const userId = useAuthStore((st) => st.user?.id ?? null);
-  const pushAskClaimed = usePushPermissionAsk(outputs.length > 0);
-  const accountAskClaimed = useAccountPrompt(outputs.length > 0);
+  useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
+  const pushAskOnScreen = usePushPermissionAsk(outputs.length > 0);
+  const accountAskOnScreen = useAccountPrompt(outputs.length > 0);
 
-  // WHO OWNS THIS VISIT
+  // THE RATING WAITS; IT DOES NOT STAND DOWN (2.0.0)
   //
-  // Only one system sheet may appear per visit; two get both dismissed. Every
-  // other prompt here has a fixed slot, and the rating — keyed to a value
-  // signal rather than a count — is the one that has to stand aside.
-  //
-  // Twice now that standing-aside was computed by GUESSING which visit the
-  // others would take, from counters. It was wrong both times: the push ask
-  // counts successes in "push_prompt_success_count" while this screen counts
-  // them in "result_success_count", and for any user who predates one of the
-  // two those numbers disagree. On 2026-09-16 the notification sheets opened,
-  // the guess said the visit was free, iOS refused the rating over them, and
-  // the attempt was recorded anyway.
-  //
-  // So nothing is inferred any more. Each prompt reports when it has actually
-  // committed to showing something, and the rating reads that at the moment
-  // it would fire.
-  const sourceSheetEligible =
-    job?.status === "COMPLETED" && !paywallFiredThisVisit && successCount >= 3;
-  // Eligible is not asking: the sheet keeps its own once-per-identity flag.
-  const [sourceSheetWillShow, setSourceSheetWillShow] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    if (!sourceSheetEligible) {
-      setSourceSheetWillShow(false);
-      return;
-    }
-    sourceSheetWillAsk(userId)
-      .then((will) => { if (!cancelled) setSourceSheetWillShow(will); })
-      .catch(() => { if (!cancelled) setSourceSheetWillShow(true); });
-    return () => { cancelled = true; };
-  }, [sourceSheetEligible, userId]);
-
-  const visitClaimed =
-    paywallFiredThisVisit   // the offer, on the first result
-    || pushAskClaimed       // notification permission — reported, not guessed
-    || accountAskClaimed    // secure your account — reported, not guessed
-    || sourceSheetWillShow; // where did you hear about us, if still unanswered
-
-  // A ref so useReviewPrompt can read the CURRENT answer inside its delay,
-  // rather than the answer that happened to be true when it was scheduled.
-  const visitClaimedRef = useRef(visitClaimed);
-  visitClaimedRef.current = visitClaimed;
-
+  // Until 1.7.1 the rating gave up whenever another prompt had "claimed" the
+  // visit, and the claims outlived the prompts. The where-did-you-hear sheet
+  // left this screen in the 19 September redesign (0243ec2) but its claim
+  // did not: its flag could never be set again, so from the third result on
+  // every visit was "claimed" and the people most likely to rate were never
+  // asked. The first-result paywall claimed the whole first visit, even after
+  // it had closed. The owner's call is that the rating must reach people, so
+  // the only question left is the one iOS actually cares about — is anything
+  // on screen RIGHT NOW that the system sheet would be refused over? — and
+  // useReviewPrompt re-asks it until the answer is no.
+  const screenFocused = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      // A paywall, the welcome screen after a purchase, a clip: while any of
+      // them is on top, this screen is not the one the user is looking at.
+      screenFocused.current = true;
+      return () => { screenFocused.current = false; };
+    }, []),
+  );
   const [valueSignal, setValueSignal] = useState(false);
-  useReviewPrompt(valueSignal, visitClaimedRef);
+  // Back from a purchase this screen started (2.0.0): the video button, or a
+  // style in the "another style" strip that ran into an empty wallet.
+  const [resumeVideo, hideResumeVideo] = useResumeNote(["RESULT_VIDEO"]);
+  const [resumeRestyle, hideResumeRestyle] = useResumeNote(["GENERATE"]);
+  // Stable, so the clip's watched-timer is not restarted by every render here.
+  const markValue = useCallback(() => setValueSignal(true), []);
+  useReviewPrompt(valueSignal, () =>
+    !screenFocused.current
+    || pushAskOnScreen      // our pre-prompt or Apple's permission alert
+    || accountAskOnScreen   // secure-your-account alert
+    || fullscreenUrl != null, // the fullscreen viewer is a Modal
+  );
 
   // How long the result actually held attention (V74). Without this the
   // only thing we could see was that 11% of people downloaded, which says
@@ -456,6 +432,7 @@ export default function ResultDetailScreen() {
   const [restyleCode, setRestyleCode] = useState<string | null>(null);
 
   const handleRestyle = async (code: string) => {
+    hideResumeRestyle();
     const style = designStyles.find((s) => s.code === code);
     if (!style || restyling || videoSubmitting) return;
     Haptics.selectionAsync();
@@ -552,12 +529,20 @@ export default function ResultDetailScreen() {
       return;
     }
     if (videoState === "progress") return;
+    hideResumeVideo();
+    // The paywall shows THIS design as the thing about to move, and after a
+    // purchase hands the user back here with a note beside this button.
+    const videoPaywall = (source: "RESULT_VIDEO" | "CREDITS_EXHAUSTED") =>
+      router.push({
+        pathname: "/paywall",
+        params: { source, afterUrl: getOutputImageUrl(job.id, currentOutput), resume: "RESULT_VIDEO" },
+      } as never);
     if (!videoFeatureEnabled) {
-      router.push("/paywall?source=RESULT_VIDEO" as never);
+      videoPaywall("RESULT_VIDEO");
       return;
     }
     if (videoCost != null && !canAfford(videoCost)) {
-      router.push({ pathname: "/paywall", params: { source: "CREDITS_EXHAUSTED" } } as never);
+      videoPaywall("CREDITS_EXHAUSTED");
       return;
     }
 
@@ -578,7 +563,7 @@ export default function ResultDetailScreen() {
     } catch (e: any) {
       // The server's own verdict on the plan wins over the client's.
       if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
-        router.push("/paywall?source=RESULT_VIDEO" as never);
+        videoPaywall("RESULT_VIDEO");
         return;
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -634,7 +619,7 @@ export default function ResultDetailScreen() {
    * job, and a before/after slider of an mp4 is not a result. Every hook
    * above has already run, so this early return is safe. */
   if (job.jobType === "VIDEO" || (currentOutput?.mimeType ?? "").startsWith("video/")) {
-    return <VideoResult job={job} />;
+    return <VideoResult job={job} onValue={markValue} />;
   }
 
   /* ── Umber result (2026-09-19) ─────────────────────────────────────
@@ -702,6 +687,11 @@ export default function ResultDetailScreen() {
             and centred — narrower than "New design" on purpose, it is an
             option, not the exit. Hidden on an upscale: the backend makes clips
             from original renders only (Kling reads the frame at its own size). */}
+        {!isAlreadyUpscaled && resumeVideo && (
+          <View style={{ marginTop: 12, marginBottom: -2 }}>
+            <ResumeNote text={t("resume.video", { cta: t("result.video_cta") })} />
+          </View>
+        )}
         {!isAlreadyUpscaled && (
           <VideoCta
             state={videoState}
@@ -720,6 +710,11 @@ export default function ResultDetailScreen() {
             two match, which is always true straight after a generation. */}
         {studioPhotoFileId != null && studioPhotoFileId === job.inputFile?.id && (
           <>
+            {resumeRestyle && (
+              <View style={{ marginTop: 16, marginBottom: -8 }}>
+                <ResumeNote text={t("resume.restyle")} />
+              </View>
+            )}
             <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 20, marginBottom: 12, gap: 12 }}>
               <Text style={{ ...theme.v2.displayS, color: U.ink, flexShrink: 1 }} numberOfLines={1}>
                 {t("result.another_style")}

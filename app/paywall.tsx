@@ -3,6 +3,7 @@ import {
     View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Image, Linking,
     Animated, Easing, AccessibilityInfo, Dimensions,
 } from "react-native";
+import { Image as ExpoImage, type ImageSource } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +11,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { theme, track as tracking } from "@/config/theme";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
@@ -26,6 +26,10 @@ import {
 } from "@/services/purchaseOutcome";
 import { track } from "@/services/analytics";
 import { planTier, tierRank } from "@/utils/planTier";
+import { planValue, creditsBuy } from "@/utils/planValue";
+import type { PlanResponse } from "@/types/api";
+import { usePostPurchaseStore } from "@/stores/postPurchaseStore";
+import { useStudioStore } from "@/stores/studioStore";
 
 const U = theme.umber;
 
@@ -97,9 +101,28 @@ const SOURCE_FIRST_RESULT = "FIRST_RESULT";
 const SOURCE_CREDITS_EXHAUSTED = "CREDITS_EXHAUSTED";
 /** Return visit of a free user who already met the first-result offer. */
 const SOURCE_APP_OPEN = "APP_OPEN";
+/** The locked "Bring it to life" button on a result (1.7.1: Base or Pro). */
+const SOURCE_RESULT_VIDEO = "RESULT_VIDEO";
+/** A Pro-only tool the user reached for: Style Transfer or Outdoor Design. */
+const PRO_TOOL_SOURCES = new Set(["RESULT_STYLE", "FEATURE_TILE"]);
 
 /** The low-commitment step, offered only to someone who has just run dry. */
 const EXHAUSTED_PACK_CODE = "CREDITS_20";
+
+/** The app's own sample room — the hero when the moment has no photo of its own. */
+const SAMPLE_BEFORE = require("@/assets/features/redesign_before.png");
+const SAMPLE_AFTER = require("@/assets/features/redesign_after.png");
+
+/** How long a pending eligibility answer may hold the Pro price back. */
+const INTRO_WAIT_MS = 1200;
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+/** What the top of the screen shows — the moment that opened it. */
+type HeroSpec =
+    | { kind: "wipe"; before: ImageSource | number; after: ImageSource | number }
+    | { kind: "photo"; image: ImageSource | number; chip: string; icon: IoniconName; moving: boolean }
+    | { kind: "pro" };
 
 export default function PaywallScreen() {
     const { t } = useTranslation();
@@ -113,9 +136,16 @@ export default function PaywallScreen() {
     const purchasePack = useCreditPacksStore((s) => s.purchase);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
     const authHeaders = useAuthHeaders();
+    const storeStatus = useStorePricesStore((s) => s.status);
+    // The photo the user was about to redesign when the wallet ran dry — the
+    // out-of-credits hero shows it, so the screen is about THEIR room.
+    const pendingPhoto = useStudioStore((s) => s.photo?.uri ?? null);
 
-    const params = useLocalSearchParams<{ source?: string; beforeUrl?: string; afterUrl?: string }>();
+    const params = useLocalSearchParams<{ source?: string; beforeUrl?: string; afterUrl?: string; resume?: string }>();
     const source = (typeof params.source === "string" && params.source ? params.source : SOURCE_ONBOARDING).toUpperCase();
+    // The task a purchase should hand back to. Usually the placement itself;
+    // the video button opens the credits placement but wants its video back.
+    const resumeKey = (typeof params.resume === "string" && params.resume ? params.resume : source).toUpperCase();
     // The user's own room, when the caller has one to show. Presigned "after"
     // URLs must travel without headers; the "before" proxy needs the token.
     const ownAfter = typeof params.afterUrl === "string" && params.afterUrl ? params.afterUrl : null;
@@ -151,39 +181,32 @@ export default function PaywallScreen() {
     // Hero reveal. Width is animated rather than a transform because the
     // "before" layer has to stay put while its window narrows — translating it
     // would slide the kitchen instead of wiping between two of them. That rules
-    // out the native driver, which is fine for one 230pt view.
-    const heroWidth = Dimensions.get("window").width;
+    // out the native driver, which is fine for one narrow view.
+    // The hero sits inside the screen's 18pt side padding.
+    const heroWidth = Dimensions.get("window").width - 36;
+    // The hero takes what the screen can spare. The rule for redesigned
+    // screens is "fits 393x852 without scrolling"; both plan rows must be in
+    // view on a 390x844 phone, so the picture gives way first: 120pt there,
+    // 180pt on a Pro Max, never below 100pt (an SE scrolls, and says so).
+    const heroHeight = Math.round(Math.min(180, Math.max(100, Dimensions.get("window").height - 724)));
     const reveal = useRef(new Animated.Value(1)).current;
     const revealWidth = reveal.interpolate({
         inputRange: [0, 1],
         outputRange: [0, heroWidth],
     });
-
+    // A slow push-in on a still — "this design, moving" — for the video hero.
+    const drift = useRef(new Animated.Value(0)).current;
+    const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
     useEffect(() => {
-        let loop: Animated.CompositeAnimation | null = null;
-        AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
-            if (reduced) {
-                // Still show both rooms — just stop moving between them.
-                reveal.setValue(0.5);
-                return;
-            }
-            const hold = (v: number, ms: number) =>
-                Animated.timing(reveal, { toValue: v, duration: ms, easing: Easing.inOut(Easing.cubic), useNativeDriver: false });
-            loop = Animated.loop(Animated.sequence([
-                Animated.delay(600),
-                hold(0.08, 1500),   // wipe to the redesigned room
-                Animated.delay(1400),
-                hold(0.95, 1500),   // and back to the original
-                Animated.delay(700),
-            ]));
-            loop.start();
-        });
-        return () => loop?.stop();
+        AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => setReduceMotion(false));
     }, []);
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
         if (source === SOURCE_CREDITS_EXHAUSTED && packs.length === 0) fetchPacks().catch(() => {});
+        // Idempotent. A boot that raced an offline window left the map empty,
+        // and this screen is the one place a missing local price costs a sale.
+        useStorePricesStore.getState().hydrate().catch(() => {});
         recordPaywallEvent("SHOWN", { source });
         // No "already seen" flag any more. It was the wrong question: a flag
         // asks "have we shown this before", and the answer we actually want is
@@ -289,29 +312,66 @@ export default function PaywallScreen() {
             outcome.current = "purchased";
             // With its evidence (timing, device state), the way a failure has it.
             await reportPurchaseSuccess({ source, planCode });
-        } else {
-            await recordPaywallEvent(event, { source, planCode });
+            // 2.0.0: the purchase no longer just closes the screen. The
+            // welcome screen says what was bought and sends the person back
+            // into the task that opened this paywall; the post-purchase store
+            // keeps every other ask quiet while they do it. Replace, not push:
+            // "back" from there must land where the paywall was opened.
+            usePostPurchaseStore.getState().begin(resumeKey, planCode ?? null);
+            router.replace({ pathname: "/plan-welcome", params: { source, plan: planCode ?? "" } } as never);
+            return;
         }
+        await recordPaywallEvent(event, { source, planCode });
         exit();
     };
 
     /**
-     * Mağazanın BİLDİRDİĞİ ücretsiz deneme — build zamanı varsayımı değil.
+     * Pro's first week at a lower price (2.0.0) — as the STORE reports it.
      *
-     * <p>🔴 Bu hesap kodda duruyordu ama hiçbir yere çizilmiyordu; ölü kod
-     * sanıp geçen tur silmiştim. Metni de zaten on dilde yazılıydı
-     * (trial_badge / trial_cta / renewal_note_trial), yani ekran bir kez
-     * tasarlanmış ve bağlanmadan kalmış. Deneme rozeti abonelik ekranında
-     * en güçlü tek argüman; gösterilmemesi sessiz bir kayıptı.
+     * <p>No free trial any more: a trial caps the credits a new subscriber gets
+     * (V72), which is exactly how Guest 149 hit a wall minutes after paying.
+     * A paid first week carries the full weekly allowance (the backend caps
+     * only period_type=TRIAL).
      *
-     * <p>Kaynağı StoreKit: App Store Connect'te introductory offer kapalıysa
-     * null döner ve rozet kendiliğinden kaybolur — burada hiçbir gün sayısı
-     * iddia edilmiyor.
+     * <p>Shown only when three things hold: the store has the offer, it is the
+     * one-week shape this copy describes, and THIS Apple ID may take it —
+     * Apple gives an introductory offer once per subscription group. Until the
+     * eligibility answer arrives the regular price is shown, never the other
+     * way round: a price we cannot honour at Apple's sheet is the one thing
+     * this screen must not display.
      */
-    const trialDays = pro?.appleProductId
-        ? storePrices[pro.appleProductId]?.introTrialDays ?? null
-        : null;
-    const trialApplies = !!trialDays && effectiveSelected === PLAN_PRO && offersPro;
+    const proWeekly = useMemo(() => plans?.find((p) => p.code === PLAN_PRO), [plans]);
+    const introOffer = (() => {
+        const intro = proWeekly?.appleProductId ? storePrices[proWeekly.appleProductId]?.intro ?? null : null;
+        if (!intro) return null;
+        const oneWeek = (intro.periodUnit === "WEEK" && intro.periodUnits === 1)
+            || (intro.periodUnit === "DAY" && intro.periodUnits === 7);
+        return oneWeek && intro.cycles === 1 ? intro : null;
+    })();
+    const [introEligible, setIntroEligible] = useState<boolean | null>(null);
+    const [introWaitOver, setIntroWaitOver] = useState(false);
+    useEffect(() => {
+        const productId = proWeekly?.appleProductId;
+        if (!introOffer || !productId || subscribed) {
+            setIntroEligible(false);
+            return;
+        }
+        let cancelled = false;
+        // The Pro price waits for the answer — briefly. Showing the regular
+        // price and then swapping in a lower one reads as a glitch; waiting
+        // forever reads as a broken screen. After the wait the regular price
+        // stands, and a late "eligible" still upgrades it (StoreKit applies
+        // the offer at the sheet either way, so under-promising is safe).
+        const timer = setTimeout(() => { if (!cancelled) setIntroWaitOver(true); }, INTRO_WAIT_MS);
+        iap.fetchIntroEligibility([productId])
+            .then((m) => { if (!cancelled) setIntroEligible(m[productId] === true); })
+            .catch(() => { if (!cancelled) setIntroEligible(false); });
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [introOffer?.priceString, proWeekly?.appleProductId, subscribed]);
+    const introShown = !!introOffer && introEligible === true && billing === "weekly" && offersPro;
+    const introApplies = introShown && effectiveSelected === PLAN_PRO;
+    const introPending = !!introOffer && introEligible === null && !introWaitOver
+        && !subscribed && billing === "weekly" && offersPro;
 
     const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
         ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
@@ -405,146 +465,329 @@ export default function PaywallScreen() {
     };
 
     /**
-     * Umber paywall (2026-09-19).
+     * Umber paywall, 2.0.0.
      *
-     * <p><b>What it stopped saying.</b> The old screen led with a benefits
-     * list, badged Base "MOST POPULAR" and Pro "BEST VALUE" — two superlatives
-     * that cancel each other — and gave both rows the same "Confirm &
-     * Subscribe", so the choice carried no consequence. Its benefit list had
-     * also drifted from the database twice.
+     * <p><b>What changed from 19 September.</b> That screen made one claim —
+     * the two Pro-only tools — and printed no credit counts on purpose:
+     * "credits are the unit the user has no feel for". The fix is to translate
+     * them, not hide them. Every row now says what its allowance buys
+     * ("100 credits a week · ≈ 20 designs or 6 videos"), computed from the
+     * plan the server sends, so a price change there can never leave a stale
+     * promise here. The two Pro photographs stay where someone reached for a
+     * Pro tool; everywhere else the top of the screen is the moment that
+     * opened it — their first result, the room they were about to redesign,
+     * the design they wanted to bring to life.
      *
-     * <p>It now makes one claim and shows it: Style Transfer and Outdoor
-     * Design are the only two capabilities a paid plan unlocks
-     * (plan_features, verified in prod), so they are the headline and the
-     * photographs are the description.
+     * <p><b>Apple 3.1.2.</b> Renewal terms are on screen whenever a
+     * subscription can be bought — price, period, auto-renewal, how to cancel —
+     * not only under a trial. Restore is a labelled control (it used to hide
+     * behind a footnote that never said "restore"), and Terms and Privacy are
+     * links; both URLs were defined in this file and never rendered.
      *
-     * <p><b>Deliberately absent:</b> any paragraph about credit counts,
-     * roll-over or weekly allowances. Credits are the unit the user has no
-     * feel for; the two locked capabilities are the only concrete claim
-     * available.
-     *
-     * <p>🔴 The purchase path below this line is unchanged — handleContinue,
-     * handlePack, handleRestore, the telemetry and the outcome classifier are
-     * all the code that was already running. Only the presentation moved.
+     * <p>🔴 The purchase path — handleContinue, handlePack, handleRestore, the
+     * telemetry and the outcome classifier — is the code that was already
+     * running. What happens after a successful purchase (the welcome screen)
+     * and what the screen shows are what changed.
      */
-    const proPrice = priceOf(pro);
-    const basePrice = priceOf(base);
+    const pricesLoading = !plans || storeStatus === "idle" || storeStatus === "loading";
+    const proPrice = pricesLoading ? null : priceOf(pro);
+    const basePrice = pricesLoading ? null : priceOf(base);
     const selectedIsPro = effectiveSelected === PLAN_PRO;
+    const periodLabel = t(billing === "annual" ? "paywall.per_year" : "paywall.per_week");
+
+    /** A price as a number, and whether it came from the store (same currency) or the backend (USD). */
+    const numericPrice = (plan?: PlanResponse) => {
+        if (!plan) return null;
+        const sp = plan.appleProductId ? storePrices[plan.appleProductId] : undefined;
+        if (sp && sp.price > 0) return { value: sp.price, store: true };
+        return plan.priceCents > 0 ? { value: plan.priceCents / 100, store: false } : null;
+    };
+
+    /**
+     * What a year costs against 52 weeks of the same tier, from the prices this
+     * storefront actually charges. The label used to say "−30%" for both
+     * tiers; the real figures were 49% (Pro) and 61% (Base). Rounded down, and
+     * never computed across two currencies.
+     */
+    const annualSaving = (() => {
+        // The tier whose year this toggle would actually sell: the selected
+        // one — or Pro for anyone already on Pro, for whom Base is not for
+        // sale (a Pro subscriber was shown Base's 61% on the simulator).
+        const pro = selectedIsPro || tierRank(currentCode) >= tierRank(PLAN_PRO);
+        const weekly = numericPrice(plans?.find((p) => p.code === (pro ? PLAN_PRO : PLAN_BASE)));
+        const annual = numericPrice(plans?.find((p) => p.code === (pro ? PLAN_PRO_ANNUAL : PLAN_BASE_ANNUAL)));
+        if (!weekly || !annual || weekly.store !== annual.store) return null;
+        const pct = Math.floor((1 - annual.value / (52 * weekly.value)) * 100);
+        return pct >= 5 ? pct : null;
+    })();
+
+    /** "First week −22%": the offer against this storefront's own weekly price. */
+    const introPct = (() => {
+        if (!introOffer || !proWeekly?.appleProductId) return null;
+        const regular = storePrices[proWeekly.appleProductId]?.price;
+        if (!regular || !(introOffer.price > 0)) return null;
+        const pct = Math.floor((1 - introOffer.price / regular) * 100);
+        return pct >= 5 ? pct : null;
+    })();
+
+    /** "≈ 20 designs or 6 videos" for one plan, or null when the server gave no rules to count with. */
+    const valueLine = (plan?: PlanResponse) => {
+        const v = planValue(plan);
+        if (!v || v.designs == null) return null;
+        const designs = t("paywall.n_designs", { count: v.designs });
+        const key = v.period === "week" ? "week" : "month";
+        return v.videos != null && v.videos > 0
+            ? t(`paywall.value_${key}`, { credits: v.credits, designs, videos: t("paywall.n_videos", { count: v.videos }) })
+            : t(`paywall.value_${key}_designs`, { credits: v.credits, designs });
+    };
+
+    /**
+     * What the plan switches on. Each rung names only what the rung below it
+     * does not have — Base against Free, Pro against Base with a "+" — so the
+     * two rows read as a ladder and each fits on one line.
+     */
+    const featuresOf = (plan?: PlanResponse): string[] => {
+        const v = planValue(plan);
+        if (!plan || !v) return [];
+        const items: string[] = [];
+        if (v.hasStyleTransfer) items.push(t("studio.mode_style_transfer"));
+        if (v.hasOutdoor) items.push(t("studio.mode_outdoor"));
+        if (v.hasVideo) items.push(t("paywall.feature_video"));
+        if (!plan.watermark) items.push(t("paywall.feature_no_watermark"));
+        return items;
+    };
+    const extrasLine = (plan?: PlanResponse, below?: PlanResponse) => {
+        const own = featuresOf(plan);
+        if (!below) return own.length ? own.join(" · ") : null;
+        const lower = new Set(featuresOf(below));
+        const extra = own.filter((x) => !lower.has(x));
+        return extra.length ? `+ ${extra.join(" · ")}` : null;
+    };
+
+    // ── The moment that opened the screen ────────────────────────────
+    const hero: HeroSpec = (() => {
+        if (PRO_TOOL_SOURCES.has(source)) return { kind: "pro" };
+        if (source === SOURCE_FIRST_RESULT && ownAfter) {
+            return ownBefore
+                ? { kind: "wipe", before: { uri: ownBefore, headers: authHeaders }, after: { uri: ownAfter } }
+                : { kind: "photo", image: { uri: ownAfter }, chip: t("result.after"), icon: "sparkles-outline", moving: false };
+        }
+        if (source === SOURCE_RESULT_VIDEO || (source === SOURCE_CREDITS_EXHAUSTED && ownAfter)) {
+            return {
+                kind: "photo", image: ownAfter ? { uri: ownAfter } : SAMPLE_AFTER,
+                chip: t("paywall.chip_video"), icon: "videocam", moving: true,
+            };
+        }
+        if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
+            return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline", moving: false };
+        }
+        if (subscribed) return { kind: "pro" };
+        return { kind: "wipe", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+    })();
+
+    const headline: { title: string; sub: string | null } = (() => {
+        if (subscribed) {
+            return {
+                title: source === SOURCE_CREDITS_EXHAUSTED
+                    ? t("paywall.title_out_of_credits")
+                    : t("paywall.current_plan_title", { plan: subscription?.planName ?? "" }),
+                sub: reloadNote,
+            };
+        }
+        if (PRO_TOOL_SOURCES.has(source)) return { title: t("paywall.two_things_headline"), sub: t("paywall.pro_tools_sub") };
+        if (source === SOURCE_FIRST_RESULT) return { title: t("paywall.hero_first_title"), sub: t("paywall.hero_first_sub") };
+        if (source === SOURCE_RESULT_VIDEO) return { title: t("paywall.hero_video_title"), sub: t("paywall.hero_video_sub") };
+        if (source === SOURCE_CREDITS_EXHAUSTED) {
+            return hero.kind === "photo" && !ownAfter
+                ? { title: t("paywall.hero_room_title"), sub: t("paywall.hero_room_sub") }
+                : { title: t("paywall.title_out_of_credits"), sub: t("paywall.hero_exhausted_sub") };
+        }
+        return { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
+    })();
+
+    const wantsWipe = hero.kind === "wipe";
+    const wantsDrift = hero.kind === "photo" && hero.moving;
+    useEffect(() => {
+        if (reduceMotion === null) return;
+        if (!wantsWipe) return;
+        if (reduceMotion) {
+            // Still show both rooms — just stop moving between them.
+            reveal.setValue(0.5);
+            return;
+        }
+        const hold = (v: number, ms: number) =>
+            Animated.timing(reveal, { toValue: v, duration: ms, easing: Easing.inOut(Easing.cubic), useNativeDriver: false });
+        const loop = Animated.loop(Animated.sequence([
+            Animated.delay(600),
+            hold(0.08, 1500),   // wipe to the redesigned room
+            Animated.delay(1400),
+            hold(0.95, 1500),   // and back to the original
+            Animated.delay(700),
+        ]));
+        loop.start();
+        return () => loop.stop();
+    }, [wantsWipe, reduceMotion]);
+    useEffect(() => {
+        if (!wantsDrift || reduceMotion !== false) return;
+        const loop = Animated.loop(Animated.sequence([
+            Animated.timing(drift, { toValue: 1, duration: 6000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+            Animated.timing(drift, { toValue: 0, duration: 6000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]));
+        loop.start();
+        return () => loop.stop();
+    }, [wantsDrift, reduceMotion]);
+
+    // ── Money lines ──────────────────────────────────────────────────
+    const chosenPrice = !chosen || pricesLoading
+        ? null
+        : introApplies ? introOffer!.priceString : priceOf(chosen);
+    const renewal = (() => {
+        if (!anythingToBuy || !chosen || pricesLoading || introPending) return null;
+        if (introApplies) return t("paywall.renewal_intro_week", { intro: introOffer!.priceString, price: priceOf(chosen) });
+        return t(billing === "annual" ? "paywall.renewal_year" : "paywall.renewal_week", { price: priceOf(chosen) });
+    })();
+
+    const packDesigns = exhaustedPack ? creditsBuy(proWeekly, exhaustedPack.credits).designs : null;
+    const ctaLabel = anythingToBuy
+        ? (selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base"))
+        : t("profile.buy_credits");
+
+    const rowA11y = (tier: string, price: string | null, period: string, value: string | null, extra?: string | null) =>
+        [tier, value, extra, price ? `${price}${period}` : null].filter(Boolean).join(", ");
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
-            <View style={{ flex: 1, paddingHorizontal: 18 }}>
-                {/* Kapatma sağ üstte, bir çarpı. Sol üstteki geri oku yanlış
-                    şeyi söylüyordu: bu ekran bir yığın adımı değil, üstüne
-                    açılan bir teklif — ve açılış kapısı olarak geldiğinde
-                    arkasında dönülecek bir ekran yok. Çarpı ikisinde de doğru. */}
-                <View style={{ paddingTop: 8, paddingBottom: 10, flexDirection: "row", justifyContent: "flex-end" }}>
-                    <Pressable
-                        onPress={() => leave("DISMISSED")}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("common.close")}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        style={{
-                            width: 34, height: 34, borderRadius: 17,
-                            backgroundColor: U.lineNeutral,
-                            alignItems: "center", justifyContent: "center",
-                        }}
-                    >
-                        <Ionicons name="close" size={19} color={U.ink} />
-                    </Pressable>
-                </View>
+            {/* Kapatma sağ üstte, bir çarpı. Bu ekran bir yığın adımı değil,
+                üstüne açılan bir teklif — ve açılış kapısı olarak geldiğinde
+                arkasında dönülecek bir ekran yok. Çarpı ikisinde de doğru. */}
+            <View style={{
+                paddingHorizontal: 18, paddingTop: 8, paddingBottom: 6,
+                flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+            }}>
+                <Text style={{ ...theme.v2.brand, color: U.inkMuted }} accessibilityElementsHidden importantForAccessibility="no">
+                    Roomframe
+                </Text>
+                <Pressable
+                    onPress={() => leave("DISMISSED")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("common.close")}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={{
+                        width: 34, height: 34, borderRadius: 17,
+                        backgroundColor: U.lineNeutral,
+                        alignItems: "center", justifyContent: "center",
+                    }}
+                >
+                    <Ionicons name="close" size={19} color={U.ink} />
+                </Pressable>
+            </View>
 
-                {/* Başlık: ödemeyen için iddia, abone için konum.
-                    Ödeyen birine "Yalnızca Pro'nun yapabildiği iki şey"
-                    demenin anlamı yok — o iki şey zaten onda. */}
-                {subscribed ? (
-                    <>
-                        <Text style={{ ...theme.v2.displayL, color: U.ink }}>
-                            {source === SOURCE_CREDITS_EXHAUSTED
-                                ? t("paywall.title_out_of_credits")
-                                : t("paywall.current_plan_title", { plan: subscription?.planName ?? "" })}
-                        </Text>
-                        {reloadNote && (
-                            <Text style={{ ...theme.v2.body, color: U.inkMuted, marginTop: 8, marginBottom: 18 }}>
-                                {reloadNote}
-                            </Text>
-                        )}
-                    </>
-                ) : (
-                    <Text style={{ ...theme.v2.displayL, color: U.ink, marginBottom: 18 }}>
-                        {t("paywall.two_things_headline")}
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 14 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <Text style={{ ...theme.v2.displayL, color: U.ink }} accessibilityRole="header">
+                    {headline.title}
+                </Text>
+                {headline.sub ? (
+                    <Text style={{ ...theme.v2.body, color: U.inkMuted, marginTop: 8 }}>
+                        {headline.sub}
                     </Text>
-                )}
+                ) : null}
 
-                {/* İki yetenek her iki hâlde de burada. Ödemeyene iddia,
-                    ödeyene ne için ödediğinin karşılığı — altındaki satırda
-                    "MEVCUT PLAN" yazdığı için satış gibi okunmuyor. Aboneye
-                    göstermemek, ekranın üst yarısını bomboş bırakıyordu. */}
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                    <ProCard
-                        image={require("@/assets/features/style_after.png")}
-                        label={t("studio.mode_style_transfer")}
-                    />
-                    <ProCard
-                        // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
-                        // "asset missing" pattern, not a photograph, and it was
-                        // being used as half the argument for a paid plan.
-                        image={require("@/assets/features/outdoor_after.png")}
-                        label={t("studio.mode_outdoor")}
-                    />
+                <View style={{ marginTop: 16 }}>
+                    {hero.kind === "pro" ? (
+                        <View style={{ flexDirection: "row", gap: 10 }}>
+                            <ProCard
+                                image={require("@/assets/features/style_after.png")}
+                                label={t("studio.mode_style_transfer")}
+                                height={heroHeight - 30}
+                            />
+                            <ProCard
+                                // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
+                                // "asset missing" pattern, not a photograph.
+                                image={require("@/assets/features/outdoor_after.png")}
+                                label={t("studio.mode_outdoor")}
+                                height={heroHeight - 30}
+                            />
+                        </View>
+                    ) : hero.kind === "wipe" ? (
+                        <WipeHero
+                            before={hero.before}
+                            after={hero.after}
+                            width={heroWidth}
+                            height={heroHeight}
+                            revealWidth={revealWidth}
+                            beforeLabel={t("result.before")}
+                            afterLabel={t("result.after")}
+                        />
+                    ) : (
+                        <PhotoHero
+                            image={hero.image}
+                            chip={hero.chip}
+                            icon={hero.icon}
+                            height={heroHeight}
+                            drift={hero.moving ? drift : null}
+                        />
+                    )}
                 </View>
 
                 <BillingSegment
                     annual={billing === "annual"}
                     onChange={setBilling}
-                    t={t}
+                    weeklyLabel={t("paywall.weekly")}
+                    annualLabel={annualSaving != null ? t("paywall.annual_save", { pct: annualSaving }) : t("paywall.annual")}
                 />
 
                 {/* Merdivenin tamamı, her zaman, fiyatlarıyla. */}
-                <View style={{ gap: 10, marginTop: 18 }}>
+                <View style={{ gap: 10, marginTop: 14 }}>
                     <UmberPlanRow
                         tier="PRO"
-                        sub={t("paywall.pro_sub")}
-                        price={proPrice}
-                        period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                        value={valueLine(pro)}
+                        extras={extrasLine(pro, base)}
+                        price={introPending ? null : introShown ? introOffer!.priceString : proPrice}
+                        period={introShown ? t("paywall.first_week") : periodLabel}
+                        then={introShown && proPrice ? t("paywall.then_price_week", { price: proPrice }) : null}
+                        badge={introShown ? (introPct != null ? t("paywall.intro_badge", { pct: introPct }) : t("paywall.intro_badge_plain")) : null}
                         selected={offersPro && selectedIsPro}
                         current={currentCode === proCode}
                         locked={!offersPro}
                         currentLabel={t("plans.current_plan")}
-                        trialLabel={
-                            trialDays && offersPro
-                                ? t("paywall.trial_badge", { days: trialDays })
-                                : null
-                        }
+                        a11yLabel={rowA11y("Pro", introShown ? introOffer!.priceString : proPrice, introShown ? ` ${t("paywall.first_week")}` : periodLabel, valueLine(pro), extrasLine(pro, base))}
                         onPress={() => {
                             if (!offersPro) return;
+                            touchedAPlan.current = true;
                             setSelected(PLAN_PRO);
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
                         }}
                     />
                     <UmberPlanRow
                         tier="BASE"
-                        sub={t("paywall.base_sub")}
+                        value={valueLine(base)}
+                        extras={extrasLine(base)}
                         price={basePrice}
-                        period={t(billing === "annual" ? "paywall.per_year" : "paywall.per_week")}
+                        period={periodLabel}
+                        then={null}
+                        badge={null}
                         selected={offersBase && !selectedIsPro}
                         current={currentCode === baseCode}
                         locked={!offersBase}
                         currentLabel={t("plans.current_plan")}
-                        trialLabel={null}
+                        a11yLabel={rowA11y("Base", basePrice, periodLabel, valueLine(base), extrasLine(base))}
                         onPress={() => {
                             if (!offersBase) return;
+                            touchedAPlan.current = true;
                             setSelected(PLAN_BASE);
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
                         }}
                     />
                 </View>
 
-                <View style={{ flex: 1 }} />
-
                 {/* The out-of-credits placement keeps its low-commitment step:
                     someone who has just run dry is the one person for whom a
-                    one-off pack is the right size of decision. */}
+                    one-off pack is the right size of decision. It says what the
+                    pack buys, at the prices a pack switches on. */}
                 {exhaustedPack && (
                     <Pressable
                         onPress={handlePack}
@@ -553,92 +796,100 @@ export default function PaywallScreen() {
                         style={{
                             borderWidth: 1, borderColor: U.lineNeutral,
                             borderRadius: 13, paddingVertical: 12, paddingHorizontal: 14,
-                            marginBottom: 10, flexDirection: "row",
+                            marginTop: 10, flexDirection: "row", gap: 12,
                             alignItems: "center", justifyContent: "space-between",
                         }}
                     >
-                        <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted }}>
-                            {t("paywall.pack_line", { credits: exhaustedPack.credits })}
+                        <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
+                            {packDesigns
+                                ? t("paywall.pack_line_designs", {
+                                    credits: exhaustedPack.credits,
+                                    designs: t("paywall.n_designs", { count: packDesigns }),
+                                })
+                                : t("paywall.pack_line", { credits: exhaustedPack.credits })}
                         </Text>
                         <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
                             {priceOfPack(exhaustedPack)}
                         </Text>
                     </Pressable>
                 )}
+            </ScrollView>
 
+            {/* Always in view: the button, what it will charge, and the three
+                things Apple and a doubtful buyer both look for. */}
+            <View style={{ paddingHorizontal: 18, paddingTop: 10, borderTopWidth: 1, borderTopColor: U.lineNeutral }}>
                 {/* Satın alınacak bir şey varsa abonelik düğmesi; yoksa —
                     yani zaten en üstteyse — dürüst olan tek kapı kredi paketi.
                     Abonelik düğmesini orada bırakmak, kullanıcıyı Apple'ın
                     "bu abonelikte zaten varsınız" uyarısına göndermekti. */}
-                {anythingToBuy ? (
-                    <Pressable
-                        onPress={handleContinue}
-                        disabled={busy || !chosen}
-                        accessibilityRole="button"
-                        style={{
-                            height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
-                            opacity: busy || !chosen ? 0.5 : 1,
-                            flexDirection: "row", alignItems: "center",
-                            justifyContent: "space-between", paddingHorizontal: 22,
-                        }}
-                    >
-                        {busy ? (
+                <Pressable
+                    onPress={anythingToBuy ? handleContinue : () => router.replace("/credits/packs" as never)}
+                    disabled={anythingToBuy ? busy || !chosen : false}
+                    accessibilityRole="button"
+                    accessibilityLabel={chosenPrice && anythingToBuy ? `${ctaLabel}, ${chosenPrice}` : ctaLabel}
+                    accessibilityState={{ disabled: anythingToBuy ? busy || !chosen : false, busy }}
+                    style={{
+                        height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                        opacity: anythingToBuy && (busy || !chosen) ? 0.5 : 1,
+                        flexDirection: "row", alignItems: "center",
+                        justifyContent: "space-between", paddingHorizontal: 22,
+                    }}
+                >
+                    {busy ? (
+                        <View style={{ flex: 1, alignItems: "center" }}>
                             <ActivityIndicator color={U.buttonInk} />
-                        ) : (
-                            <>
-                                <Text style={{ ...theme.v2.button, color: U.buttonInk }} numberOfLines={1}>
-                                    {trialApplies
-                                        ? t("paywall.trial_cta", { days: trialDays, price: proPrice })
-                                        : selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base")}
-                                </Text>
+                        </View>
+                    ) : (
+                        <>
+                            <Text style={{ ...theme.v2.button, color: U.buttonInk, flexShrink: 1 }} numberOfLines={1} adjustsFontSizeToFit>
+                                {ctaLabel}
+                            </Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                {anythingToBuy && chosenPrice && !introPending ? (
+                                    <Text style={{ fontFamily: "NotoSerif", fontSize: 18, color: U.buttonInk }}>
+                                        {chosenPrice}
+                                    </Text>
+                                ) : null}
                                 <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-                            </>
-                        )}
-                    </Pressable>
-                ) : (
-                    <Pressable
-                        onPress={() => router.replace("/credits/packs" as never)}
-                        accessibilityRole="button"
-                        style={{
-                            height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
-                            flexDirection: "row", alignItems: "center",
-                            justifyContent: "space-between", paddingHorizontal: 22,
-                        }}
-                    >
-                        <Text style={{ ...theme.v2.button, color: U.buttonInk }}>
-                            {t("profile.buy_credits")}
-                        </Text>
-                        <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-                    </Pressable>
-                )}
-
-                {/* 🔴 Denemeli satın almada yenileme koşulları Apple'ın
-                    zorunlu tuttuğu bilgidir (App Store 3.1.2): kaç gün
-                    ücretsiz, sonra ne kadar, hangi sıklıkta ve nasıl iptal
-                    edilir. Rozeti gösterip bunu göstermemek reddedilme
-                    sebebi. */}
-                {trialApplies && (
-                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 10, textAlign: "center" }}>
-                        {t("paywall.renewal_note_trial", { days: trialDays })}
-                    </Text>
-                )}
-
-                {/* Geri yükleme her zaman duruyor: aboneliği cihazda
-                    görünmeyen kullanıcı tam da buraya düşer. */}
-                <Pressable onPress={handleRestore} disabled={busy} hitSlop={8} accessibilityRole="button">
-                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 12, marginBottom: 4 }}>
-                        {t("paywall.footnote")}
-                    </Text>
+                            </View>
+                        </>
+                    )}
                 </Pressable>
+
+                {/* 🔴 App Store 3.1.2: what is charged, how often, that it
+                    renews, and how to stop it — next to the button, every time
+                    a subscription can be bought. With the first-week offer the
+                    regular price is spelled out in the same sentence. */}
+                {renewal ? (
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 9, textAlign: "center" }}>
+                        {renewal}
+                    </Text>
+                ) : null}
+
+                <View style={{
+                    flexDirection: "row", justifyContent: "center", alignItems: "center",
+                    gap: 6, marginTop: 6, marginBottom: 4,
+                }}>
+                    <FooterLink label={t("paywall.restore_link")} onPress={handleRestore} disabled={busy} role="button" />
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>·</Text>
+                    <FooterLink label={t("paywall.terms")} onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} role="link" />
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>·</Text>
+                    <FooterLink label={t("paywall.privacy")} onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})} role="link" />
+                </View>
             </View>
         </SafeAreaView>
     );
 }
 
 /** A locked capability, shown rather than described. */
-function ProCard({ image, label }: { image: number; label: string }) {
+function ProCard({ image, label, height }: { image: number; label: string; height: number }) {
     return (
-        <View style={{ flex: 1, height: 136, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}>
+        <View
+            style={{ flex: 1, height, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={label}
+        >
             <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
             <LinearGradient
                 colors={["transparent", "rgba(0,0,0,0.9)"]}
@@ -652,13 +903,104 @@ function ProCard({ image, label }: { image: number; label: string }) {
     );
 }
 
-function BillingSegment({
-    annual, onChange, t,
-}: { annual: boolean; onChange: (v: "weekly" | "annual") => void; t: (k: string) => string }) {
+/** A pill over a photograph: its own dark fill, whatever the photo. */
+function PhotoChip({ label, icon }: { label: string; icon?: IoniconName }) {
+    const { i18n } = useTranslation();
+    return (
+        <View style={{
+            flexDirection: "row", alignItems: "center", gap: 5,
+            paddingHorizontal: 9, paddingVertical: 4, borderRadius: 100,
+            backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+        }}>
+            {icon ? <Ionicons name={icon} size={12} color="#fff" /> : null}
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10.5, letterSpacing: tracking(0.8), color: "#fff" }}>
+                {label.toLocaleUpperCase(i18n.language)}
+            </Text>
+        </View>
+    );
+}
+
+/**
+ * Before and after, wiping between the two — the user's own first result when
+ * there is one, the sample room otherwise. The "before" window narrows over
+ * the "after" photo; its image keeps full width so nothing slides.
+ */
+function WipeHero({
+    before, after, width, height, revealWidth, beforeLabel, afterLabel,
+}: {
+    before: ImageSource | number; after: ImageSource | number;
+    width: number; height: number;
+    revealWidth: Animated.AnimatedInterpolation<number>;
+    beforeLabel: string; afterLabel: string;
+}) {
     return (
         <View
+            style={{ height, borderRadius: 18, overflow: "hidden", backgroundColor: U.surface }}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={`${beforeLabel} / ${afterLabel}`}
+        >
+            <ExpoImage source={after} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
+            <Animated.View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: revealWidth, overflow: "hidden" }}>
+                <ExpoImage source={before} style={{ width, height }} contentFit="cover" transition={200} />
+            </Animated.View>
+            <Animated.View
+                style={{
+                    position: "absolute", top: 0, bottom: 0, width: 2, marginLeft: -1,
+                    left: revealWidth, backgroundColor: U.accentBright,
+                }}
+            />
+            <View style={{ position: "absolute", top: 10, left: 10 }}>
+                <PhotoChip label={beforeLabel} />
+            </View>
+            <View style={{ position: "absolute", top: 10, right: 10 }}>
+                <PhotoChip label={afterLabel} />
+            </View>
+        </View>
+    );
+}
+
+/** One photograph with a label — the room waiting for credits, or the design about to move. */
+function PhotoHero({
+    image, chip, icon, height, drift,
+}: {
+    image: ImageSource | number; chip: string; icon: IoniconName; height: number;
+    drift: Animated.Value | null;
+}) {
+    const transform = drift
+        ? [
+            { scale: drift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
+            { translateX: drift.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) },
+        ]
+        : undefined;
+    return (
+        <View
+            style={{ height, borderRadius: 18, overflow: "hidden", backgroundColor: U.surface }}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={chip}
+        >
+            <Animated.View style={{ width: "100%", height: "100%", transform }}>
+                <ExpoImage source={image} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
+            </Animated.View>
+            <View style={{ position: "absolute", left: 10, bottom: 10 }}>
+                <PhotoChip label={chip} icon={icon} />
+            </View>
+        </View>
+    );
+}
+
+function BillingSegment({
+    annual, onChange, weeklyLabel, annualLabel,
+}: {
+    annual: boolean; onChange: (v: "weekly" | "annual") => void;
+    weeklyLabel: string; annualLabel: string;
+}) {
+    return (
+        <View
+            accessibilityRole="radiogroup"
             style={{
-                marginTop: 22, flexDirection: "row", borderRadius: 100,
+                marginTop: 16, flexDirection: "row", borderRadius: 100,
                 borderWidth: 1, borderColor: U.lineNeutral, padding: 4,
             }}
         >
@@ -676,13 +1018,54 @@ function BillingSegment({
                             backgroundColor: active ? U.lineAccent : "transparent",
                         }}
                     >
-                        <Text style={{ ...theme.v2.tier, color: active ? U.accentBright : U.inkMuted }}>
-                            {t(key === "annual" ? "paywall.annual_minus_30" : "paywall.weekly")}
+                        <Text
+                            style={{ ...theme.v2.tier, color: active ? U.accentBright : U.inkMuted }}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                        >
+                            {key === "annual" ? annualLabel : weeklyLabel}
                         </Text>
                     </Pressable>
                 );
             })}
         </View>
+    );
+}
+
+/** Restore, Terms, Privacy — small, but real tap targets. */
+function FooterLink({
+    label, onPress, disabled, role,
+}: { label: string; onPress: () => void; disabled?: boolean; role: "button" | "link" }) {
+    return (
+        <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            accessibilityRole={role}
+            hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+            style={{ minHeight: 28, justifyContent: "center" }}
+        >
+            <Text style={{ ...theme.v2.caption, color: U.inkMuted, textDecorationLine: "underline" }}>
+                {label}
+            </Text>
+        </Pressable>
+    );
+}
+
+/** A price that has not arrived yet: a quiet bar, never a wrong number. */
+function PriceSkeleton() {
+    const pulse = useRef(new Animated.Value(0.35)).current;
+    useEffect(() => {
+        const loop = Animated.loop(Animated.sequence([
+            Animated.timing(pulse, { toValue: 0.7, duration: 650, useNativeDriver: true }),
+            Animated.timing(pulse, { toValue: 0.35, duration: 650, useNativeDriver: true }),
+        ]));
+        loop.start();
+        return () => loop.stop();
+    }, []);
+    return (
+        <Animated.View
+            style={{ width: 66, height: 24, borderRadius: 6, backgroundColor: U.lineAccent, opacity: pulse, marginBottom: 4 }}
+        />
     );
 }
 
@@ -694,28 +1077,43 @@ function BillingSegment({
  * basamağın ne kadar olduğunu görebilmeli; satın alma hakkının olmaması bunu
  * gizlemek için gerekçe değil. Üstünde bulunulan basamak ayrıca etiketli,
  * yoksa sönük satır "tükendi" gibi okunur.
+ *
+ * <p>2.0.0: the row carries what the allowance buys and what the plan
+ * switches on; with the first-week offer the price column reads
+ * "$6.99 · first week · then $8.99/week" — the regular price never leaves
+ * the row the offer is on.
  */
 function UmberPlanRow({
-    tier, sub, price, period, selected, current, locked, currentLabel, trialLabel, onPress,
+    tier, value, extras, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
 }: {
-    tier: "PRO" | "BASE"; sub: string; price: string; period: string;
+    tier: "PRO" | "BASE";
+    value: string | null; extras: string | null;
+    /** Null while the store price is on its way — drawn as a skeleton. */
+    price: string | null; period: string;
+    /** "then $8.99/week" under an introductory price; null otherwise. */
+    then: string | null;
+    /** The first-week offer, when the store has it AND this Apple ID may take it. */
+    badge: string | null;
     selected: boolean; current: boolean; locked: boolean;
-    currentLabel: string;
-    /** Mağazanın bildirdiği ücretsiz deneme; yoksa null ve rozet çizilmez. */
-    trialLabel: string | null;
+    currentLabel: string; a11yLabel: string;
     onPress: () => void;
 }) {
+    const isPro = tier === "PRO";
+    // Locale-aware: Turkish "i" is "İ" in capitals, not "I".
+    const { i18n } = useTranslation();
+    const upper = (s: string) => s.toLocaleUpperCase(i18n.language);
     return (
         <Pressable
             onPress={onPress}
             disabled={locked}
             accessibilityRole="radio"
+            accessibilityLabel={a11yLabel}
             accessibilityState={{ selected, disabled: locked }}
             style={{
-                borderRadius: 18, paddingVertical: 15, paddingHorizontal: 16,
+                borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16,
                 borderWidth: selected || current ? 1.5 : 1,
                 borderColor: selected ? U.accent : current ? U.accentBright : U.lineNeutral,
-                backgroundColor: tier === "PRO" ? U.surface : "transparent",
+                backgroundColor: isPro ? U.surface : "transparent",
                 flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                 gap: 12,
                 // Üstünde olunan plan sönmez — o bir bilgi, bir kısıt değil.
@@ -723,8 +1121,15 @@ function UmberPlanRow({
             }}
         >
             <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Text style={{ ...theme.v2.tier, color: tier === "PRO" ? U.accentBright : U.inkMuted }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <View style={{
+                        width: 16, height: 16, borderRadius: 8, borderWidth: 1.5,
+                        borderColor: selected ? U.accent : U.lineNeutral,
+                        alignItems: "center", justifyContent: "center",
+                    }}>
+                        {selected ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: U.accent }} /> : null}
+                    </View>
+                    <Text style={{ ...theme.v2.tier, color: isPro ? U.accentBright : U.inkMuted }}>
                         {tier}
                     </Text>
                     {current ? (
@@ -733,30 +1138,43 @@ function UmberPlanRow({
                             backgroundColor: U.lineAccent, borderWidth: 1, borderColor: U.accent,
                         }}>
                             <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.accentBright }}>
-                                {currentLabel.toUpperCase()}
+                                {upper(currentLabel)}
                             </Text>
                         </View>
-                    ) : trialLabel ? (
+                    ) : badge ? (
                         // Dolu rozet: bu satırdaki en güçlü tek argüman ve
-                        // "mevcut plan" ile aynı anda asla görünmez — zaten
-                        // üstünde olunan plan için deneme diye bir şey yok.
+                        // "mevcut plan" ile aynı anda asla görünmez.
                         <View style={{
                             paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: 100,
                             backgroundColor: U.accent,
                         }}>
                             <Text style={{ fontFamily: "Inter-Bold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.buttonInk }}>
-                                {trialLabel}
+                                {upper(badge)}
                             </Text>
                         </View>
                     ) : null}
                 </View>
-                <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 3 }} numberOfLines={2}>
-                    {sub}
-                </Text>
+                {value ? (
+                    <Text style={{ ...theme.v2.row, color: U.ink, marginTop: 5 }} numberOfLines={2}>
+                        {value}
+                    </Text>
+                ) : null}
+                {extras ? (
+                    <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 2 }} numberOfLines={2}>
+                        {extras}
+                    </Text>
+                ) : null}
             </View>
             <View style={{ alignItems: "flex-end" }}>
-                <Text style={{ ...theme.v2.price, color: U.ink }}>{price}</Text>
-                <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>{period}</Text>
+                {price ? (
+                    <Text style={{ ...theme.v2.price, color: U.ink }}>{price}</Text>
+                ) : (
+                    <PriceSkeleton />
+                )}
+                <Text style={{ ...theme.v2.caption, color: then ? U.accentBright : U.inkMuted }}>{period}</Text>
+                {then ? (
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>{then}</Text>
+                ) : null}
             </View>
         </Pressable>
     );

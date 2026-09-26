@@ -264,11 +264,15 @@ const UPSELL_CARDS: UpsellCard[] = [
     icon: "briefcase-outline",
     showForPlans: ["FREE"],
   },
+  // 2.0.0: this slot sold "HD renders + 4× Ultra HD Upscale" to FREE. HD
+  // is on every plan, FREE included (V69), and no screen has offered the
+  // upscale since the 19 September redesign — both halves of the card were
+  // claims the product does not make. Room video is what Base actually adds.
   {
-    key: "hd",
-    titleKey: "settings.notifications_upsell_hd_title",
-    descKey: "settings.notifications_upsell_hd_desc",
-    icon: "sparkles-outline",
+    key: "video",
+    titleKey: "settings.notifications_upsell_video_title",
+    descKey: "settings.notifications_upsell_video_desc",
+    icon: "videocam-outline",
     showForPlans: ["FREE"],
   },
   {

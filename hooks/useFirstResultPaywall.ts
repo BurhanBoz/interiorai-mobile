@@ -5,6 +5,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { tierAtLeast } from "@/utils/planTier";
 import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 import type { JobResponse } from "@/types/api";
+import { isPostPurchaseQuiet } from "@/stores/postPurchaseStore";
 
 /** Let the reveal land before asking for anything. */
 const DELAY_MS = 2500;
@@ -45,6 +46,9 @@ export function useFirstResultPaywall(
     useEffect(() => {
         if (!job || job.status !== "COMPLETED" || !afterUrl || !userId) return;
         if (tierAtLeast(planCode, "BASE")) return;
+        // Someone who just bought a pack is finishing their room, not
+        // shopping; the offer keeps its once-per-person flag for later.
+        if (isPostPurchaseQuiet()) return;
         let cancelled = false;
         let timer: ReturnType<typeof setTimeout> | undefined;
 

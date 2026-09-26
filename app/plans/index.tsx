@@ -17,7 +17,7 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { planTier } from "@/utils/planTier";
 import { formatProductPrice, type StorePriceMap } from "@/utils/price";
-import { openManageSubscriptions } from "@/services/iap";
+import { manageSubscription } from "@/services/manageSubscription";
 import { TopBar } from "@/components/layout/TopBar";
 import { theme } from "@/config/theme";
 import type { PlanResponse } from "@/types/api";
@@ -51,10 +51,15 @@ const FEATURE_ROWS: FeatureRow[] = [
     // HD row removed 2026-09-01: the tier meant "2 MP instead of 1", and V69
     // made 2 MP the floor on every plan including FREE. Advertising it as a
     // paid capability would now be selling something every user already has.
-    // Upscale inherits the group label it used to sit under.
-    { labelKey: "plans.row_upscale",           key: "ULTRA_HD_UPSCALE",         type: "feature",    groupLabelKey: "plans.group_capabilities" },
-    { labelKey: "plans.row_inpaint",           key: "INPAINT",                  type: "feature" },
+    // 2.0.0: the upscale row went the same way. The feature is enabled on
+    // every plan, but no screen has offered it since the 19 September
+    // redesign (app/generation/upscale.tsx is unreachable) — a table that
+    // sells "Ultra HD / 4K" sells a button nobody can find. Room video, the
+    // capability a paid plan actually adds, takes its place.
+    { labelKey: "plans.row_room_video",        key: "ROOM_VIDEO",               type: "feature",    groupLabelKey: "plans.group_capabilities" },
     { labelKey: "plans.row_style_transfer",    key: "STYLE_TRANSFER",           type: "feature" },
+    { labelKey: "plans.row_outdoor",           key: "OUTDOOR_DESIGN",           type: "feature" },
+    { labelKey: "plans.row_inpaint",           key: "INPAINT",                  type: "feature" },
     { labelKey: "plans.row_empty_room",        key: "EMPTY_ROOM",               type: "feature" },
     { labelKey: "plans.row_custom_prompt",     key: "allow_custom_prompt",      type: "permission", groupLabelKey: "plans.group_controls" },
     { labelKey: "plans.row_commercial",        key: "allow_commercial_spaces",  type: "permission" },
@@ -64,9 +69,15 @@ const FEATURE_ROWS: FeatureRow[] = [
 
 // Frontend truth table — which features each tier definitively introduces.
 // Overrides backend "—" for features we know belong to a tier.
+//
+// 2.0.0: re-checked against /api/plans (26 Sep). Every permission row and
+// Magic Edit are on for FREE too, so marking them "new" on a paid tier was a
+// claim the plan does not make; the upscale entry sold a screen that no
+// longer exists. What each tier really adds: Base — room video, no watermark,
+// the priority queue; Pro — Style Transfer and Outdoor Design.
 const TIER_HIGHLIGHTS: Record<string, string[]> = {
-    BASE: ["allow_custom_prompt", "allow_commercial_spaces"],
-    PRO:  ["INPAINT", "STYLE_TRANSFER", "ULTRA_HD_UPSCALE", "advanced_controls"],
+    BASE: ["ROOM_VIDEO", "watermark", "queuePriority"],
+    PRO:  ["STYLE_TRANSFER", "OUTDOOR_DESIGN"],
 };
 
 function resolveCell(plan: PlanResponse, row: FeatureRow): string {
@@ -869,7 +880,7 @@ export default function PlansScreen() {
                     Hidden for FREE/trial users who have nothing to manage. */}
                 {planTier(currentCode) !== "FREE" ? (
                     <Pressable
-                        onPress={() => openManageSubscriptions()}
+                        onPress={() => manageSubscription(currentCode, subscription?.currentPeriodEnd ?? null)}
                         style={({ pressed }) => ({
                             marginBottom: 16,
                             opacity: pressed ? 0.6 : 1,

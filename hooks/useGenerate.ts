@@ -111,7 +111,9 @@ export function useGenerate() {
         // highest-intent moment in the app. It used to open a dead-end
         // interstitial; it now opens the paywall with its own placement, plans
         // first and a one-time pack beneath them.
-        router.push({ pathname: "/paywall", params: { source: "CREDITS_EXHAUSTED" } });
+        // resume: after a purchase, the screen this came from says "carry on"
+        // beside its button (useResumeNote) — it does not generate by itself.
+        router.push({ pathname: "/paywall", params: { source: "CREDITS_EXHAUSTED", resume: "GENERATE" } });
         return;
       }
 

@@ -74,7 +74,21 @@ function onPlayer(fn: () => void) {
   }
 }
 
-export function VideoResult({ job: initialJob }: { job: JobResponse }) {
+/** Seconds of a playing clip on screen that count as "watched it". */
+const WATCHED_MS = 6000;
+
+export function VideoResult({
+  job: initialJob,
+  onValue,
+}: {
+  job: JobResponse;
+  /**
+   * The clip earned its keep: saved, shared, or watched for a few seconds.
+   * The result screen treats it the way it treats a saved design — as the
+   * moment to ask for a rating (2.0.0).
+   */
+  onValue?: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const catalogLabel = useCatalogLabel();
   const authHeaders = useAuthHeaders();
@@ -152,6 +166,15 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
       };
     }, [player, url]),
   );
+  // Watched: the clip autoplays on focus and loops, so a few focused seconds
+  // with a finished clip on screen is someone watching their room move.
+  useFocusEffect(
+    useCallback(() => {
+      if (!url || !onValue) return;
+      const timer = setTimeout(onValue, WATCHED_MS);
+      return () => clearTimeout(timer);
+    }, [url, onValue]),
+  );
   // Our own fullscreen, not the platform's. expo-video enters iOS fullscreen
   // through AVPlayerViewController's private enterFullScreen selector and
   // never turns the controls back on, so with nativeControls={false} the
@@ -167,6 +190,7 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
     if (!url) return;
     // A download is the strongest vote a render gets; a clip is no different.
     if (output?.id) sendOutputSignal(output.id, "DOWNLOAD");
+    onValue?.();
     await saveToPhotos(url, { nameHint, media: "video" });
   };
 
@@ -174,6 +198,7 @@ export function VideoResult({ job: initialJob }: { job: JobResponse }) {
     if (!url) return;
     if (output?.id) sendOutputSignal(output.id, "SHARE");
     track("result_shared", { style: job.designStyleName ?? null, feature: job.featureCode ?? null });
+    onValue?.();
     await shareImage(url, { nameHint, media: "video" });
   };
 

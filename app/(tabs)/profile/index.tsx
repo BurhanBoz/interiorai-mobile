@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Alert, Animated, Pressable, Text, View } from "react-native";
+import { Alert, Animated, Linking, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -12,12 +12,22 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { ConsentSheet } from "@/components/studio/ConsentSheet";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
+import { manageSubscription } from "@/services/manageSubscription";
 
 const U = theme.umber;
 const V = theme.v2;
 
 /** The FREE daily ceiling the progress bar is measured against (app.daily-drip.ceiling). */
 const DAILY_CEILING = 3;
+
+/**
+ * Straight to the App Store's "write a review" page for Roomframe
+ * (id6768418544 = com.roomframeai.mobile, checked against the lookup API).
+ * The system rating sheet is rationed by iOS — three a year, shown when iOS
+ * decides — so someone who wants to rate on purpose needs a door that always
+ * opens (2.0.0).
+ */
+const APP_STORE_REVIEW_URL = "https://apps.apple.com/app/id6768418544?action=write-review";
 
 /**
  * Settings (Umber redesign, 2026-09-19).
@@ -169,6 +179,29 @@ export default function SettingsScreen() {
                         label={t("profile.language")}
                         value={languageLabel}
                         onPress={() => router.push("/settings/language" as never)}
+                    />
+                    {/* 2.0.0: the way into Apple's subscription page used to
+                        live only on the plans screen, which nothing in the
+                        tab bar reaches. It sits here now, and asks its one
+                        question first (services/manageSubscription). */}
+                    {!isFree && (
+                        <Row
+                            label={t("profile.manage_subscription")}
+                            onPress={() => {
+                                manageSubscription(
+                                    subscription?.planCode ?? null,
+                                    subscription?.currentPeriodEnd ?? null,
+                                ).catch(() => {});
+                            }}
+                            chevron
+                        />
+                    )}
+                    <Row
+                        label={t("profile.rate_app")}
+                        onPress={() => {
+                            Linking.openURL(APP_STORE_REVIEW_URL).catch(() => {});
+                        }}
+                        chevron
                     />
                     <Row
                         label={t("studio.photo_and_privacy")}
