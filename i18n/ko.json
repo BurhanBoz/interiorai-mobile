@@ -1281,7 +1281,7 @@
     "sent_lead": "전송:",
     "sent_body": "방 사진과 디자인 선택 항목. 이름, 이메일, 연락처, 위치는 포함되지 않습니다.",
     "to_lead": "수신:",
-    "to_body": "처리자인 Replicate와 Anthropic(미국). 몇 초간만 보유하며 저장하거나 학습에 사용하지 않습니다.",
+    "to_body": "처리자인 Replicate와 Anthropic(미국). 디자인 생성에만 사용하며 모델 학습에는 사용하지 않습니다.",
     "kept_lead": "보관:",
     "kept_body": "결과물은 프랑크푸르트에 삭제하실 때까지 보관됩니다.",
     "privacy_policy": "개인정보처리방침",

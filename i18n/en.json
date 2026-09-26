@@ -1283,7 +1283,7 @@
     "sent_lead": "Sent:",
     "sent_body": "your room photo and your design choices. No name, email, contacts or location.",
     "to_lead": "To:",
-    "to_body": "Replicate and Anthropic (US), as our processors. Held for seconds, never stored, never trained on.",
+    "to_body": "Replicate and Anthropic (US), as our processors. Used only for your design, never to train their models.",
     "kept_lead": "Kept:",
     "kept_body": "your results, in Frankfurt, until you delete them.",
     "privacy_policy": "Privacy Policy",

@@ -1283,7 +1283,7 @@
     "sent_lead": "Envoyé :",
     "sent_body": "la photo de votre pièce et vos choix de design. Ni nom, ni e-mail, ni contacts, ni localisation.",
     "to_lead": "À :",
-    "to_body": "Replicate et Anthropic (États-Unis), nos sous-traitants. Conservé quelques secondes, jamais stocké, jamais utilisé pour l'entraînement.",
+    "to_body": "Replicate et Anthropic (États-Unis), nos sous-traitants. Utilisé uniquement pour votre design, jamais pour entraîner leurs modèles.",
     "kept_lead": "Conservé :",
     "kept_body": "vos résultats, à Francfort, jusqu'à ce que vous les supprimiez.",
     "privacy_policy": "Politique de confidentialité",
