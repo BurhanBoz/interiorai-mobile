@@ -1167,12 +1167,12 @@
   },
   "ai_consent": {
     "title": "Comment vos photos sont traitées",
-    "body_what": "Pour créer votre design, l'application transmet à nos prestataires d'IA, via une connexion chiffrée : la photo de la pièce que vous sélectionnez, le masque que vous peignez ou l'image de référence que vous ajoutez, et vos choix de création — type de pièce, style, palette, intensité et votre consigne textuelle facultative. Rien d'autre ne leur est communiqué : ni nom, ni e-mail, ni contacts, ni localisation.",
-    "body_who": "Qui les reçoit : Replicate, Inc. (États-Unis) exécute les modèles de génération d'images qui produisent votre design, et Anthropic, PBC (États-Unis) analyse la scène pour que le résultat corresponde à votre pièce réelle. Les deux agissent en tant que sous-traitants : ils ne traitent votre contenu que le temps de la requête, ne le conservent pas ensuite et ne l'utilisent jamais pour entraîner leurs modèles.",
+    "body_what": "Pour créer votre design, la photo de la pièce, le masque ou l'image de référence éventuels, vos choix de création et votre consigne facultative sont transmis à nos prestataires d'IA via une connexion chiffrée. Rien d'autre : ni nom, ni e-mail, ni contacts, ni localisation.",
+    "body_who": "Replicate, Inc. (États-Unis) génère les images et Anthropic, PBC (États-Unis) analyse la scène. Ils n'utilisent votre contenu que pour créer votre design, jamais pour entraîner leurs modèles.",
     "privacy_link": "Politique de confidentialité",
     "accept": "Accepter et continuer",
     "decline": "Pas maintenant",
-    "body_privacy": "Vos photos transitent par des liens privés à durée limitée qui expirent en moins d'une heure. Vos résultats restent dans votre galerie, sur nos serveurs européens (Francfort), jusqu'à ce que vous les supprimiez ou que vous supprimiez votre compte. Vous pouvez retirer votre consentement à tout moment en supprimant votre compte ou en écrivant à support@roomframeai.com."
+    "body_privacy": "Vos résultats restent dans votre galerie, sur nos serveurs européens (Francfort), jusqu'à ce que vous les supprimiez. Vous pouvez retirer votre consentement à tout moment en supprimant votre compte ou en écrivant à support@roomframeai.com."
   },
   "expand": {
     "expanding": "Élargissement de la vue…",

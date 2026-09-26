@@ -51,7 +51,11 @@ export function AiConsentSheet() {
                         maxHeight: "86%",
                     }}
                 >
-                    <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                    {/* Only the text scrolls. The buttons sit below the scroll, so the
+                        choice is on screen however long the copy runs — a longer
+                        language or a larger text size moves the text, never the
+                        buttons. */}
+                    <ScrollView style={{ flexGrow: 0 }} bounces={false}>
                         {/* Icon + title */}
                         <View
                             style={{
@@ -113,7 +117,7 @@ export function AiConsentSheet() {
                         <Pressable
                             onPress={() => Linking.openURL(PRIVACY_URL)}
                             hitSlop={8}
-                            style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 22 }}
+                            style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
                         >
                             <Text
                                 style={{
@@ -130,7 +134,9 @@ export function AiConsentSheet() {
                                 color={theme.color.goldMidday}
                             />
                         </Pressable>
+                    </ScrollView>
 
+                    <View style={{ paddingTop: 20 }}>
                         {/* Accept — gold gradient, unmistakably the primary action */}
                         <Pressable onPress={accept} accessibilityRole="button">
                             <LinearGradient
@@ -174,7 +180,7 @@ export function AiConsentSheet() {
                                 {t("ai_consent.decline")}
                             </Text>
                         </Pressable>
-                    </ScrollView>
+                    </View>
                 </View>
             </View>
         </Modal>
