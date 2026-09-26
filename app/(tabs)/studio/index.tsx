@@ -15,6 +15,7 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { HexMark } from "@/components/brand/HexMark";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { PhotoSourceSheet } from "@/components/studio/PhotoSourceSheet";
+import { FREE_DAILY_CEILING } from "@/config/freeTier";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -244,9 +245,10 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
         );
         return Math.max(1, Math.ceil((next - now.getTime()) / 3_600_000));
     })();
-    // Above the ceiling the drip does not fire, so promising one would be
-    // wrong. FREE only — a subscriber's credits do not trickle.
-    const showRefill = planCode === "FREE" && balance < 3;
+    // At or above the ceiling the drip does not fire, so promising one would
+    // be wrong — with a ceiling of 1, a FREE user holding their one credit
+    // was told "+1 in 5h". FREE only — a subscriber's credits do not trickle.
+    const showRefill = planCode === "FREE" && balance < FREE_DAILY_CEILING;
 
     return (
         <View
