@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { catalogName } from "@/utils/catalogI18n";
@@ -21,6 +21,14 @@ export function useCatalogLabel() {
     const { t } = useTranslation();
     const roomTypes = useCatalogStore((s) => s.roomTypes);
     const designStyles = useCatalogStore((s) => s.designStyles);
+    const ensureLoaded = useCatalogStore((s) => s.ensureLoaded);
+    // The screen that labels a job can be the first one to need the
+    // catalogue: an account restored on a new phone opens the gallery before
+    // it ever opens the composer, and its chips read "Minimalist" / "Kids
+    // Room" in a French UI until then. A cached catalogue returns at once.
+    useEffect(() => {
+        void ensureLoaded();
+    }, [ensureLoaded]);
 
     return useCallback(
         (kind: "style" | "room", name: string | null | undefined): string => {
