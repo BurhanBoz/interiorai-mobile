@@ -41,17 +41,26 @@ interface CatalogState {
 export const useCatalogStore = create<CatalogState>()(
     persist(
         (set, get) => {
-            const fetchNow = async () => {
-                try {
-                    const [roomTypes, designStyles] = await Promise.all([
-                        getRoomTypes(),
-                        getDesignStyles(),
-                    ]);
-                    set({ roomTypes, designStyles, fetchedAt: Date.now(), isLoading: false });
-                } catch {
-                    // Keep whatever we already have; only stop the spinner.
-                    set({ isLoading: false });
-                }
+            // Every screen that labels a job now asks for the catalogue (see
+            // useCatalogLabel), so two can ask at once; they share one request.
+            let inFlight: Promise<void> | null = null;
+            const fetchNow = (): Promise<void> => {
+                if (inFlight) return inFlight;
+                inFlight = (async () => {
+                    try {
+                        const [roomTypes, designStyles] = await Promise.all([
+                            getRoomTypes(),
+                            getDesignStyles(),
+                        ]);
+                        set({ roomTypes, designStyles, fetchedAt: Date.now(), isLoading: false });
+                    } catch {
+                        // Keep whatever we already have; only stop the spinner.
+                        set({ isLoading: false });
+                    } finally {
+                        inFlight = null;
+                    }
+                })();
+                return inFlight;
             };
 
             return {
