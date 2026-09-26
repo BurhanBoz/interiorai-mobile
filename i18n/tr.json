@@ -1283,7 +1283,7 @@
     "sent_lead": "Gönderilen:",
     "sent_body": "oda fotoğrafın ve tasarım tercihlerin. İsim, e-posta, rehber veya konum yok.",
     "to_lead": "Kime:",
-    "to_body": "İşleyenlerimiz olarak Replicate ve Anthropic (ABD). Saniyeler boyunca tutulur, saklanmaz, eğitimde kullanılmaz.",
+    "to_body": "İşleyenlerimiz olarak Replicate ve Anthropic (ABD). Yalnızca tasarımın için kullanılır, model eğitiminde asla kullanılmaz.",
     "kept_lead": "Saklanan:",
     "kept_body": "sonuçların, Frankfurt'ta, sen silene kadar.",
     "privacy_policy": "Gizlilik Politikası",

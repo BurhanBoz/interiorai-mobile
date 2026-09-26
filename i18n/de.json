@@ -1283,7 +1283,7 @@
     "sent_lead": "Gesendet:",
     "sent_body": "dein Raumfoto und deine Designauswahl. Kein Name, keine E-Mail, keine Kontakte, kein Standort.",
     "to_lead": "An:",
-    "to_body": "Replicate und Anthropic (USA) als unsere Auftragsverarbeiter. Sekundenlang gehalten, nie gespeichert, nie trainiert.",
+    "to_body": "Replicate und Anthropic (USA) als unsere Auftragsverarbeiter. Nur für dein Design genutzt, nie zum Training ihrer Modelle.",
     "kept_lead": "Gespeichert:",
     "kept_body": "deine Ergebnisse, in Frankfurt, bis du sie löschst.",
     "privacy_policy": "Datenschutzerklärung",

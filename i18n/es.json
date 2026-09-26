@@ -1283,7 +1283,7 @@
     "sent_lead": "Se envía:",
     "sent_body": "la foto de tu sala y tus elecciones de diseño. Sin nombre, correo, contactos ni ubicación.",
     "to_lead": "A:",
-    "to_body": "Replicate y Anthropic (EE. UU.), como encargados del tratamiento. Se retiene segundos, nunca se almacena ni se usa para entrenar.",
+    "to_body": "Replicate y Anthropic (EE. UU.), como encargados del tratamiento. Solo se usa para tu diseño, nunca para entrenar sus modelos.",
     "kept_lead": "Se guarda:",
     "kept_body": "tus resultados, en Fráncfort, hasta que los borres.",
     "privacy_policy": "Política de privacidad",

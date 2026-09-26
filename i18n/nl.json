@@ -1283,7 +1283,7 @@
     "sent_lead": "Verstuurd:",
     "sent_body": "je kamerfoto en je ontwerpkeuzes. Geen naam, e-mail, contacten of locatie.",
     "to_lead": "Naar:",
-    "to_body": "Replicate en Anthropic (VS), als onze verwerkers. Seconden vastgehouden, nooit opgeslagen, nooit voor training gebruikt.",
+    "to_body": "Replicate en Anthropic (VS), als onze verwerkers. Alleen gebruikt voor je ontwerp, nooit om hun modellen te trainen.",
     "kept_lead": "Bewaard:",
     "kept_body": "je resultaten, in Frankfurt, totdat je ze verwijdert.",
     "privacy_policy": "Privacybeleid",
