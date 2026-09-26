@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +10,6 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
 import { planTier } from "@/utils/planTier";
-import { creditsBuy } from "@/utils/planValue";
 import { track } from "@/services/analytics";
 
 const U = theme.umber;
@@ -24,9 +23,13 @@ const ENTRY_SOURCES = new Set(["ONBOARDING", "APP_OPEN"]);
  * <p>Until 1.7.1 the paywall simply closed: the person landed back where they
  * were and had to start again the thing they had just paid to do. In
  * September three of four weekly buyers turned auto-renew off the next day,
- * and one hit the credits wall minutes after paying. This screen says what was
- * bought in units a person understands, and puts them back into the exact
- * task that opened the paywall — one tap.
+ * and one hit the credits wall minutes after paying. This screen confirms the
+ * purchase, shows the wallet, and puts them back into the exact task that
+ * opened the paywall — one tap. Kept plain on purpose (owner, 26 Sep): no
+ * "≈ designs or videos", no feature list.
+ *
+ * <p>The number is the whole wallet, not the plan's allowance: credits left
+ * from a pack stay and are added to it.
  *
  * <p>No prompt of any kind appears in this visit (postPurchaseStore keeps the
  * rating, push and offer asks quiet), so nothing competes with it.
@@ -37,7 +40,6 @@ export default function PlanWelcomeScreen() {
     const source = typeof params.source === "string" ? params.source.toUpperCase() : "";
     const boughtCode = typeof params.plan === "string" ? params.plan : "";
 
-    const plans = useSubscriptionStore((s) => s.plans);
     const subscription = useSubscriptionStore((s) => s.subscription);
     const balance = useCreditStore((s) => s.balance);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
@@ -52,30 +54,11 @@ export default function PlanWelcomeScreen() {
 
     const isPack = boughtCode.startsWith("CREDITS");
     const tier = isPack ? planTier(subscription?.planCode) : planTier(boughtCode);
-    // Which plan's prices a credit is spent at: the subscription's own, or —
-    // for a pack on the free plan — the paid prices a pack switches on.
-    const pricingPlan = useMemo(() => {
-        const code = !isPack ? boughtCode : subscription?.planCode && planTier(subscription.planCode) !== "FREE"
-            ? subscription.planCode : "PRO_WEEKLY";
-        return plans?.find((p) => p.code === code) ?? null;
-    }, [plans, boughtCode, isPack, subscription?.planCode]);
-
     const credits = balance ?? 0;
-    const buys = creditsBuy(pricingPlan, credits);
 
     const title = isPack
         ? t("plan_welcome.title_pack")
         : tier === "PRO" ? t("plan_welcome.title_pro") : t("plan_welcome.title_base");
-
-    const unlocked: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [];
-    if (!isPack) {
-        unlocked.push({ icon: "videocam-outline", label: t("plan_welcome.feature_video") });
-        if (tier === "PRO") {
-            unlocked.push({ icon: "color-wand-outline", label: t("studio.mode_style_transfer") });
-            unlocked.push({ icon: "leaf-outline", label: t("studio.mode_outdoor") });
-        }
-        unlocked.push({ icon: "water-outline", label: t("plan_welcome.feature_no_watermark") });
-    }
 
     const entry = ENTRY_SOURCES.has(source);
     const primary = () => {
@@ -132,31 +115,8 @@ export default function PlanWelcomeScreen() {
                     paddingVertical: 18, paddingHorizontal: 18, gap: 6,
                 }}>
                     <Text style={{ ...theme.v2.price, color: U.ink }}>{t("plan_welcome.balance", { count: credits })}</Text>
-                    {buys.designs != null ? (
-                        <Text style={{ ...theme.v2.body, color: U.inkMuted }}>
-                            {buys.videos != null && buys.videos > 0
-                                ? t("plan_welcome.balance_value", {
-                                    designs: t("paywall.n_designs", { count: buys.designs }),
-                                    videos: t("paywall.n_videos", { count: buys.videos }),
-                                })
-                                : t("plan_welcome.balance_value_designs", {
-                                    designs: t("paywall.n_designs", { count: buys.designs }),
-                                })}
-                        </Text>
-                    ) : null}
                 </View>
 
-                {unlocked.length > 0 ? (
-                    <View style={{ gap: 10 }}>
-                        <Text style={{ ...theme.v2.tier, color: U.inkMuted }}>{t("plan_welcome.unlocked")}</Text>
-                        {unlocked.map((u) => (
-                            <View key={u.label} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                                <Ionicons name={u.icon} size={20} color={U.accentBright} />
-                                <Text style={{ ...theme.v2.body, color: U.ink }}>{u.label}</Text>
-                            </View>
-                        ))}
-                    </View>
-                ) : null}
 
                 <View style={{ gap: 10 }}>
                     <Text style={{ ...theme.v2.tier, color: U.inkMuted }}>{t("plan_welcome.try_title")}</Text>

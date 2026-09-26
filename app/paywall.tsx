@@ -26,7 +26,6 @@ import {
 } from "@/services/purchaseOutcome";
 import { track } from "@/services/analytics";
 import { planTier, tierRank } from "@/utils/planTier";
-import { planValue, creditsBuy } from "@/utils/planValue";
 import type { PlanResponse } from "@/types/api";
 import { usePostPurchaseStore } from "@/stores/postPurchaseStore";
 import { useStudioStore } from "@/stores/studioStore";
@@ -186,9 +185,10 @@ export default function PaywallScreen() {
     const heroWidth = Dimensions.get("window").width - 36;
     // The hero takes what the screen can spare. The rule for redesigned
     // screens is "fits 393x852 without scrolling"; both plan rows must be in
-    // view on a 390x844 phone, so the picture gives way first: 120pt there,
-    // 180pt on a Pro Max, never below 100pt (an SE scrolls, and says so).
-    const heroHeight = Math.round(Math.min(180, Math.max(100, Dimensions.get("window").height - 724)));
+    // view on a 390x844 phone even with the first-week offer and a long
+    // language, so the picture gives way first: ~154pt there, 190pt on a Pro
+    // Max, never below 110pt (an SE scrolls, and says so).
+    const heroHeight = Math.round(Math.min(190, Math.max(110, Dimensions.get("window").height - 690)));
     const reveal = useRef(new Animated.Value(1)).current;
     const revealWidth = reveal.interpolate({
         inputRange: [0, 1],
@@ -467,16 +467,13 @@ export default function PaywallScreen() {
     /**
      * Umber paywall, 2.0.0.
      *
-     * <p><b>What changed from 19 September.</b> That screen made one claim —
-     * the two Pro-only tools — and printed no credit counts on purpose:
-     * "credits are the unit the user has no feel for". The fix is to translate
-     * them, not hide them. Every row now says what its allowance buys
-     * ("100 credits a week · ≈ 20 designs or 6 videos"), computed from the
-     * plan the server sends, so a price change there can never leave a stale
-     * promise here. The two Pro photographs stay where someone reached for a
-     * Pro tool; everywhere else the top of the screen is the moment that
-     * opened it — their first result, the room they were about to redesign,
-     * the design they wanted to bring to life.
+     * <p><b>What changed from 19 September.</b> The rows stay plain — a plan
+     * and its price (owner, 26 Sep: no credit counts, no "≈ designs", no
+     * feature lists). What changed is the top of the screen: the two Pro
+     * photographs stay where someone reached for a Pro tool; everywhere else
+     * it is the moment that opened the paywall — their first result, the
+     * room they were about to redesign, the design they wanted to bring to
+     * life.
      *
      * <p><b>Apple 3.1.2.</b> Renewal terms are on screen whenever a
      * subscription can be bought — price, period, auto-renewal, how to cancel —
@@ -529,40 +526,6 @@ export default function PaywallScreen() {
         const pct = Math.floor((1 - introOffer.price / regular) * 100);
         return pct >= 5 ? pct : null;
     })();
-
-    /** "≈ 20 designs or 6 videos" for one plan, or null when the server gave no rules to count with. */
-    const valueLine = (plan?: PlanResponse) => {
-        const v = planValue(plan);
-        if (!v || v.designs == null) return null;
-        const designs = t("paywall.n_designs", { count: v.designs });
-        const key = v.period === "week" ? "week" : "month";
-        return v.videos != null && v.videos > 0
-            ? t(`paywall.value_${key}`, { credits: v.credits, designs, videos: t("paywall.n_videos", { count: v.videos }) })
-            : t(`paywall.value_${key}_designs`, { credits: v.credits, designs });
-    };
-
-    /**
-     * What the plan switches on. Each rung names only what the rung below it
-     * does not have — Base against Free, Pro against Base with a "+" — so the
-     * two rows read as a ladder and each fits on one line.
-     */
-    const featuresOf = (plan?: PlanResponse): string[] => {
-        const v = planValue(plan);
-        if (!plan || !v) return [];
-        const items: string[] = [];
-        if (v.hasStyleTransfer) items.push(t("studio.mode_style_transfer"));
-        if (v.hasOutdoor) items.push(t("studio.mode_outdoor"));
-        if (v.hasVideo) items.push(t("paywall.feature_video"));
-        if (!plan.watermark) items.push(t("paywall.feature_no_watermark"));
-        return items;
-    };
-    const extrasLine = (plan?: PlanResponse, below?: PlanResponse) => {
-        const own = featuresOf(plan);
-        if (!below) return own.length ? own.join(" · ") : null;
-        const lower = new Set(featuresOf(below));
-        const extra = own.filter((x) => !lower.has(x));
-        return extra.length ? `+ ${extra.join(" · ")}` : null;
-    };
 
     // ── The moment that opened the screen ────────────────────────────
     const hero: HeroSpec = (() => {
@@ -647,13 +610,12 @@ export default function PaywallScreen() {
         return t(billing === "annual" ? "paywall.renewal_year" : "paywall.renewal_week", { price: priceOf(chosen) });
     })();
 
-    const packDesigns = exhaustedPack ? creditsBuy(proWeekly, exhaustedPack.credits).designs : null;
     const ctaLabel = anythingToBuy
         ? (selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base"))
         : t("profile.buy_credits");
 
-    const rowA11y = (tier: string, price: string | null, period: string, value: string | null, extra?: string | null) =>
-        [tier, value, extra, price ? `${price}${period}` : null].filter(Boolean).join(", ");
+    const rowA11y = (tier: string, price: string | null, period: string) =>
+        [tier, price ? `${price}${period}` : null].filter(Boolean).join(", ");
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
@@ -744,8 +706,6 @@ export default function PaywallScreen() {
                 <View style={{ gap: 10, marginTop: 14 }}>
                     <UmberPlanRow
                         tier="PRO"
-                        value={valueLine(pro)}
-                        extras={extrasLine(pro, base)}
                         price={introPending ? null : introShown ? introOffer!.priceString : proPrice}
                         period={introShown ? t("paywall.first_week") : periodLabel}
                         then={introShown && proPrice ? t("paywall.then_price_week", { price: proPrice }) : null}
@@ -754,7 +714,7 @@ export default function PaywallScreen() {
                         current={currentCode === proCode}
                         locked={!offersPro}
                         currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y("Pro", introShown ? introOffer!.priceString : proPrice, introShown ? ` ${t("paywall.first_week")}` : periodLabel, valueLine(pro), extrasLine(pro, base))}
+                        a11yLabel={rowA11y("Pro", introShown ? introOffer!.priceString : proPrice, introShown ? ` ${t("paywall.first_week")}` : periodLabel)}
                         onPress={() => {
                             if (!offersPro) return;
                             touchedAPlan.current = true;
@@ -764,8 +724,6 @@ export default function PaywallScreen() {
                     />
                     <UmberPlanRow
                         tier="BASE"
-                        value={valueLine(base)}
-                        extras={extrasLine(base)}
                         price={basePrice}
                         period={periodLabel}
                         then={null}
@@ -774,7 +732,7 @@ export default function PaywallScreen() {
                         current={currentCode === baseCode}
                         locked={!offersBase}
                         currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y("Base", basePrice, periodLabel, valueLine(base), extrasLine(base))}
+                        a11yLabel={rowA11y("Base", basePrice, periodLabel)}
                         onPress={() => {
                             if (!offersBase) return;
                             touchedAPlan.current = true;
@@ -786,8 +744,7 @@ export default function PaywallScreen() {
 
                 {/* The out-of-credits placement keeps its low-commitment step:
                     someone who has just run dry is the one person for whom a
-                    one-off pack is the right size of decision. It says what the
-                    pack buys, at the prices a pack switches on. */}
+                    one-off pack is the right size of decision. */}
                 {exhaustedPack && (
                     <Pressable
                         onPress={handlePack}
@@ -801,12 +758,7 @@ export default function PaywallScreen() {
                         }}
                     >
                         <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
-                            {packDesigns
-                                ? t("paywall.pack_line_designs", {
-                                    credits: exhaustedPack.credits,
-                                    designs: t("paywall.n_designs", { count: packDesigns }),
-                                })
-                                : t("paywall.pack_line", { credits: exhaustedPack.credits })}
+                            {t("paywall.pack_line", { credits: exhaustedPack.credits })}
                         </Text>
                         <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
                             {priceOfPack(exhaustedPack)}
@@ -1078,16 +1030,16 @@ function PriceSkeleton() {
  * gizlemek için gerekçe değil. Üstünde bulunulan basamak ayrıca etiketli,
  * yoksa sönük satır "tükendi" gibi okunur.
  *
- * <p>2.0.0: the row carries what the allowance buys and what the plan
- * switches on; with the first-week offer the price column reads
+ * <p>2.0.0: a plan and its price, nothing else — the owner's call on
+ * 26 Sep was "as plain as possible": no credit counts, no "≈ 20 designs",
+ * no feature lists. With the first-week offer the price column reads
  * "$6.99 · first week · then $8.99/week" — the regular price never leaves
  * the row the offer is on.
  */
 function UmberPlanRow({
-    tier, value, extras, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
+    tier, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
 }: {
     tier: "PRO" | "BASE";
-    value: string | null; extras: string | null;
     /** Null while the store price is on its way — drawn as a skeleton. */
     price: string | null; period: string;
     /** "then $8.99/week" under an introductory price; null otherwise. */
@@ -1154,16 +1106,6 @@ function UmberPlanRow({
                         </View>
                     ) : null}
                 </View>
-                {value ? (
-                    <Text style={{ ...theme.v2.row, color: U.ink, marginTop: 5 }} numberOfLines={2}>
-                        {value}
-                    </Text>
-                ) : null}
-                {extras ? (
-                    <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, marginTop: 2 }} numberOfLines={2}>
-                        {extras}
-                    </Text>
-                ) : null}
             </View>
             <View style={{ alignItems: "flex-end" }}>
                 {price ? (

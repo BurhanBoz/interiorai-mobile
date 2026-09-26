@@ -17,7 +17,6 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreditStore } from "@/stores/creditStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { useEffectiveCreditRules, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { useBackHandler } from "@/utils/navigation";
 import * as creditsService from "@/services/credits";
@@ -25,28 +24,6 @@ import * as promoService from "@/services/promo";
 import { theme } from "@/config/theme";
 import { buildLedgerRows, parseLedgerLine, type LedgerRowModel } from "@/utils/ledger";
 import type { CreditLedgerEntry } from "@/types/api";
-
-/**
- * Reference features to show pricing for. Each one resolves to a label and
- * a credit cost pulled from the subscription store's creditRules. Features
- * that the current plan does not support are filtered out at render time.
- */
-const REFERENCE_FEATURES: {
-  code: string;
-  tier: string | null;
-  labelKey: string;
-}[] = [
-  { code: "INTERIOR_REDESIGN", tier: "STANDARD", labelKey: "credits.ref_standard_redesign" },
-  { code: "INTERIOR_REDESIGN", tier: "HD",       labelKey: "credits.ref_hd_redesign" },
-  { code: "INPAINT",           tier: "STANDARD", labelKey: "credits.ref_inpaint" },
-  { code: "STYLE_TRANSFER",    tier: "STANDARD", labelKey: "credits.ref_style_transfer" },
-  { code: "EMPTY_ROOM",        tier: "STANDARD", labelKey: "credits.ref_empty_room" },
-  { code: "OUTDOOR_DESIGN",    tier: "STANDARD", labelKey: "credits.ref_outdoor" },
-  { code: "ULTRA_HD_UPSCALE",  tier: null,       labelKey: "credits.ref_upscale" },
-  // V183 — PRO only; the plan's feature row is disabled below that, so the
-  // filter above hides the line for everyone who cannot buy it here.
-  { code: "ROOM_VIDEO",        tier: null,       labelKey: "credits.ref_room_video" },
-];
 
 /**
  * "Today" / "Yesterday" / "19 September" — the heading over one day's rows.
@@ -177,16 +154,10 @@ export default function CreditsScreen() {
   const { t } = useTranslation();
   const balance = useCreditStore(s => s.balance);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
-  // EFFECTIVE rules/features — welcome bonus trial users see MAX-tier
-  // capabilities (what credits unlock) so the "what you can do" math
-  // matches the actual server-side entitlement during the trial.
-  const creditRules = useEffectiveCreditRules();
-  const features = useEffectiveFeatures();
   const subscription = useSubscriptionStore(s => s.subscription);
   const fetchSubscription = useSubscriptionStore(s => s.fetchSubscription);
   const fetchPlans = useSubscriptionStore(s => s.fetchPlans);
 
-  const [referenceOpen, setReferenceOpen] = useState(false);
   const [ledger, setLedger] = useState<CreditLedgerEntry[]>([]);
   const [page, setPage] = useState(0);
   const [isLast, setIsLast] = useState(false);
@@ -261,34 +232,6 @@ export default function CreditsScreen() {
   // by the strict `< 0` filter anyway, but the explicit symmetry keeps
   // future changes (e.g. paired CONSUME rows with negative deltas) from
   // double-counting.
-  const spentThisMonth = useMemo(() => {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    // Built from the PAIRED rows: a reservation that was handed straight
-    // back is not money spent, and counting it inflated the headline figure
-    // by the full cost of every failed generation.
-    return buildLedgerRows(ledger)
-      .filter(r => r.amount < 0 && new Date(r.createdAt).getTime() >= startOfMonth)
-      .reduce((sum, r) => sum + Math.abs(r.amount), 0);
-  }, [ledger]);
-
-  // Reference guide — resolve each feature's credit cost from the plan's
-  // creditRules. Skip features the plan doesn't include.
-  const referenceItems = useMemo(() => {
-    if (creditRules.length === 0) return [];
-    return REFERENCE_FEATURES.map((ref) => {
-      const feat = features.find((f) => f.featureCode === ref.code);
-      if (feat && !feat.enabled) return null;
-      const rule = creditRules.find(
-        (r) =>
-          r.featureCode === ref.code &&
-          (ref.tier ? r.qualityTier === ref.tier : true) &&
-          (r.numOutputs === 1 || r.numOutputs === null),
-      );
-      if (!rule) return null;
-      return { labelKey: ref.labelKey, cost: rule.creditCost };
-    }).filter((x): x is { labelKey: string; cost: number } => x !== null);
-  }, [creditRules, features]);
 
   useEffect(() => {
     fetchBalance();
@@ -430,101 +373,10 @@ export default function CreditsScreen() {
                 both destinations already sit one tap away on Settings as
                 "Get Pro" and "Buy Credits". */}
 
-            {/* ── Reference Guide ── */}
-            {referenceItems.length > 0 && (
-              <View
-                className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 28 }}
-              >
-                {/* Collapsible (2026-08-07). Six priced rows is a table, and a
-                    table permanently open above the Next Cycle card pushed the
-                    thing users actually came for below the fold. Closed by
-                    default: this is a lookup, not a headline. */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    LayoutAnimation.configureNext(
-                      LayoutAnimation.create(
-                        theme.motion.duration.base,
-                        LayoutAnimation.Types.easeInEaseOut,
-                        LayoutAnimation.Properties.opacity,
-                      ),
-                    );
-                    setReferenceOpen((v) => !v);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: referenceOpen }}
-                >
-                  <View
-                    className="flex-row items-center justify-between"
-                    style={{ marginBottom: 8 }}
-                  >
-                    <Text
-                      className="font-label text-secondary"
-                      style={{
-                        ...theme.text.caption,
-                      }}
-                    >
-                      {t("credits.reference_guide")}
-                    </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      {subscription?.planName && (
-                        <Text
-                          className="font-label"
-                          style={{
-                            ...theme.text.caption,
-                            color: "#DDB477",
-                          }}
-                        >
-                          {subscription.planName}
-                        </Text>
-                      )}
-                      <Ionicons
-                        name={referenceOpen ? "chevron-up" : "chevron-down"}
-                        size={theme.iconSize.md}
-                        color={theme.color.goldMidday}
-                      />
-                    </View>
-                  </View>
-                  <Text
-                    className="font-body text-on-surface-variant"
-                    style={{ ...theme.text.caption, marginBottom: referenceOpen ? 16 : 0 }}
-                  >
-                    {t("credits.reference_guide_subtitle")}
-                  </Text>
-                </Pressable>
-                {referenceOpen && referenceItems.map((item, i) => (
-                  <View key={item.labelKey}>
-                    <View
-                      className="flex-row items-center justify-between"
-                      style={{ paddingVertical: 8 }}
-                    >
-                      <Text
-                        className="font-body text-on-surface"
-                        style={{ ...theme.text.body }}
-                      >
-                        {t(item.labelKey)}
-                      </Text>
-                      <Text
-                        className="font-headline text-secondary"
-                        style={{ ...theme.text.title }}
-                      >
-                        {t("credits.credit_count", { count: item.cost })}
-                      </Text>
-                    </View>
-                    {i < referenceItems.length - 1 && (
-                      <View
-                        style={{
-                          height: 1,
-                          backgroundColor: "rgba(77,70,60,0.20)",
-                          marginVertical: 8,
-                        }}
-                      />
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
+            {/* 2.0.0: the per-action price table came off (owner, 26 Sep: no
+                "this costs so many credits" lists; the price already sits
+                above the Generate button). It also still listed the Ultra HD
+                upscale no screen has offered since the redesign. */}
 
             {/* ── Next Cycle & Progress ── */}
             {subscription?.currentPeriodEnd && (
@@ -546,7 +398,7 @@ export default function CreditsScreen() {
                     className="font-body text-on-surface-variant"
                     style={{ ...theme.text.body }}
                   >
-                    {t("credits.balance_reset_on", { date: resetDateFormatted })}
+                    {resetDateFormatted}
                   </Text>
                 </View>
 
@@ -579,12 +431,11 @@ export default function CreditsScreen() {
               </View>
             )}
 
-            {/* ── Monthly Usage Header + Filter Chips ──
-                Premium polish: hairline gold rule above the section
-                anchors the eyebrow label, and the "spent this month"
-                figure renders as a soft gold chip instead of greyed-out
-                helper text — it's the most important number on this
-                screen for a returning subscriber. */}
+            {/* ── Activity Header + Filter Chips ──
+                Hairline gold rule above the section anchors the eyebrow
+                label. 2.0.0: the "spent this month" chip came off — plans
+                are weekly, and a calendar-month total on a weekly plan
+                was a second clock nobody asked for. */}
             <View
               style={{
                 height: 1,
@@ -603,32 +454,8 @@ export default function CreditsScreen() {
                   color: "#DDB477",
                 }}
               >
-                {t("credits.monthly_usage")}
+                {t("credits.ledger_title")}
               </Text>
-              {spentThisMonth > 0 && (
-                <View
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: theme.radius.pill,
-                    backgroundColor: "rgba(225,195,155,0.10)",
-                    borderWidth: 0.5,
-                    borderColor: "rgba(225,195,155,0.25)",
-                  }}
-                >
-                  <Text
-                    className="font-label"
-                    style={{
-                      ...theme.text.caption,
-                      color: "#DDB477",
-                    }}
-                  >
-                    {t("credits.billing_spent_this_month", {
-                      amount: spentThisMonth,
-                    })}
-                  </Text>
-                </View>
-              )}
             </View>
 
             {/* Filter chips */}
