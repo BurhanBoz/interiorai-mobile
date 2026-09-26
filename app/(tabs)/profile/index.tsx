@@ -13,16 +13,11 @@ import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { ConsentSheet } from "@/components/studio/ConsentSheet";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { manageSubscription } from "@/services/manageSubscription";
+import { FREE_DAILY_CEILING } from "@/config/freeTier";
 
 const U = theme.umber;
 const V = theme.v2;
 
-/**
- * The FREE daily ceiling the progress bar is measured against — mirrors the
- * backend's app.daily-drip.ceiling (1 since 26 Sep 2026: one free design a
- * day, it does not stack). Moves with the server value.
- */
-const DAILY_CEILING = 1;
 
 /**
  * Straight to the App Store's "write a review" page for Roomframe
@@ -242,7 +237,7 @@ function CreditCard({
     onManagePlan: () => void;
 }) {
     const { t } = useTranslation();
-    const ratio = Math.max(0, Math.min(1, balance / DAILY_CEILING));
+    const ratio = Math.max(0, Math.min(1, balance / FREE_DAILY_CEILING));
 
     return (
         <View style={{ borderWidth: 1, borderColor: U.lineAccent, borderRadius: 18, padding: 16 }}>
