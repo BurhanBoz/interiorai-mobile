@@ -1167,12 +1167,12 @@
   },
   "ai_consent": {
     "title": "Hoe we je foto's verwerken",
-    "body_what": "Om je ontwerp te maken stuurt de app het volgende via een versleutelde verbinding naar onze AI-leveranciers: de kamerfoto die je kiest, het masker dat je tekent of de referentieafbeelding die je toevoegt, en je ontwerpkeuzes — kamertype, stijl, kleurenpalet, sterkte en je optionele tekstprompt. Verder wordt er niets met hen gedeeld: geen naam, geen e-mailadres, geen contacten, geen locatie.",
-    "body_who": "Wie het ontvangt: Replicate, Inc. (Verenigde Staten) draait de beeldgeneratiemodellen die je ontwerp maken, en Anthropic, PBC (Verenigde Staten) analyseert de scène zodat het ontwerp bij je echte kamer past. Beide treden op als onze verwerkers — ze verwerken je materiaal alleen tijdens de seconden die je aanvraag duurt, bewaren het daarna niet en gebruiken het nooit om hun modellen te trainen.",
+    "body_what": "Voor je ontwerp sturen we je kamerfoto, een eventueel masker of referentieafbeelding, je ontwerpkeuzes en je optionele tekst via een versleutelde verbinding naar onze AI-leveranciers. Verder niets: geen naam, e-mailadres, contacten of locatie.",
+    "body_who": "Replicate, Inc. (VS) maakt de beelden en Anthropic, PBC (VS) analyseert de scène. Ze gebruiken je materiaal alleen voor je ontwerp en nooit om hun modellen te trainen.",
     "privacy_link": "Privacybeleid",
     "accept": "Akkoord en doorgaan",
     "decline": "Nu niet",
-    "body_privacy": "Je foto's reizen via privé-links met een beperkte geldigheid die binnen een uur verlopen. Je resultaten blijven in je eigen galerij op onze servers in de EU (Frankfurt) staan totdat je ze of je account verwijdert. Je kunt je toestemming altijd intrekken door je account te verwijderen of te mailen naar support@roomframeai.com."
+    "body_privacy": "Je resultaten blijven in je galerij op onze EU-servers (Frankfurt) staan tot je ze verwijdert. Je kunt je toestemming altijd intrekken door je account te verwijderen of te mailen naar support@roomframeai.com."
   },
   "expand": {
     "expanding": "Je beeld wordt uitgebreid…",
