@@ -642,7 +642,7 @@
     "headline_balance": "{{count}} credits",
     "kind_adjustment": "Correctie",
     "kind_promo": "Actiecode",
-    "kind_monthly_reset": "Maandelijkse credits",
+    "kind_monthly_reset": "Abonnementscredits",
     "kind_welcome_bonus": "Welkomstbonus",
     "kind_daily_drip": "Dagelijkse credit",
     "kind_weekly_bonus": "Weekbonus",

@@ -637,7 +637,7 @@
     "headline_balance": "{{count}} クレジット",
     "kind_adjustment": "調整",
     "kind_promo": "プロモコード",
-    "kind_monthly_reset": "月間クレジット",
+    "kind_monthly_reset": "プランのクレジット",
     "kind_welcome_bonus": "ウェルカムボーナス",
     "kind_daily_drip": "デイリークレジット",
     "kind_weekly_bonus": "ウィークリーボーナス",

@@ -637,7 +637,7 @@
     "headline_balance": "크레딧 {{count}}개",
     "kind_adjustment": "조정",
     "kind_promo": "프로모션 코드",
-    "kind_monthly_reset": "월간 크레딧",
+    "kind_monthly_reset": "플랜 크레딧",
     "kind_welcome_bonus": "웰컴 보너스",
     "kind_daily_drip": "일일 크레딧",
     "kind_weekly_bonus": "주간 보너스",

@@ -639,7 +639,7 @@
     "headline_balance": "{{count}} Guthaben",
     "kind_adjustment": "Korrektur",
     "kind_promo": "Aktionscode",
-    "kind_monthly_reset": "Monatliche Credits",
+    "kind_monthly_reset": "Tarif-Credits",
     "kind_welcome_bonus": "Willkommensbonus",
     "kind_daily_drip": "Tages-Credit",
     "kind_weekly_bonus": "Wochenbonus",

@@ -642,7 +642,7 @@
     "headline_balance": "{{count}} credits",
     "kind_adjustment": "Adjustment",
     "kind_promo": "Promo code",
-    "kind_monthly_reset": "Monthly credits",
+    "kind_monthly_reset": "Plan credits",
     "kind_welcome_bonus": "Welcome bonus",
     "kind_daily_drip": "Daily credit",
     "kind_weekly_bonus": "Weekly bonus",
