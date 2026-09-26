@@ -17,8 +17,12 @@ import { manageSubscription } from "@/services/manageSubscription";
 const U = theme.umber;
 const V = theme.v2;
 
-/** The FREE daily ceiling the progress bar is measured against (app.daily-drip.ceiling). */
-const DAILY_CEILING = 3;
+/**
+ * The FREE daily ceiling the progress bar is measured against — mirrors the
+ * backend's app.daily-drip.ceiling (1 since 26 Sep 2026: one free design a
+ * day, it does not stack). Moves with the server value.
+ */
+const DAILY_CEILING = 1;
 
 /**
  * Straight to the App Store's "write a review" page for Roomframe
