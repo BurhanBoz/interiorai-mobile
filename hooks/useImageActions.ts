@@ -5,6 +5,7 @@ import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
+import { markBusy, markFree } from "@/utils/screenBusy";
 
 interface DownloadOptions {
     /** Authenticated headers when fetching from the backend's /api/files proxy. */
@@ -50,15 +51,34 @@ export function useImageActions() {
         [],
     );
 
+    /**
+     * An alert that keeps the screen marked busy until it is dismissed —
+     * see utils/screenBusy: the rating waits for it rather than being
+     * dropped by iOS underneath it.
+     */
+    const alertThenFree = useCallback(
+        (tag: string, title: string, body: string) => {
+            const free = () => markFree(tag);
+            Alert.alert(title, body, [{ text: t("common.ok"), onPress: free }], { onDismiss: free });
+        },
+        [t],
+    );
+
     /** Save to Photos. Prompts for permission on first use. */
     const saveToPhotos = useCallback(
         async (url: string, opts: DownloadOptions = {}) => {
             if (isDownloading) return;
             setIsDownloading(true);
+            // Busy from the first tap: the permission prompt, the download and
+            // the "Saved" alert all come before the screen is free again.
+            markBusy("save");
+            let alerted = false;
             try {
                 const perm = await MediaLibrary.requestPermissionsAsync();
                 if (!perm.granted) {
-                    Alert.alert(
+                    alerted = true;
+                    alertThenFree(
+                        "save",
                         t("result.permission_needed_title"),
                         t("result.permission_needed_body"),
                     );
@@ -67,21 +87,26 @@ export function useImageActions() {
                 const localUri = await downloadToCache(url, opts);
                 await MediaLibrary.saveToLibraryAsync(localUri);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                Alert.alert(
+                alerted = true;
+                alertThenFree(
+                    "save",
                     t("result.saved_title"),
                     t(opts.media === "video" ? "result.video_saved_body" : "result.saved_body"),
                 );
             } catch (err: any) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                Alert.alert(
+                alerted = true;
+                alertThenFree(
+                    "save",
                     t("result.save_failed_title"),
                     err?.message ?? t("result.save_failed_body"),
                 );
             } finally {
+                if (!alerted) markFree("save");
                 setIsDownloading(false);
             }
         },
-        [downloadToCache, isDownloading, t],
+        [alertThenFree, downloadToCache, isDownloading, t],
     );
 
     /** Share the image file natively. Falls back to URL share if file system blocked. */
@@ -89,10 +114,16 @@ export function useImageActions() {
         async (url: string, opts: DownloadOptions = {}) => {
             if (isSharing) return;
             setIsSharing(true);
+            // The share sheet is a modal: busy until it closes (shareAsync
+            // resolves on dismissal), or until an error alert is dismissed.
+            markBusy("share");
+            let alerted = false;
             try {
                 const canShare = await Sharing.isAvailableAsync();
                 if (!canShare) {
-                    Alert.alert(
+                    alerted = true;
+                    alertThenFree(
+                        "share",
                         t("result.share_unavailable_title"),
                         t("result.share_unavailable_body"),
                     );
@@ -113,16 +144,19 @@ export function useImageActions() {
             } catch (err: any) {
                 if (!String(err?.message ?? "").toLowerCase().includes("user did not")) {
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                    Alert.alert(
+                    alerted = true;
+                    alertThenFree(
+                        "share",
                         t("result.share_failed_title"),
                         err?.message ?? t("result.share_failed_body"),
                     );
                 }
             } finally {
+                if (!alerted) markFree("share");
                 setIsSharing(false);
             }
         },
-        [downloadToCache, isSharing, t],
+        [alertThenFree, downloadToCache, isSharing, t],
     );
 
     return { saveToPhotos, shareImage, isDownloading, isSharing };

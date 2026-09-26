@@ -478,7 +478,9 @@
     "credits_line": "kredi",
     "account_and_data": "Hesap ve veriler",
     "account_fallback_name": "Hesabın",
-    "name_and_email": "İsim ve e-posta"
+    "name_and_email": "İsim ve e-posta",
+    "manage_subscription": "Aboneliği yönet",
+    "rate_app": "Roomframe'i değerlendir"
   },
   "plans": {
     "title": "Planını Seç",
@@ -578,7 +580,9 @@
     "per_week": "/hafta",
     "plan_subtitle_weekly": "Haftada {{credits}} kredi · kullanılmayan birikir",
     "row_weekly_credits": "Haftalık kredi",
-    "weekly_credits_label": "haftalık kredi"
+    "weekly_credits_label": "haftalık kredi",
+    "row_room_video": "Oda videosu",
+    "row_outdoor": "Dış Mekân Tasarımı"
   },
   "credits_bridge": {
     "or_buy_credits": "Ya da tek seferlik kredi al"
@@ -953,9 +957,9 @@
     "help_mail_subject": "Interior AI — Destek Talebi",
     "help_mail_body": "Merhaba Interior AI ekibi,\n\n[Sorununuzu burada açıklayın]\n\n---\nUygulama sürümü: {{version}}\nPlan: {{plan}}\nKullanıcı ID: {{userId}}",
     "help_faq_q1_q": "Krediler nasıl çalışır?",
-    "help_faq_q1_a": "Her üretim kredi harcar: yeniden tasarım 3, Boş Oda 4 (HD 5), Magic Edit 4 (HD 5), Stil Transferi 6 (HD 7), Genişletme 2, 4× Ultra HD Büyütme 3. Free'de her üretim yalnızca 1 kredidir — ilk gün 3 krediyle başlarsın, sonra her gün 1 kredi daha gelir (en fazla 3 birikir). Base haftada 50, Pro haftada 100 kredi içerir; kullanılmayan krediler haftalık miktarının 2 katına kadar devreder.",
+    "help_faq_q1_a": "Her üretim kredi harcar; maliyet, başlamadan önce Oluştur düğmesinin üstünde yazar. Free'de her üretim 1 kredidir: ilk gün 3 kredi alırsın, sonra her gün 1 kredi daha (en fazla 3). Base haftada 50, Pro haftada 100 kredi içerir; kullanılmayan krediler haftalık miktarının 2 katına kadar birikir.",
     "help_faq_q2_q": "Planlar arasındaki fark nedir?",
-    "help_faq_q2_a": "Her plan en iyi AI modellerimizle çalışır. Free ilk gün 3, sonra her gün 1 kredi verir (en fazla 3) ve çıktılar filigranlıdır — her üretim 1 kredidir. Base (haftada 50 kredi) filigranı kaldırır. Pro (haftada 100 kredi) ayrıca Stil Transferi ve Dış Mekân tasarımını açar.",
+    "help_faq_q2_a": "Her plan en iyi AI modellerimizle çalışır. Free ilk gün 3, sonra her gün 1 kredi verir (en fazla 3) ve çıktılar filigranlıdır — her üretim 1 kredidir. Base (haftada 50 kredi) filigranı kaldırır ve oda videolarını ekler. Pro (haftada 100 kredi) ayrıca Stil Transferi ve Dış Mekân Tasarımı özelliklerini açar.",
     "help_faq_q3_q": "Style Transfer'ı nasıl kullanırım?",
     "help_faq_q3_a": "Pro pakette Studio ana ekranından Stil Transferi'ni seç, odanı yükle, ardından bir referans fotoğrafı ekle. Odan, referansın estetiğiyle yeniden tasarlanır.",
     "help_faq_q4_q": "Üretimlerimi ticari kullanabilir miyim?",
@@ -1050,9 +1054,9 @@
     "notifications_n_low_credits_title": "Krediniz azalıyor",
     "notifications_n_low_credits_body": "Kalan {{balance}} kredi. Sonraki döngüyü beklemeden üretime devam etmek için kredi paketi alın.",
     "notifications_n_upgrade_basic_title": "Base ile devam et",
-    "notifications_n_upgrade_basic_body": "Ayda 150 kredi, filigransız, HD üretim — hepsi en iyi AI modellerimizle.",
+    "notifications_n_upgrade_basic_body": "Filigransız sonuçlar, haftalık krediler ve tasarımlarının oda videoları.",
     "notifications_n_upgrade_pro_title": "Pro ile her şeyi aç",
-    "notifications_n_upgrade_pro_body": "Magic Edit, Stil Transferi, 4× Ultra HD Upscale ve ayda 400 kredi.",
+    "notifications_n_upgrade_pro_body": "Stil Transferi, Dış Mekân Tasarımı, oda videoları ve her hafta en çok kredi.",
     "notifications_n_upgrade_max_title": "Max: FLUX premium",
     "notifications_n_upgrade_max_body": "Stil Aktarımı, Ultra HD, öncelikli kuyruk ve her kredi paketinde %40 bonus.",
     "notifications_n_welcome_title": "Interior AI'ya hoş geldin",
@@ -1064,7 +1068,9 @@
     "profile_edit_email_hint": "Mevcut adresine bilgi göndereceğiz. Girişlerini yeni adresle yapacaksın.",
     "profile_edit_email_success": "E-posta güncellendi. Artık girişlerini bu adresle yapacaksın.",
     "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor.",
-    "delete_account": "Hesabı sil"
+    "delete_account": "Hesabı sil",
+    "notifications_upsell_video_title": "Tasarımlarını canlandır",
+    "notifications_upsell_video_desc": "Bitmiş bir tasarımı hafif doğa sesleriyle 5 saniyelik bir oda videosuna dönüştür. Base ve Pro'da var."
   },
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",
@@ -1219,7 +1225,29 @@
     "footnote": "İstediğin an iptal · tek seferlik kredi paketleri de var",
     "pack_line": "Ya da tek seferlik {{credits}} kredi",
     "current_plan_title": "{{plan}} planındasın",
-    "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey"
+    "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey",
+    "annual": "Yıllık",
+    "annual_save": "Yıllık · %{{pct}} tasarruf",
+    "chip_video": "Oda videosu · 5 sn",
+    "chip_your_room": "Senin odan",
+    "first_week": "ilk hafta",
+    "then_price_week": "sonra {{price}}/hafta",
+    "intro_badge": "−%{{pct}}",
+    "intro_badge_plain": "Fırsat",
+    "hero_default_title": "Her odayı yeniden tasarla",
+    "hero_default_sub": "Yenilenen krediler, oda videoları ve filigransız sonuçlar.",
+    "hero_first_title": "Şimdi sıra diğer odalarda",
+    "hero_first_sub": "İlk tasarımın hazır. Bir planla her oda için kredin olur — üstelik oda videoları ve filigransız sonuçlar.",
+    "hero_room_title": "Odan seni bekliyor",
+    "hero_room_sub": "Kredin bitti. Tamamlamak için bir plan seç ya da tek seferlik kredi al.",
+    "hero_exhausted_sub": "Tasarlamaya devam etmek için bir plan seç ya da tek seferlik kredi al.",
+    "hero_video_title": "Tasarımını canlandır",
+    "hero_video_sub": "Bitmiş bir tasarımı hafif doğa sesleriyle 5 saniyelik bir oda videosuna dönüştür.",
+    "pro_tools_sub": "Herhangi bir fotoğrafın stilini odana uygula; bahçe, avlu ve terasları yeniden tasarla.",
+    "renewal_intro_week": "İlk hafta {{intro}}, sonra haftalık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
+    "renewal_week": "Haftalık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
+    "renewal_year": "Yıllık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
+    "restore_link": "Satın alımları geri yükle"
   },
   "purchase_errors": {
     "sheet_title": "Apple'ın ödeme ekranı açılmadı",
@@ -1260,5 +1288,45 @@
     "kept_body": "sonuçların, Frankfurt'ta, sen silene kadar.",
     "privacy_policy": "Gizlilik Politikası",
     "got_it": "Anladım"
+  },
+  "plan_welcome": {
+    "title_pro": "Pro'ya hoş geldin",
+    "title_base": "Base'e hoş geldin",
+    "title_pack": "Kredilerin yüklendi",
+    "balance_one": "{{count}} kredi hazır",
+    "balance_other": "{{count}} kredi hazır",
+    "try_title": "Sırada",
+    "try_video": "Oda videosu yap",
+    "try_video_sub": "Galeri'de bir tasarımı aç, sonra “{{cta}}” düğmesine dokun.",
+    "start": "Tasarlamaya başla",
+    "continue": "Devam et"
+  },
+  "cancel_survey": {
+    "title_manage": "İptal etmeyi mi düşünüyorsun?",
+    "title_detected": "Gitmene üzüldük",
+    "body": "Asıl sebep ne? Tek dokunuş, düzeltmemize yardım eder.",
+    "reason_PRICE": "Çok pahalı",
+    "reason_RESULTS": "Sonuçlar istediğim gibi değildi",
+    "reason_NOT_ENOUGH_CREDITS": "Krediler yetmedi",
+    "reason_ONE_TIME": "Sadece bir kez lazımdı",
+    "reason_HOW_TO_USE": "Nasıl kullanacağımı anlamadım",
+    "reason_TECHNICAL": "Bir şey çalışmadı",
+    "reason_OTHER": "Başka bir şey",
+    "other_placeholder": "Birkaç kelimeyle anlat (isteğe bağlı)",
+    "send": "Gönder",
+    "skip_manage": "Geç — aboneliğime git",
+    "skip": "Geç",
+    "thanks_title": "Teşekkürler",
+    "thanks": "Teşekkürler — cevabın doğrudan ekibe gidiyor.",
+    "reply_PRICE": "Teşekkürler. Haftalık plan sana göre değilse tek seferlik kredi paketleri her zaman var — abonelik gerekmez.",
+    "reply_RESULTS": "Teşekkürler. En iyi sonuç; iyi aydınlatılmış, düz açıyla çekilmiş, çerçevede insan ya da evcil hayvan olmayan bir fotoğrafla alınır.",
+    "reply_HOW_TO_USE": "Teşekkürler. En sık sorulan soruların cevapları için Ayarlar'da adına, sonra Yardım'a dokun.",
+    "continue_manage": "Aboneliğime git",
+    "close": "Kapat"
+  },
+  "resume": {
+    "generate": "Her şey hazır — kaldığın yerden devam etmek için “{{cta}}” düğmesine dokun.",
+    "video": "Her şey hazır — videoyu yapmak için “{{cta}}” düğmesine dokun.",
+    "restyle": "Her şey hazır — devam etmek için bir stil seç."
   }
 }

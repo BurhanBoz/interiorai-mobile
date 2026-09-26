@@ -19,6 +19,8 @@ import { sendHeartbeat, submitAttributionToken } from "@/services/telemetry";
 import { syncPushTokenIfPermitted } from "@/hooks/usePushRegistration";
 import { AppSplash } from "@/components/ui/AppSplash";
 import { AiConsentSheet } from "@/components/ui/AiConsentSheet";
+import { CancelReasonSheet } from "@/components/ui/CancelReasonSheet";
+import { useCancellationDetect } from "@/hooks/useCancellationDetect";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import i18n from "@/i18n";
@@ -62,6 +64,8 @@ export default function RootLayout() {
   });
 
   const { isAuthenticated, isLoading, hydrate, user } = useAuthStore();
+  // 2.0.0: once per subscription period, ask why auto-renew was turned off.
+  useCancellationDetect(isAuthenticated && !isLoading);
   const storedLanguage = useSettingsStore((s) => s.language);
   const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
@@ -318,6 +322,9 @@ export default function RootLayout() {
             {/* AI-processing consent (5.1.2(i)) — mounted once, shown by
                 aiConsentStore right before the first photo pick. */}
             <AiConsentSheet />
+            {/* 2.0.0: "why are you leaving" — opened by useCancellationDetect
+                and by the manage-subscription rows. */}
+            <CancelReasonSheet />
           </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>

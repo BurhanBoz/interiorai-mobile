@@ -27,6 +27,8 @@ import { getStyleImage } from "@/components/studio/styleImages";
 import { track } from "@/services/analytics";
 import { catalogName } from "@/utils/catalogI18n";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
+import { ResumeNote } from "@/components/ui/ResumeNote";
+import { useResumeNote } from "@/hooks/useResumeNote";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -82,6 +84,8 @@ export default function ComposerScreen() {
 
     const { pickImage, isUploading } = useImagePicker();
     const { generate, isSubmitting } = useGenerate();
+    // Back from a purchase this screen's Generate button started (2.0.0).
+    const [resumeShown, hideResume] = useResumeNote(["GENERATE"]);
     const { cost } = useCreditCost();
 
     const [sheet, setSheet] = useState<null | "room" | "advanced">(null);
@@ -300,6 +304,9 @@ export default function ComposerScreen() {
                         paddingBottom: 26,
                     }}
                 >
+                    {resumeShown && (
+                        <ResumeNote text={t("resume.generate", { cta: t("studio.generate") })} />
+                    )}
                     <View
                         style={{
                             flexDirection: "row",
@@ -328,6 +335,7 @@ export default function ComposerScreen() {
                     <Pressable
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            hideResume();
                             generate();
                         }}
                         disabled={!canGenerate}

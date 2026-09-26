@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
 import { GUEST_EMAIL_UPGRADE_ENABLED } from "@/config/features";
+import { isPostPurchaseQuiet } from "@/stores/postPurchaseStore";
 
 /**
  * V53 guest-first — one-shot "secure your account" ask, shown to GUESTS only
@@ -45,19 +46,27 @@ export function useAccountPrompt(jobSucceeded: boolean): boolean {
 
         timer = setTimeout(async () => {
           if (cancelled) return;
+          // Not in the minutes after a purchase; the flag stays unset, so
+          // the next result asks instead.
+          if (isPostPurchaseQuiet()) return;
           await setFlag(ASKED_KEY);
+          // True only while the alert is up (2.0.0) — the rating waits for
+          // it to close rather than giving up on the whole visit.
           setClaimed(true);
           Alert.alert(
             t("auth.secure_account_title"),
             t("auth.secure_account_body"),
             [
-              { text: t("auth.secure_account_later"), style: "cancel" },
+              { text: t("auth.secure_account_later"), style: "cancel", onPress: () => setClaimed(false) },
               {
                 text: t("auth.secure_account_cta"),
-                onPress: () =>
-                  router.push({ pathname: "/register", params: { upgrade: "1" } }),
+                onPress: () => {
+                  setClaimed(false);
+                  router.push({ pathname: "/register", params: { upgrade: "1" } });
+                },
               },
             ],
+            { onDismiss: () => setClaimed(false) },
           );
         }, DELAY_MS);
       } catch {

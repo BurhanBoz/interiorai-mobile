@@ -453,7 +453,6 @@ export default function CreditPacksScreen() {
 
     const creditPackBonusPct2 = creditPackBonusPct;
     const storePrices = useStorePricesStore((st) => st.prices);
-    const hasBonusPlan = creditPackBonusPct > 0;
 
     /**
      * Credit packs (Umber, 2026-09-19).
@@ -599,17 +598,10 @@ export default function CreditPacksScreen() {
 
                 <View style={{ flex: 1 }} />
 
-                {!hasBonusPlan && (
-                    <Pressable
-                        onPress={() => router.push("/paywall?source=CREDIT_PACKS" as never)}
-                        accessibilityRole="button"
-                        style={{ paddingVertical: 8 }}
-                    >
-                        <Text style={{ ...theme.v2.rowQuiet, color: U.accentBright, textAlign: "center" }}>
-                            {t("credit_packs.subscribe_bonus_hint")}
-                        </Text>
-                    </Pressable>
-                )}
+                {/* 2.0.0: "Subscribe for up to +40% bonus credits" came off. The
+                    40% belonged to the retired Max plan — live plans give
+                    Base +10% and Pro +20% on packs — and the owner wants this
+                    screen plain: packs and prices. */}
                 <Text style={{ ...theme.v2.caption, color: U.inkMuted, textAlign: "center", marginBottom: 12 }}>
                     {t("credit_packs.secured_note")}
                 </Text>

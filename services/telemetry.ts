@@ -121,6 +121,40 @@ export async function recordAcquisitionSource(
     }
 }
 
+/**
+ * Why a subscriber cancelled (2.0.0, V189). Verbatim with
+ * CancellationFeedbackServiceImpl.APP_REASONS on the server — a rename on one
+ * side only drops every answer silently, and the server test pins the list.
+ */
+export type CancelReason =
+    | "PRICE"
+    | "RESULTS"
+    | "NOT_ENOUGH_CREDITS"
+    | "ONE_TIME"
+    | "HOW_TO_USE"
+    | "TECHNICAL"
+    | "OTHER"
+    | "SKIPPED";
+
+/** Fire-and-forget, like every call in this file: a survey must never cost a flow. */
+export async function recordCancellationFeedback(
+    reason: CancelReason,
+    opts: { trigger: "MANAGE" | "DETECTED"; planCode?: string | null; detail?: string | null },
+): Promise<void> {
+    try {
+        await api.post("/api/telemetry/cancellation", {
+            reason,
+            trigger: opts.trigger,
+            planCode: opts.planCode ?? null,
+            detail: opts.detail?.trim() || null,
+            appVersion: APP_VERSION,
+            locale: Localization.getLocales()[0]?.languageTag?.slice(0, 16) ?? null,
+        });
+    } catch {
+        // Analytics must never surface to the user.
+    }
+}
+
 /** Register this device for push. `environment` must match the build. */
 export async function registerPushToken(
     token: string,

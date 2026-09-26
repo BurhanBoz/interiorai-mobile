@@ -478,7 +478,9 @@
     "credits_line": "credits",
     "account_and_data": "Account en gegevens",
     "account_fallback_name": "Je account",
-    "name_and_email": "Naam en e-mail"
+    "name_and_email": "Naam en e-mail",
+    "manage_subscription": "Abonnement beheren",
+    "rate_app": "Beoordeel Roomframe"
   },
   "plans": {
     "title": "Kies je abonnement",
@@ -578,7 +580,9 @@
     "per_week": "/week",
     "plan_subtitle_weekly": "{{credits}} credits per week · ongebruikte credits blijven staan",
     "row_weekly_credits": "Credits per week",
-    "weekly_credits_label": "credits per week"
+    "weekly_credits_label": "credits per week",
+    "row_room_video": "Kamervideo",
+    "row_outdoor": "Buitenontwerp"
   },
   "credits_bridge": {
     "or_buy_credits": "Of koop eenmalig credits"
@@ -953,9 +957,9 @@
     "help_mail_subject": "Roomframe AI — Supportverzoek",
     "help_mail_body": "Beste Roomframe AI-team,\n\n[Beschrijf hier je probleem]\n\n---\nApp-versie: {{version}}\nAbonnement: {{plan}}\nGebruikers-ID: {{userId}}",
     "help_faq_q1_q": "Hoe werken credits?",
-    "help_faq_q1_a": "Elke render kost credits: herontwerp 3, Lege kamer 4 (HD 5), Magic Edit 4 (HD 5), Stijloverdracht 6 (HD 7), Uitbreiden 2 en de 4× Ultra HD-opschaling 3. Op Gratis kost elke render maar 1 credit — je begint met 3 credits op dag één en krijgt daarna elke dag 1 credit erbij (tot 3). Base bevat 50 credits per week, Pro 100 per week — ongebruikte credits blijven staan tot maximaal 2× je weekbedrag.",
+    "help_faq_q1_a": "Elke render kost credits; de kosten staan boven de knop Genereren voordat je begint. Op Gratis kost elke render 1 credit: je krijgt 3 credits op dag één en daarna elke dag 1 erbij (tot 3). Base bevat 50 credits per week en Pro 100; ongebruikte credits blijven staan tot maximaal 2× je weekbedrag.",
     "help_faq_q2_q": "Wat is het verschil tussen de abonnementen?",
-    "help_faq_q2_a": "Elk abonnement draait op onze beste AI-modellen. Gratis geeft je 3 credits op dag één en daarna 1 per dag (tot 3), met een watermerk — en elke render kost 1 credit. Base (50 credits per week) haalt het watermerk weg. Pro (100 credits per week) ontgrendelt daarnaast Stijloverdracht en Buitenontwerp.",
+    "help_faq_q2_a": "Elk abonnement draait op onze beste AI-modellen. Gratis geeft je 3 credits op dag één en daarna 1 per dag (tot 3), met een watermerk — en elke render kost 1 credit. Base (50 credits per week) haalt het watermerk weg en voegt kamervideo's toe. Pro (100 credits per week) ontgrendelt daarnaast Stijloverdracht en Buitenontwerp.",
     "help_faq_q3_q": "Hoe gebruik ik Stijloverdracht?",
     "help_faq_q3_a": "Kies met het Pro-abonnement Stijloverdracht op het startscherm van de Studio, upload je kamer en voeg daarna een referentiefoto toe. Je kamer wordt opnieuw ontworpen in de stijl van die referentie.",
     "help_faq_q4_q": "Mag ik gegenereerde ontwerpen commercieel gebruiken?",
@@ -1050,9 +1054,9 @@
     "notifications_n_low_credits_title": "Je credits raken op",
     "notifications_n_low_credits_body": "Nog maar {{balance}} credits over. Vul aan om te blijven renderen zonder op de volgende cyclus te wachten.",
     "notifications_n_upgrade_basic_title": "Kom verder met Base",
-    "notifications_n_upgrade_basic_body": "150 credits per maand, geen watermerk, HD-renders — allemaal op onze beste AI-modellen.",
+    "notifications_n_upgrade_basic_body": "Geen watermerk, elke week credits en kamervideo's van je ontwerpen.",
     "notifications_n_upgrade_pro_title": "Ontgrendel alles met Pro",
-    "notifications_n_upgrade_pro_body": "Magic Edit, Stijloverdracht, 4× Ultra HD-opschaling en 400 credits per maand.",
+    "notifications_n_upgrade_pro_body": "Stijloverdracht, Buitenontwerp, kamervideo's en de meeste credits per week.",
     "notifications_n_upgrade_max_title": "Max: FLUX premium",
     "notifications_n_upgrade_max_body": "Stijloverdracht, Ultra HD, voorrang in de wachtrij en 40% bonus op elk creditpakket.",
     "notifications_n_welcome_title": "Welkom bij Roomframe AI",
@@ -1064,7 +1068,9 @@
     "profile_edit_email_hint": "We sturen een bericht naar je huidige adres. Vanaf dan log je in met het nieuwe.",
     "profile_edit_email_success": "E-mailadres bijgewerkt. Vanaf nu log je daarmee in.",
     "profile_edit_email_managed": "Beheerd via je {{provider}}-account.",
-    "delete_account": "Account verwijderen"
+    "delete_account": "Account verwijderen",
+    "notifications_upsell_video_title": "Breng je ontwerpen tot leven",
+    "notifications_upsell_video_desc": "Maak van een afgerond ontwerp een kamervideo van 5 seconden met zachte natuurgeluiden. Inbegrepen bij Base en Pro."
   },
   "errors": {
     "network": "Netwerkfout. Controleer je verbinding.",
@@ -1219,7 +1225,29 @@
     "footnote": "Altijd opzegbaar · losse creditpakketten ook beschikbaar",
     "pack_line": "Of {{credits}} credits, eenmalig",
     "current_plan_title": "Je zit op {{plan}}",
-    "two_things_headline": "Twee dingen die alleen Pro kan"
+    "two_things_headline": "Twee dingen die alleen Pro kan",
+    "annual": "Jaarlijks",
+    "annual_save": "Jaarlijks · −{{pct}}%",
+    "chip_video": "Kamervideo · 5 s",
+    "chip_your_room": "Jouw kamer",
+    "first_week": "eerste week",
+    "then_price_week": "daarna {{price}}/week",
+    "intro_badge": "−{{pct}}%",
+    "intro_badge_plain": "Aanbieding",
+    "hero_default_title": "Geef elke kamer een nieuw ontwerp",
+    "hero_default_sub": "Credits die worden aangevuld, kamervideo's en geen watermerk.",
+    "hero_first_title": "Nu de rest van je huis",
+    "hero_first_sub": "Je eerste ontwerp is klaar. Met een abonnement heb je credits voor elke kamer, plus kamervideo's en geen watermerk.",
+    "hero_room_title": "Je kamer wacht op je",
+    "hero_room_sub": "Je credits zijn op. Kies een abonnement om hem af te maken, of vul eenmalig aan.",
+    "hero_exhausted_sub": "Kies een abonnement om verder te ontwerpen, of vul eenmalig aan.",
+    "hero_video_title": "Breng je ontwerp tot leven",
+    "hero_video_sub": "Maak van een afgerond ontwerp een kamervideo van 5 seconden met zachte natuurgeluiden.",
+    "pro_tools_sub": "Geef je kamer de stijl van elke foto die je kiest, en ontwerp tuinen, binnenplaatsen en terrassen opnieuw.",
+    "renewal_intro_week": "{{intro}} voor de eerste week, daarna {{price}} per week. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
+    "renewal_week": "{{price}} per week. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
+    "renewal_year": "{{price}} per jaar. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
+    "restore_link": "Aankopen herstellen"
   },
   "purchase_errors": {
     "sheet_title": "Het betaalscherm van Apple ging niet open",
@@ -1260,5 +1288,45 @@
     "kept_body": "je resultaten, in Frankfurt, totdat je ze verwijdert.",
     "privacy_policy": "Privacybeleid",
     "got_it": "Begrepen"
+  },
+  "plan_welcome": {
+    "title_pro": "Welkom bij Pro",
+    "title_base": "Welkom bij Base",
+    "title_pack": "Je credits zijn binnen",
+    "balance_one": "{{count}} credit klaar",
+    "balance_other": "{{count}} credits klaar",
+    "try_title": "Probeer nu",
+    "try_video": "Maak een kamervideo",
+    "try_video_sub": "Open een ontwerp in de Galerij en tik op ‘{{cta}}’.",
+    "start": "Begin met ontwerpen",
+    "continue": "Doorgaan"
+  },
+  "cancel_survey": {
+    "title_manage": "Denk je erover op te zeggen?",
+    "title_detected": "Jammer dat je gaat",
+    "body": "Wat is de belangrijkste reden? Eén tik helpt ons het te verbeteren.",
+    "reason_PRICE": "Het is te duur",
+    "reason_RESULTS": "De resultaten waren niet wat ik wilde",
+    "reason_NOT_ENOUGH_CREDITS": "Niet genoeg credits",
+    "reason_ONE_TIME": "Ik had het maar één keer nodig",
+    "reason_HOW_TO_USE": "Ik begreep niet hoe het werkt",
+    "reason_TECHNICAL": "Er werkte iets niet",
+    "reason_OTHER": "Iets anders",
+    "other_placeholder": "Vertel het ons in een paar woorden (optioneel)",
+    "send": "Versturen",
+    "skip_manage": "Overslaan — naar mijn abonnement",
+    "skip": "Overslaan",
+    "thanks_title": "Bedankt",
+    "thanks": "Bedankt — je antwoord gaat rechtstreeks naar het team.",
+    "reply_PRICE": "Bedankt. Is een weekabonnement niets voor jou? Eenmalige creditpakketten zijn er altijd — zonder abonnement.",
+    "reply_RESULTS": "Bedankt. De beste resultaten krijg je met een goed verlichte foto, recht van voren genomen, zonder mensen of huisdieren in beeld.",
+    "reply_HOW_TO_USE": "Bedankt. Tik in Instellingen op je naam en daarna op Help voor antwoorden op de meest gestelde vragen.",
+    "continue_manage": "Naar mijn abonnement",
+    "close": "Sluiten"
+  },
+  "resume": {
+    "generate": "Alles staat klaar — tik op ‘{{cta}}’ om verder te gaan waar je was.",
+    "video": "Alles staat klaar — tik op ‘{{cta}}’ om de video te maken.",
+    "restyle": "Alles staat klaar — kies een stijl om verder te gaan."
   }
 }

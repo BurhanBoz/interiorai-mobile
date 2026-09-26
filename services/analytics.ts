@@ -192,4 +192,17 @@ export type AnalyticsEvent =
      */
     | "result_shared"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.
-    | "video_sound_toggled";
+    | "video_sound_toggled"
+    /**
+     * The first minutes after a purchase (2.0.0). In September three of four
+     * weekly buyers turned auto-renew off the next day; whether the welcome
+     * screen sends people back into a task — and which one — is the question.
+     */
+    | "plan_welcome_viewed"
+    | "plan_welcome_continue"
+    | "plan_welcome_try"
+    /**
+     * Where a paying user met the cancel question, and whether they answered
+     * it. The answer itself goes to the server; this is the funnel around it.
+     */
+    | "cancel_survey_shown";

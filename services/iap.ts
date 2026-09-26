@@ -236,7 +236,7 @@ export async function fetchStorePrices(): Promise<StorePriceMap> {
         price: p.price,
         currencyCode: p.currencyCode,
         pricePerMonthString: p.pricePerMonthString,
-        introTrialDays: freeTrialDays(p),
+        intro: paidIntro(p),
     });
 
     const map: StorePriceMap = {};
@@ -588,24 +588,69 @@ export async function openManageSubscriptions(): Promise<boolean> {
 }
 
 /**
- * Days of FREE trial StoreKit attaches to a product, or null.
+ * An active subscription whose auto-renew the user has turned off, or null.
  *
- * <p>Only a zero-priced introductory offer counts — a paid intro ("first week
- * $0.99") is not a trial and must not be described as one. The unit is
- * normalised to days because the paywall copy says "{{days}} days free";
- * Apple's shortest option is 3 days, so anything shorter is impossible and
- * anything longer than a month is not a trial we would ever configure.
+ * <p>Apple runs cancellation on its own screen and tells the app nothing; the
+ * receipt RevenueCat keeps is the only place it shows. {@code
+ * unsubscribeDetectedAt} is the discriminator on purpose — {@code willRenew}
+ * is also false while a payment is failing, and that person did not choose to
+ * leave. Never throws: this runs on every return to the foreground.
  */
-function freeTrialDays(p: PurchasesStoreProduct): number | null {
+export async function findLapsingSubscription(): Promise<{ productId: string; expires: string | null } | null> {
+    if (isDummyMode) return null;
+    try {
+        const info = await Purchases.getCustomerInfo();
+        for (const e of Object.values(info.entitlements.active)) {
+            if (e.willRenew === false && e.unsubscribeDetectedAt) {
+                return { productId: e.productIdentifier, expires: e.expirationDate };
+            }
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * The PAID introductory offer StoreKit attaches to a product, or null.
+ *
+ * <p>A zero-priced intro is a free trial, which Roomframe does not offer
+ * (2.0.0): it is ignored here rather than described, so the paywall can never
+ * promise a trial by accident if one is switched on in App Store Connect.
+ */
+function paidIntro(p: PurchasesStoreProduct): StorePrice["intro"] {
     const intro = p.introPrice;
-    if (!intro || intro.price !== 0) return null;
-    const n = intro.periodNumberOfUnits;
-    if (!Number.isFinite(n) || n <= 0) return null;
-    switch (intro.periodUnit) {
-        case "DAY": return n;
-        case "WEEK": return n * 7;
-        case "MONTH": return n * 30;
-        case "YEAR": return n * 365;
-        default: return null;
+    if (!intro || !(intro.price > 0)) return null;
+    const units = intro.periodNumberOfUnits;
+    if (!Number.isFinite(units) || units <= 0) return null;
+    return {
+        priceString: intro.priceString,
+        price: intro.price,
+        periodUnit: intro.periodUnit,
+        periodUnits: units,
+        cycles: Number.isFinite(intro.cycles) && intro.cycles > 0 ? intro.cycles : 1,
+    };
+}
+
+/**
+ * Which of these products' introductory offers THIS Apple ID may take.
+ *
+ * <p>Apple gives an introductory offer once per subscription group, so a past
+ * Base subscriber cannot take Pro's first-week price; showing it anyway would
+ * put one price on our screen and another on Apple's sheet. Only ELIGIBLE
+ * counts — UNKNOWN, and any failure, read as not eligible, which is
+ * RevenueCat's own advice: when in doubt, show the regular price.
+ */
+export async function fetchIntroEligibility(productIds: string[]): Promise<Record<string, boolean>> {
+    if (isDummyMode || productIds.length === 0) return {};
+    try {
+        const map = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+        const eligible = Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE;
+        const out: Record<string, boolean> = {};
+        for (const id of productIds) out[id] = map[id]?.status === eligible;
+        return out;
+    } catch (e) {
+        console.warn("[IAP] intro eligibility check failed, showing regular prices:", e);
+        return {};
     }
 }

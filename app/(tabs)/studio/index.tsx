@@ -561,7 +561,16 @@ function FeatureGrid({
                     German "Stilübertragung" and Dutch "Buitenontwerp" wrap to
                     two lines and must not change the grid. */}
                 <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
-                    <Text numberOfLines={2} style={{ ...V.tile, color: selected ? U.accentBright : U.ink }}>
+                    {/* A single long word ("Réaménagement") must shrink, not
+                        split mid-word — iOS broke it as "Réaménagem / ent" on
+                        the French home screen (simulator, 26 Sep). Labels with
+                        a space keep their two lines. */}
+                    <Text
+                        numberOfLines={item.label.includes(" ") ? 2 : 1}
+                        adjustsFontSizeToFit={!item.label.includes(" ")}
+                        minimumFontScale={0.7}
+                        style={{ ...V.tile, color: selected ? U.accentBright : U.ink }}
+                    >
                         {item.label}
                     </Text>
                 </View>
