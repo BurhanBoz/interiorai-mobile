@@ -96,8 +96,14 @@ export default function StudioScreen() {
     useFocusEffect(
         useCallback(() => {
             fetchBalance().catch(() => {});
-            if (!useStudioStore.getState().photo?.fileId) {
+            const stored = useStudioStore.getState().photo;
+            if (!stored?.fileId) {
                 setJustPicked(null);
+            } else {
+                // The composer can replace the room (its "Replace" pill). Follow
+                // it, but only if a room was picked on THIS visit — an earlier
+                // visit's room is still never shown.
+                setJustPicked((current) => (current != null ? stored.uri ?? current : current));
             }
         }, [fetchBalance]),
     );
@@ -312,8 +318,10 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
  *
  * <p>The tile shows the room picked on THIS visit (never an earlier one —
  * 19 Sep founder call), and while that room uploads it is already on the
- * tile under a spinner. Each `nudge` bump — a dimmed tool was tapped — makes
- * the tile pulse once (skipped under Reduce Motion; the haptic stays).
+ * tile under a spinner. Before there is a preview to show — the file is still
+ * being read or downscaled — the "+" itself turns into the spinner. Each
+ * `nudge` bump — a dimmed tool was tapped — makes the tile pulse once
+ * (skipped under Reduce Motion; the haptic stays).
  */
 function IntakeRow({
     busy,
@@ -358,7 +366,9 @@ function IntakeRow({
                     onPress={onAddPhoto}
                     disabled={busy}
                     accessibilityRole="button"
-                    accessibilityLabel={photoUri ? t("studio.replace") : t("studio.add_a_photo")}
+                    accessibilityLabel={
+                        photoUri ? t("studio.replace") : busy ? t("studio.uploading") : t("studio.add_a_photo")
+                    }
                     accessibilityState={{ busy }}
                     style={{
                         flex: 1,
@@ -413,6 +423,24 @@ function IntakeRow({
                                     </Text>
                                 </View>
                             )}
+                        </>
+                    ) : busy ? (
+                        /* Picked, but no preview yet: iOS is still reading the
+                           file (an iCloud original downloads first) or it is
+                           being downscaled. Same tile, the "+" swapped for a
+                           spinner, so the tap visibly took (build 91). The
+                           spinner sits in the glyph's 34px so the label does
+                           not move. */
+                        <>
+                            <View style={{ height: 34, justifyContent: "center" }}>
+                                <ActivityIndicator color={U.buttonInk} />
+                            </View>
+                            <Text
+                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                                numberOfLines={1}
+                            >
+                                {t("studio.uploading")}
+                            </Text>
                         </>
                     ) : (
                         <>

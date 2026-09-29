@@ -77,6 +77,7 @@ export default function ComposerScreen() {
     const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
     const setRoomType = useStudioStore((s) => s.setRoomType);
     const setDesignStyle = useStudioStore((s) => s.setDesignStyle);
+    const setPhoto = useStudioStore((s) => s.setPhoto);
 
     const roomTypes = useCatalogStore((s) => s.roomTypes);
     const designStyles = useCatalogStore((s) => s.designStyles);
@@ -172,10 +173,15 @@ export default function ComposerScreen() {
 
     const pickedProduct = objectRefs[0] ?? null;
 
-    const onReplace = useCallback(() => {
+    const onReplace = useCallback(async () => {
         Haptics.selectionAsync();
-        pickImage("gallery").catch(() => {});
-    }, [pickImage]);
+        // 🔴 The picker RETURNS the photo; it does not store it. From the
+        // Umber composer (51f234a) until build 91 this pill uploaded the new
+        // room and dropped it — the frame kept the old photo. setPhoto also
+        // clears any mask drawn on the old one.
+        const picked = await pickImage("gallery").catch(() => null);
+        if (picked) setPhoto(picked);
+    }, [pickImage, setPhoto]);
 
     const canGenerate = Boolean(photo?.fileId) && !isSubmitting && !isUploading;
 
