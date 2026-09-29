@@ -354,9 +354,7 @@
     "mask_ready": "변경할 영역 설정됨",
     "edit_mask": "편집",
     "reference_ready": "참고 사진 설정됨",
-    "change_reference": "변경",
-    "pick_tool_title": "이 사진으로 무엇을 할까요?",
-    "then_pick_tool": "그다음 할 작업을 고르세요"
+    "change_reference": "변경"
   },
   "furniture": {
     "title": "가구",

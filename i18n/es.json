@@ -355,9 +355,7 @@
     "mask_ready": "Zona a cambiar definida",
     "edit_mask": "Editar",
     "reference_ready": "Foto de referencia definida",
-    "change_reference": "Cambiar",
-    "pick_tool_title": "¿Qué hacemos con ella?",
-    "then_pick_tool": "Después, elige qué hacer"
+    "change_reference": "Cambiar"
   },
   "furniture": {
     "title": "Muebles",

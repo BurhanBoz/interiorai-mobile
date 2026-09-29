@@ -355,9 +355,7 @@
     "mask_ready": "Area da modificare impostata",
     "edit_mask": "Modifica",
     "reference_ready": "Foto di riferimento impostata",
-    "change_reference": "Cambia",
-    "pick_tool_title": "Cosa ne facciamo?",
-    "then_pick_tool": "Poi scegli cosa fare"
+    "change_reference": "Cambia"
   },
   "furniture": {
     "title": "Arredamento",

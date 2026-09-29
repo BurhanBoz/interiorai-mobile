@@ -1,17 +1,5 @@
-import { useCallback, useState } from "react";
-import {
-    View,
-    Text,
-    Pressable,
-    Image,
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    LayoutAnimation,
-    AccessibilityInfo,
-    type StyleProp,
-    type ViewStyle,
-} from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -22,7 +10,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES } from "@/components/studio/featureCatalog";
-import { SAMPLE_ROOMS, type SampleRoom } from "@/components/studio/sampleRooms";
+import { SAMPLE_ROOMS } from "@/components/studio/sampleRooms";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { HexMark } from "@/components/brand/HexMark";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
@@ -34,153 +22,166 @@ const V = theme.v2;
 const R = theme.v2Layout.radius;
 const GUTTER = theme.v2Layout.gutterWide;
 
-type ToolKey = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR";
-
-/** Tile and chip order — one list, so the two steps can never disagree. */
-const TOOLS: { key: ToolKey; labelKey: string }[] = [
-    { key: "REDESIGN", labelKey: "studio.mode_redesign" },
-    { key: "EMPTY_ROOM", labelKey: "studio.mode_empty_room" },
-    { key: "INPAINT", labelKey: "studio.mode_inpaint" },
-    { key: "STYLE_TRANSFER", labelKey: "studio.mode_style_transfer" },
-    { key: "OUTDOOR", labelKey: "studio.mode_outdoor" },
-];
-
-/** The server knows Outdoor by its feature code, the client by its mode. */
-const featureCodeFor = (key: ToolKey) => (key === "OUTDOOR" ? "OUTDOOR_DESIGN" : key);
-
 /**
- * Studio — the home screen. Photo first, then the tool (2.1.0, 2026-09-29).
+ * Studio — the home screen (Umber redesign, 2026-09-19).
  *
- * <p><b>Why the order changed.</b> Since 19 Sep the photo and the tool were two
- * equal halves: whichever the user tapped second navigated. The tool grid was
- * the biggest thing on the screen, so that is where people started — and the
- * 24-hour activity report of 29 Sep shows how the day then ended for most new
- * users: app opened, paywall closed, nothing uploaded, gone. A tool without a
- * room is an abstract choice; a room on the screen makes every tool concrete.
+ * <p><b>What changed and why.</b> The previous home showed five features as
+ * one full-width card each. Two were visible without scrolling; Style Transfer
+ * was the fourth card and Outdoor the fifth, two swipes down, and the first
+ * time a user met either was as a padlock. The furniture catalogue — the one
+ * thing no competitor has — had no entry point here at all.
  *
- * <p>So the screen now has two steps and shows one at a time:
- * <ol>
- *   <li><b>Step 1 — the room.</b> The intake is the hero. Samples sit right
- *       under it for people without a photo to hand. The tools are still
- *       visible (the 19 Sep redesign's rule: the home must answer "what does
- *       this app do?"), but as a small "then choose" row. Tapping one keeps
- *       the choice and opens the photo sheet — the tool never runs without a
- *       room, and the user's intent is not lost.</li>
- *   <li><b>Step 2 — the tool.</b> The room the user just gave sits on top, the
- *       five tools below as photographs, locks from the server as before.
- *       A tap goes straight to the tool's screen.</li>
- * </ol>
+ * <p>That screen could not answer "what does this app do?", and the number
+ * that matters says nobody stayed to find out: of 126 people who ever produced
+ * a design, 118 produced all of them on a single day and 64 generated exactly
+ * once.
  *
- * <p>🔴 Still true from the 19 Sep redesign:
- * <ul>
- *   <li>The screen never opens on a photo from an earlier visit (founder
- *       call): step 2 shows only what was chosen on THIS screen. When a run
- *       finishes, studioStore.reset() clears the photo and the screen is back
- *       at step 1 on the next focus.</li>
- *   <li>Locks come from the server's plan_features, never from the client
- *       catalogue.</li>
- *   <li>The height budget is a contract: both steps fit 393 × 852 with no
- *       vertical scroll. Flex takes the slack, so larger phones grow the
- *       photographs, not the gaps.</li>
- * </ul>
+ * <p>So: six capabilities in one glance, the catalogue promoted to a tile AND
+ * a band, and the locked pair shown as photographs with a PRO tag rather than
+ * hidden behind a lock. Nothing is withheld visually; the tag says what costs
+ * money.
+ *
+ * <p><b>Photo first (2.1.0, 2026-09-29 founder call).</b> Until 2.0.0 the photo
+ * and the tool were two equal halves and whichever came second navigated, so
+ * people started on the big tool grid and met the photo question on the next
+ * screen. Now the order is fixed on THIS screen, without adding a step: the
+ * tools stay on show — they are still the answer to "what does this app do?" —
+ * but they are dimmed and do not open until there is a room. Tapping one early
+ * is not a dead tap: the phone gives a short warning buzz and the "Add a photo"
+ * tile pulses, which says where to start without another line of text. Once
+ * the room is in, the tiles come up to full strength and a tap goes straight to
+ * the tool.
+ *
+ * <p>🔴 <b>The height budget is a contract.</b> Everything below must fit
+ * 393 × 852 with no vertical scroll — there is no ScrollView on this screen
+ * on purpose. Content runs ~637px against a tab-bar top of 774px. Adding a
+ * block means removing one.
  */
 export default function StudioScreen() {
     const { t } = useTranslation();
     const setMode = useStudioStore((s) => s.setMode);
     const setPhoto = useStudioStore((s) => s.setPhoto);
     const planCode = useEffectivePlanCode();
+    // 🔴 The lock comes from the SERVER's plan_features, not from the client
+    // catalogue's `minPlan`. The two had already drifted: only Outdoor carried
+    // minPlan, so Style Transfer rendered unlocked here while the backend
+    // refuses it — a user could walk the whole flow and be turned away at the
+    // charge. The catalogue file's own comment warns about exactly this
+    // ("never re-hardcode a lock list, it drifted in both directions").
     const features = useEffectiveFeatures();
 
     const balance = useCreditStore((s) => s.balance);
     const fetchBalance = useCreditStore((s) => s.fetchBalance);
 
-    const { pickImage, useSampleImage, isUploading } = useImagePicker();
-
     const [sourceSheet, setSourceSheet] = useState(false);
-    /** The room chosen on THIS screen; null = step 1. */
-    const [chosen, setChosen] = useState<{ uri: string; sample: SampleRoom | null } | null>(null);
-    /** The local file shown while it uploads, so the screen is never blank. */
+
+    /**
+     * BU ziyarette seçilen fotoğraf.
+     *
+     * <p>🔴 Store'dan okunmuyor, kasten. Karo açılışta store'daki fotoğrafı
+     * gösterdiğinde ekran geçen seferden kalmış bir odayla karşılıyordu ve
+     * kullanıcı onu yeni seçimi sanıyordu (19 Eyl kurucu kararı). Ekrana
+     * girerken boş, seçtikten sonra dolu.
+     *
+     * <p>Bir iş bitince studioStore.reset() fotoğrafı siler; bir sonraki odakta
+     * karo da boşalır ve araçlar yeniden kapanır. İş yapmadan geri dönen
+     * kullanıcı ise aynı odayla döner ve başka bir araç seçebilir.
+     */
+    const [justPicked, setJustPicked] = useState<string | null>(null);
+    /** The local file shown on the tile while it uploads. */
     const [previewUri, setPreviewUri] = useState<string | null>(null);
-    /** A tool tapped before there was a room — honoured once the room arrives. */
-    const [pendingTool, setPendingTool] = useState<ToolKey | null>(null);
+    /** Bumped when a dimmed tool is tapped; the intake tile pulses on each bump. */
+    const [nudge, setNudge] = useState(0);
 
     useFocusEffect(
         useCallback(() => {
             fetchBalance().catch(() => {});
-            // A finished run resets the store; the home follows it back to
-            // step 1. Leaving a tool WITHOUT generating keeps the photo, so the
-            // user lands on step 2 and can pick another tool for the same room.
             if (!useStudioStore.getState().photo?.fileId) {
-                setChosen(null);
-                setPendingTool(null);
+                setJustPicked(null);
             }
         }, [fetchBalance]),
     );
 
-    // Server truth. Returns false until plan_features has loaded — an unlocked
-    // flash is recoverable, a wrongly locked tile is not.
-    const isLocked = (key: ToolKey) =>
-        features.length > 0 &&
-        !(features.find((f) => f.featureCode === featureCodeFor(key))?.enabled ?? true);
+    const { pickImage, useSampleImage, isUploading } = useImagePicker();
+
+    /** The tools open only once a room is uploaded and in the store. */
+    const photoReady = justPicked != null && !isUploading;
 
     /**
-     * Where a tool goes. Magic Edit needs a painted mask and Style Transfer a
-     * reference photo — inputs the composer does not collect — so they keep
-     * their own screens. All three read the photo from the studio store.
+     * Where a mode goes.
+     *
+     * <p>🔴 Two modes need an input the composer does not collect, and
+     * {@link useGenerate} refuses without it: Magic Edit needs a painted mask
+     * and Style Transfer needs a reference photo. Sending them to the
+     * composer let the user walk the whole screen and meet an alert at
+     * Generate — a dead end with the credit cost already on display.
+     *
+     * <p>They keep their own screens, which do collect it. Both read the
+     * photo from the studio store, so the intake above still applies.
      */
-    const openTool = (key: ToolKey) => {
-        setMode(key as never);
-        if (key === "INPAINT") return router.push("/studio/smart-edit" as never);
-        if (key === "STYLE_TRANSFER") return router.push("/studio/style-transfer" as never);
-        router.push("/studio/composer" as never);
+    const MODE_ROUTES: Record<string, string> = {
+        INPAINT: "/studio/smart-edit",
+        STYLE_TRANSFER: "/studio/style-transfer",
     };
 
+    const goComposer = (mode: string, opts?: { catalogue?: boolean }) => {
+        setMode(mode as never);
+        const dedicated = MODE_ROUTES[mode];
+        if (dedicated) {
+            router.push(dedicated as never);
+            return;
+        }
+        router.push({
+            pathname: "/studio/composer",
+            params: opts?.catalogue ? { sheet: "catalogue" } : undefined,
+        } as never);
+    };
+
+    /**
+     * Intake. Every path goes through {@link useImagePicker}, which is also
+     * where the consent gate lives, so no photo can leave the device unasked
+     * whichever button was pressed. A cancelled picker returns null and we
+     * stay put.
+     */
     const addPhoto = async (
-        source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; room: SampleRoom },
+        source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number },
     ) => {
         Haptics.selectionAsync();
         const opts = { onPreview: setPreviewUri };
         const picked =
             source.kind === "sample"
-                ? await useSampleImage(source.room.module, opts)
+                ? await useSampleImage(source.module, opts)
                 : await pickImage(source.kind, opts);
         setPreviewUri(null);
         if (!picked) return;
-        // The picker RETURNS the photo; it does not store it.
+        // 🔴 The picker RETURNS the photo; it does not store it. Without this
+        // the composer opened on an empty frame that spun forever — the
+        // upload had succeeded and nothing was holding the result.
         setPhoto(picked);
-        await animateNextLayout();
-        setChosen({ uri: picked.uri, sample: source.kind === "sample" ? source.room : null });
-        if (pendingTool) {
-            const key = pendingTool;
-            setPendingTool(null);
-            openTool(key);
-        }
+        setJustPicked(picked.uri ?? null);
     };
 
-    const onTool = (key: ToolKey) => {
+    const onFeature = (key: string, locked: boolean) => {
+        if (!photoReady) {
+            // The room comes first. No navigation — a buzz and a pulse on the
+            // tile that starts the flow.
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            setNudge((n) => n + 1);
+            return;
+        }
         Haptics.selectionAsync();
-        if (isLocked(key)) {
+        if (locked) {
             router.push("/paywall?source=FEATURE_TILE" as never);
             return;
         }
-        if (chosen) {
-            openTool(key);
-            return;
-        }
-        // Step 1: the room comes first. Keep the choice (tapping it again
-        // clears it — a choice you cannot undo is a trap) and ask for the room.
-        if (pendingTool === key) {
-            setPendingTool(null);
-            return;
-        }
-        setPendingTool(key);
-        setSourceSheet(true);
+        goComposer(key);
     };
 
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
-            {/* The tab bar is absolutely positioned and takes no space, so the
-                column pads itself clear of the dock. */}
+            {/* 🔴 The tab bar is absolutely positioned, so it takes no space —
+                a flex:1 column runs underneath it. Without this padding the
+                second tile row and its labels sat behind the dock. */}
             <View
                 style={{
                     flex: 1,
@@ -189,48 +190,22 @@ export default function StudioScreen() {
                 }}
             >
                 <Header balance={balance} planCode={planCode} />
-
-                {chosen ? (
-                    <View style={{ flex: 1 }}>
-                        <ChosenRoom
-                            uri={previewUri ?? chosen.uri}
-                            busy={isUploading}
-                            onChange={() => setSourceSheet(true)}
-                        />
-                        <StepHeading step={2} title={t("studio.pick_tool_title")} style={{ marginTop: 18 }} />
-                        <ToolGrid
-                            isLocked={isLocked}
-                            onPress={onTool}
-                            recommended={chosen.sample?.modes ?? null}
-                            style={{ marginTop: 14 }}
-                        />
-                    </View>
-                ) : (
-                    <View style={{ flex: 1 }}>
-                        <StepHeading
-                            step={1}
-                            title={t("studio.photo_source_title")}
-                            body={t("studio.photo_source_body")}
-                        />
-                        <PhotoHero
-                            busy={isUploading}
-                            previewUri={previewUri}
-                            onPress={() => setSourceSheet(true)}
-                            style={{ marginTop: 16 }}
-                        />
-                        <SampleRow
-                            busy={isUploading}
-                            onPick={(room) => addPhoto({ kind: "sample", room })}
-                            style={{ marginTop: 18 }}
-                        />
-                        <ToolChips
-                            isLocked={isLocked}
-                            pending={pendingTool}
-                            onPress={onTool}
-                            style={{ marginTop: 18 }}
-                        />
-                    </View>
-                )}
+                <IntakeRow
+                    busy={isUploading}
+                    photoUri={previewUri ?? justPicked}
+                    nudge={nudge}
+                    onAddPhoto={() => setSourceSheet(true)}
+                    onSample={(m) => addPhoto({ kind: "sample", module: m })}
+                />
+                <FeatureGrid
+                    isLocked={(code) =>
+                        features.length > 0 &&
+                        !(features.find((f) => f.featureCode === code)?.enabled ?? true)
+                    }
+                    onPress={onFeature}
+                    t={t}
+                    enabled={photoReady}
+                />
             </View>
 
             {sourceSheet && (
@@ -242,12 +217,6 @@ export default function StudioScreen() {
             )}
         </SafeAreaView>
     );
-}
-
-/** One quiet transition between the steps; nothing moves under Reduce Motion. */
-async function animateNextLayout() {
-    const reduce = await AccessibilityInfo.isReduceMotionEnabled().catch(() => false);
-    if (!reduce) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 }
 
 /* ── header ─────────────────────────────────────────────────────────── */
@@ -265,11 +234,16 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
     // would be a friendly lie.
     const hoursToRefill = (() => {
         const now = new Date();
-        const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+        const next = Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() + 1,
+        );
         return Math.max(1, Math.ceil((next - now.getTime()) / 3_600_000));
     })();
     // At or above the ceiling the drip does not fire, so promising one would
-    // be wrong. FREE only — a subscriber's credits do not trickle.
+    // be wrong — with a ceiling of 1, a FREE user holding their one credit
+    // was told "+1 in 5h". FREE only — a subscriber's credits do not trickle.
     const showRefill = planCode === "FREE" && balance < FREE_DAILY_CEILING;
 
     return (
@@ -279,7 +253,9 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingTop: 10,
-                paddingBottom: 22,
+                // The intake tile used to start 14px under the lockup, which
+                // read as one block rather than a header and a first action.
+                paddingBottom: 26,
             }}
         >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -307,7 +283,9 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                     paddingHorizontal: 12,
                 }}
             >
-                <Text style={{ fontFamily: "Inter-Bold", fontSize: 13, color: U.accentBright }}>{balance}</Text>
+                <Text style={{ fontFamily: "Inter-Bold", fontSize: 13, color: U.accentBright }}>
+                    {balance}
+                </Text>
                 {showRefill && (
                     <Text style={{ fontFamily: "Inter-Medium", fontSize: 11, color: U.inkMuted }}>
                         {t("studio.refill_in", { hours: hoursToRefill })}
@@ -318,188 +296,167 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
     );
 }
 
-/* ── step heading ───────────────────────────────────────────────────── */
+/* ── intake ─────────────────────────────────────────────────────────── */
 
 /**
- * "STEP 1 / 2" is the whole explanation of the flow. It says there is a
- * second step without describing it, so step 1 stays about the room.
- */
-function StepHeading({
-    step,
-    title,
-    body,
-    style,
-}: {
-    step: 1 | 2;
-    title: string;
-    body?: string;
-    style?: StyleProp<ViewStyle>;
-}) {
-    const { t } = useTranslation();
-    return (
-        <View style={style} accessible accessibilityRole="header">
-            <Text style={{ ...V.kicker, color: U.accent }}>{t("studio.step_of", { current: step, total: 2 })}</Text>
-            <Text style={{ ...V.displayS, color: U.ink, marginTop: 6 }} numberOfLines={2}>
-                {title}
-            </Text>
-            {body ? (
-                <Text style={{ ...V.rowQuiet, color: U.inkMuted, marginTop: 6 }} numberOfLines={2}>
-                    {body}
-                </Text>
-            ) : null}
-        </View>
-    );
-}
-
-/* ── step 1 ─────────────────────────────────────────────────────────── */
-
-/** A room photo's own shape — the card reads as "a photo goes here". */
-const HERO_RATIO = 4 / 3;
-/** Share of the column's width the card may take; the rest is air on both sides. */
-const HERO_WIDTH_SHARE = 0.86;
-/** Minimum air above and below the card, each. */
-const HERO_AIR = 12;
-
-/**
- * The first action — the one clear thing to do, but not the whole screen.
+ * One way in, not two.
  *
- * <p>2026-09-29 founder call: the edge-to-edge card that filled all the free
- * height read as a wall, not a button. It is now a 4:3 card (the shape of the
- * photo it asks for) at most 86% of the column wide, centred in the space
- * between the heading and the samples, with air on all four sides. Its size is
- * computed from that space rather than fixed, so a two-line German heading
- * shrinks the card instead of pushing the samples under the tab bar.
+ * <p>The row used to spend two of its three columns on "Shoot the room" and
+ * "Choose a photo" — one decision split across two tiles, asked before the
+ * user has decided they want to give a photo at all. They are now a single
+ * tile carrying a "+", wide enough to be the obvious thing on the screen, and
+ * the camera-or-library question moves to the sheet that opens on tap.
  *
- * <p>Camera-or-library is asked on the sheet (one way in, not two tiles for
- * one decision). While the chosen photo uploads it fills this card under a
- * scrim, so the user sees their room the moment they pick it.
+ * <p>The label is neutral on purpose. The tile now leads to both sources, so
+ * naming the camera on it would be a promise the sheet immediately breaks.
+ *
+ * <p>The tile shows the room picked on THIS visit (never an earlier one —
+ * 19 Sep founder call), and while that room uploads it is already on the
+ * tile under a spinner. Each `nudge` bump — a dimmed tool was tapped — makes
+ * the tile pulse once (skipped under Reduce Motion; the haptic stays).
  */
-function PhotoHero({
+function IntakeRow({
     busy,
-    previewUri,
-    onPress,
-    style,
+    photoUri,
+    nudge,
+    onAddPhoto,
+    onSample,
 }: {
     busy: boolean;
-    previewUri: string | null;
-    onPress: () => void;
-    style?: StyleProp<ViewStyle>;
+    /** Bu ziyarette seçilen (ya da şu an yüklenen) fotoğraf; null ise karo boş "+" olarak durur. */
+    photoUri: string | null;
+    nudge: number;
+    onAddPhoto: () => void;
+    onSample: (module: number) => void;
 }) {
     const { t } = useTranslation();
-    const [space, setSpace] = useState<{ w: number; h: number } | null>(null);
-    const size = space ? heroSize(space.w, space.h) : null;
+    const samples = SAMPLE_ROOMS.slice(0, 2);
+    const pulse = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        if (nudge === 0) return;
+        let cancelled = false;
+        AccessibilityInfo.isReduceMotionEnabled()
+            .catch(() => false)
+            .then((reduce) => {
+                if (cancelled || reduce) return;
+                pulse.setValue(1);
+                Animated.sequence([
+                    Animated.timing(pulse, { toValue: 1.05, duration: 120, useNativeDriver: true }),
+                    Animated.spring(pulse, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }),
+                ]).start();
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [nudge, pulse]);
+
     return (
-        <View
-            style={[{ flex: 1, minHeight: 150, alignItems: "center", justifyContent: "center" }, style]}
-            onLayout={(e) => {
-                const { width, height } = e.nativeEvent.layout;
-                setSpace((s) => (s && s.w === width && s.h === height ? s : { w: width, h: height }));
-            }}
-        >
-            {size && (
+        <View style={{ flexDirection: "row", gap: 10, height: 100 }}>
+            <Animated.View style={{ flex: 2, transform: [{ scale: pulse }] }}>
                 <Pressable
-                    onPress={onPress}
+                    onPress={onAddPhoto}
                     disabled={busy}
                     accessibilityRole="button"
-                    accessibilityLabel={t("studio.add_a_photo")}
+                    accessibilityLabel={photoUri ? t("studio.replace") : t("studio.add_a_photo")}
                     accessibilityState={{ busy }}
                     style={{
-                        width: size.w,
-                        height: size.h,
+                        flex: 1,
+                        backgroundColor: photoUri ? U.surface : U.buttonFill,
                         borderRadius: R.card,
                         overflow: "hidden",
-                        backgroundColor: previewUri ? U.surface : U.buttonFill,
                         alignItems: "center",
                         justifyContent: "center",
+                        gap: 8,
+                        paddingHorizontal: 12,
+                        borderWidth: photoUri ? 1.5 : 0,
+                        borderColor: U.accent,
                     }}
                 >
-                    {previewUri ? (
+                    {photoUri ? (
                         <>
-                            <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                            <View
-                                style={[
-                                    StyleSheet.absoluteFill,
-                                    { backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center", gap: 10 },
-                                ]}
-                            >
-                                <ActivityIndicator color={U.accentBright} />
-                                <Text style={{ ...V.row, color: U.ink }}>{t("studio.uploading")}</Text>
-                            </View>
+                            <Image
+                                source={{ uri: photoUri }}
+                                style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                                resizeMode="cover"
+                            />
+                            {busy ? (
+                                <View
+                                    style={{
+                                        position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
+                                        backgroundColor: U.overlayScrim,
+                                        alignItems: "center", justifyContent: "center", gap: 6,
+                                    }}
+                                >
+                                    <ActivityIndicator color={U.accentBright} />
+                                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}>
+                                        {t("studio.uploading")}
+                                    </Text>
+                                </View>
+                            ) : (
+                                /* Fotoğrafın üstünde metin okunur kalsın diye kendi
+                                   perdesi — tema rengi değil, fotoğraf kromu. */
+                                <View
+                                    style={{
+                                        position: "absolute", left: 0, right: 0, bottom: 0,
+                                        paddingHorizontal: 10, paddingTop: 16, paddingBottom: 8,
+                                        backgroundColor: "rgba(0,0,0,0.55)",
+                                        flexDirection: "row", alignItems: "center", gap: 6,
+                                    }}
+                                >
+                                    <Text style={{ color: U.accentBright, fontSize: 12 }}>✓</Text>
+                                    <Text
+                                        style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}
+                                        numberOfLines={1}
+                                    >
+                                        {t("studio.replace")}
+                                    </Text>
+                                </View>
+                            )}
                         </>
                     ) : (
                         <>
                             <PlusGlyph color={U.buttonInk} />
-                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 17, color: U.buttonInk, marginTop: 12 }}>
+                            <Text
+                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                                numberOfLines={1}
+                            >
                                 {t("studio.add_a_photo")}
-                            </Text>
-                            <Text style={{ ...V.rowQuiet, color: U.buttonInk, opacity: 0.72, marginTop: 4 }}>
-                                {t("studio.camera")} · {t("studio.gallery")}
                             </Text>
                         </>
                     )}
                 </Pressable>
-            )}
-        </View>
-    );
-}
+            </Animated.View>
 
-/** The largest 4:3 card that fits the space with the width share and the air kept. */
-function heroSize(spaceW: number, spaceH: number): { w: number; h: number } {
-    const maxW = spaceW * HERO_WIDTH_SHARE;
-    const maxH = Math.max(0, spaceH - 2 * HERO_AIR);
-    let w = maxW;
-    let h = w / HERO_RATIO;
-    if (h > maxH) {
-        h = maxH;
-        w = h * HERO_RATIO;
-    }
-    return { w: Math.round(w), h: Math.round(h) };
-}
-
-/**
- * All four sample rooms, labelled. They go through the same upload as a real
- * photo (consent included), so what comes back is a real render.
- */
-function SampleRow({
-    busy,
-    onPick,
-    style,
-}: {
-    busy: boolean;
-    onPick: (room: SampleRoom) => void;
-    style?: StyleProp<ViewStyle>;
-}) {
-    const { t } = useTranslation();
-    return (
-        <View style={style}>
-            <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.try_a_sample")}</Text>
-            <View style={{ flexDirection: "row", gap: 8, height: 74, marginTop: 10 }}>
-                {SAMPLE_ROOMS.map((room) => (
+            <View style={{ flex: 1, gap: 8 }}>
+                {samples.map((s, i) => (
                     <Pressable
-                        key={room.key}
-                        onPress={() => onPick(room)}
+                        key={s.key}
+                        onPress={() => onSample(s.module)}
                         disabled={busy}
                         accessibilityRole="button"
-                        accessibilityLabel={`${t("studio.try_a_sample")}: ${t(room.labelKey)}`}
-                        style={{ flex: 1, borderRadius: R.thumb, overflow: "hidden", opacity: busy ? 0.6 : 1 }}
+                        accessibilityLabel={t("studio.try_a_sample")}
+                        style={{ flex: 1, borderRadius: R.tile, overflow: "hidden" }}
                     >
-                        <Image source={room.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                        <View
-                            style={{
-                                position: "absolute",
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                paddingHorizontal: 6,
-                                paddingTop: 10,
-                                paddingBottom: 5,
-                                backgroundColor: U.photoChrome,
-                            }}
-                        >
-                            <Text style={{ ...V.captionStrong, color: "#fff" }} numberOfLines={1}>
-                                {t(room.labelKey)}
-                            </Text>
-                        </View>
+                        <Image source={s.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                        {i === 0 && (
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    paddingHorizontal: 6,
+                                    paddingBottom: 4,
+                                    paddingTop: 12,
+                                    backgroundColor: "rgba(0,0,0,0.55)",
+                                }}
+                            >
+                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: "#fff" }}>
+                                    {t("studio.try_a_sample")}
+                                </Text>
+                            </View>
+                        )}
                     </Pressable>
                 ))}
             </View>
@@ -507,198 +464,100 @@ function SampleRow({
     );
 }
 
-/**
- * What comes next, visible but secondary. A chip is a real control: it keeps
- * the tool and asks for the room, so tapping a tool first still works — it
- * just cannot skip the room.
- */
-function ToolChips({
-    isLocked,
-    pending,
-    onPress,
-    style,
-}: {
-    isLocked: (key: ToolKey) => boolean;
-    pending: ToolKey | null;
-    onPress: (key: ToolKey) => void;
-    style?: StyleProp<ViewStyle>;
-}) {
-    const { t } = useTranslation();
-    const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
-    return (
-        <View style={style}>
-            <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.then_pick_tool")}</Text>
-            {/* Horizontal only — five labels do not fit one row in German. The
-                row runs to the screen edge (the gutter moves inside it), so a
-                chip cut by the edge reads as "there is more" rather than as a
-                clipped layout. */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, paddingHorizontal: GUTTER }}
-                style={{ marginTop: 10, flexGrow: 0, marginHorizontal: -GUTTER }}
-            >
-                {TOOLS.map((tool) => {
-                    const selected = pending === tool.key;
-                    const locked = isLocked(tool.key);
-                    const image = imageFor(byKey[tool.key]);
-                    const label = t(tool.labelKey);
-                    return (
-                        <Pressable
-                            key={tool.key}
-                            onPress={() => onPress(tool.key)}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected }}
-                            accessibilityLabel={locked ? `${label}, PRO` : label}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 8,
-                                height: 40,
-                                paddingLeft: 5,
-                                paddingRight: 12,
-                                borderRadius: R.pill,
-                                backgroundColor: U.surface,
-                                borderWidth: selected ? 1.5 : 1,
-                                borderColor: selected ? U.accent : U.lineNeutral,
-                            }}
-                        >
-                            {image ? (
-                                <Image source={image} style={{ width: 30, height: 30, borderRadius: 15 }} resizeMode="cover" />
-                            ) : null}
-                            <Text style={{ ...V.row, color: selected ? U.accentBright : U.ink }}>{label}</Text>
-                            {locked && (
-                                <Text style={{ ...V.captionStrong, letterSpacing: 1, color: U.accentBright }}>PRO</Text>
-                            )}
-                        </Pressable>
-                    );
-                })}
-            </ScrollView>
-        </View>
-    );
-}
-
-/** A rounded square holding a plus — the shape the intake is built around. */
+/** A rounded square holding a plus — the shape the tile is built around. */
 function PlusGlyph({ color }: { color: string }) {
     return (
         <View
             style={{
-                width: 44,
-                height: 40,
+                width: 38,
+                height: 34,
                 borderWidth: 2,
                 borderColor: color,
-                borderRadius: 10,
+                borderRadius: 9,
                 alignItems: "center",
                 justifyContent: "center",
             }}
         >
-            <View style={{ position: "absolute", width: 18, height: 2, backgroundColor: color, borderRadius: 1 }} />
-            <View style={{ position: "absolute", width: 2, height: 18, backgroundColor: color, borderRadius: 1 }} />
+            <View style={{ position: "absolute", width: 16, height: 2, backgroundColor: color, borderRadius: 1 }} />
+            <View style={{ position: "absolute", width: 2, height: 16, backgroundColor: color, borderRadius: 1 }} />
         </View>
     );
 }
 
-/* ── step 2 ─────────────────────────────────────────────────────────── */
+/* ── feature grid ───────────────────────────────────────────────────── */
+
+/** How far the tools step back while there is no room yet. */
+const DIMMED = 0.38;
 
 /**
- * The room the user just gave, on top of the tools that will change it.
- * "Change photo" goes back through the same sheet; while a replacement
- * uploads, the new photo is already here under a scrim.
+ * Five tiles — three across, then two wide. The wide pair is the paid pair —
+ * the extra width is the point, since this is the only place a free user
+ * meets what a plan buys.
+ *
+ * <p>Until a room is in ({@code enabled} false) the whole grid is dimmed and
+ * reported as disabled to VoiceOver, with the hint saying what comes first.
+ * The tiles still receive the tap so the screen can answer it (buzz + pulse on
+ * the intake tile) instead of swallowing it. When the room arrives the grid
+ * fades up to full strength.
  */
-function ChosenRoom({ uri, busy, onChange }: { uri: string; busy: boolean; onChange: () => void }) {
-    const { t } = useTranslation();
-    return (
-        <View style={{ height: 188, borderRadius: R.card, overflow: "hidden", backgroundColor: U.surface }}>
-            <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-            {busy ? (
-                <View
-                    style={[
-                        StyleSheet.absoluteFill,
-                        { backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center", gap: 10 },
-                    ]}
-                >
-                    <ActivityIndicator color={U.accentBright} />
-                    <Text style={{ ...V.row, color: U.ink }}>{t("studio.uploading")}</Text>
-                </View>
-            ) : (
-                <>
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: 10,
-                            left: 10,
-                            width: 26,
-                            height: 26,
-                            borderRadius: 13,
-                            backgroundColor: U.accent,
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                    >
-                        <Text style={{ color: U.buttonInk, fontSize: 13, fontWeight: "700" }}>✓</Text>
-                    </View>
-                    <Pressable
-                        onPress={onChange}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("studio.change_photo")}
-                        hitSlop={8}
-                        style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 10,
-                            paddingVertical: 7,
-                            paddingHorizontal: 12,
-                            borderRadius: R.pill,
-                            backgroundColor: U.photoChrome,
-                            borderWidth: 1,
-                            borderColor: U.photoChromeBorder,
-                        }}
-                    >
-                        <Text style={{ ...V.captionStrong, fontSize: 12, color: "#fff" }}>{t("studio.change_photo")}</Text>
-                    </Pressable>
-                </>
-            )}
-        </View>
-    );
-}
-
-/**
- * The five tools as photographs — the photographs ARE the description.
- * Three across, then the paid pair wide. When the room came from a sample,
- * the tools that sample was chosen for stay bright and the rest step back
- * (a garden cannot be emptied); nothing is disabled, the user can still
- * choose anything.
- */
-function ToolGrid({
+function FeatureGrid({
     isLocked,
     onPress,
-    recommended,
-    style,
+    t,
+    enabled,
 }: {
-    isLocked: (key: ToolKey) => boolean;
-    onPress: (key: ToolKey) => void;
-    recommended: readonly string[] | null;
-    style?: StyleProp<ViewStyle>;
+    /** Server truth. Returns false until plan_features has loaded — an
+        unlocked flash is recoverable, a wrongly locked tile is not. */
+    isLocked: (featureCode: string) => boolean;
+    onPress: (key: string, locked: boolean) => void;
+    t: (k: string) => string;
+    enabled: boolean;
 }) {
-    const { t } = useTranslation();
     const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
+    const fade = useRef(new Animated.Value(enabled ? 1 : DIMMED)).current;
 
-    const tile = (tool: (typeof TOOLS)[number], width: `${number}%`) => {
-        const locked = isLocked(tool.key);
-        const dim = recommended != null && !recommended.includes(tool.key);
-        const image = imageFor(byKey[tool.key]);
-        const label = t(tool.labelKey);
+    useEffect(() => {
+        let cancelled = false;
+        AccessibilityInfo.isReduceMotionEnabled()
+            .catch(() => false)
+            .then((reduce) => {
+                if (cancelled) return;
+                const to = enabled ? 1 : DIMMED;
+                if (reduce) {
+                    fade.setValue(to);
+                } else {
+                    Animated.timing(fade, { toValue: to, duration: 260, useNativeDriver: true }).start();
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [enabled, fade]);
+
+    const row1 = [
+        { key: "REDESIGN", label: t("studio.mode_redesign") },
+        { key: "EMPTY_ROOM", label: t("studio.mode_empty_room") },
+        { key: "INPAINT", label: t("studio.mode_inpaint") },
+    ];
+    const row2 = [
+        { key: "STYLE_TRANSFER", label: t("studio.mode_style_transfer") },
+        { key: "OUTDOOR", label: t("studio.mode_outdoor") },
+    ];
+
+    const tile = (item: { key: string; label: string }, width: string) => {
+        const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
+        const locked = isLocked(featureCode);
+        const image = imageFor(byKey[item.key]);
         return (
             <Pressable
-                key={tool.key}
-                onPress={() => onPress(tool.key)}
+                key={item.key}
+                onPress={() => onPress(item.key, locked)}
                 accessibilityRole="button"
-                accessibilityLabel={locked ? `${label}, PRO` : label}
+                accessibilityState={{ disabled: !enabled }}
+                accessibilityLabel={locked ? `${item.label}, PRO` : item.label}
+                accessibilityHint={enabled ? undefined : t("studio.photo_source_title")}
                 style={{
-                    width,
-                    opacity: dim ? 0.45 : 1,
+                    width: width as never,
                     backgroundColor: U.surface,
                     borderWidth: 1,
                     borderColor: U.lineNeutral,
@@ -706,8 +565,12 @@ function ToolGrid({
                     overflow: "hidden",
                 }}
             >
-                <View style={{ flex: 1, minHeight: 64 }}>
-                    {image ? <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
+                {/* flex, not a fixed 72: the tile's height now comes from the
+                    row, and the image takes whatever the label does not. */}
+                <View style={{ flex: 1, minHeight: 72 }}>
+                    {image ? (
+                        <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    ) : null}
                     {locked && (
                         <View
                             style={{
@@ -722,36 +585,57 @@ function ToolGrid({
                                 paddingHorizontal: 6,
                             }}
                         >
-                            <Text style={{ ...V.captionStrong, letterSpacing: 1, color: U.accentBright }}>PRO</Text>
+                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
+                                PRO
+                            </Text>
                         </View>
                     )}
                 </View>
-                {/* The label never sets the tile's height — German and Dutch
-                    labels wrap to two lines; a single long word ("Réaménagement")
-                    shrinks instead of splitting mid-word. */}
-                <View style={{ paddingHorizontal: 9, paddingTop: 8, paddingBottom: 10, minHeight: 44 }}>
+                {/* The tile's height is set by the image, never by the label —
+                    German "Stilübertragung" and Dutch "Buitenontwerp" wrap to
+                    two lines and must not change the grid. */}
+                <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
+                    {/* A single long word ("Réaménagement") must shrink, not
+                        split mid-word — iOS broke it as "Réaménagem / ent" on
+                        the French home screen (simulator, 26 Sep). Labels with
+                        a space keep their two lines. */}
                     <Text
-                        numberOfLines={label.includes(" ") ? 2 : 1}
-                        adjustsFontSizeToFit={!label.includes(" ")}
+                        numberOfLines={item.label.includes(" ") ? 2 : 1}
+                        adjustsFontSizeToFit={!item.label.includes(" ")}
                         minimumFontScale={0.7}
                         style={{ ...V.tile, color: U.ink }}
                     >
-                        {label}
+                        {item.label}
                     </Text>
                 </View>
             </Pressable>
         );
     };
 
+    /**
+     * The grid takes the height the furniture band used to occupy.
+     *
+     * <p>Removing the band left roughly 250px of dead space under the tiles.
+     * The options were to centre the block (which floats), to add something
+     * (which the spec forbids — "text is the last resort") or to let the
+     * photographs grow into it. The photographs ARE the description of each
+     * feature, so they grew: the rows share the remaining height with flex,
+     * which also means the screen fills correctly on a 17 Pro and a 17 Pro
+     * Max without either one being tuned by hand.
+     */
     return (
-        <View style={[{ flex: 1, gap: 8, maxHeight: 420 }, style]}>
-            <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>{TOOLS.slice(0, 3).map((x) => tile(x, "31.5%"))}</View>
-            <View style={{ flex: 1.15, flexDirection: "row", gap: 8 }}>{TOOLS.slice(3).map((x) => tile(x, "48.7%"))}</View>
-        </View>
+        <Animated.View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420, opacity: fade }}>
+            <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
+                {row1.map((i) => tile(i, "31.5%"))}
+            </View>
+            <View style={{ flex: 1.15, flexDirection: "row", gap: 8 }}>
+                {row2.map((i) => tile(i, "48.7%"))}
+            </View>
+        </Animated.View>
     );
 }
 
-/** The feature registry stores media in several shapes; tiles and chips want one still. */
+/** The feature registry stores media in three shapes; the tile wants one still. */
 function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
     if (!feature) return null;
     const m = feature.media;

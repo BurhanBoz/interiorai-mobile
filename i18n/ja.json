@@ -354,9 +354,7 @@
     "mask_ready": "変更する範囲を設定済み",
     "edit_mask": "編集",
     "reference_ready": "参考写真を設定済み",
-    "change_reference": "変更",
-    "pick_tool_title": "この写真で何をしますか？",
-    "then_pick_tool": "次に、することを選びます"
+    "change_reference": "変更"
   },
   "furniture": {
     "title": "家具",

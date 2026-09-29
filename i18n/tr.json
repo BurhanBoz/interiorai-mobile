@@ -355,9 +355,7 @@
     "mask_ready": "Değişecek alan seçildi",
     "edit_mask": "Düzenle",
     "reference_ready": "Referans fotoğrafı seçildi",
-    "change_reference": "Değiştir",
-    "pick_tool_title": "Bununla ne yapalım?",
-    "then_pick_tool": "Sonra ne yapacağını seç"
+    "change_reference": "Değiştir"
   },
   "furniture": {
     "title": "Mobilya",

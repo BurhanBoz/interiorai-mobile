@@ -355,9 +355,7 @@
     "mask_ready": "Bereich ist festgelegt",
     "edit_mask": "Bearbeiten",
     "reference_ready": "Referenzfoto gesetzt",
-    "change_reference": "Ändern",
-    "pick_tool_title": "Was sollen wir damit machen?",
-    "then_pick_tool": "Danach wählst du, was passieren soll"
+    "change_reference": "Ändern"
   },
   "furniture": {
     "title": "Möbel",

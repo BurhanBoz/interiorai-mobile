@@ -355,9 +355,7 @@
     "mask_ready": "Te wijzigen gebied ingesteld",
     "edit_mask": "Bewerken",
     "reference_ready": "Referentiefoto ingesteld",
-    "change_reference": "Wijzigen",
-    "pick_tool_title": "Wat gaan we ermee doen?",
-    "then_pick_tool": "Kies daarna wat je wilt doen"
+    "change_reference": "Wijzigen"
   },
   "furniture": {
     "title": "Meubels",
