@@ -118,7 +118,17 @@ export function useImagePicker() {
         return false;
     };
 
-    const pickImage = async (source: "camera" | "gallery" = "gallery") => {
+    /**
+     * @param opts.onPreview called with the local, downscaled file BEFORE the
+     *        upload starts, so a screen can show the room the user just chose
+     *        while it travels. The home screen (photo-first, 2.1.0) uses it;
+     *        without it the screen stayed blank for the whole upload — seconds
+     *        on the slow mobile links our ad cohort arrives on.
+     */
+    const pickImage = async (
+        source: "camera" | "gallery" = "gallery",
+        opts?: { onPreview?: (uri: string) => void },
+    ) => {
         // App Store 5.1.2(i): before ANY photo leaves the device we must
         // disclose what is sent and to whom, and get explicit consent.
         // Every upload flow (redesign, empty room, Magic Edit, Style
@@ -149,6 +159,7 @@ export function useImagePicker() {
 
         const asset = result.assets[0];
         const resizedUri = await resizeIfNeeded(asset);
+        opts?.onPreview?.(resizedUri);
 
         setIsUploading(true);
         try {
@@ -209,7 +220,10 @@ export function useImagePicker() {
      * still runs — the image reaches the same third parties either way, and
      * two consent paths is exactly how a compliance gap starts.
      */
-    const useSampleImage = async (module: number) => {
+    const useSampleImage = async (
+        module: number,
+        opts?: { onPreview?: (uri: string) => void },
+    ) => {
         if (!(await useAiConsentStore.getState().request())) return null;
 
         setIsUploading(true);
@@ -229,6 +243,7 @@ export function useImagePicker() {
                 } as ImagePicker.ImagePickerAsset,
                 true, // samples ship as PNG — always re-encode
             );
+            opts?.onPreview?.(resizedUri);
 
             let file;
             try {

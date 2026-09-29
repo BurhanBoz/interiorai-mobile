@@ -355,7 +355,9 @@
     "mask_ready": "Değişecek alan seçildi",
     "edit_mask": "Düzenle",
     "reference_ready": "Referans fotoğrafı seçildi",
-    "change_reference": "Değiştir"
+    "change_reference": "Değiştir",
+    "pick_tool_title": "Bununla ne yapalım?",
+    "then_pick_tool": "Sonra ne yapacağını seç"
   },
   "furniture": {
     "title": "Mobilya",
@@ -659,7 +661,7 @@
     "ledger_today": "Bugün",
     "ledger_yesterday": "Dün",
     "ledger_feature_room_video": "Oda videosu",
-    "ref_room_video": "Oda videosu (5 sn)"
+    "ref_room_video": "Oda videosu (8 sn)"
   },
   "credit_packs": {
     "title": "Kredi Paketleri",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Bildirimler kapalı",
     "reminder_denied_body": "Hatırlatmayı almak için Ayarlar'dan aç.",
     "video_cta": "Canlandır",
-    "video_cta_hint": "5 saniyelik video · {{cost}} kredi",
-    "video_locked_hint": "5 saniyelik video · Base ya da Pro",
+    "video_cta_hint": "8 saniyelik video · {{cost}} kredi",
+    "video_locked_hint": "8 saniyelik video · Base ya da Pro",
     "video_in_progress": "Video hazırlanıyor…",
     "video_watch": "Videoyu izle",
     "video_kicker": "Video",
     "video_sound_on": "Sesi aç",
     "video_sound_off": "Sesi kapat",
-    "video_length": "5 sn",
+    "video_length": "8 sn",
     "video_cost_used": "{{cost}} kredi kullanıldı",
     "video_back_to_design": "Tasarıma dön",
     "video_saved_body": "Videon artık film rulonda.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor.",
     "delete_account": "Hesabı sil",
     "notifications_upsell_video_title": "Tasarımlarını canlandır",
-    "notifications_upsell_video_desc": "Bitmiş bir tasarımı hafif doğa sesleriyle 5 saniyelik bir oda videosuna dönüştür. Base ve Pro'da var."
+    "notifications_upsell_video_desc": "Bitmiş bir tasarımı hafif doğa sesleriyle 8 saniyelik bir oda videosuna dönüştür. Base ve Pro'da var."
   },
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Yalnızca Pro'nun yapabildiği iki şey",
     "annual": "Yıllık",
     "annual_save": "Yıllık · %{{pct}} tasarruf",
-    "chip_video": "Oda videosu · 5 sn",
+    "chip_video": "Oda videosu · 8 sn",
     "chip_your_room": "Senin odan",
     "first_week": "ilk hafta",
     "then_price_week": "sonra {{price}}/hafta",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "Kredin bitti. Tamamlamak için bir plan seç ya da tek seferlik kredi al.",
     "hero_exhausted_sub": "Tasarlamaya devam etmek için bir plan seç ya da tek seferlik kredi al.",
     "hero_video_title": "Tasarımını canlandır",
-    "hero_video_sub": "Bitmiş bir tasarımı hafif doğa sesleriyle 5 saniyelik bir oda videosuna dönüştür.",
+    "hero_video_sub": "Bitmiş bir tasarımı hafif doğa sesleriyle 8 saniyelik bir oda videosuna dönüştür.",
     "pro_tools_sub": "Herhangi bir fotoğrafın stilini odana uygula; bahçe, avlu ve terasları yeniden tasarla.",
     "renewal_intro_week": "İlk hafta {{intro}}, sonra haftalık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
     "renewal_week": "Haftalık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",

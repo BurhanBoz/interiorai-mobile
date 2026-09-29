@@ -355,7 +355,9 @@
     "mask_ready": "Te wijzigen gebied ingesteld",
     "edit_mask": "Bewerken",
     "reference_ready": "Referentiefoto ingesteld",
-    "change_reference": "Wijzigen"
+    "change_reference": "Wijzigen",
+    "pick_tool_title": "Wat gaan we ermee doen?",
+    "then_pick_tool": "Kies daarna wat je wilt doen"
   },
   "furniture": {
     "title": "Meubels",
@@ -659,7 +661,7 @@
     "ledger_today": "Vandaag",
     "ledger_yesterday": "Gisteren",
     "ledger_feature_room_video": "Kamervideo",
-    "ref_room_video": "Kamervideo (5 s)"
+    "ref_room_video": "Kamervideo (8 s)"
   },
   "credit_packs": {
     "title": "Creditpakketten",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Meldingen staan uit",
     "reminder_denied_body": "Zet ze aan in Instellingen om de herinnering te krijgen.",
     "video_cta": "Breng het tot leven",
-    "video_cta_hint": "Video van 5 seconden · {{cost}} credits",
-    "video_locked_hint": "Video van 5 seconden · Base of Pro",
+    "video_cta_hint": "Video van 8 seconden · {{cost}} credits",
+    "video_locked_hint": "Video van 8 seconden · Base of Pro",
     "video_in_progress": "Video wordt gemaakt…",
     "video_watch": "Bekijk de video",
     "video_kicker": "Video",
     "video_sound_on": "Geluid aan",
     "video_sound_off": "Geluid uit",
-    "video_length": "5 s",
+    "video_length": "8 s",
     "video_cost_used": "{{cost}} credits gebruikt",
     "video_back_to_design": "Terug naar het ontwerp",
     "video_saved_body": "Je video staat nu in je filmrol.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "Beheerd via je {{provider}}-account.",
     "delete_account": "Account verwijderen",
     "notifications_upsell_video_title": "Breng je ontwerpen tot leven",
-    "notifications_upsell_video_desc": "Maak van een afgerond ontwerp een kamervideo van 5 seconden met zachte natuurgeluiden. Inbegrepen bij Base en Pro."
+    "notifications_upsell_video_desc": "Maak van een afgerond ontwerp een kamervideo van 8 seconden met zachte natuurgeluiden. Inbegrepen bij Base en Pro."
   },
   "errors": {
     "network": "Netwerkfout. Controleer je verbinding.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Twee dingen die alleen Pro kan",
     "annual": "Jaarlijks",
     "annual_save": "Jaarlijks · −{{pct}}%",
-    "chip_video": "Kamervideo · 5 s",
+    "chip_video": "Kamervideo · 8 s",
     "chip_your_room": "Jouw kamer",
     "first_week": "eerste week",
     "then_price_week": "daarna {{price}}/week",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "Je credits zijn op. Kies een abonnement om hem af te maken, of vul eenmalig aan.",
     "hero_exhausted_sub": "Kies een abonnement om verder te ontwerpen, of vul eenmalig aan.",
     "hero_video_title": "Breng je ontwerp tot leven",
-    "hero_video_sub": "Maak van een afgerond ontwerp een kamervideo van 5 seconden met zachte natuurgeluiden.",
+    "hero_video_sub": "Maak van een afgerond ontwerp een kamervideo van 8 seconden met zachte natuurgeluiden.",
     "pro_tools_sub": "Geef je kamer de stijl van elke foto die je kiest, en ontwerp tuinen, binnenplaatsen en terrassen opnieuw.",
     "renewal_intro_week": "{{intro}} voor de eerste week, daarna {{price}} per week. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
     "renewal_week": "{{price}} per week. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",

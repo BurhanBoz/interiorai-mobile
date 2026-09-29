@@ -355,7 +355,9 @@
     "mask_ready": "Area to change is set",
     "edit_mask": "Edit",
     "reference_ready": "Reference photo set",
-    "change_reference": "Change"
+    "change_reference": "Change",
+    "pick_tool_title": "What should we do with it?",
+    "then_pick_tool": "Then choose what to do"
   },
   "furniture": {
     "title": "Furniture",
@@ -659,7 +661,7 @@
     "ledger_today": "Today",
     "ledger_yesterday": "Yesterday",
     "ledger_feature_room_video": "Room video",
-    "ref_room_video": "Room video (5 s)"
+    "ref_room_video": "Room video (8 s)"
   },
   "credit_packs": {
     "title": "Credit Packs",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Notifications are off",
     "reminder_denied_body": "Turn them on in Settings to get the reminder.",
     "video_cta": "Bring it to life",
-    "video_cta_hint": "5-second video · {{cost}} credits",
-    "video_locked_hint": "5-second video · Base or Pro",
+    "video_cta_hint": "8-second video · {{cost}} credits",
+    "video_locked_hint": "8-second video · Base or Pro",
     "video_in_progress": "Video in progress…",
     "video_watch": "Watch the video",
     "video_kicker": "Video",
     "video_sound_on": "Turn sound on",
     "video_sound_off": "Turn sound off",
-    "video_length": "5 s",
+    "video_length": "8 s",
     "video_cost_used": "{{cost}} credits used",
     "video_back_to_design": "Back to the design",
     "video_saved_body": "Your video is now in your camera roll.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "Managed by your {{provider}} sign-in.",
     "delete_account": "Delete account",
     "notifications_upsell_video_title": "Bring your designs to life",
-    "notifications_upsell_video_desc": "Turn a finished design into a 5-second room video with soft nature sounds. Included with Base and Pro."
+    "notifications_upsell_video_desc": "Turn a finished design into an 8-second room video with soft nature sounds. Included with Base and Pro."
   },
   "errors": {
     "network": "Network error. Please check your connection.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Two things only Pro can do",
     "annual": "Annual",
     "annual_save": "Annual · save {{pct}}%",
-    "chip_video": "Room video · 5 s",
+    "chip_video": "Room video · 8 s",
     "chip_your_room": "Your room",
     "first_week": "first week",
     "then_price_week": "then {{price}}/week",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "You're out of credits. Pick a plan to finish it, or top up once.",
     "hero_exhausted_sub": "Pick a plan to keep designing, or top up once.",
     "hero_video_title": "Bring your design to life",
-    "hero_video_sub": "Turn a finished design into a 5-second room video with soft nature sounds.",
+    "hero_video_sub": "Turn a finished design into an 8-second room video with soft nature sounds.",
     "pro_tools_sub": "Put the style of any photo onto your room, and redesign gardens, courtyards and terraces.",
     "renewal_intro_week": "{{intro}} for the first week, then {{price}} a week. Renews automatically; cancel anytime in Settings, at least 24 h before renewal.",
     "renewal_week": "{{price}} a week. Renews automatically; cancel anytime in Settings, at least 24 h before renewal.",

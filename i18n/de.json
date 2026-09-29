@@ -355,7 +355,9 @@
     "mask_ready": "Bereich ist festgelegt",
     "edit_mask": "Bearbeiten",
     "reference_ready": "Referenzfoto gesetzt",
-    "change_reference": "Ändern"
+    "change_reference": "Ändern",
+    "pick_tool_title": "Was sollen wir damit machen?",
+    "then_pick_tool": "Danach wählst du, was passieren soll"
   },
   "furniture": {
     "title": "Möbel",
@@ -656,7 +658,7 @@
     "ledger_today": "Heute",
     "ledger_yesterday": "Gestern",
     "ledger_feature_room_video": "Raumvideo",
-    "ref_room_video": "Raumvideo (5 s)"
+    "ref_room_video": "Raumvideo (8 s)"
   },
   "credit_packs": {
     "title": "Credit-Pakete",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Mitteilungen sind aus",
     "reminder_denied_body": "Schalte sie in den Einstellungen ein, um die Erinnerung zu erhalten.",
     "video_cta": "Zum Leben erwecken",
-    "video_cta_hint": "5-Sekunden-Video · {{cost}} Guthaben",
-    "video_locked_hint": "5-Sekunden-Video · Base oder Pro",
+    "video_cta_hint": "8-Sekunden-Video · {{cost}} Guthaben",
+    "video_locked_hint": "8-Sekunden-Video · Base oder Pro",
     "video_in_progress": "Video wird erstellt…",
     "video_watch": "Video ansehen",
     "video_kicker": "Video",
     "video_sound_on": "Ton einschalten",
     "video_sound_off": "Ton ausschalten",
-    "video_length": "5 s",
+    "video_length": "8 s",
     "video_cost_used": "{{cost}} Guthaben verwendet",
     "video_back_to_design": "Zurück zum Design",
     "video_saved_body": "Dein Video ist jetzt in deiner Fotomediathek.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "Wird über deine {{provider}}-Anmeldung verwaltet.",
     "delete_account": "Konto löschen",
     "notifications_upsell_video_title": "Erwecke deine Designs zum Leben",
-    "notifications_upsell_video_desc": "Mach aus einem fertigen Design ein 5-sekündiges Raumvideo mit sanften Naturklängen. In Base und Pro enthalten."
+    "notifications_upsell_video_desc": "Mach aus einem fertigen Design ein 8-sekündiges Raumvideo mit sanften Naturklängen. In Base und Pro enthalten."
   },
   "errors": {
     "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Zwei Dinge, die nur Pro kann",
     "annual": "Jährlich",
     "annual_save": "Jährlich · −{{pct}} %",
-    "chip_video": "Raumvideo · 5 s",
+    "chip_video": "Raumvideo · 8 s",
     "chip_your_room": "Dein Raum",
     "first_week": "erste Woche",
     "then_price_week": "danach {{price}}/Woche",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "Deine Credits sind aufgebraucht. Wähle ein Abo, um ihn fertigzustellen, oder lade einmalig auf.",
     "hero_exhausted_sub": "Wähle ein Abo, um weiter zu gestalten, oder lade einmalig auf.",
     "hero_video_title": "Erwecke dein Design zum Leben",
-    "hero_video_sub": "Mach aus einem fertigen Design ein 5-sekündiges Raumvideo mit sanften Naturklängen.",
+    "hero_video_sub": "Mach aus einem fertigen Design ein 8-sekündiges Raumvideo mit sanften Naturklängen.",
     "pro_tools_sub": "Übertrage den Stil eines beliebigen Fotos auf deinen Raum und gestalte Gärten, Innenhöfe und Terrassen neu.",
     "renewal_intro_week": "{{intro}} für die erste Woche, danach {{price}} pro Woche. Verlängert sich automatisch; jederzeit in den Einstellungen kündbar, spätestens 24 Std. vor Verlängerung.",
     "renewal_week": "{{price}} pro Woche. Verlängert sich automatisch; jederzeit in den Einstellungen kündbar, spätestens 24 Std. vor Verlängerung.",

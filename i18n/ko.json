@@ -354,7 +354,9 @@
     "mask_ready": "변경할 영역 설정됨",
     "edit_mask": "편집",
     "reference_ready": "참고 사진 설정됨",
-    "change_reference": "변경"
+    "change_reference": "변경",
+    "pick_tool_title": "이 사진으로 무엇을 할까요?",
+    "then_pick_tool": "그다음 할 작업을 고르세요"
   },
   "furniture": {
     "title": "가구",
@@ -652,7 +654,7 @@
     "ledger_today": "오늘",
     "ledger_yesterday": "어제",
     "ledger_feature_room_video": "공간 영상",
-    "ref_room_video": "공간 영상 (5초)"
+    "ref_room_video": "공간 영상 (8초)"
   },
   "credit_packs": {
     "title": "크레딧 팩",
@@ -848,14 +850,14 @@
     "reminder_denied_title": "알림이 꺼져 있습니다",
     "reminder_denied_body": "알림을 받으려면 설정에서 켜주세요.",
     "video_cta": "영상으로 만들기",
-    "video_cta_hint": "5초 영상 · 크레딧 {{cost}}개",
-    "video_locked_hint": "5초 영상 · Base 또는 Pro",
+    "video_cta_hint": "8초 영상 · 크레딧 {{cost}}개",
+    "video_locked_hint": "8초 영상 · Base 또는 Pro",
     "video_in_progress": "영상 만드는 중…",
     "video_watch": "영상 보기",
     "video_kicker": "영상",
     "video_sound_on": "소리 켜기",
     "video_sound_off": "소리 끄기",
-    "video_length": "5초",
+    "video_length": "8초",
     "video_cost_used": "크레딧 {{cost}}개 사용",
     "video_back_to_design": "디자인으로 돌아가기",
     "video_saved_body": "영상이 카메라 롤에 저장되었습니다.",
@@ -1070,7 +1072,7 @@
     "profile_edit_email_managed": "{{provider}} 로그인으로 관리됩니다.",
     "delete_account": "계정 삭제",
     "notifications_upsell_video_title": "디자인에 생명을 불어넣으세요",
-    "notifications_upsell_video_desc": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 5초 공간 영상으로 바꿔 보세요. Base와 Pro에 포함되어 있어요."
+    "notifications_upsell_video_desc": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 8초 공간 영상으로 바꿔 보세요. Base와 Pro에 포함되어 있어요."
   },
   "errors": {
     "network": "네트워크 오류입니다. 연결을 확인해 주세요.",
@@ -1228,7 +1230,7 @@
     "two_things_headline": "Pro만 할 수 있는 두 가지",
     "annual": "연간",
     "annual_save": "연간 · {{pct}}% 절약",
-    "chip_video": "공간 영상 · 5초",
+    "chip_video": "공간 영상 · 8초",
     "chip_your_room": "내 공간",
     "first_week": "첫 주",
     "then_price_week": "이후 {{price}}/주",
@@ -1242,7 +1244,7 @@
     "hero_room_sub": "크레딧이 모두 소진됐어요. 마무리하려면 플랜을 선택하거나 한 번만 충전하세요.",
     "hero_exhausted_sub": "디자인을 계속하려면 플랜을 선택하거나 한 번만 충전하세요.",
     "hero_video_title": "디자인에 생명을 불어넣으세요",
-    "hero_video_sub": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 5초 공간 영상으로 바꿔 보세요.",
+    "hero_video_sub": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 8초 공간 영상으로 바꿔 보세요.",
     "pro_tools_sub": "어떤 사진의 스타일이든 내 공간에 적용하고, 정원·안뜰·테라스도 새롭게 디자인하세요.",
     "renewal_intro_week": "첫 주 {{intro}}, 이후 매주 {{price}}. 자동 갱신되며, 갱신 24시간 전까지 설정에서 언제든 해지할 수 있어요.",
     "renewal_week": "매주 {{price}}. 자동 갱신되며, 갱신 24시간 전까지 설정에서 언제든 해지할 수 있어요.",

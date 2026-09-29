@@ -355,7 +355,9 @@
     "mask_ready": "Area da modificare impostata",
     "edit_mask": "Modifica",
     "reference_ready": "Foto di riferimento impostata",
-    "change_reference": "Cambia"
+    "change_reference": "Cambia",
+    "pick_tool_title": "Cosa ne facciamo?",
+    "then_pick_tool": "Poi scegli cosa fare"
   },
   "furniture": {
     "title": "Arredamento",
@@ -656,7 +658,7 @@
     "ledger_today": "Oggi",
     "ledger_yesterday": "Ieri",
     "ledger_feature_room_video": "Video della stanza",
-    "ref_room_video": "Video della stanza (5 s)"
+    "ref_room_video": "Video della stanza (8 s)"
   },
   "credit_packs": {
     "title": "Pacchetti di Crediti",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Notifiche disattivate",
     "reminder_denied_body": "Attivale in Impostazioni per ricevere il promemoria.",
     "video_cta": "Dagli vita",
-    "video_cta_hint": "Video di 5 secondi · {{cost}} crediti",
-    "video_locked_hint": "Video di 5 secondi · Base o Pro",
+    "video_cta_hint": "Video di 8 secondi · {{cost}} crediti",
+    "video_locked_hint": "Video di 8 secondi · Base o Pro",
     "video_in_progress": "Video in corso…",
     "video_watch": "Guarda il video",
     "video_kicker": "Video",
     "video_sound_on": "Attiva audio",
     "video_sound_off": "Disattiva audio",
-    "video_length": "5 s",
+    "video_length": "8 s",
     "video_cost_used": "{{cost}} crediti usati",
     "video_back_to_design": "Torna al progetto",
     "video_saved_body": "Il tuo video è ora nel rullino.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "Gestito dal tuo accesso {{provider}}.",
     "delete_account": "Elimina account",
     "notifications_upsell_video_title": "Dai vita ai tuoi progetti",
-    "notifications_upsell_video_desc": "Trasforma un progetto finito in un video di 5 secondi della stanza, con morbidi suoni della natura. Incluso in Base e Pro."
+    "notifications_upsell_video_desc": "Trasforma un progetto finito in un video di 8 secondi della stanza, con morbidi suoni della natura. Incluso in Base e Pro."
   },
   "errors": {
     "network": "Errore di rete. Controlla la connessione.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Due cose che solo Pro può fare",
     "annual": "Annuale",
     "annual_save": "Annuale · −{{pct}}%",
-    "chip_video": "Video della stanza · 5 s",
+    "chip_video": "Video della stanza · 8 s",
     "chip_your_room": "La tua stanza",
     "first_week": "prima settimana",
     "then_price_week": "poi {{price}}/settimana",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "Hai finito i crediti. Scegli un piano per completarla o ricarica una volta.",
     "hero_exhausted_sub": "Scegli un piano per continuare a progettare o ricarica una volta.",
     "hero_video_title": "Dai vita al tuo progetto",
-    "hero_video_sub": "Trasforma un progetto finito in un video di 5 secondi della stanza, con morbidi suoni della natura.",
+    "hero_video_sub": "Trasforma un progetto finito in un video di 8 secondi della stanza, con morbidi suoni della natura.",
     "pro_tools_sub": "Applica lo stile di qualsiasi foto alla tua stanza e riprogetta giardini, cortili e terrazze.",
     "renewal_intro_week": "{{intro}} la prima settimana, poi {{price}} a settimana. Si rinnova automaticamente; disdici quando vuoi nelle Impostazioni, almeno 24 ore prima del rinnovo.",
     "renewal_week": "{{price}} a settimana. Si rinnova automaticamente; disdici quando vuoi nelle Impostazioni, almeno 24 ore prima del rinnovo.",

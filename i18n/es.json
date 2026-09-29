@@ -355,7 +355,9 @@
     "mask_ready": "Zona a cambiar definida",
     "edit_mask": "Editar",
     "reference_ready": "Foto de referencia definida",
-    "change_reference": "Cambiar"
+    "change_reference": "Cambiar",
+    "pick_tool_title": "¿Qué hacemos con ella?",
+    "then_pick_tool": "Después, elige qué hacer"
   },
   "furniture": {
     "title": "Muebles",
@@ -656,7 +658,7 @@
     "ledger_today": "Hoy",
     "ledger_yesterday": "Ayer",
     "ledger_feature_room_video": "Vídeo de la habitación",
-    "ref_room_video": "Vídeo de la habitación (5 s)"
+    "ref_room_video": "Vídeo de la habitación (8 s)"
   },
   "credit_packs": {
     "title": "Paquetes de Créditos",
@@ -852,14 +854,14 @@
     "reminder_denied_title": "Notificaciones desactivadas",
     "reminder_denied_body": "Actívalas en Ajustes para recibir el recordatorio.",
     "video_cta": "Dale vida",
-    "video_cta_hint": "Vídeo de 5 segundos · {{cost}} créditos",
-    "video_locked_hint": "Vídeo de 5 segundos · Base o Pro",
+    "video_cta_hint": "Vídeo de 8 segundos · {{cost}} créditos",
+    "video_locked_hint": "Vídeo de 8 segundos · Base o Pro",
     "video_in_progress": "Vídeo en curso…",
     "video_watch": "Ver el vídeo",
     "video_kicker": "Vídeo",
     "video_sound_on": "Activar sonido",
     "video_sound_off": "Desactivar sonido",
-    "video_length": "5 s",
+    "video_length": "8 s",
     "video_cost_used": "{{cost}} créditos usados",
     "video_back_to_design": "Volver al diseño",
     "video_saved_body": "Tu vídeo ya está en tu carrete.",
@@ -1074,7 +1076,7 @@
     "profile_edit_email_managed": "Gestionado por tu inicio de sesión de {{provider}}.",
     "delete_account": "Eliminar cuenta",
     "notifications_upsell_video_title": "Dale vida a tus diseños",
-    "notifications_upsell_video_desc": "Convierte un diseño terminado en un vídeo de 5 segundos de tu habitación, con suaves sonidos de la naturaleza. Incluido en Base y Pro."
+    "notifications_upsell_video_desc": "Convierte un diseño terminado en un vídeo de 8 segundos de tu habitación, con suaves sonidos de la naturaleza. Incluido en Base y Pro."
   },
   "errors": {
     "network": "Error de red. Verifica tu conexión.",
@@ -1232,7 +1234,7 @@
     "two_things_headline": "Dos cosas que solo Pro puede hacer",
     "annual": "Anual",
     "annual_save": "Anual · −{{pct}} %",
-    "chip_video": "Vídeo de la habitación · 5 s",
+    "chip_video": "Vídeo de la habitación · 8 s",
     "chip_your_room": "Tu habitación",
     "first_week": "primera semana",
     "then_price_week": "luego {{price}}/semana",
@@ -1246,7 +1248,7 @@
     "hero_room_sub": "Te has quedado sin créditos. Elige un plan para terminarla o recarga una vez.",
     "hero_exhausted_sub": "Elige un plan para seguir diseñando o recarga una vez.",
     "hero_video_title": "Dale vida a tu diseño",
-    "hero_video_sub": "Convierte un diseño terminado en un vídeo de 5 segundos de tu habitación, con suaves sonidos de la naturaleza.",
+    "hero_video_sub": "Convierte un diseño terminado en un vídeo de 8 segundos de tu habitación, con suaves sonidos de la naturaleza.",
     "pro_tools_sub": "Aplica el estilo de cualquier foto a tu habitación y rediseña jardines, patios y terrazas.",
     "renewal_intro_week": "{{intro}} la primera semana, luego {{price}} a la semana. Se renueva automáticamente; cancela cuando quieras en Ajustes, al menos 24 h antes de la renovación.",
     "renewal_week": "{{price}} a la semana. Se renueva automáticamente; cancela cuando quieras en Ajustes, al menos 24 h antes de la renovación.",
