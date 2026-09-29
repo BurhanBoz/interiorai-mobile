@@ -353,11 +353,26 @@ function StepHeading({
 
 /* ── step 1 ─────────────────────────────────────────────────────────── */
 
+/** A room photo's own shape — the card reads as "a photo goes here". */
+const HERO_RATIO = 4 / 3;
+/** Share of the column's width the card may take; the rest is air on both sides. */
+const HERO_WIDTH_SHARE = 0.86;
+/** Minimum air above and below the card, each. */
+const HERO_AIR = 12;
+
 /**
- * The first action, as big as the screen allows. Camera-or-library is asked on
- * the sheet (one way in, not two tiles for one decision). While the chosen
- * photo uploads it fills this card under a scrim, so the user sees their room
- * the moment they pick it instead of a spinner on an empty frame.
+ * The first action — the one clear thing to do, but not the whole screen.
+ *
+ * <p>2026-09-29 founder call: the edge-to-edge card that filled all the free
+ * height read as a wall, not a button. It is now a 4:3 card (the shape of the
+ * photo it asks for) at most 86% of the column wide, centred in the space
+ * between the heading and the samples, with air on all four sides. Its size is
+ * computed from that space rather than fixed, so a two-line German heading
+ * shrinks the card instead of pushing the samples under the tab bar.
+ *
+ * <p>Camera-or-library is asked on the sheet (one way in, not two tiles for
+ * one decision). While the chosen photo uploads it fills this card under a
+ * scrim, so the user sees their room the moment they pick it.
  */
 function PhotoHero({
     busy,
@@ -371,52 +386,74 @@ function PhotoHero({
     style?: StyleProp<ViewStyle>;
 }) {
     const { t } = useTranslation();
+    const [space, setSpace] = useState<{ w: number; h: number } | null>(null);
+    const size = space ? heroSize(space.w, space.h) : null;
     return (
-        <Pressable
-            onPress={onPress}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={t("studio.add_a_photo")}
-            accessibilityState={{ busy }}
-            style={[
-                {
-                    flex: 1,
-                    minHeight: 150,
-                    borderRadius: R.card,
-                    overflow: "hidden",
-                    backgroundColor: previewUri ? U.surface : U.buttonFill,
-                    alignItems: "center",
-                    justifyContent: "center",
-                },
-                style,
-            ]}
+        <View
+            style={[{ flex: 1, minHeight: 150, alignItems: "center", justifyContent: "center" }, style]}
+            onLayout={(e) => {
+                const { width, height } = e.nativeEvent.layout;
+                setSpace((s) => (s && s.w === width && s.h === height ? s : { w: width, h: height }));
+            }}
         >
-            {previewUri ? (
-                <>
-                    <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                    <View
-                        style={[
-                            StyleSheet.absoluteFill,
-                            { backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center", gap: 10 },
-                        ]}
-                    >
-                        <ActivityIndicator color={U.accentBright} />
-                        <Text style={{ ...V.row, color: U.ink }}>{t("studio.uploading")}</Text>
-                    </View>
-                </>
-            ) : (
-                <>
-                    <PlusGlyph color={U.buttonInk} />
-                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 17, color: U.buttonInk, marginTop: 12 }}>
-                        {t("studio.add_a_photo")}
-                    </Text>
-                    <Text style={{ ...V.rowQuiet, color: U.buttonInk, opacity: 0.72, marginTop: 4 }}>
-                        {t("studio.camera")} · {t("studio.gallery")}
-                    </Text>
-                </>
+            {size && (
+                <Pressable
+                    onPress={onPress}
+                    disabled={busy}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("studio.add_a_photo")}
+                    accessibilityState={{ busy }}
+                    style={{
+                        width: size.w,
+                        height: size.h,
+                        borderRadius: R.card,
+                        overflow: "hidden",
+                        backgroundColor: previewUri ? U.surface : U.buttonFill,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    {previewUri ? (
+                        <>
+                            <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                            <View
+                                style={[
+                                    StyleSheet.absoluteFill,
+                                    { backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center", gap: 10 },
+                                ]}
+                            >
+                                <ActivityIndicator color={U.accentBright} />
+                                <Text style={{ ...V.row, color: U.ink }}>{t("studio.uploading")}</Text>
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <PlusGlyph color={U.buttonInk} />
+                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 17, color: U.buttonInk, marginTop: 12 }}>
+                                {t("studio.add_a_photo")}
+                            </Text>
+                            <Text style={{ ...V.rowQuiet, color: U.buttonInk, opacity: 0.72, marginTop: 4 }}>
+                                {t("studio.camera")} · {t("studio.gallery")}
+                            </Text>
+                        </>
+                    )}
+                </Pressable>
             )}
-        </Pressable>
+        </View>
     );
+}
+
+/** The largest 4:3 card that fits the space with the width share and the air kept. */
+function heroSize(spaceW: number, spaceH: number): { w: number; h: number } {
+    const maxW = spaceW * HERO_WIDTH_SHARE;
+    const maxH = Math.max(0, spaceH - 2 * HERO_AIR);
+    let w = maxW;
+    let h = w / HERO_RATIO;
+    if (h > maxH) {
+        h = maxH;
+        w = h * HERO_RATIO;
+    }
+    return { w: Math.round(w), h: Math.round(h) };
 }
 
 /**
