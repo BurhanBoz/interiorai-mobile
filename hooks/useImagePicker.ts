@@ -118,7 +118,17 @@ export function useImagePicker() {
         return false;
     };
 
-    const pickImage = async (source: "camera" | "gallery" = "gallery") => {
+    /**
+     * @param opts.onPreview called with the local, downscaled file BEFORE the
+     *        upload starts, so a screen can show the room the user just chose
+     *        while it travels. The home screen (photo-first, 2.1.0) uses it;
+     *        without it the screen stayed blank for the whole upload — seconds
+     *        on the slow mobile links our ad cohort arrives on.
+     */
+    const pickImage = async (
+        source: "camera" | "gallery" = "gallery",
+        opts?: { onPreview?: (uri: string) => void },
+    ) => {
         // App Store 5.1.2(i): before ANY photo leaves the device we must
         // disclose what is sent and to whom, and get explicit consent.
         // Every upload flow (redesign, empty room, Magic Edit, Style
@@ -140,55 +150,73 @@ export function useImagePicker() {
             quality: 1, // keep raw quality from the picker; we downscale ourselves
         };
 
-        const result =
-            source === "camera"
-                ? await ImagePicker.launchCameraAsync(options)
-                : await ImagePicker.launchImageLibraryAsync(options);
-
-        if (result.canceled || !result.assets[0]) return null;
-
-        const asset = result.assets[0];
-        const resizedUri = await resizeIfNeeded(asset);
-
+        // Busy from the moment the picker opens, not from the moment the
+        // upload starts (2.1.0 build 91, founder report 2026-09-29: while a
+        // photo was being added nothing said it was loading).
+        //
+        // <p>Between the tap on a photo and the first byte of the upload
+        // there are two silent waits. iOS closes the picker at once and only
+        // then reads the file — an iCloud-only original is downloaded first,
+        // seconds on a mobile link — and the downscale/HEIC re-encode below
+        // follows. Busy used to start after both, so the "Add a photo" tile
+        // sat unchanged as if the pick had not taken, and stayed tappable:
+        // a second tap could start a second pick. While the picker is open
+        // busy shows nothing, the picker covers the screen; a cancel resolves
+        // before the picker starts to close (expo-image-picker 17,
+        // ImagePickerHandler), so the flag is already clear when the screen
+        // reappears.
         setIsUploading(true);
         try {
-            // A dropped upload used to vanish. uploadImage would reject,
-            // not one of the five call sites had a catch, and the
-            // rejection died as an unhandled promise: spinner off, no
-            // message, no retry, nothing to tap. A real user on a
-            // 0.76 Mbit/s link (2026-09-08) lost a 1 MB photo at 96%
-            // after 10.8 s and left the app five seconds later — the
-            // whole session, gone to a silent failure. Uploads fail ~1%
-            // overall but far more on the slow mobile links our largest
-            // ad cohort arrives on. So: one automatic retry, then a
-            // visible message, and null — the value every call site
-            // already handles, since consent, permission and cancel all
-            // return it too.
-            let file;
+            const result =
+                source === "camera"
+                    ? await ImagePicker.launchCameraAsync(options)
+                    : await ImagePicker.launchImageLibraryAsync(options);
+
+            if (result.canceled || !result.assets[0]) return null;
+
+            const asset = result.assets[0];
+            const resizedUri = await resizeIfNeeded(asset);
+            opts?.onPreview?.(resizedUri);
+
             try {
-                file = await uploadImage(resizedUri);
-            } catch (err) {
-                if (!isRetriableUploadError(err)) throw err;
-                file = await uploadImage(resizedUri);
+                // A dropped upload used to vanish. uploadImage would reject,
+                // not one of the five call sites had a catch, and the
+                // rejection died as an unhandled promise: spinner off, no
+                // message, no retry, nothing to tap. A real user on a
+                // 0.76 Mbit/s link (2026-09-08) lost a 1 MB photo at 96%
+                // after 10.8 s and left the app five seconds later — the
+                // whole session, gone to a silent failure. Uploads fail ~1%
+                // overall but far more on the slow mobile links our largest
+                // ad cohort arrives on. So: one automatic retry, then a
+                // visible message, and null — the value every call site
+                // already handles, since consent, permission and cancel all
+                // return it too.
+                let file;
+                try {
+                    file = await uploadImage(resizedUri);
+                } catch (err) {
+                    if (!isRetriableUploadError(err)) throw err;
+                    file = await uploadImage(resizedUri);
+                }
+                // Capture original dimensions so the studio can compute a
+                // model-friendly aspect ratio (`16:9`, `4:5`, `1:1`, …) and
+                // pass it to the backend. Without this the backend falls back
+                // to a per-room default that may not match the user's photo
+                // — visible as letterboxing or stretched output on PRO/MAX
+                // tiers where the model honors `aspect_ratio` strictly.
+                return {
+                    uri: resizedUri,
+                    fileId: file.id,
+                    width: asset.width ?? null,
+                    height: asset.height ?? null,
+                };
+            } catch {
+                Alert.alert(
+                    t("errors.upload_failed_title"),
+                    t("errors.upload_failed_body"),
+                );
+                return null;
             }
-            // Capture original dimensions so the studio can compute a
-            // model-friendly aspect ratio (`16:9`, `4:5`, `1:1`, …) and
-            // pass it to the backend. Without this the backend falls back
-            // to a per-room default that may not match the user's photo
-            // — visible as letterboxing or stretched output on PRO/MAX
-            // tiers where the model honors `aspect_ratio` strictly.
-            return {
-                uri: resizedUri,
-                fileId: file.id,
-                width: asset.width ?? null,
-                height: asset.height ?? null,
-            };
-        } catch {
-            Alert.alert(
-                t("errors.upload_failed_title"),
-                t("errors.upload_failed_body"),
-            );
-            return null;
         } finally {
             setIsUploading(false);
         }
@@ -209,7 +237,10 @@ export function useImagePicker() {
      * still runs — the image reaches the same third parties either way, and
      * two consent paths is exactly how a compliance gap starts.
      */
-    const useSampleImage = async (module: number) => {
+    const useSampleImage = async (
+        module: number,
+        opts?: { onPreview?: (uri: string) => void },
+    ) => {
         if (!(await useAiConsentStore.getState().request())) return null;
 
         setIsUploading(true);
@@ -229,6 +260,7 @@ export function useImagePicker() {
                 } as ImagePicker.ImagePickerAsset,
                 true, // samples ship as PNG — always re-encode
             );
+            opts?.onPreview?.(resizedUri);
 
             let file;
             try {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -41,6 +41,17 @@ const GUTTER = theme.v2Layout.gutterWide;
  * hidden behind a lock. Nothing is withheld visually; the tag says what costs
  * money.
  *
+ * <p><b>Photo first (2.1.0, 2026-09-29 founder call).</b> Until 2.0.0 the photo
+ * and the tool were two equal halves and whichever came second navigated, so
+ * people started on the big tool grid and met the photo question on the next
+ * screen. Now the order is fixed on THIS screen, without adding a step: the
+ * tools stay on show — they are still the answer to "what does this app do?" —
+ * but they are dimmed and do not open until there is a room. Tapping one early
+ * is not a dead tap: the phone gives a short warning buzz and the "Add a photo"
+ * tile pulses, which says where to start without another line of text. Once
+ * the room is in, the tiles come up to full strength and a tap goes straight to
+ * the tool.
+ *
  * <p>🔴 <b>The height budget is a contract.</b> Everything below must fit
  * 393 × 852 with no vertical scroll — there is no ScrollView on this screen
  * on purpose. Content runs ~637px against a tab-bar top of 774px. Adding a
@@ -50,7 +61,6 @@ export default function StudioScreen() {
     const { t } = useTranslation();
     const setMode = useStudioStore((s) => s.setMode);
     const setPhoto = useStudioStore((s) => s.setPhoto);
-    const photo = useStudioStore((s) => s.photo);
     const planCode = useEffectivePlanCode();
     // 🔴 The lock comes from the SERVER's plan_features, not from the client
     // catalogue's `minPlan`. The two had already drifted: only Outdoor carried
@@ -65,15 +75,43 @@ export default function StudioScreen() {
 
     const [sourceSheet, setSourceSheet] = useState(false);
 
+    /**
+     * BU ziyarette seçilen fotoğraf.
+     *
+     * <p>🔴 Store'dan okunmuyor, kasten. Karo açılışta store'daki fotoğrafı
+     * gösterdiğinde ekran geçen seferden kalmış bir odayla karşılıyordu ve
+     * kullanıcı onu yeni seçimi sanıyordu (19 Eyl kurucu kararı). Ekrana
+     * girerken boş, seçtikten sonra dolu.
+     *
+     * <p>Bir iş bitince studioStore.reset() fotoğrafı siler; bir sonraki odakta
+     * karo da boşalır ve araçlar yeniden kapanır. İş yapmadan geri dönen
+     * kullanıcı ise aynı odayla döner ve başka bir araç seçebilir.
+     */
+    const [justPicked, setJustPicked] = useState<string | null>(null);
+    /** The local file shown on the tile while it uploads. */
+    const [previewUri, setPreviewUri] = useState<string | null>(null);
+    /** Bumped when a dimmed tool is tapped; the intake tile pulses on each bump. */
+    const [nudge, setNudge] = useState(0);
+
     useFocusEffect(
         useCallback(() => {
             fetchBalance().catch(() => {});
+            const stored = useStudioStore.getState().photo;
+            if (!stored?.fileId) {
+                setJustPicked(null);
+            } else {
+                // The composer can replace the room (its "Replace" pill). Follow
+                // it, but only if a room was picked on THIS visit — an earlier
+                // visit's room is still never shown.
+                setJustPicked((current) => (current != null ? stored.uri ?? current : current));
+            }
         }, [fetchBalance]),
     );
 
-    // Four cut-outs for the band. A failure here must not take the screen
-    // with it — the band simply renders its plates empty.
     const { pickImage, useSampleImage, isUploading } = useImagePicker();
+
+    /** The tools open only once a room is uploaded and in the store. */
+    const photoReady = justPicked != null && !isUploading;
 
     /**
      * Where a mode goes.
@@ -85,8 +123,7 @@ export default function StudioScreen() {
      * Generate — a dead end with the credit cost already on display.
      *
      * <p>They keep their own screens, which do collect it. Both read the
-     * photo from the studio store, so the intake above still applies and
-     * nothing about the two-step selection changes.
+     * photo from the studio store, so the intake above still applies.
      */
     const MODE_ROUTES: Record<string, string> = {
         INPAINT: "/studio/smart-edit",
@@ -107,79 +144,43 @@ export default function StudioScreen() {
     };
 
     /**
-     * Intake: get the photo FIRST, then open the composer.
-     *
-     * <p>The composer has no upload step of its own — that is the point of
-     * folding seven screens into three — so arriving without a photo would
-     * leave it showing an empty frame with nothing to do. Every one of these
-     * paths goes through {@link useImagePicker}, which is also where the
-     * consent gate lives, so no photo can leave the device unasked whichever
-     * button was pressed.
-     *
-     * <p>A cancelled picker returns null and we stay put; navigating anyway
-     * is how the old flow produced a dead "Analyze Your Space" screen.
+     * Intake. Every path goes through {@link useImagePicker}, which is also
+     * where the consent gate lives, so no photo can leave the device unasked
+     * whichever button was pressed. A cancelled picker returns null and we
+     * stay put.
      */
-    /**
-     * Two choices, then go.
-     *
-     * <p>Tapping a feature used to navigate on its own, so the composer
-     * opened on an empty frame and the first thing it did was ask for the
-     * photo the user had not been asked for yet. A mode without a photo is
-     * half a request; so is a photo without a mode.
-     *
-     * <p>So each tap records one half and the SECOND one navigates, in
-     * whichever order they arrive. Nothing is preselected — a default mode
-     * would mean picking a photo navigates after a single tap, which is the
-     * behaviour this replaces.
-     */
-    const [pendingMode, setPendingMode] = useState<string | null>(null);
-
-    /**
-     * BU ziyarette seçilen fotoğraf.
-     *
-     * <p>🔴 Store'dan okunmuyor, kasten. Karo açılışta store'daki fotoğrafı
-     * gösterdiğinde ekran geçen seferden kalmış bir odayla karşılıyordu ve
-     * kullanıcı onu yeni seçimi sanıyordu — bu yüzden kaldırılmıştı. Ama
-     * kaldırınca ters uç ortaya çıktı: mod seçmeden fotoğraf seçen kullanıcı
-     * HİÇBİR geri bildirim görmüyor. Fotoğraf gerçekten alınıyor, yükleniyor
-     * ve store'a yazılıyor; ekranda değişen tek şey yok.
-     *
-     * <p>Ayrım zamanda: yalnız bu oturumda seçilen gösteriliyor. Ekrana
-     * girerken boş, seçtikten sonra dolu.
-     */
-    const [justPicked, setJustPicked] = useState<string | null>(null);
-
     const addPhoto = async (
         source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number },
     ) => {
         Haptics.selectionAsync();
+        const opts = { onPreview: setPreviewUri };
         const picked =
             source.kind === "sample"
-                ? await useSampleImage(source.module)
-                : await pickImage(source.kind);
+                ? await useSampleImage(source.module, opts)
+                : await pickImage(source.kind, opts);
+        setPreviewUri(null);
         if (!picked) return;
         // 🔴 The picker RETURNS the photo; it does not store it. Without this
         // the composer opened on an empty frame that spun forever — the
         // upload had succeeded and nothing was holding the result.
         setPhoto(picked);
         setJustPicked(picked.uri ?? null);
-        if (pendingMode) goComposer(pendingMode);
     };
 
     const onFeature = (key: string, locked: boolean) => {
+        if (!photoReady) {
+            // The room comes first. No navigation — a buzz and a pulse on the
+            // tile that starts the flow.
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            setNudge((n) => n + 1);
+            return;
+        }
         Haptics.selectionAsync();
         if (locked) {
             router.push("/paywall?source=FEATURE_TILE" as never);
             return;
         }
-        // Tapping the selected one again clears it — a selection you cannot
-        // undo is a trap on a screen with no Back.
-        if (pendingMode === key) {
-            setPendingMode(null);
-            return;
-        }
-        setPendingMode(key);
-        if (photo?.fileId) goComposer(key);
+        goComposer(key);
     };
 
     return (
@@ -197,7 +198,8 @@ export default function StudioScreen() {
                 <Header balance={balance} planCode={planCode} />
                 <IntakeRow
                     busy={isUploading}
-                    photoUri={justPicked}
+                    photoUri={previewUri ?? justPicked}
+                    nudge={nudge}
                     onAddPhoto={() => setSourceSheet(true)}
                     onSample={(m) => addPhoto({ kind: "sample", module: m })}
                 />
@@ -208,7 +210,7 @@ export default function StudioScreen() {
                     }
                     onPress={onFeature}
                     t={t}
-                    selectedMode={pendingMode}
+                    enabled={photoReady}
                 />
             </View>
 
@@ -313,88 +315,146 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
  *
  * <p>The label is neutral on purpose. The tile now leads to both sources, so
  * naming the camera on it would be a promise the sheet immediately breaks.
- */
-/**
- * <p>The tile does NOT show the last photo (2026-09-19 founder call). It did
- * briefly, to make the pending half of the two-step selection visible — but
- * a room the user finished with yesterday, sitting on the home screen as if
- * it were about to be used, reads as a stale state rather than a ready one.
- * The screen opens empty; the photo belongs to the run, not to the home.
+ *
+ * <p>The tile shows the room picked on THIS visit (never an earlier one —
+ * 19 Sep founder call), and while that room uploads it is already on the
+ * tile under a spinner. Before there is a preview to show — the file is still
+ * being read or downscaled — the "+" itself turns into the spinner. Each
+ * `nudge` bump — a dimmed tool was tapped — makes the tile pulse once
+ * (skipped under Reduce Motion; the haptic stays).
  */
 function IntakeRow({
     busy,
     photoUri,
+    nudge,
     onAddPhoto,
     onSample,
 }: {
     busy: boolean;
-    /** Bu ziyarette seçilen fotoğraf; null ise karo boş "+" olarak durur. */
+    /** Bu ziyarette seçilen (ya da şu an yüklenen) fotoğraf; null ise karo boş "+" olarak durur. */
     photoUri: string | null;
+    nudge: number;
     onAddPhoto: () => void;
     onSample: (module: number) => void;
 }) {
     const { t } = useTranslation();
     const samples = SAMPLE_ROOMS.slice(0, 2);
+    const pulse = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        if (nudge === 0) return;
+        let cancelled = false;
+        AccessibilityInfo.isReduceMotionEnabled()
+            .catch(() => false)
+            .then((reduce) => {
+                if (cancelled || reduce) return;
+                pulse.setValue(1);
+                Animated.sequence([
+                    Animated.timing(pulse, { toValue: 1.05, duration: 120, useNativeDriver: true }),
+                    Animated.spring(pulse, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }),
+                ]).start();
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [nudge, pulse]);
 
     return (
         <View style={{ flexDirection: "row", gap: 10, height: 100 }}>
-            <Pressable
-                onPress={onAddPhoto}
-                disabled={busy}
-                accessibilityRole="button"
-                accessibilityLabel={photoUri ? t("studio.replace") : t("studio.add_a_photo")}
-                style={{
-                    flex: 2,
-                    opacity: busy ? 0.6 : 1,
-                    backgroundColor: photoUri ? U.surface : U.buttonFill,
-                    borderRadius: R.card,
-                    overflow: "hidden",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    paddingHorizontal: 12,
-                    borderWidth: photoUri ? 1.5 : 0,
-                    borderColor: U.accent,
-                }}
-            >
-                {photoUri ? (
-                    <>
-                        <Image
-                            source={{ uri: photoUri }}
-                            style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-                            resizeMode="cover"
-                        />
-                        {/* Fotoğrafın üstünde metin okunur kalsın diye kendi
-                            perdesi — tema rengi değil, fotoğraf kromu. */}
-                        <View
-                            style={{
-                                position: "absolute", left: 0, right: 0, bottom: 0,
-                                paddingHorizontal: 10, paddingTop: 16, paddingBottom: 8,
-                                backgroundColor: "rgba(0,0,0,0.55)",
-                                flexDirection: "row", alignItems: "center", gap: 6,
-                            }}
-                        >
-                            <Text style={{ color: U.accentBright, fontSize: 12 }}>✓</Text>
+            <Animated.View style={{ flex: 2, transform: [{ scale: pulse }] }}>
+                <Pressable
+                    onPress={onAddPhoto}
+                    disabled={busy}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                        photoUri ? t("studio.replace") : busy ? t("studio.uploading") : t("studio.add_a_photo")
+                    }
+                    accessibilityState={{ busy }}
+                    style={{
+                        flex: 1,
+                        backgroundColor: photoUri ? U.surface : U.buttonFill,
+                        borderRadius: R.card,
+                        overflow: "hidden",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        paddingHorizontal: 12,
+                        borderWidth: photoUri ? 1.5 : 0,
+                        borderColor: U.accent,
+                    }}
+                >
+                    {photoUri ? (
+                        <>
+                            <Image
+                                source={{ uri: photoUri }}
+                                style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                                resizeMode="cover"
+                            />
+                            {busy ? (
+                                <View
+                                    style={{
+                                        position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
+                                        backgroundColor: U.overlayScrim,
+                                        alignItems: "center", justifyContent: "center", gap: 6,
+                                    }}
+                                >
+                                    <ActivityIndicator color={U.accentBright} />
+                                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}>
+                                        {t("studio.uploading")}
+                                    </Text>
+                                </View>
+                            ) : (
+                                /* Fotoğrafın üstünde metin okunur kalsın diye kendi
+                                   perdesi — tema rengi değil, fotoğraf kromu. */
+                                <View
+                                    style={{
+                                        position: "absolute", left: 0, right: 0, bottom: 0,
+                                        paddingHorizontal: 10, paddingTop: 16, paddingBottom: 8,
+                                        backgroundColor: "rgba(0,0,0,0.55)",
+                                        flexDirection: "row", alignItems: "center", gap: 6,
+                                    }}
+                                >
+                                    <Text style={{ color: U.accentBright, fontSize: 12 }}>✓</Text>
+                                    <Text
+                                        style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}
+                                        numberOfLines={1}
+                                    >
+                                        {t("studio.replace")}
+                                    </Text>
+                                </View>
+                            )}
+                        </>
+                    ) : busy ? (
+                        /* Picked, but no preview yet: iOS is still reading the
+                           file (an iCloud original downloads first) or it is
+                           being downscaled. Same tile, the "+" swapped for a
+                           spinner, so the tap visibly took (build 91). The
+                           spinner sits in the glyph's 34px so the label does
+                           not move. */
+                        <>
+                            <View style={{ height: 34, justifyContent: "center" }}>
+                                <ActivityIndicator color={U.buttonInk} />
+                            </View>
                             <Text
-                                style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: "#fff" }}
+                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
                                 numberOfLines={1}
                             >
-                                {t("studio.replace")}
+                                {t("studio.uploading")}
                             </Text>
-                        </View>
-                    </>
-                ) : (
-                    <>
-                        <PlusGlyph color={U.buttonInk} />
-                        <Text
-                            style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                            numberOfLines={1}
-                        >
-                            {t("studio.add_a_photo")}
-                        </Text>
-                    </>
-                )}
-            </Pressable>
+                        </>
+                    ) : (
+                        <>
+                            <PlusGlyph color={U.buttonInk} />
+                            <Text
+                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
+                                numberOfLines={1}
+                            >
+                                {t("studio.add_a_photo")}
+                            </Text>
+                        </>
+                    )}
+                </Pressable>
+            </Animated.View>
 
             <View style={{ flex: 1, gap: 8 }}>
                 {samples.map((s, i) => (
@@ -454,37 +514,54 @@ function PlusGlyph({ color }: { color: string }) {
 
 /* ── feature grid ───────────────────────────────────────────────────── */
 
+/** How far the tools step back while there is no room yet. */
+const DIMMED = 0.38;
+
 /**
- * Six tiles, three across. Furniture is not a {@code DesignMode} on the
- * server — it is a modifier on Redesign — but it is a capability from the
- * user's side, so it gets a tile and opens the composer with the catalogue
- * already up.
+ * Five tiles — three across, then two wide. The wide pair is the paid pair —
+ * the extra width is the point, since this is the only place a free user
+ * meets what a plan buys.
+ *
+ * <p>Until a room is in ({@code enabled} false) the whole grid is dimmed and
+ * reported as disabled to VoiceOver, with the hint saying what comes first.
+ * The tiles still receive the tap so the screen can answer it (buzz + pulse on
+ * the intake tile) instead of swallowing it. When the room arrives the grid
+ * fades up to full strength.
  */
 function FeatureGrid({
     isLocked,
     onPress,
     t,
-    selectedMode,
+    enabled,
 }: {
     /** Server truth. Returns false until plan_features has loaded — an
         unlocked flash is recoverable, a wrongly locked tile is not. */
     isLocked: (featureCode: string) => boolean;
     onPress: (key: string, locked: boolean) => void;
     t: (k: string) => string;
-    selectedMode: string | null;
+    enabled: boolean;
 }) {
     const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
+    const fade = useRef(new Animated.Value(enabled ? 1 : DIMMED)).current;
 
-    /**
-     * Five, not six. The Furniture tile came off (2026-09-19): the catalogue
-     * is offered inside the composer, where the room it goes into already
-     * exists, and a tile that jumped straight past the photo was asking for
-     * the piece before the space.
-     *
-     * <p>Three across, then two wide. The wide pair is the paid pair — the
-     * extra width is the point, since this is the only place a free user
-     * meets what a plan buys.
-     */
+    useEffect(() => {
+        let cancelled = false;
+        AccessibilityInfo.isReduceMotionEnabled()
+            .catch(() => false)
+            .then((reduce) => {
+                if (cancelled) return;
+                const to = enabled ? 1 : DIMMED;
+                if (reduce) {
+                    fade.setValue(to);
+                } else {
+                    Animated.timing(fade, { toValue: to, duration: 260, useNativeDriver: true }).start();
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [enabled, fade]);
+
     const row1 = [
         { key: "REDESIGN", label: t("studio.mode_redesign") },
         { key: "EMPTY_ROOM", label: t("studio.mode_empty_room") },
@@ -498,20 +575,20 @@ function FeatureGrid({
     const tile = (item: { key: string; label: string }, width: string) => {
         const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
         const locked = isLocked(featureCode);
-        const selected = selectedMode === item.key;
         const image = imageFor(byKey[item.key]);
         return (
             <Pressable
                 key={item.key}
                 onPress={() => onPress(item.key, locked)}
                 accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={item.label}
+                accessibilityState={{ disabled: !enabled }}
+                accessibilityLabel={locked ? `${item.label}, PRO` : item.label}
+                accessibilityHint={enabled ? undefined : t("studio.photo_source_title")}
                 style={{
                     width: width as never,
                     backgroundColor: U.surface,
-                    borderWidth: selected ? 1.5 : 1,
-                    borderColor: selected ? U.accent : U.lineNeutral,
+                    borderWidth: 1,
+                    borderColor: U.lineNeutral,
                     borderRadius: R.tile,
                     overflow: "hidden",
                 }}
@@ -541,23 +618,6 @@ function FeatureGrid({
                             </Text>
                         </View>
                     )}
-                    {selected && (
-                        <View
-                            style={{
-                                position: "absolute",
-                                top: 6,
-                                left: 6,
-                                width: 20,
-                                height: 20,
-                                borderRadius: 10,
-                                backgroundColor: U.accent,
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Text style={{ color: U.buttonInk, fontSize: 11, fontWeight: "700" }}>✓</Text>
-                        </View>
-                    )}
                 </View>
                 {/* The tile's height is set by the image, never by the label —
                     German "Stilübertragung" and Dutch "Buitenontwerp" wrap to
@@ -571,7 +631,7 @@ function FeatureGrid({
                         numberOfLines={item.label.includes(" ") ? 2 : 1}
                         adjustsFontSizeToFit={!item.label.includes(" ")}
                         minimumFontScale={0.7}
-                        style={{ ...V.tile, color: selected ? U.accentBright : U.ink }}
+                        style={{ ...V.tile, color: U.ink }}
                     >
                         {item.label}
                     </Text>
@@ -592,14 +652,14 @@ function FeatureGrid({
      * Max without either one being tuned by hand.
      */
     return (
-        <View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420 }}>
+        <Animated.View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420, opacity: fade }}>
             <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
                 {row1.map((i) => tile(i, "31.5%"))}
             </View>
             <View style={{ flex: 1.15, flexDirection: "row", gap: 8 }}>
                 {row2.map((i) => tile(i, "48.7%"))}
             </View>
-        </View>
+        </Animated.View>
     );
 }
 
@@ -610,4 +670,3 @@ function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
     if (m.kind === "single") return m.image;
     return m.after;
 }
-

@@ -13,7 +13,7 @@ const PRIVACY_URL = "https://roomframeai.com/privacy";
  * <p>Mounted once at the root layout; visibility is driven by
  * {@link useAiConsentStore}. Appears right before the FIRST photo pick —
  * discloses exactly what is sent (room photo, mask/reference, design
- * choices) and to whom (Replicate, Anthropic), links the Privacy Policy,
+ * choices) and to whom (fal.ai, Replicate, Anthropic), links the Privacy Policy,
  * and blocks the upload until the user explicitly agrees. Declining just
  * dismisses — the flow that asked receives {@code false} and stops.
  */

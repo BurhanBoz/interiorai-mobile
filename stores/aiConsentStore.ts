@@ -20,12 +20,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * doesn't proceed, and the sheet appears again on the next attempt,
  * because without consent there is nothing else the generation flows can
  * legally do.
+ *
+ * <p>Versioned by WHO receives the photo: the persisted version is the
+ * disclosure the user agreed to. v1 named Replicate; v2 (2.1.0, 2026-09-29)
+ * names fal.ai, which now generates the images and videos. A v1 consent does
+ * not cover a processor it never named, so a v1 user is asked once more
+ * before their next upload — the "in-app notification" our privacy policy
+ * promises for material changes. The v1 timestamp is kept for the audit
+ * trail. Bump the version whenever the recipients in `ai_consent.body_who`
+ * change; never for wording alone.
  */
 interface AiConsentState {
     /** User accepted the AI-processing disclosure. Persisted. */
     granted: boolean;
     /** ISO timestamp of acceptance — audit trail. Persisted. */
     grantedAt: string | null;
+    /** When an EARLIER version of the disclosure was accepted, if ever — audit trail. Persisted. */
+    previousGrantedAt: string | null;
     /** Consent sheet visibility (session-only). */
     visible: boolean;
     /** Resolver of the in-flight request() promise (session-only). */
@@ -44,6 +55,7 @@ export const useAiConsentStore = create<AiConsentState>()(
         (set, get) => ({
             granted: false,
             grantedAt: null,
+            previousGrantedAt: null,
             visible: false,
             resolver: null,
 
@@ -78,9 +90,21 @@ export const useAiConsentStore = create<AiConsentState>()(
         {
             name: "ai-consent-store",
             storage: createJSONStorage(() => AsyncStorage),
-            version: 1,
+            version: 2,
+            // v1 → v2: fal.ai joined the recipients (see the class comment).
+            migrate: (persisted, fromVersion) => {
+                const old = (persisted ?? {}) as { grantedAt?: string | null };
+                if (fromVersion < 2) {
+                    return { granted: false, grantedAt: null, previousGrantedAt: old.grantedAt ?? null };
+                }
+                return persisted as Partial<AiConsentState>;
+            },
             // Only the durable facts — never the transient UI/promise state.
-            partialize: (s) => ({ granted: s.granted, grantedAt: s.grantedAt }),
+            partialize: (s) => ({
+                granted: s.granted,
+                grantedAt: s.grantedAt,
+                previousGrantedAt: s.previousGrantedAt,
+            }),
         },
     ),
 );
