@@ -7,6 +7,7 @@ import {
     ScrollView,
     ActivityIndicator,
     ActivityIndicator as Spinner,
+    StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -29,6 +30,9 @@ import { catalogName } from "@/utils/catalogI18n";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
 import { ResumeNote } from "@/components/ui/ResumeNote";
 import { useResumeNote } from "@/hooks/useResumeNote";
+import { CoachMarks } from "@/components/tour/CoachMarks";
+import { tourTarget } from "@/components/tour/tourTargets";
+import { useFirstRunTour } from "@/hooks/useFirstRunTour";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -185,6 +189,17 @@ export default function ComposerScreen() {
 
     const canGenerate = Boolean(photo?.fileId) && !isSubmitting && !isUploading;
 
+    /**
+     * First-run tour, second half (2.2.0): the room type, the style strip,
+     * Advanced — pointed at, never opened — and Generate. Waits until the
+     * defaults are on screen, so the room pill has its name and the strip
+     * its styles.
+     */
+    const tour = useFirstRunTour(
+        "composer",
+        Boolean(photo?.uri) && Boolean(roomType) && designStyles.length > 0 && sheet === null && !isSubmitting,
+    );
+
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
             <View style={{ flex: 1 }}>
@@ -228,27 +243,30 @@ export default function ComposerScreen() {
                         height={photo?.height ?? null}
                         roomTypeName={roomType ? catalogName(t, "room", roomType) : ""}
                         onChangeRoom={() => setSheet("room")}
+                        roomTargetRef={tourTarget("composer.room")}
                         onReplace={onReplace}
                         busy={isUploading}
                         maskStrokes={mode === "INPAINT" ? maskStrokes : null}
                         maskMode={maskMode}
                     />
 
-                    <StyleStrip
-                        styles={designStyles}
-                        selectedId={designStyle?.id ?? null}
-                        onSelect={(s) => {
-                            Haptics.selectionAsync();
-                            setDesignStyle(s);
-                            // 🔴 Bu olay 1.6.0'da KÖRLEŞMİŞTİ. Sihirbazın stil
-                            // ızgarası ekranından (studio/style.tsx) atılıyordu
-                            // ve o ekran yeniden tasarımda silindi; tipi
-                            // analytics.ts'te durdu ama çağıran kalmadı.
-                            // Son ölçümünde 7 günde 65 olay / 26 kişiydi —
-                            // hangi stilin seçildiği tek sinyal bu.
-                            track("style_selected", { style: s.code ?? s.name });
-                        }}
-                    />
+                    <View ref={tourTarget("composer.style")} collapsable={false} style={{ marginTop: 18 }}>
+                        <StyleStrip
+                            styles={designStyles}
+                            selectedId={designStyle?.id ?? null}
+                            onSelect={(s) => {
+                                Haptics.selectionAsync();
+                                setDesignStyle(s);
+                                // 🔴 Bu olay 1.6.0'da KÖRLEŞMİŞTİ. Sihirbazın stil
+                                // ızgarası ekranından (studio/style.tsx) atılıyordu
+                                // ve o ekran yeniden tasarımda silindi; tipi
+                                // analytics.ts'te durdu ama çağıran kalmadı.
+                                // Son ölçümünde 7 günde 65 olay / 26 kişiydi —
+                                // hangi stilin seçildiği tek sinyal bu.
+                                track("style_selected", { style: s.code ?? s.name });
+                            }}
+                        />
+                    </View>
 
                     {/* Advanced first, the pieces it produced underneath —
                         a chosen sofa is the RESULT of opening the catalogue,
@@ -263,6 +281,12 @@ export default function ComposerScreen() {
                             label={t("studio.advanced")}
                             tone="ink"
                             onPress={() => setSheet("advanced")}
+                        />
+                        <View
+                            ref={tourTarget("composer.advanced")}
+                            collapsable={false}
+                            pointerEvents="none"
+                            style={StyleSheet.absoluteFill}
                         />
                     </View>
 
@@ -299,8 +323,12 @@ export default function ComposerScreen() {
                     )}
                 </View>
 
-                {/* Action bar — a real footer with its own height. */}
+                {/* Action bar — a real footer with its own height. The tour's
+                    last step lights all of it: the cost line its copy points
+                    to sits right above the button. */}
                 <View
+                    ref={tourTarget("composer.generate")}
+                    collapsable={false}
                     style={{
                         backgroundColor: U.ground,
                         borderTopWidth: 1,
@@ -383,6 +411,17 @@ export default function ComposerScreen() {
                 />
             )}
             {sheet === "advanced" && <AdvancedSheet onClose={() => setSheet(null)} />}
+
+            <CoachMarks
+                visible={tour.visible}
+                onFinish={tour.finish}
+                steps={[
+                    { target: "composer.room", title: t("tour.room_title"), body: t("tour.room_body"), padding: 6, radius: 100 },
+                    { target: "composer.style", title: t("tour.style_title"), body: t("tour.style_body") },
+                    { target: "composer.advanced", title: t("tour.advanced_title"), body: t("tour.advanced_body") },
+                    { target: "composer.generate", title: t("tour.generate_title"), body: t("tour.generate_body"), padding: 0, radius: 22 },
+                ]}
+            />
         </SafeAreaView>
     );
 }
@@ -408,6 +447,7 @@ function PhotoFrame({
     height,
     roomTypeName,
     onChangeRoom,
+    roomTargetRef,
     onReplace,
     busy,
     maskStrokes,
@@ -418,6 +458,8 @@ function PhotoFrame({
     height: number | null;
     roomTypeName: string;
     onChangeRoom: () => void;
+    /** The first-run tour points at the room pill. */
+    roomTargetRef?: (node: View | null) => void;
     onReplace: () => void;
     busy: boolean;
     maskStrokes?: unknown[] | null;
@@ -462,7 +504,7 @@ function PhotoFrame({
                     alignItems: "center",
                 }}
             >
-                <PhotoPill onPress={onChangeRoom}>
+                <PhotoPill onPress={onChangeRoom} targetRef={roomTargetRef}>
                     <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: "#fff" }}>
                         {roomTypeName}
                     </Text>
@@ -491,9 +533,18 @@ function PhotoFrame({
  * arbitrary image — a token that assumes a known background fails on a bright
  * kitchen and a dark hallway in opposite directions.
  */
-function PhotoPill({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
+function PhotoPill({
+    children,
+    onPress,
+    targetRef,
+}: {
+    children: React.ReactNode;
+    onPress: () => void;
+    targetRef?: (node: View | null) => void;
+}) {
     return (
         <Pressable
+            ref={targetRef}
             onPress={onPress}
             accessibilityRole="button"
             hitSlop={8}
@@ -530,7 +581,7 @@ function StyleStrip({
         <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 18, flexGrow: 0 }}
+            style={{ flexGrow: 0 }}
             contentContainerStyle={{ gap: 9 }}
         >
             {styles.map((s) => {

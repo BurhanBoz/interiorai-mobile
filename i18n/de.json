@@ -1332,5 +1332,23 @@
     "generate": "Alles bereit — tippe auf „{{cta}}“, um weiterzumachen.",
     "video": "Alles bereit — tippe auf „{{cta}}“, um das Video zu erstellen.",
     "restyle": "Alles bereit — wähle einen Stil, um weiterzumachen."
+  },
+  "tour": {
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "done": "Verstanden",
+    "step_label": "Schritt {{current}} von {{total}}",
+    "photo_title": "Starte mit deinem Raum",
+    "photo_body": "Füge ein Foto deines Raums hinzu oder probiere ein Beispiel aus.",
+    "tools_title": "Dann wählst du, was entstehen soll",
+    "tools_body": "Umgestalten, einen leeren Raum einrichten, ein einzelnes Stück ändern und mehr. Sie öffnen sich, sobald dein Foto da ist.",
+    "room_title": "Raumtyp prüfen",
+    "room_body": "Tippe darauf, um einen anderen Raum zu wählen.",
+    "style_title": "Wähle einen Stil",
+    "style_body": "Wische, um alle zu sehen, und tippe auf deinen Favoriten.",
+    "advanced_title": "Feinabstimmung, wenn du magst",
+    "advanced_body": "Farbpalette, wie stark die Veränderung ausfällt und ob dein Layout bleibt. Optional – die Standardwerte funktionieren gut.",
+    "generate_title": "Erstelle dein Design",
+    "generate_body": "Tippe hier, wenn du bereit bist. Die Kosten stehen direkt darüber."
   }
 }

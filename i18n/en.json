@@ -1332,5 +1332,23 @@
     "generate": "You're all set — tap “{{cta}}” to pick up where you left off.",
     "video": "You're all set — tap “{{cta}}” to make the video.",
     "restyle": "You're all set — pick a style to carry on."
+  },
+  "tour": {
+    "skip": "Skip",
+    "next": "Next",
+    "done": "Got it",
+    "step_label": "Step {{current}} of {{total}}",
+    "photo_title": "Start with your room",
+    "photo_body": "Add a photo of your room, or try one of the samples.",
+    "tools_title": "Then choose what to create",
+    "tools_body": "Redesign it, furnish an empty room, change a single piece and more. These open once your photo is in.",
+    "room_title": "Check the room type",
+    "room_body": "Tap it to pick a different room.",
+    "style_title": "Pick a style",
+    "style_body": "Swipe to see them all and tap the one you like.",
+    "advanced_title": "Fine-tune, if you like",
+    "advanced_body": "Color palette, how bold the change is and keeping your layout live here. Optional — the defaults work well.",
+    "generate_title": "Create your design",
+    "generate_body": "Tap here when you're ready. The cost is shown just above."
   }
 }

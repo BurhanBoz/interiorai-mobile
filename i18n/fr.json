@@ -1332,5 +1332,23 @@
     "generate": "Tout est prêt — touchez « {{cta}} » pour reprendre là où vous en étiez.",
     "video": "Tout est prêt — touchez « {{cta}} » pour créer la vidéo.",
     "restyle": "Tout est prêt — choisissez un style pour continuer."
+  },
+  "tour": {
+    "skip": "Passer",
+    "next": "Suivant",
+    "done": "Compris",
+    "step_label": "Étape {{current}} sur {{total}}",
+    "photo_title": "Commencez par votre pièce",
+    "photo_body": "Ajoutez une photo de votre pièce ou essayez l'un des exemples.",
+    "tools_title": "Puis choisissez quoi créer",
+    "tools_body": "Réaménager, meubler une pièce vide, changer un seul meuble et plus encore. Ils s'activent dès que votre photo est ajoutée.",
+    "room_title": "Vérifiez le type de pièce",
+    "room_body": "Touchez-le pour choisir une autre pièce.",
+    "style_title": "Choisissez un style",
+    "style_body": "Faites défiler pour tous les voir et touchez celui qui vous plaît.",
+    "advanced_title": "Affinez si vous le souhaitez",
+    "advanced_body": "Palette de couleurs, intensité du changement et conservation de l'agencement. Facultatif — les réglages par défaut fonctionnent bien.",
+    "generate_title": "Créez votre design",
+    "generate_body": "Touchez ici quand vous êtes prêt. Le coût est indiqué juste au-dessus."
   }
 }

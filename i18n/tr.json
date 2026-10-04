@@ -1332,5 +1332,23 @@
     "generate": "Her şey hazır — kaldığın yerden devam etmek için “{{cta}}” düğmesine dokun.",
     "video": "Her şey hazır — videoyu yapmak için “{{cta}}” düğmesine dokun.",
     "restyle": "Her şey hazır — devam etmek için bir stil seç."
+  },
+  "tour": {
+    "skip": "Geç",
+    "next": "İleri",
+    "done": "Anladım",
+    "step_label": "Adım {{current}}/{{total}}",
+    "photo_title": "Odanla başla",
+    "photo_body": "Odanın fotoğrafını ekle ya da örneklerden birini dene.",
+    "tools_title": "Sonra ne yapacağını seç",
+    "tools_body": "Yeniden tasarla, boş odayı döşe, tek bir parçayı değiştir ve fazlası. Fotoğrafın eklenince açılırlar.",
+    "room_title": "Oda tipini kontrol et",
+    "room_body": "Başka bir oda seçmek için dokun.",
+    "style_title": "Bir stil seç",
+    "style_body": "Hepsini görmek için kaydır, beğendiğine dokun.",
+    "advanced_title": "İstersen ince ayar yap",
+    "advanced_body": "Renk paleti, değişimin ne kadar cesur olacağı ve düzeni koruma burada. İsteğe bağlı; varsayılanlar iyi çalışır.",
+    "generate_title": "Tasarımını oluştur",
+    "generate_body": "Hazır olduğunda buraya dokun. Bedeli hemen üstünde yazar."
   }
 }

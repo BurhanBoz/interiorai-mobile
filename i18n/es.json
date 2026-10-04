@@ -1332,5 +1332,23 @@
     "generate": "Todo listo: toca «{{cta}}» para seguir donde lo dejaste.",
     "video": "Todo listo: toca «{{cta}}» para crear el vídeo.",
     "restyle": "Todo listo: elige un estilo para continuar."
+  },
+  "tour": {
+    "skip": "Omitir",
+    "next": "Siguiente",
+    "done": "Entendido",
+    "step_label": "Paso {{current}} de {{total}}",
+    "photo_title": "Empieza con tu espacio",
+    "photo_body": "Añade una foto de tu habitación o prueba uno de los ejemplos.",
+    "tools_title": "Luego elige qué crear",
+    "tools_body": "Rediseñar, amueblar una habitación vacía, cambiar una sola pieza y más. Se activan cuando añades tu foto.",
+    "room_title": "Revisa el tipo de habitación",
+    "room_body": "Tócalo para elegir otra habitación.",
+    "style_title": "Elige un estilo",
+    "style_body": "Desliza para verlos todos y toca el que te guste.",
+    "advanced_title": "Ajusta si quieres",
+    "advanced_body": "Paleta de colores, intensidad del cambio y conservar la distribución. Opcional: los valores por defecto funcionan bien.",
+    "generate_title": "Crea tu diseño",
+    "generate_body": "Toca aquí cuando estés listo. El coste aparece justo encima."
   }
 }

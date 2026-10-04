@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,9 @@ import { HexMark } from "@/components/brand/HexMark";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { PhotoSourceSheet } from "@/components/studio/PhotoSourceSheet";
 import { FREE_DAILY_CEILING } from "@/config/freeTier";
+import { CoachMarks } from "@/components/tour/CoachMarks";
+import { tourTarget } from "@/components/tour/tourTargets";
+import { useFirstRunTour } from "@/hooks/useFirstRunTour";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -112,6 +115,14 @@ export default function StudioScreen() {
 
     /** The tools open only once a room is uploaded and in the store. */
     const photoReady = justPicked != null && !isUploading;
+
+    /**
+     * First-run tour (2.2.0): where to start, then what the tools are. Only
+     * while the screen is in its first state — no room yet, no sheet open.
+     * The composer carries the second half (room type → style → advanced →
+     * generate).
+     */
+    const tour = useFirstRunTour("studio", justPicked == null && !sourceSheet && !isUploading);
 
     /**
      * Where a mode goes.
@@ -213,6 +224,15 @@ export default function StudioScreen() {
                     enabled={photoReady}
                 />
             </View>
+
+            <CoachMarks
+                visible={tour.visible}
+                onFinish={tour.finish}
+                steps={[
+                    { target: "studio.photo", title: t("tour.photo_title"), body: t("tour.photo_body") },
+                    { target: "studio.tools", title: t("tour.tools_title"), body: t("tour.tools_body") },
+                ]}
+            />
 
             {sourceSheet && (
                 <PhotoSourceSheet
@@ -360,7 +380,7 @@ function IntakeRow({
     }, [nudge, pulse]);
 
     return (
-        <View style={{ flexDirection: "row", gap: 10, height: 100 }}>
+        <View ref={tourTarget("studio.photo")} collapsable={false} style={{ flexDirection: "row", gap: 10, height: 100 }}>
             <Animated.View style={{ flex: 2, transform: [{ scale: pulse }] }}>
                 <Pressable
                     onPress={onAddPhoto}
@@ -653,6 +673,14 @@ function FeatureGrid({
      */
     return (
         <Animated.View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420, opacity: fade }}>
+            {/* What the first-run tour measures — the grid's own frame, without
+                wrapping (and so re-flowing) it. */}
+            <View
+                ref={tourTarget("studio.tools")}
+                collapsable={false}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+            />
             <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
                 {row1.map((i) => tile(i, "31.5%"))}
             </View>

@@ -1332,5 +1332,23 @@
     "generate": "Tutto pronto: tocca «{{cta}}» per continuare da dove avevi lasciato.",
     "video": "Tutto pronto: tocca «{{cta}}» per creare il video.",
     "restyle": "Tutto pronto: scegli uno stile per continuare."
+  },
+  "tour": {
+    "skip": "Salta",
+    "next": "Avanti",
+    "done": "Ho capito",
+    "step_label": "Passo {{current}} di {{total}}",
+    "photo_title": "Inizia dalla tua stanza",
+    "photo_body": "Aggiungi una foto della tua stanza o prova uno degli esempi.",
+    "tools_title": "Poi scegli cosa creare",
+    "tools_body": "Riprogetta, arreda una stanza vuota, cambia un singolo pezzo e altro. Si attivano quando aggiungi la foto.",
+    "room_title": "Controlla il tipo di stanza",
+    "room_body": "Toccalo per scegliere un'altra stanza.",
+    "style_title": "Scegli uno stile",
+    "style_body": "Scorri per vederli tutti e tocca quello che ti piace.",
+    "advanced_title": "Rifinisci, se vuoi",
+    "advanced_body": "Palette di colori, intensità del cambiamento e mantenimento della disposizione. Facoltativo: le impostazioni predefinite funzionano bene.",
+    "generate_title": "Crea il tuo design",
+    "generate_body": "Tocca qui quando sei pronto. Il costo è indicato appena sopra."
   }
 }
