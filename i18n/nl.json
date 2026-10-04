@@ -1332,5 +1332,23 @@
     "generate": "Alles staat klaar — tik op ‘{{cta}}’ om verder te gaan waar je was.",
     "video": "Alles staat klaar — tik op ‘{{cta}}’ om de video te maken.",
     "restyle": "Alles staat klaar — kies een stijl om verder te gaan."
+  },
+  "tour": {
+    "skip": "Overslaan",
+    "next": "Volgende",
+    "done": "Begrepen",
+    "step_label": "Stap {{current}} van {{total}}",
+    "photo_title": "Begin met je ruimte",
+    "photo_body": "Voeg een foto van je kamer toe of probeer een van de voorbeelden.",
+    "tools_title": "Kies daarna wat je wilt maken",
+    "tools_body": "Herinrichten, een lege kamer inrichten, één stuk veranderen en meer. Ze worden actief zodra je foto er is.",
+    "room_title": "Controleer het kamertype",
+    "room_body": "Tik erop om een andere kamer te kiezen.",
+    "style_title": "Kies een stijl",
+    "style_body": "Veeg om ze allemaal te zien en tik op je favoriet.",
+    "advanced_title": "Verfijn als je wilt",
+    "advanced_body": "Kleurenpalet, hoe sterk de verandering is en je indeling behouden. Optioneel — de standaardinstellingen werken goed.",
+    "generate_title": "Maak je ontwerp",
+    "generate_body": "Tik hier als je klaar bent. De kosten staan er direct boven."
   }
 }
