@@ -1334,7 +1334,6 @@
     "restyle": "You're all set — pick a style to carry on."
   },
   "tour": {
-    "skip": "Skip",
     "next": "Next",
     "done": "Got it",
     "step_label": "Step {{current}} of {{total}}",

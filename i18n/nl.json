@@ -1334,7 +1334,6 @@
     "restyle": "Alles staat klaar — kies een stijl om verder te gaan."
   },
   "tour": {
-    "skip": "Overslaan",
     "next": "Volgende",
     "done": "Begrepen",
     "step_label": "Stap {{current}} van {{total}}",

@@ -1330,7 +1330,6 @@
     "restyle": "준비됐어요 — 스타일을 골라 계속하세요."
   },
   "tour": {
-    "skip": "건너뛰기",
     "next": "다음",
     "done": "확인",
     "step_label": "{{total}}단계 중 {{current}}단계",

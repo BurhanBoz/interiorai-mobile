@@ -47,8 +47,9 @@ type Hole = { x: number; y: number; width: number; height: number; radius: numbe
  * says what that element is for.
  *
  * <p>It only points. Nothing underneath is pressed or opened — a tap anywhere
- * moves to the next step, "Skip" ends the tour, and the last step's button
- * closes it. The spotlight glides from one element to the next instead of
+ * moves to the next step and the last step's button closes it. There is no
+ * "Skip": the owner wants every first-time user to see the whole flow — the
+ * room type in particular is easy to miss (2026-10-04). The spotlight glides from one element to the next instead of
  * jumping, so the eye follows it. Under Reduce Motion the halo stands still
  * and every move is instant.
  *
@@ -62,7 +63,7 @@ export function CoachMarks({
 }: {
     steps: TourStep[];
     visible: boolean;
-    onFinish: (reason: "done" | "skip") => void;
+    onFinish: () => void;
 }) {
     const { t } = useTranslation();
     const { width: screenW, height: screenH } = useWindowDimensions();
@@ -112,7 +113,7 @@ export function CoachMarks({
                 // a control this mode does not show) — the tour moves on
                 // rather than pointing at nothing.
                 if (index < steps.length - 1) setIndex(index + 1);
-                else onFinish("done");
+                else onFinish();
                 return;
             }
             const next = toHole(r, step);
@@ -188,11 +189,7 @@ export function CoachMarks({
     const advance = () => {
         Haptics.selectionAsync();
         if (index < steps.length - 1) setIndex(index + 1);
-        else onFinish("done");
-    };
-    const skip = () => {
-        Haptics.selectionAsync();
-        onFinish("skip");
+        else onFinish();
     };
 
     if (!visible || steps.length === 0) return null;
@@ -205,7 +202,7 @@ export function CoachMarks({
     const arrowLeft = Math.min(Math.max(centerX - cardLeft - 7, 22), cardW - 36);
 
     return (
-        <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={skip}>
+        <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={advance}>
             {/* Geometry here is physical — measureInWindow reports it that way —
                 but under RTL React Native swaps left and right. The overlay is
                 laid out LTR; the card's content gets the reading direction back. */}
@@ -334,19 +331,6 @@ export function CoachMarks({
                                         ))}
                                     </View>
 
-                                    {!last && (
-                                        <Pressable
-                                            onPress={skip}
-                                            hitSlop={10}
-                                            accessibilityRole="button"
-                                        >
-                                            <Text
-                                                style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.inkMuted }}
-                                            >
-                                                {t("tour.skip")}
-                                            </Text>
-                                        </Pressable>
-                                    )}
                                     <Pressable
                                         onPress={advance}
                                         accessibilityRole="button"

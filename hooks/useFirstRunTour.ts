@@ -11,7 +11,7 @@ type TourKey = (typeof TOUR_KEYS)[number];
 const flagOf = (key: TourKey) => `tour.${key}.v1`;
 
 /**
- * Build 92 (TestFlight only) let "Skip" end every tour through this flag.
+ * Build 92 (TestFlight only) had a "Skip" that ended every tour through this flag.
  * Nothing reads it any more; it is only cleared by resetTours().
  */
 const LEGACY_SKIPPED_ALL = "tour.skipped.v1";
@@ -47,10 +47,6 @@ export async function resetTours(): Promise<void> {
  * <p>Each tour shows once per device. The flag lives in the Keychain
  * ({@link setFlag}), next to the guest identity, so deleting and reinstalling
  * the app does not replay it — the same lifetime as the account it describes.
- *
- * <p>"Skip" closes only this screen's tour. The tour is split across
- * screens, and someone who skips "add a photo" because it is obvious can
- * still use being shown the room type, the styles and Generate.
  *
  * <p>The tour waits {@code delayMs} after the screen is focused and
  * {@code ready} turns true, so the layout has settled and a paywall that was
@@ -99,7 +95,7 @@ export function useFirstRunTour(key: TourKey, ready: boolean, delayMs = 650) {
     }, [eligible, key, flag, delayMs]);
 
     const finish = useCallback(
-        (_reason: "done" | "skip") => {
+        () => {
             finishedThisSession.add(key);
             setVisible(false);
             setFlag(flag).catch(() => {});
