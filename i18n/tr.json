@@ -1334,7 +1334,6 @@
     "restyle": "Her şey hazır — devam etmek için bir stil seç."
   },
   "tour": {
-    "skip": "Geç",
     "next": "İleri",
     "done": "Anladım",
     "step_label": "Adım {{current}}/{{total}}",

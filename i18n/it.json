@@ -1334,7 +1334,6 @@
     "restyle": "Tutto pronto: scegli uno stile per continuare."
   },
   "tour": {
-    "skip": "Salta",
     "next": "Avanti",
     "done": "Ho capito",
     "step_label": "Passo {{current}} di {{total}}",
