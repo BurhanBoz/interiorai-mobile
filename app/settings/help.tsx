@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import * as Haptics from "expo-haptics";
+import { resetTours } from "@/hooks/useFirstRunTour";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
@@ -195,6 +197,7 @@ export default function HelpScreen() {
   const user = useAuthStore(s => s.user);
   const subscription = useSubscriptionStore(s => s.subscription);
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+  const [toursReset, setToursReset] = useState(false);
 
   // Client-side filter over the translated q/a pair so search works in the
   // active language, not just English.
@@ -416,17 +419,32 @@ export default function HelpScreen() {
         </View>
 
         {/* Version Footer */}
+        {/* A long press here replays the first-run tour on this device — for
+            the owner's TestFlight checks, invisible to everyone else. The tour
+            still only shows to an account that has never rendered. */}
         <View className="items-center pb-12">
-          <Text
-            className="font-label text-center"
-            style={{
-              ...theme.text.caption,
-              color: "#9A8F7D",
-              opacity: 0.5,
+          <Pressable
+            delayLongPress={1500}
+            onLongPress={() => {
+              resetTours().then(() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                setToursReset(true);
+                setTimeout(() => setToursReset(false), 2000);
+              });
             }}
           >
-            {t("settings.help_version_label", { version: appVersion })}
-          </Text>
+            <Text
+              className="font-label text-center"
+              style={{
+                ...theme.text.caption,
+                color: "#9A8F7D",
+                opacity: 0.5,
+              }}
+            >
+              {t("settings.help_version_label", { version: appVersion })}
+              {toursReset ? " ✓" : ""}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -89,3 +89,11 @@ export async function writeCounter(key: string, value: number): Promise<void> {
         AsyncStorage.setItem(key, String(value)),
     ]);
 }
+
+/** Forget a flag in both stores — for the owner's hidden tour reset, not for product logic. */
+export async function clearFlag(key: string): Promise<void> {
+    await Promise.allSettled([
+        SecureStore.deleteItemAsync(NS + keychainSafe(key)),
+        AsyncStorage.removeItem(key),
+    ]);
+}

@@ -1,11 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "expo-router";
 
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
+import { clearFlag, isFlagSet, setFlag } from "@/utils/oneShotFlag";
 
-/** "Skip" on any tour ends every tour — the person said they do not want to be walked through. */
-const SKIPPED_ALL = "tour.skipped.v1";
+/** Every tour the app has. resetTours() forgets all of them. */
+const TOUR_KEYS = ["studio", "composer"] as const;
+type TourKey = (typeof TOUR_KEYS)[number];
+
+const flagOf = (key: TourKey) => `tour.${key}.v1`;
+
+/**
+ * Build 92 (TestFlight only) let "Skip" end every tour through this flag.
+ * Nothing reads it any more; it is only cleared by resetTours().
+ */
+const LEGACY_SKIPPED_ALL = "tour.skipped.v1";
+
+/**
+ * Tours finished in this session. Kept outside the screens because the tab
+ * screens stay mounted — a reset has to reach a screen that is already open.
+ */
+const finishedThisSession = new Set<TourKey>();
+
+/**
+ * Forget that the tours were seen, so they play again on this device.
+ *
+ * <p>For the owner's own testing (a long press on the version line in
+ * Help). A tour still only shows to an account that has never rendered —
+ * this does not change that.
+ */
+export async function resetTours(): Promise<void> {
+    finishedThisSession.clear();
+    await Promise.all([...TOUR_KEYS.map((k) => clearFlag(flagOf(k))), clearFlag(LEGACY_SKIPPED_ALL)]);
+}
 
 /**
  * Whether a first-run coach-mark tour should be on screen.
@@ -21,19 +48,22 @@ const SKIPPED_ALL = "tour.skipped.v1";
  * ({@link setFlag}), next to the guest identity, so deleting and reinstalling
  * the app does not replay it — the same lifetime as the account it describes.
  *
+ * <p>"Skip" closes only this screen's tour. The tour is split across
+ * screens, and someone who skips "add a photo" because it is obvious can
+ * still use being shown the room type, the styles and Generate.
+ *
  * <p>The tour waits {@code delayMs} after the screen is focused and
  * {@code ready} turns true, so the layout has settled and a paywall that was
  * just dismissed has finished animating away. Leaving the screen hides it
  * without marking it seen.
  */
-export function useFirstRunTour(key: string, ready: boolean, delayMs = 650) {
+export function useFirstRunTour(key: TourKey, ready: boolean, delayMs = 650) {
     const subscriptionResolved = useSubscriptionStore((s) => s.subscriptionResolved);
     const hasGenerated = useSubscriptionStore((s) => s.subscription?.hasGenerated);
 
     const [visible, setVisible] = useState(false);
     const [focused, setFocused] = useState(false);
-    const finished = useRef(false);
-    const flag = `tour.${key}.v1`;
+    const flag = flagOf(key);
 
     useFocusEffect(
         useCallback(() => {
@@ -48,14 +78,14 @@ export function useFirstRunTour(key: string, ready: boolean, delayMs = 650) {
     const eligible = focused && ready && subscriptionResolved && hasGenerated === false;
 
     useEffect(() => {
-        if (!eligible || finished.current) return;
+        if (!eligible || finishedThisSession.has(key)) return;
         let cancelled = false;
         let timer: ReturnType<typeof setTimeout> | undefined;
         (async () => {
-            const [seen, skippedAll] = await Promise.all([isFlagSet(flag), isFlagSet(SKIPPED_ALL)]);
+            const seen = await isFlagSet(flag);
             if (cancelled) return;
-            if (seen || skippedAll) {
-                finished.current = true;
+            if (seen) {
+                finishedThisSession.add(key);
                 return;
             }
             timer = setTimeout(() => {
@@ -66,16 +96,15 @@ export function useFirstRunTour(key: string, ready: boolean, delayMs = 650) {
             cancelled = true;
             if (timer) clearTimeout(timer);
         };
-    }, [eligible, flag, delayMs]);
+    }, [eligible, key, flag, delayMs]);
 
     const finish = useCallback(
-        (reason: "done" | "skip") => {
-            finished.current = true;
+        (_reason: "done" | "skip") => {
+            finishedThisSession.add(key);
             setVisible(false);
             setFlag(flag).catch(() => {});
-            if (reason === "skip") setFlag(SKIPPED_ALL).catch(() => {});
         },
-        [flag],
+        [key, flag],
     );
 
     return { visible, finish };
