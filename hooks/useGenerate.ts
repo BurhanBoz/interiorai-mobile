@@ -7,6 +7,7 @@ import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
+import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
 import type { CatalogItemResponse } from "@/types/api";
 
@@ -29,10 +30,17 @@ import type { CatalogItemResponse } from "@/types/api";
  * replays the same key and the backend returns the existing job instead of
  * starting — and charging for — a second one.
  */
+/**
+ * The idempotency key of the request in flight, shared by every useGenerate — module scope, not a ref. Since
+ * 2026-10-05 the create call finishes on the progress screen, and its Retry belongs to a different hook instance:
+ * with a per-instance ref, a request that succeeded on the server but lost its answer would be retried under a new
+ * key and charged twice.
+ */
+const idempotencyKeyRef: { current: string | null } = { current: null };
+
 export function useGenerate() {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const idempotencyKeyRef = useRef<string | null>(null);
   /** Set synchronously on the first tap; see {@link handleGenerate}. */
   const inFlightRef = useRef(false);
 
@@ -73,7 +81,7 @@ export function useGenerate() {
      *   a style the strip never offers on a Minimalist render). The caller now
      *   hands the style in; everything else still comes from the studio.
      */
-    const run = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
+    const run = async (overrides?: { designStyle?: CatalogItemResponse | null; replace?: boolean }) => {
       const style = overrides?.designStyle ?? designStyle;
       if (!photo?.fileId || !roomType?.id || !style?.id) {
         Alert.alert(
@@ -122,6 +130,16 @@ export function useGenerate() {
       if (!idempotencyKeyRef.current) {
         idempotencyKeyRef.current = Crypto.randomUUID();
       }
+
+      // Generate opens the progress screen at once and the request finishes there
+      // (pendingGenerationStore): the plan Claude writes before the server answers
+      // takes 40-75 s, too long to hold the user on a frozen composer.
+      const pendingId = Crypto.randomUUID();
+      const pending = usePendingGenerationStore.getState();
+      pending.start(pendingId);
+      const progress = `/generation/progress?pending=${pendingId}`;
+      if (overrides?.replace) router.replace(progress as any);
+      else router.push(progress as any);
 
       setIsSubmitting(true);
       try {
@@ -186,7 +204,7 @@ export function useGenerate() {
         // Refresh balance after credits are deducted
         fetchBalance();
 
-        router.push(`/generation/progress?jobId=${job.id}`);
+        pending.resolve(pendingId, job.id);
       } catch (err: any) {
         const status = err?.response?.status;
         const msg =
@@ -199,7 +217,7 @@ export function useGenerate() {
                 : !err?.response
                   ? t("errors.network")
                   : t("errors.generic");
-        Alert.alert(t("generation.failed"), msg);
+        pending.fail(pendingId, msg);
       } finally {
         setIsSubmitting(false);
       }
@@ -216,7 +234,7 @@ export function useGenerate() {
      * job, but it should never have been sent). A ref is read and set in the
      * same tick, so the second tap finds the door already shut.
      */
-    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null }) => {
+    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null; replace?: boolean }) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
