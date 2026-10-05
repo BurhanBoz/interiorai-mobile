@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, AppState } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Crypto from "expo-crypto";
@@ -37,6 +37,35 @@ import type { CatalogItemResponse } from "@/types/api";
  * key and charged twice.
  */
 const idempotencyKeyRef: { current: string | null } = { current: null };
+
+/**
+ * How many times a create call whose answer never arrived is sent again, under the same key.
+ *
+ * <p>2026-10-05, owner's TestFlight runs (jobs 3ed94459, 3e71f11d): Generate, then the app to the background. The
+ * create call is held open while Claude writes the plan (26-37 s); iOS suspends the app and the connection with it,
+ * so the answer never lands. The server had made the job and the render finished — but the screen said "Something
+ * went wrong", and only Try Again (same key, "Idempotent hit" in the log 1.5-3 min later) showed the finished room.
+ *
+ * <p>Sending it again is safe: a finished key returns its job; a key still being worked on by the first request
+ * clashes on the unique index and JobsController answers with the first request's job; the provider call is
+ * after-commit, so a request that loses that race never renders or charges anything.
+ */
+const MAX_REPLAYS = 4;
+
+/** Resolves once the app is in the foreground — a request sent from the background is suspended again. */
+function untilActive(): Promise<void> {
+  if (AppState.currentState === "active") return Promise.resolve();
+  return new Promise((resolve) => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        sub.remove();
+        resolve();
+      }
+    });
+  });
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function useGenerate() {
   const { t } = useTranslation();
@@ -149,7 +178,7 @@ export function useGenerate() {
         // which is what we want — the photo the user just shot is the
         // ground truth for proportions, not the average bathroom.
         const computedAspectRatio = aspectRatioFor(photo.width, photo.height);
-        const job = await createJob({
+        const body = {
           inputFileId: photo.fileId,
           roomTypeId: roomType.id,
           designStyleId: style.id,
@@ -193,7 +222,21 @@ export function useGenerate() {
             ];
             return extras.length > 0 ? extras : undefined;
           })(),
-        }, idempotencyKeyRef.current);
+        };
+        const key = idempotencyKeyRef.current ?? undefined;
+        let job;
+        for (let attempt = 0; ; attempt++) {
+          try {
+            job = await createJob(body, key);
+            break;
+          } catch (err: any) {
+            // An HTTP answer is the server's verdict and is final. No answer means the request may well have
+            // reached the server: wait for the foreground and ask again under the same key.
+            if (err?.response || attempt >= MAX_REPLAYS) throw err;
+            await untilActive();
+            await sleep(1500 * (attempt + 1));
+          }
+        }
 
         // Success — release the key so the next generate intent gets a fresh
         // one. Note: we deliberately do NOT clear in catch/finally — if the

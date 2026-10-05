@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { AppState } from "react-native";
 import { getJob } from "@/services/jobs";
 import type { JobResponse, JobStatus } from "@/types/api";
 
@@ -93,13 +94,31 @@ export function useJobPolling(
             timerRef.current = setInterval(poll, intervalMs);
         }, EAGER_WINDOW_MS);
 
-        timeoutRef.current = setTimeout(() => {
+        // The ceiling is wall-clock: iOS holds JS timers while the app is in the background and fires the
+        // overdue ones on return, so after a few minutes away this can fire before any poll has run — and
+        // call "failed" a job that finished while the user was gone. One last read decides.
+        timeoutRef.current = setTimeout(async () => {
             stop();
+            try {
+                const job = await getJob(jobId);
+                if (TERMINAL_STATUSES.includes(job.status)) {
+                    onUpdateRef.current(job);
+                    return;
+                }
+            } catch {
+                // fall through to the timeout
+            }
             onTimeoutRef.current?.();
         }, timeoutMs);
 
+        // Back in the foreground: read at once rather than on the next tick.
+        const appState = AppState.addEventListener("change", (state) => {
+            if (state === "active" && timerRef.current) poll();
+        });
+
         return () => {
             clearTimeout(stepDown);
+            appState.remove();
             stop();
         };
     }, [jobId, intervalMs, timeoutMs, stop]);
