@@ -3,7 +3,6 @@ import {
     ActivityIndicator,
     Animated,
     FlatList,
-    Image,
     Pressable,
     Text,
     useWindowDimensions,
@@ -18,6 +17,7 @@ import * as SecureStore from "expo-secure-store";
 import { theme, track } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
 import { HexMark } from "@/components/brand/HexMark";
+import { ShowcaseHero, WallHero, WipeHero } from "@/components/onboarding/Heroes";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -34,30 +34,30 @@ const V = theme.v2;
  * <p>The dots now track the page and the button advances one page at a time,
  * with SKIP always visible for anyone who does not want the tour.
  *
- * <p>🔴 The three heroes are BUNDLED. They used to be remote
- * {@code lh3.googleusercontent.com/aida-public/…} URLs — design-tool
- * placeholders fetched over the network on the very first screen of a first
- * launch, where the user has the least patience and the connection is least
- * proven, and which 404 the day that bucket is cleaned up.
+ * <p>🔴 The three heroes are BUNDLED and since 2026-10-05 they MOVE and are real
+ * outputs (components/onboarding/Heroes.tsx): the empty room furnishing itself,
+ * one render per mode, then a drifting wall of designs. The three still mood
+ * shots before them were never something the app had made. Copy and layout
+ * are unchanged.
  */
 const SLIDES = [
     {
         id: "restyled",
         headlineKey: "onboarding.v2_slide1_headline",
         bodyKey: "onboarding.v2_slide1_body",
-        image: require("@/assets/onboarding/hall.png"),
+        Hero: WipeHero,
     },
     {
         id: "six-ways",
         headlineKey: "onboarding.v2_slide2_headline",
         bodyKey: "onboarding.v2_slide2_body",
-        image: require("@/assets/onboarding/restyled.png"),
+        Hero: ShowcaseHero,
     },
     {
         id: "free-today",
         headlineKey: "onboarding.v2_slide3_headline",
         bodyKey: "onboarding.v2_slide3_body",
-        image: require("@/assets/onboarding/minimal.png"),
+        Hero: WallHero,
     },
 ] as const;
 
@@ -133,16 +133,17 @@ export default function OnboardingScreen() {
                 onMomentumScrollEnd={(e) =>
                     setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
                 }
-                renderItem={({ item }) => (
-                    <View style={{ width, height: HERO_HEIGHT }}>
-                        <Image
-                            source={item.image}
-                            style={{ width: "100%", height: "100%" }}
-                            resizeMode="cover"
-                            accessible
-                            accessibilityLabel={t(item.headlineKey)}
-                        />
+                extraData={index}
+                renderItem={({ item, index: i }) => (
+                    <View
+                        style={{ width, height: HERO_HEIGHT }}
+                        accessible
+                        accessibilityRole="image"
+                        accessibilityLabel={t(item.headlineKey)}
+                    >
+                        <item.Hero width={width} height={HERO_HEIGHT} active={i === index} />
                         <LinearGradient
+                            pointerEvents="none"
                             colors={[U.overlayScrim, "transparent", U.ground]}
                             locations={[0, 0.3, 0.97]}
                             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
