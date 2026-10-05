@@ -13,6 +13,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
+import { useStudioStore } from "@/stores/studioStore";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { getFileDownloadUrl } from "@/services/files";
 import { useTranslation } from "react-i18next";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
@@ -58,6 +62,20 @@ export default function GenerationProgressScreen() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+
+  // The room being worked on, blurred behind the progress (2026-10-05): the
+  // minute-long wait reads as "my room is being designed", not a bare spinner.
+  // Opened by Generate it is the studio's own photo (already on the device);
+  // opened from the gallery it is the job's input through the file proxy.
+  const authHeaders = useAuthHeaders();
+  const studioPhotoUri = useStudioStore((s) => s.photo?.uri ?? null);
+  const jobInputId = job?.inputFile?.id ?? null;
+  const backdrop = pending && studioPhotoUri
+    ? { uri: studioPhotoUri }
+    : jobInputId && authHeaders.Authorization
+      ? { uri: getFileDownloadUrl(jobInputId), headers: authHeaders }
+      : null;
+
   const startedAt = useRef<number>(Date.now());
   // The render's own clock: the phases after planning are timed from the moment the job exists.
   const jobStartedAt = useRef<number | null>(jobIdParam ? Date.now() : null);
@@ -283,6 +301,21 @@ export default function GenerationProgressScreen() {
 
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
+      {backdrop ? (
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+          <Image
+            source={backdrop}
+            blurRadius={36}
+            contentFit="cover"
+            transition={400}
+            style={{ width: "100%", height: "100%", opacity: 0.85 }}
+          />
+          <LinearGradient
+            colors={["rgba(25,21,16,0.35)", "rgba(25,21,16,0.62)", "rgba(25,21,16,0.92)"]}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+        </View>
+      ) : null}
       {/* Top bar */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <Brand variant="inline" size="sm" tone="gold" />

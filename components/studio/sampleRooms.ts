@@ -24,8 +24,8 @@ import type { DesignMode } from "@/types/api";
  * <ul>
  *   <li>living room, kitchen — the before/after pairs in the anonymous trial
  *       carousel and the paywall hero fallback ({@code assets/trial/}).</li>
- *   <li>empty room — the same photograph as store screenshot frame 02,
- *       downscaled from {@code aso_gorseller/empty_before.JPG}.</li>
+ *   <li>empty room — the "before" of the Empty Room card and store frame 02
+ *       (Prompt Lab A/B, 2026-10-05).</li>
  *   <li>garden — the exact file frame 07 is cut from; {@code compose.py}
  *       reads {@code assets/features/outdoor_before.png} directly.</li>
  * </ul>
@@ -58,7 +58,7 @@ export const SAMPLE_ROOMS: SampleRoom[] = [
     },
     {
         key: "empty_room",
-        module: require("@/assets/features/empty_before.png"),
+        module: require("@/assets/features/empty_before.jpg"),
         labelKey: "studio.sample_empty_room",
         // Empty Room only — offering a furnished room there would demo the
         // wrong feature and the output would look like a plain redesign.

@@ -12,6 +12,8 @@ import {
   AppState,
   Animated,
   PanResponder,
+  AccessibilityInfo,
+  Easing,
 } from "react-native";
 import { theme } from "@/config/theme";
 import { useCatalogStore } from "@/stores/catalogStore";
@@ -29,6 +31,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import * as Notifications from "expo-notifications";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { Image } from "expo-image";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -851,11 +854,39 @@ function BeforeAfter({
   const [width, setWidth] = useState(0);
   const [reveal, setReveal] = useState(55);
   const enter = useRef(new Animated.Value(0)).current;
+  /**
+   * Açılış süpürmesi (2026-10-05): ekran "önce" fotoğrafının tamamıyla açılır,
+   * sonra çizgi kayıp tasarımı 55%'e kadar açar — kullanıcı farkı kaydırıcıyı
+   * bulmadan görür. Parmak değdiği an durur; hareket azaltma açıksa hiç oynamaz.
+   */
+  const sweep = useRef(new Animated.Value(55)).current;
+  const sweepAnim = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
-    setReveal(55);
     Animated.timing(enter, { toValue: 1, duration: 450, useNativeDriver: true }).start();
-  }, [afterUrl, enter]);
+    let cancelled = false;
+    const id = sweep.addListener(({ value }) => setReveal(value));
+    setReveal(55);
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((reduce) => {
+        if (cancelled || reduce || !afterUrl) return;
+        sweep.setValue(98);
+        sweepAnim.current = Animated.timing(sweep, {
+          toValue: 55,
+          duration: 1100,
+          delay: 400,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: false,
+        });
+        sweepAnim.current.start();
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      sweepAnim.current?.stop();
+      sweep.removeListener(id);
+    };
+  }, [afterUrl, enter, sweep]);
 
   /**
    * Kaydırma mı, dokunuş mu.
@@ -879,6 +910,7 @@ function BeforeAfter({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
+        sweepAnim.current?.stop();
         gestureMoved.current = false;
         gestureStart.current = Date.now();
       },
@@ -1091,7 +1123,7 @@ function AnotherStyleStrip({
       <Pressable onPress={onLocked} accessibilityRole="button" style={{ width: 98 }}>
         <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
           <Image
-            source={require("@/assets/features/style_after.png")}
+            source={require("@/assets/features/style_after.jpg")}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
           />
@@ -1170,8 +1202,10 @@ function VideoCta({
       >
         {busy || state === "progress" ? (
           <ActivityIndicator size="small" color={U.accentBright} />
+        ) : state === "make" ? (
+          <VideoTeaser />
         ) : (
-          <Ionicons name={state === "watch" ? "play" : "videocam"} size={16} color={U.accentBright} />
+          <Ionicons name="play" size={16} color={U.accentBright} />
         )}
         <View style={{ alignItems: "center", flexShrink: 1 }}>
           <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13.5, color: U.accentBright }} numberOfLines={1}>
@@ -1197,6 +1231,47 @@ function VideoCta({
           </View>
         ) : null}
       </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Three silent seconds of a real room clip (MiniMax H3, the live video model —
+ * the owner's 2026-09-27 test) in place of the camera icon, so "bring it to
+ * life" shows what it makes before anyone pays for it. Muted and mixed with
+ * other audio: it must never stop the user's music. Still under reduce-motion.
+ * Never paused by hand — pause() on a player expo-video has already released
+ * throws (1.7.0 (82)), and a muted 47 KB loop costs nothing to leave running.
+ */
+const VIDEO_TEASER = require("@/assets/features/video_teaser.mp4");
+
+function VideoTeaser() {
+  const player = useVideoPlayer(VIDEO_TEASER, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.audioMixingMode = "mixWithOthers";
+  });
+  useEffect(() => {
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((reduce) => {
+        if (!cancelled && !reduce) {
+          try { player.play(); } catch {}
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [player]);
+  return (
+    <View style={{ width: 34, height: 34, borderRadius: 8, overflow: "hidden", backgroundColor: U.surface }}>
+      <VideoView
+        player={player}
+        style={{ width: "100%", height: "100%" }}
+        contentFit="cover"
+        nativeControls={false}
+        allowsPictureInPicture={false}
+        pointerEvents="none"
+      />
     </View>
   );
 }

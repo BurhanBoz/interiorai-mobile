@@ -53,6 +53,9 @@ export function planTier(code: string | null | undefined): PlanTier {
             break;
         }
     }
+    // Lineup generation (V196, 2026-10-05): PRO_V2_WEEKLY / PRO_V2_MONTHLY are new App Store
+    // products for the same Pro tier — the generation says nothing about entitlement.
+    base = base.replace(/_V\d+$/, "");
     switch (base) {
         case "BASE":
         case "BASIC": // legacy tier ≈ today's BASE

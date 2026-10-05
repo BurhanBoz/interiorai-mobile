@@ -15,12 +15,11 @@ import { tierAtLeast, type PlanTier } from "@/utils/planTier";
  *   - "single"   → static image (also plays GIFs via expo-image, if the
  *                  marketing team ever ships animated teasers)
  *
- * <p>ASSET SWAP (pending): the founder is producing authentic pairs by
- * running plain "before" rooms through the app itself. When they land in
- * `assets/features/`, point the entries below at:
- *   redesign_before/after · empty_before/after · inpaint_before/after
- *   style_before · style_reference · style_after
- * Until then the entries reuse bundled trial/style stills as placeholders.
+ * <p>Redesign, Empty Room and Style Transfer show the owner's Prompt Lab A/B
+ * runs (2026-10-05, arm C3: the photo-anchored prompt with Sonnet 5.5 on Nano
+ * Banana 2 1K + thinking) — the same pipeline that is live, so the card
+ * promises what the app delivers. Magic Edit and Outdoor are still the
+ * founder's July/August runs.
  *
  * <p>Titles reuse the existing studio.mode_* i18n keys (already in all 8
  * locales); only the one-line descriptions are new.
@@ -74,8 +73,8 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_redesign_desc",
         media: {
             kind: "pair",
-            before: require("@/assets/features/redesign_before.png"),
-            after: require("@/assets/features/redesign_after.png"),
+            before: require("@/assets/features/redesign_before.jpg"),
+            after: require("@/assets/features/redesign_after.jpg"),
         },
     },
     {
@@ -84,8 +83,8 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         descKey: "studio.feature_empty_room_desc",
         media: {
             kind: "pair",
-            before: require("@/assets/features/empty_before.png"),
-            after: require("@/assets/features/empty_after.png"),
+            before: require("@/assets/features/empty_before.jpg"),
+            after: require("@/assets/features/empty_after.jpg"),
         },
     },
     {
@@ -101,7 +100,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
             kind: "paint",
             before: require("@/assets/features/inpaint_before.png"),
             paint: require("@/assets/features/inpaint_paint.png"),
-            after: require("@/assets/features/inpaint_after.png"),
+            after: require("@/assets/features/inpaint_after.jpg"),
         },
     },
     {
@@ -111,9 +110,9 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         minPlan: "PRO",
         media: {
             kind: "transfer",
-            before: require("@/assets/features/style_before.png"),
-            reference: require("@/assets/features/style_reference.png"),
-            after: require("@/assets/features/style_after.png"),
+            before: require("@/assets/features/style_before.jpg"),
+            reference: require("@/assets/features/style_reference.jpg"),
+            after: require("@/assets/features/style_after.jpg"),
         },
     },
     {
@@ -128,7 +127,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         media: {
             kind: "pair",
             before: require("@/assets/features/outdoor_before.png"),
-            after: require("@/assets/features/outdoor_after.png"),
+            after: require("@/assets/features/outdoor_after.jpg"),
         },
     },
 ];

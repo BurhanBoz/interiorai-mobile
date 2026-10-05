@@ -57,6 +57,11 @@ export const SUBSCRIPTION_PACKAGE_IDS: Record<string, string> = {
     // offline-cache fallback — but they must exist for that path to work.
     BASE_WEEKLY: "weekly_base",
     PRO_WEEKLY: "weekly_pro",
+    // Pro-only lineup (V196, 2.3.0): new products, so new packages — the old ones stay in the
+    // offering for 2.2.0 until it is off the field. Unique ids: matching a package by id must never
+    // land on the old $8.99 product.
+    PRO_V2_WEEKLY: "weekly_pro_v2",
+    PRO_V2_MONTHLY: "monthly_pro_v2",
 };
 
 /**
@@ -74,6 +79,8 @@ export const SUBSCRIPTION_PRODUCT_IDS: Record<string, string> = {
     PRO: "com.roomframeai.subscription.pro2",
     BASE_ANNUAL: "com.roomframeai.subscription.base.annual",
     PRO_ANNUAL: "com.roomframeai.subscription.pro2.annual",
+    PRO_V2_WEEKLY: "com.roomframeai.subscription.pro.weekly.v2",
+    PRO_V2_MONTHLY: "com.roomframeai.subscription.pro.monthly.v2",
 };
 
 /**

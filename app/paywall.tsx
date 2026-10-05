@@ -58,31 +58,17 @@ const TERMS_URL = "https://roomframeai.com/terms";
 const PRIVACY_URL = "https://roomframeai.com/privacy";
 
 /**
- * Two weekly plans, nothing else.
+ * Pro only — weekly or monthly (V196, 2.3.0; owner, 2026-10-05).
  *
- * <p>The annual plan used to sit here, pre-selected, and the event log is
- * unambiguous about what that produced: PRO_ANNUAL was never once chosen by
- * hand (0 PLAN_SELECTED) while the weekly plan was chosen 12 times, yet
- * PRO_ANNUAL collected 10 PURCHASE_STARTED — people pressing the CTA over a
- * default they had not picked. Every one of those, and all 8 who reached
- * Apple's sheet, abandoned there: the sheet asked for $239.99. Nobody rejected
- * the product; they met a year's bill on a screen they had opened seconds ago.
- *
- * <p>So the choice on offer is now between two small numbers rather than
- * between small and enormous. The annual SKUs stay live and purchasable from
- * the plans screen for anyone who wants one — they are simply no longer the
- * first thing a stranger sees.
+ * <p>Base and the annual plans are gone from sale: from launch to 5 October the
+ * paying users were all on weekly plans (4 Base, 6 Pro), nobody bought a year,
+ * and the annual row's only effect was a $239.99 sheet people backed out of.
+ * The two rows are the same Pro, two billing periods, each with its own first-
+ * period price from the store. New App Store products, so new plan codes —
+ * the old PRO_WEEKLY stays live for 2.2.0 and its subscribers.
  */
-const PLAN_PRO = "PRO_WEEKLY";
-const PLAN_BASE = "BASE_WEEKLY";
-/**
- * The annual SKUs behind the billing segment. They were always purchasable
- * from the plans screen; the segment brings them onto the paywall without
- * making a year's bill the first number a stranger sees — the weekly half is
- * selected by default and the annual one is opt-in.
- */
-const PLAN_PRO_ANNUAL = "PRO_ANNUAL";
-const PLAN_BASE_ANNUAL = "BASE_ANNUAL";
+const PLAN_WEEKLY = "PRO_V2_WEEKLY";
+const PLAN_MONTHLY = "PRO_V2_MONTHLY";
 
 /**
  * Where the paywall was opened from — stored as {@code paywall_events.source}
@@ -109,8 +95,10 @@ const PRO_TOOL_SOURCES = new Set(["RESULT_STYLE", "FEATURE_TILE"]);
 const EXHAUSTED_PACK_CODE = "CREDITS_20";
 
 /** The app's own sample room — the hero when the moment has no photo of its own. */
-const SAMPLE_BEFORE = require("@/assets/features/redesign_before.png");
-const SAMPLE_AFTER = require("@/assets/features/redesign_after.png");
+// The owner's own Empty Room render from the phone (2026-10-05, Sonnet 5.5 + Nano Banana 2): the empty
+// room is the Empty Room card's "before", the after is that job's output.
+const SAMPLE_BEFORE = require("@/assets/features/empty_before.jpg");
+const SAMPLE_AFTER = require("@/assets/features/paywall_after.jpg");
 
 /** How long a pending eligibility answer may hold the Pro price back. */
 const INTRO_WAIT_MS = 1200;
@@ -150,7 +138,7 @@ export default function PaywallScreen() {
     const ownAfter = typeof params.afterUrl === "string" && params.afterUrl ? params.afterUrl : null;
     const ownBefore = typeof params.beforeUrl === "string" && params.beforeUrl ? params.beforeUrl : null;
 
-    const [selected, setSelected] = useState<string>(PLAN_PRO);
+    const [selected, setSelected] = useState<string>(PLAN_WEEKLY);
 
     // How long the paywall actually held someone, and whether they touched it
     // at all. The server already records SHOWN and DISMISSED — what it cannot
@@ -215,12 +203,8 @@ export default function PaywallScreen() {
         // deletion and silenced the paywall for reinstalls too.
     }, []);
 
-    const [billing, setBilling] = useState<"weekly" | "annual">("weekly");
-    const proCode = billing === "annual" ? PLAN_PRO_ANNUAL : PLAN_PRO;
-    const baseCode = billing === "annual" ? PLAN_BASE_ANNUAL : PLAN_BASE;
-
-    const pro = useMemo(() => plans?.find((p) => p.code === proCode), [plans, proCode]);
-    const base = useMemo(() => plans?.find((p) => p.code === baseCode), [plans, baseCode]);
+    const weekly = useMemo(() => plans?.find((p) => p.code === PLAN_WEEKLY), [plans]);
+    const monthly = useMemo(() => plans?.find((p) => p.code === PLAN_MONTHLY), [plans]);
 
     /**
      * Never sell someone what they already own.
@@ -252,28 +236,23 @@ export default function PaywallScreen() {
     const buyable = (code: string) =>
         code !== currentCode && tierRank(code) >= currentRank;
 
-    const offersBase = !!base && buyable(baseCode);
-    const offersPro = !!pro && buyable(proCode);
+    const offersWeekly = !!weekly && buyable(PLAN_WEEKLY);
+    const offersMonthly = !!monthly && buyable(PLAN_MONTHLY);
 
     /**
      * 🔴 Plan satırları ARTIK HER ZAMAN çiziliyor — satın alınabilir olsun ya
-     * da olmasın. Önceki sürüm onları offersX arkasına saklıyordu ve ödeyen
-     * bir abone paywall'ı açtığında ortada boş bir boşluk görüyordu: kendi
-     * planını, fiyatını, merdivenin neresinde durduğunu hiçbir yerden
-     * okuyamıyordu. Fiyatı görmek satın almaktan ayrı bir ihtiyaç.
-     * Satılamayan satır sönük ve dokunulamaz; üstünde de hangisi olduğu
-     * yazıyor.
+     * da olmasın. Satılamayan satır sönük ve dokunulamaz; üstünde de hangisi
+     * olduğu yazıyor.
      */
-    const anythingToBuy = !plans || offersBase || offersPro;
+    const anythingToBuy = !plans || offersWeekly || offersMonthly;
 
-    // Seçim, gerçekten satın alınabilir olanın içinde kalmalı: BASE abonesi
-    // varsayılan PRO seçimini yanlış planı fiyatlayan bir düğmeye taşımasın.
-    const effectiveSelected = offersPro && offersBase
+    // Seçim, gerçekten satın alınabilir olanın içinde kalmalı.
+    const effectiveSelected = offersWeekly && offersMonthly
         ? selected
-        : offersPro ? PLAN_PRO : PLAN_BASE;
-    const chosen = effectiveSelected === PLAN_BASE
-        ? (offersBase ? base : undefined)
-        : (offersPro ? pro : undefined);
+        : offersWeekly ? PLAN_WEEKLY : PLAN_MONTHLY;
+    const chosen = effectiveSelected === PLAN_WEEKLY
+        ? (offersWeekly ? weekly : undefined)
+        : (offersMonthly ? monthly : undefined);
 
     /** When the subscriber's own weekly allocation comes back. */
     const reloadNote = useMemo(() => {
@@ -285,7 +264,7 @@ export default function PaywallScreen() {
         return t("paywall.reload_in_days", { days });
     }, [subscription?.currentPeriodEnd, t]);
 
-    const priceOf = (plan?: typeof pro) =>
+    const priceOf = (plan?: PlanResponse) =>
         plan ? formatProductPrice(storePrices, plan.appleProductId, plan.priceCents, plan.currency) : "—";
 
     const priceOfPack = (pack: NonNullable<typeof exhaustedPack>) =>
@@ -340,38 +319,46 @@ export default function PaywallScreen() {
      * way round: a price we cannot honour at Apple's sheet is the one thing
      * this screen must not display.
      */
-    const proWeekly = useMemo(() => plans?.find((p) => p.code === PLAN_PRO), [plans]);
-    const introOffer = (() => {
-        const intro = proWeekly?.appleProductId ? storePrices[proWeekly.appleProductId]?.intro ?? null : null;
-        if (!intro) return null;
-        const oneWeek = (intro.periodUnit === "WEEK" && intro.periodUnits === 1)
-            || (intro.periodUnit === "DAY" && intro.periodUnits === 7);
-        return oneWeek && intro.cycles === 1 ? intro : null;
-    })();
-    const [introEligible, setIntroEligible] = useState<boolean | null>(null);
+    const introFor = (plan: PlanResponse | undefined, unit: "WEEK" | "MONTH") => {
+        const intro = plan?.appleProductId ? storePrices[plan.appleProductId]?.intro ?? null : null;
+        if (!intro || intro.cycles !== 1) return null;
+        const one = unit === "WEEK"
+            ? (intro.periodUnit === "WEEK" && intro.periodUnits === 1) || (intro.periodUnit === "DAY" && intro.periodUnits === 7)
+            : intro.periodUnit === "MONTH" && intro.periodUnits === 1;
+        return one ? intro : null;
+    };
+    const weeklyIntro = introFor(weekly, "WEEK");
+    const monthlyIntro = introFor(monthly, "MONTH");
+    const [introEligible, setIntroEligible] = useState<Record<string, boolean> | null>(null);
     const [introWaitOver, setIntroWaitOver] = useState(false);
     useEffect(() => {
-        const productId = proWeekly?.appleProductId;
-        if (!introOffer || !productId || subscribed) {
-            setIntroEligible(false);
+        const ids = [
+            weeklyIntro ? weekly?.appleProductId : null,
+            monthlyIntro ? monthly?.appleProductId : null,
+        ].filter((x): x is string => !!x);
+        if (ids.length === 0 || subscribed) {
+            setIntroEligible({});
             return;
         }
         let cancelled = false;
-        // The Pro price waits for the answer — briefly. Showing the regular
-        // price and then swapping in a lower one reads as a glitch; waiting
-        // forever reads as a broken screen. After the wait the regular price
-        // stands, and a late "eligible" still upgrades it (StoreKit applies
+        // The price waits for the answer — briefly; after the wait the regular
+        // price stands and a late "eligible" still upgrades it (StoreKit applies
         // the offer at the sheet either way, so under-promising is safe).
         const timer = setTimeout(() => { if (!cancelled) setIntroWaitOver(true); }, INTRO_WAIT_MS);
-        iap.fetchIntroEligibility([productId])
-            .then((m) => { if (!cancelled) setIntroEligible(m[productId] === true); })
-            .catch(() => { if (!cancelled) setIntroEligible(false); });
+        iap.fetchIntroEligibility(ids)
+            .then((m) => { if (!cancelled) setIntroEligible(m); })
+            .catch(() => { if (!cancelled) setIntroEligible({}); });
         return () => { cancelled = true; clearTimeout(timer); };
-    }, [introOffer?.priceString, proWeekly?.appleProductId, subscribed]);
-    const introShown = !!introOffer && introEligible === true && billing === "weekly" && offersPro;
-    const introApplies = introShown && effectiveSelected === PLAN_PRO;
-    const introPending = !!introOffer && introEligible === null && !introWaitOver
-        && !subscribed && billing === "weekly" && offersPro;
+    }, [weeklyIntro?.priceString, monthlyIntro?.priceString, weekly?.appleProductId, monthly?.appleProductId, subscribed]);
+    const weeklyIntroShown = !!weeklyIntro && !!weekly?.appleProductId
+        && introEligible?.[weekly.appleProductId] === true && offersWeekly;
+    const monthlyIntroShown = !!monthlyIntro && !!monthly?.appleProductId
+        && introEligible?.[monthly.appleProductId] === true && offersMonthly;
+    const chosenIntro = effectiveSelected === PLAN_WEEKLY
+        ? (weeklyIntroShown ? weeklyIntro : null)
+        : (monthlyIntroShown ? monthlyIntro : null);
+    const introPending = (!!weeklyIntro || !!monthlyIntro) && introEligible === null && !introWaitOver
+        && !subscribed && anythingToBuy;
 
     const exhaustedPack = source === SOURCE_CREDITS_EXHAUSTED
         ? packs.find((p) => p.code === EXHAUSTED_PACK_CODE) ?? null
@@ -487,10 +474,8 @@ export default function PaywallScreen() {
      * and what the screen shows are what changed.
      */
     const pricesLoading = !plans || storeStatus === "idle" || storeStatus === "loading";
-    const proPrice = pricesLoading ? null : priceOf(pro);
-    const basePrice = pricesLoading ? null : priceOf(base);
-    const selectedIsPro = effectiveSelected === PLAN_PRO;
-    const periodLabel = t(billing === "annual" ? "paywall.per_year" : "paywall.per_week");
+    const weeklyPrice = pricesLoading ? null : priceOf(weekly);
+    const monthlyPrice = pricesLoading ? null : priceOf(monthly);
 
     /** A price as a number, and whether it came from the store (same currency) or the backend (USD). */
     const numericPrice = (plan?: PlanResponse) => {
@@ -500,32 +485,27 @@ export default function PaywallScreen() {
         return plan.priceCents > 0 ? { value: plan.priceCents / 100, store: false } : null;
     };
 
-    /**
-     * What a year costs against 52 weeks of the same tier, from the prices this
-     * storefront actually charges. The label used to say "−30%" for both
-     * tiers; the real figures were 49% (Pro) and 61% (Base). Rounded down, and
-     * never computed across two currencies.
-     */
-    const annualSaving = (() => {
-        // The tier whose year this toggle would actually sell: the selected
-        // one — or Pro for anyone already on Pro, for whom Base is not for
-        // sale (a Pro subscriber was shown Base's 61% on the simulator).
-        const pro = selectedIsPro || tierRank(currentCode) >= tierRank(PLAN_PRO);
-        const weekly = numericPrice(plans?.find((p) => p.code === (pro ? PLAN_PRO : PLAN_BASE)));
-        const annual = numericPrice(plans?.find((p) => p.code === (pro ? PLAN_PRO_ANNUAL : PLAN_BASE_ANNUAL)));
-        if (!weekly || !annual || weekly.store !== annual.store) return null;
-        const pct = Math.floor((1 - annual.value / (52 * weekly.value)) * 100);
+    /** What a month costs against 52/12 weeks of weekly, from this storefront's own prices. */
+    const monthlySaving = (() => {
+        const w = numericPrice(weekly);
+        const m = numericPrice(monthly);
+        if (!w || !m || w.store !== m.store) return null;
+        const pct = Math.floor((1 - m.value / (w.value * 52 / 12)) * 100);
         return pct >= 5 ? pct : null;
     })();
 
-    /** "First week −22%": the offer against this storefront's own weekly price. */
-    const introPct = (() => {
-        if (!introOffer || !proWeekly?.appleProductId) return null;
-        const regular = storePrices[proWeekly.appleProductId]?.price;
-        if (!regular || !(introOffer.price > 0)) return null;
-        const pct = Math.floor((1 - introOffer.price / regular) * 100);
+    /** "−25%": a first-period offer against the same product's regular price. */
+    const introPctOf = (plan: PlanResponse | undefined, intro: typeof weeklyIntro) => {
+        if (!intro || !plan?.appleProductId) return null;
+        const regular = storePrices[plan.appleProductId]?.price;
+        if (!regular || !(intro.price > 0)) return null;
+        const pct = Math.floor((1 - intro.price / regular) * 100);
         return pct >= 5 ? pct : null;
-    })();
+    };
+    const introBadge = (plan: PlanResponse | undefined, intro: typeof weeklyIntro) => {
+        const pct = introPctOf(plan, intro);
+        return pct != null ? t("paywall.intro_badge", { pct }) : t("paywall.intro_badge_plain");
+    };
 
     // ── The moment that opened the screen ────────────────────────────
     const hero: HeroSpec = (() => {
@@ -603,16 +583,18 @@ export default function PaywallScreen() {
     // ── Money lines ──────────────────────────────────────────────────
     const chosenPrice = !chosen || pricesLoading
         ? null
-        : introApplies ? introOffer!.priceString : priceOf(chosen);
+        : chosenIntro ? chosenIntro.priceString : priceOf(chosen);
     const renewal = (() => {
         if (!anythingToBuy || !chosen || pricesLoading || introPending) return null;
-        if (introApplies) return t("paywall.renewal_intro_week", { intro: introOffer!.priceString, price: priceOf(chosen) });
-        return t(billing === "annual" ? "paywall.renewal_year" : "paywall.renewal_week", { price: priceOf(chosen) });
+        const isWeekly = effectiveSelected === PLAN_WEEKLY;
+        if (chosenIntro) {
+            return t(isWeekly ? "paywall.renewal_intro_week" : "paywall.renewal_intro_month",
+                { intro: chosenIntro.priceString, price: priceOf(chosen) });
+        }
+        return t(isWeekly ? "paywall.renewal_week" : "paywall.renewal_month", { price: priceOf(chosen) });
     })();
 
-    const ctaLabel = anythingToBuy
-        ? (selectedIsPro ? t("paywall.start_pro") : t("paywall.start_base"))
-        : t("profile.buy_credits");
+    const ctaLabel = anythingToBuy ? t("paywall.start_pro") : t("profile.buy_credits");
 
     const rowA11y = (tier: string, price: string | null, period: string) =>
         [tier, price ? `${price}${period}` : null].filter(Boolean).join(", ");
@@ -662,14 +644,14 @@ export default function PaywallScreen() {
                     {hero.kind === "pro" ? (
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <ProCard
-                                image={require("@/assets/features/style_after.png")}
+                                image={require("@/assets/features/style_after.jpg")}
                                 label={t("studio.mode_style_transfer")}
                                 height={heroHeight - 30}
                             />
                             <ProCard
                                 // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
                                 // "asset missing" pattern, not a photograph.
-                                image={require("@/assets/features/outdoor_after.png")}
+                                image={require("@/assets/features/outdoor_after.jpg")}
                                 label={t("studio.mode_outdoor")}
                                 height={heroHeight - 30}
                             />
@@ -695,49 +677,48 @@ export default function PaywallScreen() {
                     )}
                 </View>
 
-                <BillingSegment
-                    annual={billing === "annual"}
-                    onChange={setBilling}
-                    weeklyLabel={t("paywall.weekly")}
-                    annualLabel={annualSaving != null ? t("paywall.annual_save", { pct: annualSaving }) : t("paywall.annual")}
-                />
-
-                {/* Merdivenin tamamı, her zaman, fiyatlarıyla. */}
-                <View style={{ gap: 10, marginTop: 14 }}>
+                {/* İki satır: aynı Pro, iki dönem. */}
+                <View style={{ gap: 10, marginTop: 16 }}>
                     <UmberPlanRow
-                        tier="PRO"
-                        price={introPending ? null : introShown ? introOffer!.priceString : proPrice}
-                        period={introShown ? t("paywall.first_week") : periodLabel}
-                        then={introShown && proPrice ? t("paywall.then_price_week", { price: proPrice }) : null}
-                        badge={introShown ? (introPct != null ? t("paywall.intro_badge", { pct: introPct }) : t("paywall.intro_badge_plain")) : null}
-                        selected={offersPro && selectedIsPro}
-                        current={currentCode === proCode}
-                        locked={!offersPro}
+                        label={`Pro · ${t("paywall.weekly")}`}
+                        price={introPending ? null : weeklyIntroShown ? weeklyIntro!.priceString : weeklyPrice}
+                        period={weeklyIntroShown ? t("paywall.first_week") : t("paywall.per_week")}
+                        then={weeklyIntroShown && weeklyPrice ? t("paywall.then_price_week", { price: weeklyPrice }) : null}
+                        badge={weeklyIntroShown ? introBadge(weekly, weeklyIntro) : null}
+                        selected={offersWeekly && effectiveSelected === PLAN_WEEKLY}
+                        current={currentCode === PLAN_WEEKLY}
+                        locked={!offersWeekly}
                         currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y("Pro", introShown ? introOffer!.priceString : proPrice, introShown ? ` ${t("paywall.first_week")}` : periodLabel)}
+                        a11yLabel={rowA11y(`Pro ${t("paywall.weekly")}`,
+                            weeklyIntroShown ? weeklyIntro!.priceString : weeklyPrice,
+                            weeklyIntroShown ? ` ${t("paywall.first_week")}` : t("paywall.per_week"))}
                         onPress={() => {
-                            if (!offersPro) return;
+                            if (!offersWeekly) return;
                             touchedAPlan.current = true;
-                            setSelected(PLAN_PRO);
-                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_PRO });
+                            setSelected(PLAN_WEEKLY);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_WEEKLY });
                         }}
                     />
                     <UmberPlanRow
-                        tier="BASE"
-                        price={basePrice}
-                        period={periodLabel}
-                        then={null}
-                        badge={null}
-                        selected={offersBase && !selectedIsPro}
-                        current={currentCode === baseCode}
-                        locked={!offersBase}
+                        label={`Pro · ${t("paywall.monthly")}`}
+                        price={introPending ? null : monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice}
+                        period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
+                        then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
+                        badge={monthlyIntroShown
+                            ? introBadge(monthly, monthlyIntro)
+                            : monthlySaving != null ? t("paywall.save_pct", { pct: monthlySaving }) : null}
+                        selected={offersMonthly && effectiveSelected === PLAN_MONTHLY}
+                        current={currentCode === PLAN_MONTHLY}
+                        locked={!offersMonthly}
                         currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y("Base", basePrice, periodLabel)}
+                        a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
+                            monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
+                            monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
                         onPress={() => {
-                            if (!offersBase) return;
+                            if (!offersMonthly) return;
                             touchedAPlan.current = true;
-                            setSelected(PLAN_BASE);
-                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_BASE });
+                            setSelected(PLAN_MONTHLY);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
                         }}
                     />
                 </View>
@@ -942,48 +923,6 @@ function PhotoHero({
     );
 }
 
-function BillingSegment({
-    annual, onChange, weeklyLabel, annualLabel,
-}: {
-    annual: boolean; onChange: (v: "weekly" | "annual") => void;
-    weeklyLabel: string; annualLabel: string;
-}) {
-    return (
-        <View
-            accessibilityRole="radiogroup"
-            style={{
-                marginTop: 16, flexDirection: "row", borderRadius: 100,
-                borderWidth: 1, borderColor: U.lineNeutral, padding: 4,
-            }}
-        >
-            {(["weekly", "annual"] as const).map((key) => {
-                const active = (key === "annual") === annual;
-                return (
-                    <Pressable
-                        key={key}
-                        onPress={() => onChange(key)}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected: active }}
-                        style={{
-                            flex: 1, height: 38, borderRadius: 100,
-                            alignItems: "center", justifyContent: "center",
-                            backgroundColor: active ? U.lineAccent : "transparent",
-                        }}
-                    >
-                        <Text
-                            style={{ ...theme.v2.tier, color: active ? U.accentBright : U.inkMuted }}
-                            numberOfLines={1}
-                            adjustsFontSizeToFit
-                        >
-                            {key === "annual" ? annualLabel : weeklyLabel}
-                        </Text>
-                    </Pressable>
-                );
-            })}
-        </View>
-    );
-}
-
 /** Restore, Terms, Privacy — small, but real tap targets. */
 function FooterLink({
     label, onPress, disabled, role,
@@ -1037,9 +976,10 @@ function PriceSkeleton() {
  * the row the offer is on.
  */
 function UmberPlanRow({
-    tier, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
+    label, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
 }: {
-    tier: "PRO" | "BASE";
+    /** "Pro · Weekly" — the tier and the period, as one line. */
+    label: string;
     /** Null while the store price is on its way — drawn as a skeleton. */
     price: string | null; period: string;
     /** "then $8.99/week" under an introductory price; null otherwise. */
@@ -1050,7 +990,6 @@ function UmberPlanRow({
     currentLabel: string; a11yLabel: string;
     onPress: () => void;
 }) {
-    const isPro = tier === "PRO";
     // Locale-aware: Turkish "i" is "İ" in capitals, not "I".
     const { i18n } = useTranslation();
     const upper = (s: string) => s.toLocaleUpperCase(i18n.language);
@@ -1065,7 +1004,7 @@ function UmberPlanRow({
                 borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16,
                 borderWidth: selected || current ? 1.5 : 1,
                 borderColor: selected ? U.accent : current ? U.accentBright : U.lineNeutral,
-                backgroundColor: isPro ? U.surface : "transparent",
+                backgroundColor: U.surface,
                 flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                 gap: 12,
                 // Üstünde olunan plan sönmez — o bir bilgi, bir kısıt değil.
@@ -1081,8 +1020,8 @@ function UmberPlanRow({
                     }}>
                         {selected ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: U.accent }} /> : null}
                     </View>
-                    <Text style={{ ...theme.v2.tier, color: isPro ? U.accentBright : U.inkMuted }}>
-                        {tier}
+                    <Text style={{ ...theme.v2.tier, color: U.accentBright }}>
+                        {upper(label)}
                     </Text>
                     {current ? (
                         <View style={{
