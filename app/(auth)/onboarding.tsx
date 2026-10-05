@@ -180,7 +180,15 @@ export default function OnboardingScreen() {
 
                 {/* Headline only (owner, 5 Oct): the moving pictures carry the page; a paragraph
                     under them read as a manual. bodyKey stays on the slides for the copy history. */}
-                <Text style={{ ...V.displayXL, color: U.ink }}>{t(SLIDES[index].headlineKey)}</Text>
+                {/* One line in every language (owner, 5 Oct): long ones scale down instead of wrapping. */}
+                <Text
+                    style={{ ...V.displayL, color: U.ink }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.55}
+                >
+                    {t(SLIDES[index].headlineKey)}
+                </Text>
 
                 <Pressable
                     onPress={advance}
