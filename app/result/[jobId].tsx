@@ -21,7 +21,6 @@ import { catalogName } from "@/utils/catalogI18n";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { getStyleImage } from "@/components/studio/styleImages";
 import { useGenerate } from "@/hooks/useGenerate";
-import { requestPushPermission } from "@/hooks/usePushRegistration";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const U = theme.umber;
@@ -41,7 +40,8 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { useAuthStore } from "@/stores/authStore";
 import { track } from "@/services/analytics";
 import { TopBar } from "@/components/layout/TopBar";
-import { getJob, sendOutputSignal, createVideoJob } from "@/services/jobs";
+import { getJob, sendOutputSignal } from "@/services/jobs";
+import { usePendingVideoStore } from "@/stores/pendingVideoStore";
 import { VideoResult } from "@/components/result/VideoResult";
 import { getFileDownloadUrl, getOutputDownloadUrl } from "@/services/files";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
@@ -191,7 +191,8 @@ export default function ResultDetailScreen() {
     ?? null;
   const canAfford = useCreditStore((s) => s.canAfford);
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
-  const [videoSubmitting, setVideoSubmitting] = useState(false);
+  // The clip is created on its own screen now (video-progress); nothing here is ever mid-request.
+  const videoSubmitting = false;
   // The clip of this render, and the button IS its status. Seeded from the
   // server's answer on the job (videoJobId / videoStatus), set the moment
   // the user starts one, and kept current by polling while it renders.
@@ -200,6 +201,13 @@ export default function ResultDetailScreen() {
   // hazırlanıyor" and stayed that way after the clip had finished, because
   // nothing on this screen ever looked at the clip again.
   const [video, setVideo] = useState<{ id: string; status: JobStatus } | null>(null);
+  const [isFocused, setIsFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
   // Whether this device will hear about the finished clip — decides which
   // promise the in-progress button makes (a push, or just the gallery).
   const [pushGranted, setPushGranted] = useState<boolean | null>(null);
@@ -265,7 +273,9 @@ export default function ResultDetailScreen() {
   // watchdog for a clip (app.jobs.video-timeout-minutes), after which the
   // server has failed and refunded it and the next focus reads that.
   useJobPolling(
-    video && !isTerminalStatus(video.status) ? video.id : null,
+    // Only while this screen is in front: with the clip's own progress screen on top, that
+    // screen follows the clip, and two pollers meant two failure alerts.
+    isFocused && video && !isTerminalStatus(video.status) ? video.id : null,
     (polled) => {
       setVideo({ id: polled.id, status: polled.status });
       if (polled.status === "COMPLETED") {
@@ -507,8 +517,12 @@ export default function ResultDetailScreen() {
    * clip is "watch" — a second tap on a finished render can never buy a
    * second clip — and a failed one is "make" again, its credits already back.
    */
+  // A clip request still on its way to the server (video-progress, 10–40 s of Claude before the
+  // row exists) counts as in progress — otherwise a second tap would start a second, paid clip.
+  const videoCreating = usePendingVideoStore((s) => (job ? s.byParent[job.id]?.status === "creating" : false));
   const videoState: "make" | "progress" | "watch" =
-    !video ? "make"
+    videoCreating ? "progress"
+    : !video ? "make"
     : video.status === "COMPLETED" ? "watch"
     : video.status === "FAILED" || video.status === "CANCELLED" ? "make"
     : "progress";
@@ -531,14 +545,22 @@ export default function ResultDetailScreen() {
       router.push(`/result/${video.id}` as never);
       return;
     }
-    if (videoState === "progress") return;
+    const imageUrl = getOutputImageUrl(job.id, currentOutput);
+    if (videoState === "progress") {
+      // Back to the wait it was left on — nothing new is started.
+      router.push({
+        pathname: "/generation/video-progress",
+        params: { parentJobId: job.id, outputId: currentOutput.id, imageUrl, videoJobId: video?.id ?? "" },
+      } as never);
+      return;
+    }
     hideResumeVideo();
     // The paywall shows THIS design as the thing about to move, and after a
     // purchase hands the user back here with a note beside this button.
     const videoPaywall = (source: "RESULT_VIDEO" | "CREDITS_EXHAUSTED") =>
       router.push({
         pathname: "/paywall",
-        params: { source, afterUrl: getOutputImageUrl(job.id, currentOutput), resume: "RESULT_VIDEO" },
+        params: { source, afterUrl: imageUrl, resume: "RESULT_VIDEO" },
       } as never);
     if (!videoFeatureEnabled) {
       videoPaywall("RESULT_VIDEO");
@@ -549,34 +571,13 @@ export default function ResultDetailScreen() {
       return;
     }
 
-    setVideoSubmitting(true);
-    try {
-      const created = await createVideoJob(job.id, currentOutput.id);
-      setVideo({ id: created.id, status: created.status });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // The credits are reserved the moment the job exists; show it.
-      fetchBalance().catch(() => {});
-      // Ask for notifications NOW — the one moment the user has a reason to
-      // say yes: they just started something that finishes while they are
-      // away. On 2026-09-25 the clip finished and the push went out, but this
-      // install had never been asked, so it had no token to receive it.
-      // Already granted: this only re-syncs the token. Refused before: iOS
-      // shows nothing, and the button promises the gallery instead.
-      requestPushPermission().then(setPushGranted).catch(() => {});
-    } catch (e: any) {
-      // The server's own verdict on the plan wins over the client's.
-      if (e?.response?.data?.errorCode === "PLAN_UPGRADE_REQUIRED") {
-        videoPaywall("RESULT_VIDEO");
-        return;
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(
-        t("generation.failed"),
-        e?.response?.data?.message ?? t("errors.generic"),
-      );
-    } finally {
-      setVideoSubmitting(false);
-    }
+    // 2.3.0: the wait has a screen of its own (the design blurred behind, a phase, a bar), the
+    // same as a design's. It creates the clip, survives being left, and comes back here when the
+    // clip is done — this button then reads "Watch the video".
+    router.push({
+      pathname: "/generation/video-progress",
+      params: { parentJobId: job.id, outputId: currentOutput.id, imageUrl },
+    } as never);
   };
 
   if (loading) {

@@ -748,7 +748,10 @@
     "failed_body": "The render didn't finish. Your credits weren't used — try again.",
     "video_creating": "Bringing your room to life…",
     "video_eta": "Usually takes a few minutes",
-    "video_failed_body": "The video didn't finish. Your credits weren't used — try again."
+    "video_failed_body": "The video didn't finish. Your credits weren't used — try again.",
+    "video_phase_planning": "Planning the camera move",
+    "video_phase_rendering": "Rendering your room video",
+    "video_phase_ready": "Your video is ready"
   },
   "styles": {
     "scandinavian": "Scandinavian design celebrates warm minimalism — pale woods, soft neutrals, and abundant natural light. Every object earns its place through utility and honest craftsmanship.",

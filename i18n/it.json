@@ -748,7 +748,10 @@
     "failed_body": "Il render non è stato completato. I tuoi crediti non sono stati usati — riprova.",
     "video_creating": "La tua stanza prende vita…",
     "video_eta": "Di solito richiede qualche minuto",
-    "video_failed_body": "Il video non è stato completato. I tuoi crediti non sono stati usati: riprova."
+    "video_failed_body": "Il video non è stato completato. I tuoi crediti non sono stati usati: riprova.",
+    "video_phase_planning": "Pianificazione del movimento di camera",
+    "video_phase_rendering": "Creazione del video della stanza",
+    "video_phase_ready": "Il tuo video è pronto"
   },
   "styles": {
     "scandinavian": "Il design scandinavo celebra un minimalismo caldo — legni chiari, tonalità neutre morbide e abbondante luce naturale. Ogni oggetto guadagna il suo posto attraverso l'utilità e l'artigianato onesto.",

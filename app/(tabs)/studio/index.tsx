@@ -122,7 +122,12 @@ export default function StudioScreen() {
      * The composer carries the second half (room type → style → advanced →
      * generate).
      */
-    const tour = useFirstRunTour("studio", justPicked == null && !sourceSheet && !isUploading);
+    /** True while an `intent` arrival (below) is picking its photo: the tour waits. */
+    const [intentPicking, setIntentPicking] = useState(false);
+    // 🔴 Not while the intent flow's library / permission prompt is up (TestFlight-path repro,
+    // 5 Oct): the tour's overlay mounted under the system prompt, never showed, and swallowed
+    // every tap on this screen until the user switched tabs.
+    const tour = useFirstRunTour("studio", justPicked == null && !sourceSheet && !isUploading && !intentPicking);
 
     /**
      * Where a mode goes.
@@ -191,13 +196,18 @@ export default function StudioScreen() {
         if (!intent || handledIntent.current === intent) return;
         handledIntent.current = intent;
         router.setParams({ intent: undefined } as never);
+        setIntentPicking(true);
         (async () => {
-            const picked = await pickImage("gallery", { onPreview: setPreviewUri });
-            setPreviewUri(null);
-            if (!picked) return;
-            setPhoto(picked);
-            setJustPicked(picked.uri ?? null);
-            goComposer(intent);
+            try {
+                const picked = await pickImage("gallery", { onPreview: setPreviewUri });
+                setPreviewUri(null);
+                if (!picked) return;
+                setPhoto(picked);
+                setJustPicked(picked.uri ?? null);
+                goComposer(intent);
+            } finally {
+                setIntentPicking(false);
+            }
         })();
     }, [intent]);
 

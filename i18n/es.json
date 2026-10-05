@@ -748,7 +748,10 @@
     "failed_body": "El render no se completó. No se usaron tus créditos — inténtalo de nuevo.",
     "video_creating": "Dando vida a tu habitación…",
     "video_eta": "Suele tardar unos minutos",
-    "video_failed_body": "El vídeo no se completó. No se usaron tus créditos: inténtalo de nuevo."
+    "video_failed_body": "El vídeo no se completó. No se usaron tus créditos: inténtalo de nuevo.",
+    "video_phase_planning": "Planificando el movimiento de cámara",
+    "video_phase_rendering": "Creando el vídeo de tu habitación",
+    "video_phase_ready": "Tu vídeo está listo"
   },
   "styles": {
     "scandinavian": "El diseño escandinavo celebra un minimalismo cálido: maderas claras, tonos neutros suaves y abundante luz natural. Cada objeto gana su lugar por su utilidad y una artesanía honesta.",

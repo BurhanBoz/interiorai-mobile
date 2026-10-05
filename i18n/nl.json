@@ -748,7 +748,10 @@
     "failed_body": "De render is niet voltooid. Je credits zijn niet gebruikt — probeer het opnieuw.",
     "video_creating": "Je kamer komt tot leven…",
     "video_eta": "Duurt meestal een paar minuten",
-    "video_failed_body": "De video is niet afgemaakt. Je credits zijn niet gebruikt — probeer het opnieuw."
+    "video_failed_body": "De video is niet afgemaakt. Je credits zijn niet gebruikt — probeer het opnieuw.",
+    "video_phase_planning": "Camerabeweging wordt gepland",
+    "video_phase_rendering": "Je kamervideo wordt gemaakt",
+    "video_phase_ready": "Je video is klaar"
   },
   "styles": {
     "scandinavian": "Scandinavisch design viert warm minimalisme — licht hout, zachte neutralen en volop daglicht. Elk object verdient zijn plek door bruikbaarheid en eerlijk vakmanschap.",
