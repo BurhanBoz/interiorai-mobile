@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import { useJobPolling } from "@/hooks/useJobPolling";
+import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
@@ -31,7 +32,10 @@ import type { JobResponse, JobStatus } from "@/types/api";
  * Within PROCESSING we still animate through sub-phases so the copy doesn't feel frozen
  * during the long render window.
  */
-type Phase = "queued" | "submitted" | "rendering" | "polishing" | "ready" | "error";
+type Phase = "planning" | "queued" | "submitted" | "rendering" | "polishing" | "ready" | "error";
+
+/** Claude reads the photo and writes the plan before the server answers (Sonnet, 2026-10-05: 40-75 s). */
+const ESTIMATED_PLANNING_MS = 50_000;
 
 const ESTIMATED_TOTAL_MS = 45_000; // Avg job time — tuned to ControlNet Hough median
 
@@ -41,7 +45,13 @@ export default function GenerationProgressScreen() {
   const { generate } = useGenerate();
   const { t } = useTranslation();
   const catalogLabel = useCatalogLabel();
-  const { jobId } = useLocalSearchParams<{ jobId?: string }>();
+  const { jobId: jobIdParam, pending } = useLocalSearchParams<{ jobId?: string; pending?: string }>();
+  // Opened by Generate before the job exists: the request finishes here (pendingGenerationStore).
+  const pendingRequest = usePendingGenerationStore((s) =>
+    pending && s.current?.id === pending ? s.current : null,
+  );
+  const jobId = jobIdParam ?? pendingRequest?.jobId ?? undefined;
+  const planning = !jobId && !!pendingRequest && !pendingRequest.error;
 
   const fetchBalance = useCreditStore((s) => s.fetchBalance);
 
@@ -49,6 +59,14 @@ export default function GenerationProgressScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const startedAt = useRef<number>(Date.now());
+  // The render's own clock: the phases after planning are timed from the moment the job exists.
+  const jobStartedAt = useRef<number | null>(jobIdParam ? Date.now() : null);
+  if (jobId && jobStartedAt.current == null) jobStartedAt.current = Date.now();
+  const renderElapsedMs = jobStartedAt.current == null ? 0 : Math.max(0, startedAt.current + elapsedMs - jobStartedAt.current);
+
+  useEffect(() => {
+    if (pendingRequest?.error) setErrorMessage(pendingRequest.error);
+  }, [pendingRequest?.error]);
 
   const rotation = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0.3)).current;
@@ -150,15 +168,16 @@ export default function GenerationProgressScreen() {
 
   const phase: Phase = useMemo(() => {
     if (errorMessage) return "error";
+    if (planning) return "planning";
     const status = job?.status;
     if (status === "COMPLETED") return "ready";
     if (status === "FAILED" || status === "CANCELLED") return "error";
     if (status === "PENDING" || !status) return "queued";
     if (status === "SUBMITTED") return "submitted";
     // PROCESSING: split into two sub-phases using elapsed time
-    if (elapsedMs < ESTIMATED_TOTAL_MS * 0.75) return "rendering";
+    if (renderElapsedMs < ESTIMATED_TOTAL_MS * 0.75) return "rendering";
     return "polishing";
-  }, [job?.status, elapsedMs, errorMessage]);
+  }, [job?.status, renderElapsedMs, errorMessage, planning]);
 
   // ─── Progress percentage (smooth, time-aware) ─────────
   // Uses the asymptotic curve pattern from upscale.tsx — feels responsive
@@ -166,13 +185,14 @@ export default function GenerationProgressScreen() {
   const targetProgress = useMemo(() => {
     if (phase === "ready") return 100;
     if (phase === "error") return 100;
-    if (phase === "queued") return 6;
+    if (phase === "planning") return Math.round(2 + Math.min(1, elapsedMs / ESTIMATED_PLANNING_MS) * 10);
+    if (phase === "queued") return 12;
     if (phase === "submitted") return 14;
-    const linear = Math.min(1, elapsedMs / ESTIMATED_TOTAL_MS);
+    const linear = Math.min(1, renderElapsedMs / ESTIMATED_TOTAL_MS);
     if (phase === "rendering") return Math.round(14 + linear * 70);
     // polishing — creep to 95
     return Math.min(95, Math.round(84 + linear * 11));
-  }, [phase, elapsedMs]);
+  }, [phase, elapsedMs, renderElapsedMs]);
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -230,7 +250,9 @@ export default function GenerationProgressScreen() {
    * starting — and charging for — a second one.
    */
   const handleRetry = () => {
-    generate();
+    // Replace, not push: the retry's own progress screen takes this one's place.
+    setErrorMessage(null);
+    generate({ replace: true });
   };
 
   // "About this style" is a first-generation teaching card (2026-07 tester

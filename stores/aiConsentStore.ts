@@ -27,7 +27,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * not cover a processor it never named, so a v1 user is asked once more
  * before their next upload — the "in-app notification" our privacy policy
  * promises for material changes. The v1 timestamp is kept for the audit
- * trail. Bump the version whenever the recipients in `ai_consent.body_who`
+ * trail. v3 (2.3.0, 2026-10-05) names Google, whose Nano Banana 2 model fal.ai runs for most designs.
+ * Bump the version whenever the recipients in `ai_consent.body_who`
  * change; never for wording alone.
  */
 interface AiConsentState {
@@ -90,11 +91,11 @@ export const useAiConsentStore = create<AiConsentState>()(
         {
             name: "ai-consent-store",
             storage: createJSONStorage(() => AsyncStorage),
-            version: 2,
-            // v1 → v2: fal.ai joined the recipients (see the class comment).
+            version: 3,
+            // v1 → v2: fal.ai joined the recipients; v2 → v3: Google (see the class comment).
             migrate: (persisted, fromVersion) => {
                 const old = (persisted ?? {}) as { grantedAt?: string | null };
-                if (fromVersion < 2) {
+                if (fromVersion < 3) {
                     return { granted: false, grantedAt: null, previousGrantedAt: old.grantedAt ?? null };
                 }
                 return persisted as Partial<AiConsentState>;
