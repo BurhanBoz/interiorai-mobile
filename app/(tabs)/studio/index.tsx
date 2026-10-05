@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 
@@ -177,6 +177,29 @@ export default function StudioScreen() {
         setPhoto(picked);
         setJustPicked(picked.uri ?? null);
     };
+
+    /**
+     * Arrival with a tool already chosen (2.3.0): the welcome screen after a purchase offers
+     * "Empty Room", "Style Transfer"… and sends the choice here as `intent`. A tool without a
+     * room is a dead end — it used to open the composer on an empty frame — so the photo
+     * library opens straight away and the tool follows the pick. A cancelled pick leaves the
+     * user here, tools dimmed until a room is chosen, like any other visit.
+     */
+    const { intent } = useLocalSearchParams<{ intent?: string }>();
+    const handledIntent = useRef<string | null>(null);
+    useEffect(() => {
+        if (!intent || handledIntent.current === intent) return;
+        handledIntent.current = intent;
+        router.setParams({ intent: undefined } as never);
+        (async () => {
+            const picked = await pickImage("gallery", { onPreview: setPreviewUri });
+            setPreviewUri(null);
+            if (!picked) return;
+            setPhoto(picked);
+            setJustPicked(picked.uri ?? null);
+            goComposer(intent);
+        })();
+    }, [intent]);
 
     const onFeature = (key: string, locked: boolean) => {
         if (!photoReady) {
@@ -358,7 +381,11 @@ function IntakeRow({
     onSample: (module: number) => void;
 }) {
     const { t } = useTranslation();
-    const samples = SAMPLE_ROOMS.slice(0, 2);
+    // The green-sofa living room (Redesign, the owner's Prompt Lab room) and the empty room
+    // (Empty Room) — owner's choice, 5 Oct. The others stay in the per-mode lists.
+    const samples = ["green_living_room", "empty_room"]
+        .map((k) => SAMPLE_ROOMS.find((s) => s.key === k))
+        .filter((s): s is (typeof SAMPLE_ROOMS)[number] => !!s);
     const pulse = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {

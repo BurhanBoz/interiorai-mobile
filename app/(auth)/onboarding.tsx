@@ -61,11 +61,13 @@ const SLIDES = [
     },
 ] as const;
 
-const HERO_HEIGHT = 455;
 
 export default function OnboardingScreen() {
     const { t } = useTranslation();
-    const { width } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
+    // Headline-only pages (5 Oct): the picture takes the room the paragraph left — ~68% of the
+    // screen, the dots and headline sitting just under its fade.
+    const HERO_HEIGHT = Math.round(Math.min(height * 0.68, 640));
     const guestLogin = useAuthStore((st) => st.guestLogin);
 
     const [busy, setBusy] = useState(false);
@@ -176,9 +178,16 @@ export default function OnboardingScreen() {
                     ))}
                 </View>
 
-                <Text style={{ ...V.displayXL, color: U.ink }}>{t(SLIDES[index].headlineKey)}</Text>
-                <Text style={{ ...V.body, color: U.inkMuted, maxWidth: 290, marginTop: 12 }}>
-                    {t(SLIDES[index].bodyKey)}
+                {/* Headline only (owner, 5 Oct): the moving pictures carry the page; a paragraph
+                    under them read as a manual. bodyKey stays on the slides for the copy history. */}
+                {/* One line in every language (owner, 5 Oct): long ones scale down instead of wrapping. */}
+                <Text
+                    style={{ ...V.displayL, color: U.ink }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.55}
+                >
+                    {t(SLIDES[index].headlineKey)}
                 </Text>
 
                 <Pressable
