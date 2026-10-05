@@ -109,8 +109,10 @@ const PRO_TOOL_SOURCES = new Set(["RESULT_STYLE", "FEATURE_TILE"]);
 const EXHAUSTED_PACK_CODE = "CREDITS_20";
 
 /** The app's own sample room — the hero when the moment has no photo of its own. */
-const SAMPLE_BEFORE = require("@/assets/features/redesign_before.png");
-const SAMPLE_AFTER = require("@/assets/features/redesign_after.png");
+// The owner's own Empty Room render from the phone (2026-10-05, Sonnet 5.5 + Nano Banana 2): the empty
+// room is the Empty Room card's "before", the after is that job's output.
+const SAMPLE_BEFORE = require("@/assets/features/empty_before.jpg");
+const SAMPLE_AFTER = require("@/assets/features/paywall_after.jpg");
 
 /** How long a pending eligibility answer may hold the Pro price back. */
 const INTRO_WAIT_MS = 1200;
@@ -662,7 +664,7 @@ export default function PaywallScreen() {
                     {hero.kind === "pro" ? (
                         <View style={{ flexDirection: "row", gap: 10 }}>
                             <ProCard
-                                image={require("@/assets/features/style_after.png")}
+                                image={require("@/assets/features/style_after.jpg")}
                                 label={t("studio.mode_style_transfer")}
                                 height={heroHeight - 30}
                             />
