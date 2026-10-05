@@ -67,10 +67,15 @@ export default function PlanWelcomeScreen() {
         else router.back();
     };
 
-    const openMode = (mode: string, route: string) => {
+    /**
+     * A tool needs a room. Straight to the composer it opened on an empty frame (TestFlight,
+     * 5 Oct), so the choice goes to the studio, which opens the photo library and then the tool
+     * (studio `intent`).
+     */
+    const openMode = (mode: string) => {
         track("plan_welcome_try", { mode });
         setMode(mode as never);
-        router.replace(route as never);
+        router.replace({ pathname: "/(tabs)/studio", params: { intent: mode } } as never);
     };
 
     const tries: { key: string; icon: keyof typeof Ionicons.glyphMap; label: string; sub?: string; onPress: () => void }[] = [];
@@ -83,17 +88,17 @@ export default function PlanWelcomeScreen() {
     }
     tries.push({
         key: "empty", icon: "cube-outline", label: t("studio.mode_empty_room"),
-        onPress: () => openMode("EMPTY_ROOM", "/studio/composer"),
+        onPress: () => openMode("EMPTY_ROOM"),
     });
     if (tier === "PRO") {
         tries.push({
             key: "style", icon: "color-wand-outline", label: t("studio.mode_style_transfer"),
-            onPress: () => openMode("STYLE_TRANSFER", "/studio/style-transfer"),
+            onPress: () => openMode("STYLE_TRANSFER"),
         });
     } else {
         tries.push({
             key: "magic", icon: "brush-outline", label: t("studio.mode_inpaint"),
-            onPress: () => openMode("INPAINT", "/studio/smart-edit"),
+            onPress: () => openMode("INPAINT"),
         });
     }
 

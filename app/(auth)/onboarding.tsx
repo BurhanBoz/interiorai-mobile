@@ -176,10 +176,9 @@ export default function OnboardingScreen() {
                     ))}
                 </View>
 
+                {/* Headline only (owner, 5 Oct): the moving pictures carry the page; a paragraph
+                    under them read as a manual. bodyKey stays on the slides for the copy history. */}
                 <Text style={{ ...V.displayXL, color: U.ink }}>{t(SLIDES[index].headlineKey)}</Text>
-                <Text style={{ ...V.body, color: U.inkMuted, maxWidth: 290, marginTop: 12 }}>
-                    {t(SLIDES[index].bodyKey)}
-                </Text>
 
                 <Pressable
                     onPress={advance}
