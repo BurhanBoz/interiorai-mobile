@@ -61,11 +61,13 @@ const SLIDES = [
     },
 ] as const;
 
-const HERO_HEIGHT = 455;
 
 export default function OnboardingScreen() {
     const { t } = useTranslation();
-    const { width } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
+    // Headline-only pages (5 Oct): the picture takes the room the paragraph left — ~68% of the
+    // screen, the dots and headline sitting just under its fade.
+    const HERO_HEIGHT = Math.round(Math.min(height * 0.68, 640));
     const guestLogin = useAuthStore((st) => st.guestLogin);
 
     const [busy, setBusy] = useState(false);
