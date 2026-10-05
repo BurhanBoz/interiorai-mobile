@@ -43,6 +43,14 @@ export type SampleRoom = {
 
 export const SAMPLE_ROOMS: SampleRoom[] = [
     {
+        // The plant-filled living room with the green sofa — the Redesign room of the owner's
+        // Prompt Lab runs (fotolar/01-salon.jpg, 4–5 Oct). Studio's first sample since 2.3.0.
+        key: "green_living_room",
+        module: require("@/assets/trial/greenLivingRoom_Before.jpg"),
+        labelKey: "studio.sample_living_room",
+        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER"],
+    },
+    {
         key: "living_room",
         module: require("@/assets/trial/livingRoom_Before.png"),
         labelKey: "studio.sample_living_room",

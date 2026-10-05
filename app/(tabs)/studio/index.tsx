@@ -381,9 +381,9 @@ function IntakeRow({
     onSample: (module: number) => void;
 }) {
     const { t } = useTranslation();
-    // The floral living room (Redesign) and the empty room (Empty Room) — the two rooms the
-    // owner's own 2.3.0 renders are made from (5 Oct). The kitchen stays in the per-mode lists.
-    const samples = ["living_room", "empty_room"]
+    // The green-sofa living room (Redesign, the owner's Prompt Lab room) and the empty room
+    // (Empty Room) — owner's choice, 5 Oct. The others stay in the per-mode lists.
+    const samples = ["green_living_room", "empty_room"]
         .map((k) => SAMPLE_ROOMS.find((s) => s.key === k))
         .filter((s): s is (typeof SAMPLE_ROOMS)[number] => !!s);
     const pulse = useRef(new Animated.Value(1)).current;
