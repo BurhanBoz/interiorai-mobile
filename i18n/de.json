@@ -748,7 +748,10 @@
     "failed_body": "Das Rendering wurde nicht fertig. Deine Credits wurden nicht verbraucht — versuch es erneut.",
     "video_creating": "Dein Raum erwacht zum Leben…",
     "video_eta": "Dauert meist ein paar Minuten",
-    "video_failed_body": "Das Video wurde nicht fertig. Dein Guthaben wurde nicht verwendet — versuch es noch einmal."
+    "video_failed_body": "Das Video wurde nicht fertig. Dein Guthaben wurde nicht verwendet — versuch es noch einmal.",
+    "video_phase_planning": "Kamerafahrt wird geplant",
+    "video_phase_rendering": "Dein Raumvideo wird erstellt",
+    "video_phase_ready": "Dein Video ist fertig"
   },
   "styles": {
     "scandinavian": "Skandinavisches Design feiert warmen Minimalismus — helle Hölzer, weiche Neutraltöne und reichlich natürliches Licht. Jedes Objekt verdient seinen Platz durch Nützlichkeit und ehrliches Handwerk.",

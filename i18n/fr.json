@@ -748,7 +748,10 @@
     "failed_body": "Le rendu n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie.",
     "video_creating": "Ta pièce prend vie…",
     "video_eta": "Prend généralement quelques minutes",
-    "video_failed_body": "La vidéo n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie."
+    "video_failed_body": "La vidéo n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie.",
+    "video_phase_planning": "Préparation du mouvement de caméra",
+    "video_phase_rendering": "Création de la vidéo de ta pièce",
+    "video_phase_ready": "Ta vidéo est prête"
   },
   "styles": {
     "scandinavian": "Le design scandinave célèbre un minimalisme chaleureux — bois clairs, neutres doux et lumière naturelle généreuse. Chaque objet gagne sa place par son utilité et son artisanat honnête.",

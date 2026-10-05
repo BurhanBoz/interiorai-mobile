@@ -748,7 +748,10 @@
     "failed_body": "Üretim tamamlanmadı. Krediniz harcanmadı — tekrar deneyin.",
     "video_creating": "Odan canlanıyor…",
     "video_eta": "Genellikle birkaç dakika sürer",
-    "video_failed_body": "Video tamamlanamadı. Kredilerin kullanılmadı — tekrar dene."
+    "video_failed_body": "Video tamamlanamadı. Kredilerin kullanılmadı — tekrar dene.",
+    "video_phase_planning": "Kamera hareketi planlanıyor",
+    "video_phase_rendering": "Oda videon oluşturuluyor",
+    "video_phase_ready": "Videon hazır"
   },
   "styles": {
     "scandinavian": "İskandinav tasarımı sıcak minimalizmi kutlar — açık ahşaplar, yumuşak nötr tonlar ve bol doğal ışık. Her nesne, işlevi ve dürüst zanaatı sayesinde yerini kazanır.",
