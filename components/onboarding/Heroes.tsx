@@ -25,18 +25,18 @@ const SHOWCASE: { image: ImageSourcePropType; modeKey: string }[] = [
     { image: require("@/assets/features/redesign_after.jpg"), modeKey: "studio.mode_redesign" },
     { image: require("@/assets/features/empty_after.jpg"), modeKey: "studio.mode_empty_room" },
     { image: require("@/assets/features/style_after.jpg"), modeKey: "studio.mode_style_transfer" },
-    { image: require("@/assets/features/inpaint_after.png"), modeKey: "studio.mode_inpaint" },
-    { image: require("@/assets/features/outdoor_after.png"), modeKey: "studio.mode_outdoor" },
+    { image: require("@/assets/features/inpaint_after.jpg"), modeKey: "studio.mode_inpaint" },
+    { image: require("@/assets/features/outdoor_after.jpg"), modeKey: "studio.mode_outdoor" },
 ];
 
 const WALL_LEFT = [
     require("@/assets/features/paywall_after.jpg"),
     require("@/assets/features/style_after.jpg"),
-    require("@/assets/features/outdoor_after.png"),
+    require("@/assets/features/outdoor_after.jpg"),
 ];
 const WALL_RIGHT = [
     require("@/assets/features/redesign_after.jpg"),
-    require("@/assets/features/inpaint_after.png"),
+    require("@/assets/features/inpaint_after.jpg"),
     require("@/assets/features/empty_after.jpg"),
 ];
 

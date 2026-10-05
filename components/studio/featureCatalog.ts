@@ -100,7 +100,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
             kind: "paint",
             before: require("@/assets/features/inpaint_before.png"),
             paint: require("@/assets/features/inpaint_paint.png"),
-            after: require("@/assets/features/inpaint_after.png"),
+            after: require("@/assets/features/inpaint_after.jpg"),
         },
     },
     {
@@ -127,7 +127,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         media: {
             kind: "pair",
             before: require("@/assets/features/outdoor_before.png"),
-            after: require("@/assets/features/outdoor_after.png"),
+            after: require("@/assets/features/outdoor_after.jpg"),
         },
     },
 ];
