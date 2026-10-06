@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Animated, Easing } from "react-native";
+import { View, Text, Pressable, Animated, Easing, AppState } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -93,10 +93,60 @@ export default function VideoProgressScreen() {
                     } as never);
                     return;
                 }
+                if (!e?.response) {
+                    // No answer — the app was likely sent to the background while the server was still writing
+                    // the clip, and the server may have made it. Never send the create again (a second clip is a
+                    // second charge while the first is still being written); read the design until it names one.
+                    recoverLostClip();
+                    return;
+                }
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                 setError(e?.response?.data?.message ?? t("errors.generic"));
             });
     }, [parentJobId, outputId, videoJobId, pending?.status]);
+
+    /**
+     * A create call that lost its answer: wait for the foreground, then read the parent design for its clip,
+     * every 5 s for up to 2 minutes (the server writes the clip in 10-40 s). Found → carry on as if the answer
+     * had arrived; not found → the usual error, and the result screen's button can try again.
+     */
+    const recoverLostClip = async () => {
+        // Still "creating" for the result screen while this runs, so its button reopens this screen
+        // instead of sending a second create.
+        usePendingVideoStore.getState().start(parentJobId);
+        try {
+            await findLostClip();
+        } finally {
+            usePendingVideoStore.getState().clear(parentJobId);
+        }
+    };
+    const findLostClip = async () => {
+        if (AppState.currentState !== "active") {
+            await new Promise<void>((resolve) => {
+                const sub = AppState.addEventListener("change", (s) => {
+                    if (s === "active") { sub.remove(); resolve(); }
+                });
+            });
+        }
+        const deadline = Date.now() + 120_000;
+        while (Date.now() < deadline) {
+            try {
+                const parent = await getJob(parentJobId);
+                if (parent.videoJobId) {
+                    renderStartedAt.current = Date.now();
+                    setVideoJobId(parent.videoJobId);
+                    setStatus(parent.videoStatus ?? null);
+                    fetchBalance().catch(() => {});
+                    return;
+                }
+            } catch {
+                // keep trying until the deadline
+            }
+            await new Promise((r) => setTimeout(r, 5000));
+        }
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setError(t("errors.network"));
+    };
 
     // Opened on a clip that already exists (the in-progress button): read it once now.
     useEffect(() => {
