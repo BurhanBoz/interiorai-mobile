@@ -1288,9 +1288,9 @@
     "skip": "Omitir"
   },
   "push": {
-    "preprompt_title": "¿Te avisamos?",
-    "preprompt_body": "Te avisaremos cuando tu crédito gratis esté listo. Nada más.",
-    "preprompt_yes": "Sí, avísame",
+    "preprompt_title": "¿Te lo recordamos?",
+    "preprompt_body": "Te avisamos cuando tu próximo diseño gratis esté listo y cuando terminen tus diseños. Nunca de noche.",
+    "preprompt_yes": "Recordármelo",
     "preprompt_later": "Ahora no"
   },
   "consent": {

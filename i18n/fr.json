@@ -1288,9 +1288,9 @@
     "skip": "Passer"
   },
   "push": {
-    "preprompt_title": "On vous prévient ?",
-    "preprompt_body": "Nous vous prévenons quand votre crédit gratuit est prêt. Rien d'autre.",
-    "preprompt_yes": "Oui, prévenez-moi",
+    "preprompt_title": "Un petit rappel ?",
+    "preprompt_body": "On vous prévient quand votre prochain design gratuit est prêt et quand vos designs sont terminés. Jamais la nuit.",
+    "preprompt_yes": "Me le rappeler",
     "preprompt_later": "Pas maintenant"
   },
   "consent": {

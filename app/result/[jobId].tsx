@@ -298,12 +298,14 @@ export default function ResultDetailScreen() {
   const currentOutput = outputs[activeIndex];
 
   // Post-result prompts: the offer (1st result, below), the notification ask
-  // (2nd), the account ask (5th, guests, when enabled) — and the rating,
+  // (1st, once the offer has closed), the account ask (5th, guests, when enabled) — and the rating,
   // which is keyed to a value signal rather than a visit number.
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
   useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
-  const pushAskOnScreen = usePushPermissionAsk(outputs.length > 0);
+  // Focused only: on the 1st result the offer opens at 2.5 s and takes focus, which
+  // cancels this ask; it comes back 3.5 s after the user returns to the room.
+  const pushAskOnScreen = usePushPermissionAsk(outputs.length > 0 && isFocused);
   const accountAskOnScreen = useAccountPrompt(outputs.length > 0);
 
   // THE RATING WAITS; IT DOES NOT STAND DOWN (2.0.0)

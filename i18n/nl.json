@@ -1288,10 +1288,10 @@
     "skip": "Overslaan"
   },
   "push": {
-    "preprompt_title": "Zullen we het laten weten?",
-    "preprompt_body": "We laten je weten wanneer je gratis credit klaarstaat. Verder niets.",
-    "preprompt_yes": "Ja, laat het weten",
-    "preprompt_later": "Nu niet"
+    "preprompt_title": "Herinnering ontvangen?",
+    "preprompt_body": "We laten het je weten als je volgende gratis ontwerp klaar is en als je ontwerpen af zijn. Nooit 's nachts.",
+    "preprompt_yes": "Herinner me",
+    "preprompt_later": "Niet nu"
   },
   "consent": {
     "title": "Hoe je foto's worden verwerkt",

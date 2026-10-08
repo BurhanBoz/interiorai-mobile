@@ -1284,9 +1284,9 @@
     "skip": "スキップ"
   },
   "push": {
-    "preprompt_title": "お知らせしますか？",
-    "preprompt_body": "無料クレジットの準備ができたときにお知らせします。それ以外はありません。",
-    "preprompt_yes": "はい、お知らせする",
+    "preprompt_title": "リマインドしますか？",
+    "preprompt_body": "次の無料デザインの準備ができたときと、デザインが完成したときにお知らせします。夜間には送りません。",
+    "preprompt_yes": "リマインドする",
     "preprompt_later": "今はしない"
   },
   "consent": {
