@@ -72,13 +72,16 @@ export function usePushTokenSync(enabled: boolean) {
  */
 const PUSH_ASKED_KEY = "push_permission_asked";
 /**
- * 2nd success, not 3rd (1.4.5). Under the old number 65 users produced one
- * permission: most never reached a third render. The 1st result now carries
- * the offer, so the 2nd is the earliest visit with no other sheet in it.
+ * 1st success (2.3.2). At "2nd" only 11 of 376 new users in 30 days held a push
+ * token (2.9%, 2026-10-08): a free account makes one design a day and most never
+ * came back for a second, so the daily-free-design reminder had almost nobody to
+ * reach. The 1st result also opens the offer; the caller passes `jobSucceeded`
+ * only while the result screen is focused, so the question waits until the
+ * paywall has closed and the user is back on their room.
  */
-const ASK_ON_NTH_SUCCESS = 2;
+const ASK_ON_NTH_SUCCESS = 1;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
-const ASK_DELAY_MS = 3000;
+const ASK_DELAY_MS = 3500;
 
 /**
  * @return true once this visit has decided to ask. Anything that must not

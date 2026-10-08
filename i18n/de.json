@@ -1288,10 +1288,10 @@
     "skip": "Überspringen"
   },
   "push": {
-    "preprompt_title": "Bescheid geben?",
-    "preprompt_body": "Wir melden uns, wenn dein Gratis-Credit da ist. Sonst nichts.",
-    "preprompt_yes": "Ja, Bescheid geben",
-    "preprompt_later": "Jetzt nicht"
+    "preprompt_title": "Erinnerung gewünscht?",
+    "preprompt_body": "Wir sagen dir Bescheid, wenn dein nächstes kostenloses Design bereit ist und deine Designs fertig sind. Nie nachts.",
+    "preprompt_yes": "Erinnern",
+    "preprompt_later": "Nicht jetzt"
   },
   "consent": {
     "title": "Wie deine Fotos verarbeitet werden",

@@ -1288,9 +1288,9 @@
     "skip": "Geç"
   },
   "push": {
-    "preprompt_title": "Haber verelim mi?",
-    "preprompt_body": "Ücretsiz kredin hazır olduğunda haber veririz. Başka bir şey için değil.",
-    "preprompt_yes": "Evet, haber ver",
+    "preprompt_title": "Hatırlatalım mı?",
+    "preprompt_body": "Bir sonraki ücretsiz tasarımın hazır olduğunda ve tasarımların bittiğinde haber veririz. Gece asla.",
+    "preprompt_yes": "Hatırlat",
     "preprompt_later": "Şimdi değil"
   },
   "consent": {

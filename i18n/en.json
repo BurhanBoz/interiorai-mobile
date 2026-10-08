@@ -1288,9 +1288,9 @@
     "skip": "Skip"
   },
   "push": {
-    "preprompt_title": "Get a heads-up?",
-    "preprompt_body": "We'll tell you when your free credit is ready. Nothing else.",
-    "preprompt_yes": "Yes, notify me",
+    "preprompt_title": "Want a reminder?",
+    "preprompt_body": "We'll tell you when your next free design is ready and when your designs finish. Never at night.",
+    "preprompt_yes": "Remind me",
     "preprompt_later": "Not now"
   },
   "consent": {
