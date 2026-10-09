@@ -306,10 +306,13 @@ export default function ResultDetailScreen() {
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
   useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
-  // Focused only: on the 1st result the offer opens at 2.5 s and takes focus, which
-  // cancels this ask; it comes back 3.5 s after the user returns to the room.
-  const pushAskOnScreen = usePushPermissionAsk(outputs.length > 0 && isFocused);
-  const accountAskOnScreen = useAccountPrompt(outputs.length > 0);
+  // RATING FIRST (2.3.3, owner's rule): the notification and account asks
+  // wait until the rating has had its turn this visit — asked and left alone
+  // for a moment, or ruled out (budget spent, too soon, unavailable). They
+  // are gated on useReviewPrompt's answer below; the rating in turn waits for
+  // anything of theirs that is on screen, so the two never stack. The cost,
+  // accepted: a visit shorter than the dwell signal asks nothing at all.
+  const otherAskOnScreen = useRef(false);
 
   // THE RATING WAITS; IT DOES NOT STAND DOWN (2.0.0)
   //
@@ -366,12 +369,17 @@ export default function ResultDetailScreen() {
     }, RATING_DWELL_MS);
     return () => clearTimeout(timer);
   }, [outputs.length, signalValue]);
-  useReviewPrompt(valueSignal, () =>
+  const ratingTurn = useReviewPrompt(valueSignal, () =>
     !screenFocused.current
-    || pushAskOnScreen      // our pre-prompt or Apple's permission alert
-    || accountAskOnScreen   // secure-your-account alert
-    || fullscreenUrl != null, // the fullscreen viewer is a Modal
+    || otherAskOnScreen.current // our push pre-prompt / Apple's alert / the account alert
+    || fullscreenUrl != null,   // the fullscreen viewer is a Modal
   );
+  const othersMayAsk = outputs.length > 0 && ratingTurn === "clear";
+  // Focused only: on the 1st result the offer opens at 2.5 s and takes focus, which
+  // cancels this ask; it comes back 3.5 s after the user returns to the room.
+  const pushAskOnScreen = usePushPermissionAsk(othersMayAsk && isFocused);
+  const accountAskOnScreen = useAccountPrompt(othersMayAsk);
+  otherAskOnScreen.current = pushAskOnScreen || accountAskOnScreen;
 
   // How long the result actually held attention (V74). Without this the
   // only thing we could see was that 11% of people downloaded, which says
