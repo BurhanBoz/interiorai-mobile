@@ -14,6 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import * as Haptics from "expo-haptics";
 import { resetTours } from "@/hooks/useFirstRunTour";
+import { resetReviewPrompt } from "@/hooks/useReviewPrompt";
+import { resetPushAsk } from "@/hooks/usePushRegistration";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
@@ -419,14 +421,15 @@ export default function HelpScreen() {
         </View>
 
         {/* Version Footer */}
-        {/* A long press here replays the first-run tour on this device — for
-            the owner's TestFlight checks, invisible to everyone else. The tour
+        {/* A long press here replays the first-run tour on this device — and,
+            since 2.3.3, resets the rating and notification asks too — for the
+            owner's TestFlight checks, invisible to everyone else. The tour
             still only shows to an account that has never rendered. */}
         <View className="items-center pb-12">
           <Pressable
             delayLongPress={1500}
             onLongPress={() => {
-              resetTours().then(() => {
+              Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk()]).then(() => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 setToursReset(true);
                 setTimeout(() => setToursReset(false), 2000);

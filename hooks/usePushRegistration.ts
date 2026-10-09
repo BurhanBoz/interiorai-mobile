@@ -62,22 +62,30 @@ export function usePushTokenSync(enabled: boolean) {
 /**
  * Ask for notification permission at a moment the user is happy.
  *
- * Called from the result screen once a render has succeeded. Guarded so it is
- * asked at most once per install: a second `requestPermissionsAsync()` after a
- * denial is a no-op on iOS anyway, and re-running it just wastes a call.
- *
- * Deliberately staggered behind the rating prompt (which fires on the 2nd
- * success) — asking for a review and a permission in the same breath gets both
- * refused.
+ * Since 2.3.3 (103) it is called from the PROGRESS screen while the first
+ * design is being made — "we'll tell you when it's done" is the natural
+ * reading there, and it leaves the result screen to the rating alone (owner's
+ * rule: the rating comes first and shares its screen with nothing). Guarded
+ * so it is asked at most once per install: a second
+ * `requestPermissionsAsync()` after a denial is a no-op on iOS anyway, and
+ * re-running it just wastes a call.
  */
 const PUSH_ASKED_KEY = "push_permission_asked";
+
+/** True while our question or Apple's is up — the rating checks it before asking. */
+let pushAskOnScreen = false;
+export const isPushAskOnScreen = () => pushAskOnScreen;
+
+/** Owner's test aid (Help → long-press the version): the next generation asks again. */
+export async function resetPushAsk(): Promise<void> {
+    await AsyncStorage.multiRemove([PUSH_ASKED_KEY, SUCCESS_COUNT_KEY]).catch(() => {});
+}
 /**
- * 1st success (2.3.2). At "2nd" only 11 of 376 new users in 30 days held a push
- * token (2.9%, 2026-10-08): a free account makes one design a day and most never
- * came back for a second, so the daily-free-design reminder had almost nobody to
- * reach. The 1st result also opens the offer; the caller passes `jobSucceeded`
- * only while the result screen is focused, so the question waits until the
- * paywall has closed and the user is back on their room.
+ * 1st generation (2.3.2 made it the 1st success; 2.3.3 moved it to the progress
+ * screen). At "2nd" only 11 of 376 new users in 30 days held a push token
+ * (2.9%, 2026-10-08): a free account makes one design a day and most never came
+ * back for a second, so the daily-free-design reminder had almost nobody to
+ * reach. The counter now counts generations started, not results viewed.
  */
 const ASK_ON_NTH_SUCCESS = 1;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
@@ -131,7 +139,7 @@ export async function requestPushPermission(): Promise<boolean> {
     }
 }
 
-export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
+export function usePushPermissionAsk(generating: boolean): boolean {
     const { t } = useTranslation();
     // True while OUR question or Apple's is on screen — set before the
     // pre-prompt, cleared once the answer is in. 2.0.0: it used to stay true
@@ -170,6 +178,7 @@ export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
         // and re-asking is worse than occasionally missing one.
         await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
         setOnScreen(true);
+        pushAskOnScreen = true;
         try {
             // Our own question first. iOS grants one chance and a cold system
             // sheet is refused by most people; a sentence saying WHAT we would
@@ -189,11 +198,12 @@ export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
             }
         } finally {
             setOnScreen(false);
+            pushAskOnScreen = false;
         }
     }, [t]);
 
     useEffect(() => {
-        if (!jobSucceeded) return;
+        if (!generating) return;
         let cancelled = false;
         const timer = setTimeout(() => {
             if (!cancelled) ask().catch(() => {});
@@ -202,7 +212,7 @@ export function usePushPermissionAsk(jobSucceeded: boolean): boolean {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [jobSucceeded, ask]);
+    }, [generating, ask]);
 
     return onScreen;
 }
