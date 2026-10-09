@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { isFlagSet, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import { isScreenBusy } from "@/utils/screenBusy";
@@ -69,6 +69,28 @@ import * as StoreReview from "expo-store-review";
 /** What earned the ask — recorded with the event, never shown. */
 export type ReviewTrigger = "save" | "share" | "video" | "second_result" | "dwell" | "fullscreen";
 
+/**
+ * Whose turn it is on the result screen (2.3.3, owner's rule: the rating
+ * comes first, and nothing else appears before or after it until it has had
+ * its moment).
+ *
+ * <ul>
+ *   <li>{@code pending} — the rating may still ask this visit: either the
+ *       budget allows it and no value signal has come yet, or one has and
+ *       the ask is scheduled / waiting for the screen to clear.</li>
+ *   <li>{@code asked} — the sheet was requested; the quiet window after it is
+ *       running. iOS says nothing about what the user did, so the window is
+ *       the proxy for "they have dealt with it".</li>
+ *   <li>{@code clear} — the other asks may go: the rating is ruled out for
+ *       this visit (budget spent, too soon, unavailable, gave up waiting) or
+ *       it was asked and the quiet window has passed.</li>
+ * </ul>
+ */
+export type ReviewTurn = "pending" | "asked" | "clear";
+
+/** After the sheet is requested, how long the screen stays the rating's. */
+const QUIET_AFTER_ASK_MS = 12_000;
+
 /** The 1.5.0 one-shot flag. Read only to migrate; never written again. */
 const LEGACY_ASKED_KEY = "review_prompt_asked";
 const ATTEMPTS_KEY = "review_prompt_attempts";
@@ -104,11 +126,26 @@ const MAX_WAIT_MS = 3 * 60 * 1000;
  *   anything on screen right now (another screen on top, an alert, a sheet)
  *   that the system rating sheet would be refused over?
  */
-export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: () => boolean) {
+export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: () => boolean): ReviewTurn {
   // Latest-callback ref: the caller's closure changes every render, the
   // schedule must not restart because of it.
   const blocked = useRef(isBlocked);
   blocked.current = isBlocked;
+  const [turn, setTurn] = useState<ReviewTurn>("pending");
+
+  // The budget is known before any signal: a visit the rating cannot use
+  // hands the screen to the other asks at once, instead of making them wait
+  // for a signal that will not be acted on.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const attempts = await eligibleAttempts();
+      if (!cancelled && attempts === null) setTurn("clear");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!valueSignal) return;
@@ -118,27 +155,21 @@ export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: ()
 
     (async () => {
       try {
-        let attempts = await readCounter(ATTEMPTS_KEY);
-        // Anyone carrying the 1.5.0 one-shot flag has spent exactly one
-        // attempt — not all three. Seeding it this way is what gives the
-        // users the old design stranded another chance.
-        if (attempts === 0 && (await isFlagSet(LEGACY_ASKED_KEY))) {
-          attempts = 1;
-          await writeCounter(ATTEMPTS_KEY, attempts);
+        const attempts = await eligibleAttempts();
+        if (attempts === null) {
+          setTurn("clear");
+          return;
         }
-        if (attempts >= MAX_ATTEMPTS) return;
-
-        const lastDay = await readCounter(LAST_DAY_KEY);
-        if (lastDay > 0 && epochDay() - lastDay < MIN_GAP_DAYS) return;
-
-        if (!(await StoreReview.isAvailableAsync())) return;
 
         const fire = async () => {
           if (cancelled) return;
           // A purchase made after this save owns the next few minutes:
           // the welcome screen and the task it resumes come first. A save
           // made after paying starts its own, later, ask.
-          if (purchasedSince(signalAt)) return;
+          if (purchasedSince(signalAt)) {
+            setTurn("clear");
+            return;
+          }
           // Three ways the screen can be taken: the caller's own prompts
           // and screens, our alerts and sheets (a save's "Saved" alert, the
           // share sheet), and a system dialog — the Photos permission
@@ -147,7 +178,11 @@ export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: ()
             // Something is up — a paywall, an alert, the fullscreen viewer.
             // iOS would drop the request and we would have spent an attempt
             // on nothing. Look again shortly; the moment it closes, ask.
-            if (Date.now() - signalAt < MAX_WAIT_MS) timer = setTimeout(fire, RECHECK_MS);
+            if (Date.now() - signalAt < MAX_WAIT_MS) {
+              timer = setTimeout(fire, RECHECK_MS);
+            } else {
+              setTurn("clear"); // gave up for this visit; the others may go
+            }
             return;
           }
           // Still recorded BEFORE the call, because the OS reports nothing
@@ -156,11 +191,17 @@ export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: ()
           await writeCounter(ATTEMPTS_KEY, attempts + 1);
           await writeCounter(LAST_DAY_KEY, epochDay());
           track("rating_asked", { trigger: valueSignal, attempt: attempts + 1 });
+          setTurn("asked");
           await StoreReview.requestReview();
+          timer = setTimeout(() => {
+            if (!cancelled) setTurn("clear");
+          }, QUIET_AFTER_ASK_MS);
         };
         timer = setTimeout(fire, ASK_DELAY_MS);
       } catch {
-        // Fail-open: a rating ask must never affect the result screen.
+        // Fail-open: a rating ask must never affect the result screen — but
+        // it must not hold the others hostage either.
+        setTurn("clear");
       }
     })();
 
@@ -169,4 +210,30 @@ export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: ()
       if (timer) clearTimeout(timer);
     };
   }, [valueSignal]);
+
+  return turn;
+}
+
+/**
+ * The attempt count if the rating may ask now, null if it may not: budget
+ * spent, last try too recent, or the sheet unavailable on this build.
+ */
+async function eligibleAttempts(): Promise<number | null> {
+  try {
+    let attempts = await readCounter(ATTEMPTS_KEY);
+    // Anyone carrying the 1.5.0 one-shot flag has spent exactly one
+    // attempt — not all three. Seeding it this way is what gives the
+    // users the old design stranded another chance.
+    if (attempts === 0 && (await isFlagSet(LEGACY_ASKED_KEY))) {
+      attempts = 1;
+      await writeCounter(ATTEMPTS_KEY, attempts);
+    }
+    if (attempts >= MAX_ATTEMPTS) return null;
+    const lastDay = await readCounter(LAST_DAY_KEY);
+    if (lastDay > 0 && epochDay() - lastDay < MIN_GAP_DAYS) return null;
+    if (!(await StoreReview.isAvailableAsync())) return null;
+    return attempts;
+  } catch {
+    return null;
+  }
 }
