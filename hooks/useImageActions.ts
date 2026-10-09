@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
+import { APP_STORE_REVIEW_URL } from "@/config/appStore";
+import { track } from "@/services/analytics";
 import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
@@ -88,10 +90,26 @@ export function useImageActions() {
                 await MediaLibrary.saveToLibraryAsync(localUri);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 alerted = true;
-                alertThenFree(
-                    "save",
+                // "Rate Roomframe" on the Saved alert (2.3.3): someone who just
+                // took a render out of the app is the person to ask, and the
+                // App Store review page is the one ask Apple never throttles.
+                // The system sheet still follows for everyone who taps OK.
+                const free = () => markFree("save");
+                Alert.alert(
                     t("result.saved_title"),
                     t(opts.media === "video" ? "result.video_saved_body" : "result.saved_body"),
+                    [
+                        {
+                            text: t("profile.rate_app"),
+                            onPress: () => {
+                                track("rating_store_link", { from: "saved_alert" });
+                                free();
+                                Linking.openURL(APP_STORE_REVIEW_URL).catch(() => {});
+                            },
+                        },
+                        { text: t("common.ok"), style: "cancel", onPress: free },
+                    ],
+                    { onDismiss: free },
                 );
             } catch (err: any) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

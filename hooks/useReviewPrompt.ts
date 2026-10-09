@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import { isFlagSet, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import { isScreenBusy } from "@/utils/screenBusy";
 import { purchasedSince } from "@/stores/postPurchaseStore";
+import { track } from "@/services/analytics";
 import * as StoreReview from "expo-store-review";
 
 /**
@@ -51,8 +52,22 @@ import * as StoreReview from "expo-store-review";
  * an answered alert — and then ask. Only leaving the screen gives up, and it
  * spends nothing.
  *
+ * <p><b>2.3.3 — more doors in.</b> Save and share were the only value
+ * signals, and in the 30 days to 9 October 152 people generated, 6 saved and
+ * nobody shared: the ask could reach seven people a month, and the listing
+ * still had zero ratings outside Turkey. The signal now also comes from the
+ * second result this install has viewed (one in five users gets there), from
+ * fifteen seconds spent on a result, and from opening the fullscreen viewer —
+ * each a sign the render was worth looking at, each on the user's own time.
+ * Apple's three-a-year cap and the 3-day gap are unchanged; the signal names
+ * its trigger so the {@code rating_asked} event can say which door people
+ * come through.
+ *
  * <p>Never blocks or throws: any storage or API failure just skips the ask.
  */
+
+/** What earned the ask — recorded with the event, never shown. */
+export type ReviewTrigger = "save" | "share" | "video" | "second_result" | "dwell" | "fullscreen";
 
 /** The 1.5.0 one-shot flag. Read only to migrate; never written again. */
 const LEGACY_ASKED_KEY = "review_prompt_asked";
@@ -81,13 +96,15 @@ const RECHECK_MS = 1500;
 const MAX_WAIT_MS = 3 * 60 * 1000;
 
 /**
- * @param valueSignal true once the user has saved, shared or favourited a
- *   result — or watched / saved a room video — in this visit.
+ * @param valueSignal the first value signal of this visit — a save, a share,
+ *   a watched clip, the second result, fifteen seconds of attention, the
+ *   fullscreen viewer — or null while there is none. Only the first one
+ *   counts; later ones do not restart the schedule.
  * @param isBlocked asked at FIRE time, and again while it says yes: is there
  *   anything on screen right now (another screen on top, an alert, a sheet)
  *   that the system rating sheet would be refused over?
  */
-export function useReviewPrompt(valueSignal: boolean, isBlocked: () => boolean) {
+export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: () => boolean) {
   // Latest-callback ref: the caller's closure changes every render, the
   // schedule must not restart because of it.
   const blocked = useRef(isBlocked);
@@ -138,6 +155,7 @@ export function useReviewPrompt(valueSignal: boolean, isBlocked: () => boolean) 
           // attempts rather than the only one.
           await writeCounter(ATTEMPTS_KEY, attempts + 1);
           await writeCounter(LAST_DAY_KEY, epochDay());
+          track("rating_asked", { trigger: valueSignal, attempt: attempts + 1 });
           await StoreReview.requestReview();
         };
         timer = setTimeout(fire, ASK_DELAY_MS);
