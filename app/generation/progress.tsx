@@ -22,6 +22,7 @@ import { useJobPolling } from "@/hooks/useJobPolling";
 import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
+import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { Brand } from "@/components/brand/Brand";
 import { theme } from "@/config/theme";
@@ -62,6 +63,12 @@ export default function GenerationProgressScreen() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+
+  // "Want a reminder?" lives here since 2.3.3 (owner's call): the minute the
+  // design takes is the natural moment for "we'll tell you when it's done",
+  // and it keeps the result screen for the rating alone. First generation
+  // only, 3.5 s in, once per install — the hook rations it.
+  usePushPermissionAsk(!!jobId && !errorMessage);
 
   // The room being worked on, blurred behind the progress (2026-10-05): the
   // minute-long wait reads as "my room is being designed", not a bare spinner.

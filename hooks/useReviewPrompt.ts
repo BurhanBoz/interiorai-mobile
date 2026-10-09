@@ -214,6 +214,16 @@ export function useReviewPrompt(valueSignal: ReviewTrigger | null, isBlocked: ()
   return turn;
 }
 
+/** Owner's test aid (Help → long-press the version): the budget starts over on this device. */
+export async function resetReviewPrompt(): Promise<void> {
+  try {
+    await writeCounter(ATTEMPTS_KEY, 0);
+    await writeCounter(LAST_DAY_KEY, 0);
+  } catch {
+    /* fail open */
+  }
+}
+
 /**
  * The attempt count if the rating may ask now, null if it may not: budget
  * spent, last try too recent, or the sheet unavailable on this build.
