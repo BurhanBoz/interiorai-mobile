@@ -191,6 +191,16 @@ export type AnalyticsEvent =
      * whether adding a link is worth the change.
      */
     | "result_shared"
+    /**
+     * 2.3.3 (101) — the system rating sheet was requested; `trigger` says
+     * which value signal earned it (save, share, video, second_result, dwell,
+     * fullscreen) and `attempt` which of the three. iOS reports nothing back,
+     * and until this event existed nothing did: 30 days, 152 people generated,
+     * 6 saved, zero ratings — and no way to tell whether the sheet ever opened.
+     */
+    | "rating_asked"
+    /** 2.3.3 — "Rate Roomframe" tapped in the "Saved to Photos" alert (opens the App Store review page). */
+    | "rating_store_link"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.
     | "video_sound_toggled"
     /**

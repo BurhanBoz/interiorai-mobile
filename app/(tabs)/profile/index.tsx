@@ -26,7 +26,7 @@ const V = theme.v2;
  * decides — so someone who wants to rate on purpose needs a door that always
  * opens (2.0.0).
  */
-const APP_STORE_REVIEW_URL = "https://apps.apple.com/app/id6768418544?action=write-review";
+import { APP_STORE_REVIEW_URL } from "@/config/appStore";
 
 /**
  * Settings (Umber redesign, 2026-09-19).

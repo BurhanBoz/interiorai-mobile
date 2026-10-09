@@ -54,7 +54,8 @@ import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffe
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse, JobStatus } from "@/types/api";
-import { useReviewPrompt } from "@/hooks/useReviewPrompt";
+import { useReviewPrompt, type ReviewTrigger } from "@/hooks/useReviewPrompt";
+import { useSuccessCount } from "@/hooks/useSuccessCount";
 import { useResumeNote } from "@/hooks/useResumeNote";
 import { ResumeNote } from "@/components/ui/ResumeNote";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
@@ -95,6 +96,8 @@ function getOutputImageUrl(_jobId: string, output: JobOutputResponse): string {
  * and refunded the job; the next time this screen is focused it reads that.
  */
 const VIDEO_POLL_TIMEOUT_MS = 20 * 60 * 1000;
+/** Attention on a result that counts as a value signal for the rating (2.3.3). */
+const RATING_DWELL_MS = 15 * 1000;
 
 const isTerminalStatus = (s?: JobStatus | null) =>
   s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
@@ -329,13 +332,40 @@ export default function ResultDetailScreen() {
       return () => { screenFocused.current = false; };
     }, []),
   );
-  const [valueSignal, setValueSignal] = useState(false);
+  // The first value signal of this visit wins; later ones do not restart the
+  // ask's schedule (2.3.3: the signal names its trigger for `rating_asked`).
+  const [valueSignal, setValueSignal] = useState<ReviewTrigger | null>(null);
+  const signalValue = useCallback(
+    (trigger: ReviewTrigger) => setValueSignal((v) => v ?? trigger),
+    [],
+  );
   // Back from a purchase this screen started (2.0.0): the video button, or a
   // style in the "another style" strip that ran into an empty wallet.
   const [resumeVideo, hideResumeVideo] = useResumeNote(["RESULT_VIDEO"]);
   const [resumeRestyle, hideResumeRestyle] = useResumeNote(["GENERATE"]);
   // Stable, so the clip's watched-timer is not restarted by every render here.
-  const markValue = useCallback(() => setValueSignal(true), []);
+  const markValue = useCallback(() => signalValue("video"), [signalValue]);
+
+  // MORE DOORS TO THE RATING (2.3.3)
+  //
+  // Save and share were the only value signals, and in the 30 days to
+  // 9 October 152 people generated, 6 saved and nobody shared — the ask could
+  // reach seven people a month, and every storefront we advertise in showed
+  // zero ratings. Two more signs that a render was worth looking at, both on
+  // the user's own time: the second result this install has viewed (one in
+  // five users gets there), and fifteen seconds of attention on a result.
+  // The fullscreen viewer is the third, in openFullscreen below.
+  const successCount = useSuccessCount(outputs.length > 0);
+  useEffect(() => {
+    if (successCount >= 2) signalValue("second_result");
+  }, [successCount, signalValue]);
+  useEffect(() => {
+    if (outputs.length === 0) return;
+    const timer = setTimeout(() => {
+      if (screenFocused.current && AppState.currentState === "active") signalValue("dwell");
+    }, RATING_DWELL_MS);
+    return () => clearTimeout(timer);
+  }, [outputs.length, signalValue]);
   useReviewPrompt(valueSignal, () =>
     !screenFocused.current
     || pushAskOnScreen      // our pre-prompt or Apple's permission alert
@@ -408,7 +438,7 @@ export default function ResultDetailScreen() {
       style: job?.designStyleName ?? null,
       feature: job?.featureCode ?? null,
     });
-    setValueSignal(true);
+    signalValue("share");
     // Share the actual image file (downloaded from the pre-signed S3
     // URL), not just the URL string. iMessage / WhatsApp / Mail get a
     // real attachment instead of a paste-this-into-a-browser link.
@@ -426,7 +456,7 @@ export default function ResultDetailScreen() {
     // C1: a download is the strongest quality vote we have — the user is
     // taking this render OUT of the app. Fire-and-forget by contract.
     if (currentOutput?.id) sendOutputSignal(currentOutput.id, "DOWNLOAD");
-    setValueSignal(true);
+    signalValue("save");
     // No auth headers — see getOutputImageUrl.
     await saveToPhotos(url, {
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
@@ -497,6 +527,9 @@ export default function ResultDetailScreen() {
    */
   const openFullscreen = () => {
     if (!currentOutput || !job) return;
+    // Looking closer is a value signal too (2.3.3); the ask waits for the
+    // viewer to close — it is a Modal, see useReviewPrompt's isBlocked.
+    signalValue("fullscreen");
     setFullscreenUrl(getOutputImageUrl(job.id, currentOutput));
   };
 
