@@ -420,7 +420,10 @@
     "v2_empty_line": "まだ何もありません。",
     "v2_new_design": "＋ 新しいデザイン",
     "video_badge": "動画",
-    "design_fallback": "デザイン"
+    "design_fallback": "デザイン",
+    "v3_count_one": "{{count}}件のデザイン",
+    "v3_count_other": "{{count}}件のデザイン",
+    "v3_days_ago": "{{count}}日前"
   },
   "history": {
     "title": "履歴",
@@ -494,7 +497,10 @@
     "account_fallback_name": "あなたのアカウント",
     "name_and_email": "名前とメール",
     "manage_subscription": "サブスクリプションを管理",
-    "rate_app": "Roomframeを評価"
+    "rate_app": "Roomframeを評価",
+    "section_account": "アカウント",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "毎日補充"
   },
   "plans": {
     "title": "プランを選択",

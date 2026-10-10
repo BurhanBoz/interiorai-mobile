@@ -421,7 +421,10 @@
     "v2_empty_line": "Burada henüz bir şey yok.",
     "v2_new_design": "+ Yeni tasarım",
     "video_badge": "VİDEO",
-    "design_fallback": "Tasarım"
+    "design_fallback": "Tasarım",
+    "v3_count_one": "{{count}} tasarım",
+    "v3_count_other": "{{count}} tasarım",
+    "v3_days_ago": "{{count}} gün önce"
   },
   "history": {
     "title": "Geçmiş",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Hesabın",
     "name_and_email": "İsim ve e-posta",
     "manage_subscription": "Aboneliği yönet",
-    "rate_app": "Roomframe'i değerlendir"
+    "rate_app": "Roomframe'i değerlendir",
+    "section_account": "Hesap",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "her gün yenilenir"
   },
   "plans": {
     "title": "Planını Seç",

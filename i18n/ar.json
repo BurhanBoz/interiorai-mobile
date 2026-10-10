@@ -420,7 +420,10 @@
     "v2_empty_line": "لا شيء هنا بعد.",
     "v2_new_design": "+ تصميم جديد",
     "video_badge": "فيديو",
-    "design_fallback": "تصميم"
+    "design_fallback": "تصميم",
+    "v3_count_one": "تصميم واحد",
+    "v3_count_other": "{{count}} تصاميم",
+    "v3_days_ago": "قبل {{count}} أيام"
   },
   "history": {
     "title": "السجل",
@@ -494,7 +497,10 @@
     "account_fallback_name": "حسابك",
     "name_and_email": "الاسم والبريد",
     "manage_subscription": "إدارة الاشتراك",
-    "rate_app": "قيّم Roomframe"
+    "rate_app": "قيّم Roomframe",
+    "section_account": "الحساب",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "يتجدد يوميًا"
   },
   "plans": {
     "title": "اختر خطتك",

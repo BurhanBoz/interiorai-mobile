@@ -421,7 +421,10 @@
     "v2_empty_line": "Rien ici pour l'instant.",
     "v2_new_design": "+ Nouveau design",
     "video_badge": "VIDÉO",
-    "design_fallback": "Design"
+    "design_fallback": "Design",
+    "v3_count_one": "{{count}} design",
+    "v3_count_other": "{{count}} designs",
+    "v3_days_ago": "il y a {{count}} jours"
   },
   "history": {
     "title": "Historique",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Votre compte",
     "name_and_email": "Nom et e-mail",
     "manage_subscription": "Gérer l'abonnement",
-    "rate_app": "Noter Roomframe"
+    "rate_app": "Noter Roomframe",
+    "section_account": "Compte",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "se recharge chaque jour"
   },
   "plans": {
     "title": "Choisissez votre offre",

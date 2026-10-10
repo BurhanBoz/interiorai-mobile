@@ -421,7 +421,10 @@
     "v2_empty_line": "Aquí todavía no hay nada.",
     "v2_new_design": "+ Nuevo diseño",
     "video_badge": "VÍDEO",
-    "design_fallback": "Diseño"
+    "design_fallback": "Diseño",
+    "v3_count_one": "{{count}} diseño",
+    "v3_count_other": "{{count}} diseños",
+    "v3_days_ago": "hace {{count}} días"
   },
   "history": {
     "title": "Historial",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Tu cuenta",
     "name_and_email": "Nombre y correo",
     "manage_subscription": "Gestionar suscripción",
-    "rate_app": "Valorar Roomframe"
+    "rate_app": "Valorar Roomframe",
+    "section_account": "Cuenta",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "se recarga cada día"
   },
   "plans": {
     "title": "Elige Tu Plan",

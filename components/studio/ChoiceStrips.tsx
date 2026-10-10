@@ -8,6 +8,7 @@ import type { CatalogItemResponse } from "@/types/api";
 import { catalogName } from "@/utils/catalogI18n";
 import { getStyleImage } from "@/components/studio/styleImages";
 import { RoomIcon } from "@/components/studio/RoomIcon";
+import { getRoomImage } from "@/components/studio/roomImages";
 import { useSelectionMotion } from "@/components/studio/selectionMotion";
 
 const U = theme.umber;
@@ -37,7 +38,8 @@ const R = theme.v2Layout.radius;
  */
 
 /** Room tile edge; the strip is exactly one tile tall. */
-const ROOM_TILE = 84;
+/** Room card width (2.4.0: photo cards like the style strip, smaller — the photo above shrinks to fit). */
+const ROOM_TILE = 92;
 const ROOM_GAP = 10;
 const STYLE_CARD_W = 104;
 const STYLE_GAP = 12;
@@ -110,6 +112,9 @@ function RoomTile({
     const { pulse, scaleStyle, ringStyle } = useSelectionMotion(selected);
     const name = catalogName(t, "room", item);
     const ink = selected ? U.accentBright : U.ink;
+    // 2.4.0 (owner): a picture of the room type, like the style cards. Bundled —
+    // see roomImages.ts; a code without a picture keeps its line icon.
+    const image = getRoomImage(item.code);
     return (
         <Pressable
             onPress={() => {
@@ -124,28 +129,40 @@ function RoomTile({
                 style={[
                     {
                         width: ROOM_TILE,
-                        height: ROOM_TILE,
-                        borderRadius: R.tile,
-                        backgroundColor: U.surface,
+                        padding: 3,
+                        borderRadius: R.thumb + 3,
                         borderWidth: 1.5,
                         borderColor: U.lineNeutral,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        paddingHorizontal: 6,
                     },
                     scaleStyle,
                 ]}
             >
-                <Ring style={ringStyle} radius={R.tile} tint />
-                <RoomIcon code={item.code} color={ink} />
+                <Ring style={ringStyle} radius={R.thumb + 3} tint={false} />
+                <View
+                    style={{
+                        height: 62,
+                        borderRadius: R.thumb,
+                        overflow: "hidden",
+                        backgroundColor: U.surface,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    {image ? (
+                        <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    ) : (
+                        <RoomIcon code={item.code} color={ink} />
+                    )}
+                </View>
                 <Text
                     numberOfLines={2}
                     style={{
                         fontFamily: "Inter-SemiBold",
                         fontSize: 11.5,
                         lineHeight: 14,
-                        textAlign: "center",
+                        minHeight: 28,
+                        marginTop: 5,
+                        paddingHorizontal: 3,
                         color: ink,
                     }}
                 >

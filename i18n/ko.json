@@ -420,7 +420,10 @@
     "v2_empty_line": "아직 아무것도 없습니다.",
     "v2_new_design": "+ 새 디자인",
     "video_badge": "영상",
-    "design_fallback": "디자인"
+    "design_fallback": "디자인",
+    "v3_count_one": "디자인 {{count}}개",
+    "v3_count_other": "디자인 {{count}}개",
+    "v3_days_ago": "{{count}}일 전"
   },
   "history": {
     "title": "기록",
@@ -494,7 +497,10 @@
     "account_fallback_name": "내 계정",
     "name_and_email": "이름과 이메일",
     "manage_subscription": "구독 관리",
-    "rate_app": "Roomframe 평가하기"
+    "rate_app": "Roomframe 평가하기",
+    "section_account": "계정",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "매일 충전"
   },
   "plans": {
     "title": "플랜 선택",

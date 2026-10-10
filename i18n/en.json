@@ -421,7 +421,10 @@
     "v2_empty_line": "Nothing here yet.",
     "v2_new_design": "+ New design",
     "video_badge": "VIDEO",
-    "design_fallback": "Design"
+    "design_fallback": "Design",
+    "v3_count_one": "{{count}} design",
+    "v3_count_other": "{{count}} designs",
+    "v3_days_ago": "{{count}} days ago"
   },
   "history": {
     "title": "History",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Your account",
     "name_and_email": "Name and email",
     "manage_subscription": "Manage subscription",
-    "rate_app": "Rate Roomframe"
+    "rate_app": "Rate Roomframe",
+    "section_account": "Account",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "refills daily"
   },
   "plans": {
     "title": "Choose Your Plan",

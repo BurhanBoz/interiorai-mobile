@@ -421,7 +421,10 @@
     "v2_empty_line": "Qui non c'è ancora nulla.",
     "v2_new_design": "+ Nuovo design",
     "video_badge": "VIDEO",
-    "design_fallback": "Progetto"
+    "design_fallback": "Progetto",
+    "v3_count_one": "{{count}} design",
+    "v3_count_other": "{{count}} design",
+    "v3_days_ago": "{{count}} giorni fa"
   },
   "history": {
     "title": "Cronologia",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Il tuo account",
     "name_and_email": "Nome ed email",
     "manage_subscription": "Gestisci abbonamento",
-    "rate_app": "Valuta Roomframe"
+    "rate_app": "Valuta Roomframe",
+    "section_account": "Account",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "si ricarica ogni giorno"
   },
   "plans": {
     "title": "Scegli il Tuo Piano",

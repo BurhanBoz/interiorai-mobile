@@ -421,7 +421,10 @@
     "v2_empty_line": "Hier staat nog niets.",
     "v2_new_design": "+ Nieuw ontwerp",
     "video_badge": "VIDEO",
-    "design_fallback": "Ontwerp"
+    "design_fallback": "Ontwerp",
+    "v3_count_one": "{{count}} ontwerp",
+    "v3_count_other": "{{count}} ontwerpen",
+    "v3_days_ago": "{{count}} dagen geleden"
   },
   "history": {
     "title": "Geschiedenis",
@@ -497,7 +500,10 @@
     "account_fallback_name": "Je account",
     "name_and_email": "Naam en e-mail",
     "manage_subscription": "Abonnement beheren",
-    "rate_app": "Beoordeel Roomframe"
+    "rate_app": "Beoordeel Roomframe",
+    "section_account": "Account",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "vult dagelijks aan"
   },
   "plans": {
     "title": "Kies je abonnement",
