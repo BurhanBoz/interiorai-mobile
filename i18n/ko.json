@@ -354,7 +354,20 @@
     "mask_ready": "변경할 영역 설정됨",
     "edit_mask": "편집",
     "reference_ready": "참고 사진 설정됨",
-    "change_reference": "변경"
+    "change_reference": "변경",
+    "home_headline": "내 방을 새롭게.",
+    "home_subline": "지금 방의 사진으로 시작하세요.",
+    "add_your_room": "내 방 추가",
+    "add_your_room_sub": "카메라 또는 사진 보관함",
+    "or_try_a_sample": "또는 샘플로 해보기",
+    "what_to_do_with_it": "할 수 있는 것",
+    "which_room": "어떤 방인가요?",
+    "pick_style": "스타일 선택",
+    "advanced_hint": "팔레트, 강도",
+    "summary_room_placeholder": "방",
+    "summary_style_placeholder": "스타일",
+    "summary_pieces_one": "+1개",
+    "summary_pieces_other": "+{{count}}개"
   },
   "furniture": {
     "title": "가구",
@@ -407,7 +420,10 @@
     "v2_empty_line": "아직 아무것도 없습니다.",
     "v2_new_design": "+ 새 디자인",
     "video_badge": "영상",
-    "design_fallback": "디자인"
+    "design_fallback": "디자인",
+    "v3_count_one": "디자인 {{count}}개",
+    "v3_count_other": "디자인 {{count}}개",
+    "v3_days_ago": "{{count}}일 전"
   },
   "history": {
     "title": "기록",
@@ -481,7 +497,10 @@
     "account_fallback_name": "내 계정",
     "name_and_email": "이름과 이메일",
     "manage_subscription": "구독 관리",
-    "rate_app": "Roomframe 평가하기"
+    "rate_app": "Roomframe 평가하기",
+    "section_account": "계정",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "매일 충전"
   },
   "plans": {
     "title": "플랜 선택",
@@ -747,7 +766,11 @@
     "video_failed_body": "영상을 완성하지 못했습니다. 크레딧은 사용되지 않았으니 다시 시도해 주세요.",
     "video_phase_planning": "카메라 움직임을 계획하는 중",
     "video_phase_rendering": "공간 영상을 만드는 중",
-    "video_phase_ready": "영상이 준비됐어요"
+    "video_phase_ready": "영상이 준비됐어요",
+    "designing_room": "{{room}} 디자인 중",
+    "style_about_a_minute": "{{style}} · 약 1분",
+    "about_a_minute": "약 1분",
+    "leave_app_hint": "앱을 나가도 디자인은 계속됩니다."
   },
   "styles": {
     "scandinavian": "스칸디나비아 디자인은 따뜻한 미니멀리즘을 기념합니다 — 밝은 나무, 부드러운 중성 톤, 풍부한 자연광. 모든 물건은 실용성과 정직한 장인 정신을 통해 그 자리를 차지합니다.",
@@ -866,7 +889,12 @@
     "video_share_dialog_title": "영상 공유",
     "video_unavailable": "지금은 영상을 볼 수 없습니다.",
     "video_in_progress_hint": "몇 분 · 완료되면 알려드립니다",
-    "video_in_progress_hint_gallery": "몇 분 · 완료되면 갤러리에 담깁니다"
+    "video_in_progress_hint_gallery": "몇 분 · 완료되면 갤러리에 담깁니다",
+    "video_walk_title": "둘러보기",
+    "video_walk_sub": "소리가 있는 8초 방 영상",
+    "more_styles": "더 많은 스타일",
+    "more_actions": "기타 작업",
+    "reminder_turn_off": "크레딧 알림 끄기"
   },
   "settings": {
     "notifications_title": "알림",
@@ -1258,7 +1286,10 @@
     "then_price_month": "이후 {{price}}/월",
     "renewal_month": "매월 {{price}}. 자동 갱신되며, 갱신 24시간 전까지 설정에서 언제든 해지할 수 있어요.",
     "renewal_intro_month": "첫 달 {{intro}}, 이후 매월 {{price}}. 자동 갱신되며, 갱신 24시간 전까지 설정에서 언제든 해지할 수 있어요.",
-    "save_pct": "{{pct}}% 절약"
+    "save_pct": "{{pct}}% 절약",
+    "hero_one_room_title": "이건 방 하나였어요.",
+    "value_line": "Pro는 모든 방을 원하는 스타일로 다시 디자인해요. 방 영상 포함, 워터마크 없음.",
+    "price_today": "오늘 {{price}}"
   },
   "purchase_errors": {
     "sheet_title": "Apple 결제 화면이 열리지 않았습니다",
@@ -1355,6 +1386,7 @@
     "advanced_title": "원하면 세부 조정",
     "advanced_body": "색상 팔레트, 변화 강도, 레이아웃 유지를 여기서 정할 수 있어요. 선택 사항이며 기본값으로도 충분해요.",
     "generate_title": "디자인 만들기",
-    "generate_body": "준비되면 여기를 탭하세요. 필요한 크레딧은 바로 위에 표시돼요."
+    "generate_body": "준비되면 여기를 탭하세요. 필요한 크레딧은 바로 위에 표시돼요.",
+    "room_strip_body": "스크롤해서 방을 탭하세요. 방과 스타일을 모두 골라야 만들 수 있어요."
   }
 }

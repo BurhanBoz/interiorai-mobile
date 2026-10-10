@@ -355,7 +355,20 @@
     "mask_ready": "Area da modificare impostata",
     "edit_mask": "Modifica",
     "reference_ready": "Foto di riferimento impostata",
-    "change_reference": "Cambia"
+    "change_reference": "Cambia",
+    "home_headline": "La tua stanza, ridisegnata.",
+    "home_subline": "Inizia con una foto della stanza così com'è.",
+    "add_your_room": "Aggiungi la tua stanza",
+    "add_your_room_sub": "Fotocamera o libreria foto",
+    "or_try_a_sample": "Oppure prova un esempio",
+    "what_to_do_with_it": "Cosa puoi farci",
+    "which_room": "Che stanza è?",
+    "pick_style": "Scegli uno stile",
+    "advanced_hint": "Palette, intensità",
+    "summary_room_placeholder": "Stanza",
+    "summary_style_placeholder": "Stile",
+    "summary_pieces_one": "+1 pezzo",
+    "summary_pieces_other": "+{{count}} pezzi"
   },
   "furniture": {
     "title": "Arredamento",
@@ -408,7 +421,10 @@
     "v2_empty_line": "Qui non c'è ancora nulla.",
     "v2_new_design": "+ Nuovo design",
     "video_badge": "VIDEO",
-    "design_fallback": "Progetto"
+    "design_fallback": "Progetto",
+    "v3_count_one": "{{count}} design",
+    "v3_count_other": "{{count}} design",
+    "v3_days_ago": "{{count}} giorni fa"
   },
   "history": {
     "title": "Cronologia",
@@ -484,7 +500,10 @@
     "account_fallback_name": "Il tuo account",
     "name_and_email": "Nome ed email",
     "manage_subscription": "Gestisci abbonamento",
-    "rate_app": "Valuta Roomframe"
+    "rate_app": "Valuta Roomframe",
+    "section_account": "Account",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "si ricarica ogni giorno"
   },
   "plans": {
     "title": "Scegli il Tuo Piano",
@@ -751,7 +770,11 @@
     "video_failed_body": "Il video non è stato completato. I tuoi crediti non sono stati usati: riprova.",
     "video_phase_planning": "Pianificazione del movimento di camera",
     "video_phase_rendering": "Creazione del video della stanza",
-    "video_phase_ready": "Il tuo video è pronto"
+    "video_phase_ready": "Il tuo video è pronto",
+    "designing_room": "Stiamo progettando: {{room}}",
+    "style_about_a_minute": "{{style}} · circa un minuto",
+    "about_a_minute": "Circa un minuto",
+    "leave_app_hint": "Puoi uscire dall'app: il design continua."
   },
   "styles": {
     "scandinavian": "Il design scandinavo celebra un minimalismo caldo — legni chiari, tonalità neutre morbide e abbondante luce naturale. Ogni oggetto guadagna il suo posto attraverso l'utilità e l'artigianato onesto.",
@@ -870,7 +893,12 @@
     "video_share_dialog_title": "Condividi video",
     "video_unavailable": "Il video non è disponibile al momento.",
     "video_in_progress_hint": "Qualche minuto · ti avvisiamo",
-    "video_in_progress_hint_gallery": "Qualche minuto · poi lo trovi in galleria"
+    "video_in_progress_hint_gallery": "Qualche minuto · poi lo trovi in galleria",
+    "video_walk_title": "Fai un giro",
+    "video_walk_sub": "Un video di 8 secondi con audio",
+    "more_styles": "Altri stili",
+    "more_actions": "Altre azioni",
+    "reminder_turn_off": "Disattiva il promemoria crediti"
   },
   "settings": {
     "notifications_title": "Notifiche",
@@ -1262,7 +1290,10 @@
     "then_price_month": "poi {{price}}/mese",
     "renewal_month": "{{price}} al mese. Si rinnova automaticamente; disdici quando vuoi nelle Impostazioni, almeno 24 ore prima del rinnovo.",
     "renewal_intro_month": "{{intro}} il primo mese, poi {{price}} al mese. Si rinnova automaticamente; disdici quando vuoi nelle Impostazioni, almeno 24 ore prima del rinnovo.",
-    "save_pct": "Risparmi il {{pct}}%"
+    "save_pct": "Risparmi il {{pct}}%",
+    "hero_one_room_title": "Questa era una stanza.",
+    "value_line": "Pro ridisegna ogni stanza in qualsiasi stile, con video e senza filigrana.",
+    "price_today": "{{price}} oggi"
   },
   "purchase_errors": {
     "sheet_title": "La schermata di pagamento di Apple non si è aperta",
@@ -1359,6 +1390,7 @@
     "advanced_title": "Rifinisci, se vuoi",
     "advanced_body": "Palette di colori, intensità del cambiamento e mantenimento della disposizione. Facoltativo: le impostazioni predefinite funzionano bene.",
     "generate_title": "Crea il tuo design",
-    "generate_body": "Tocca qui quando sei pronto. Il costo è indicato appena sopra."
+    "generate_body": "Tocca qui quando sei pronto. Il costo è indicato appena sopra.",
+    "room_strip_body": "Scorri e tocca la tua stanza. Scegli tu stanza e stile: servono entrambi."
   }
 }

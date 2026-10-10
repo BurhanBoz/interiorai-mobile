@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, Animated, AccessibilityInfo, StyleSheet } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, {
+    cancelAnimation,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withSequence,
+    withSpring,
+    withTiming,
+} from "react-native-reanimated";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
@@ -19,6 +29,8 @@ import { FREE_DAILY_CEILING } from "@/config/freeTier";
 import { CoachMarks } from "@/components/tour/CoachMarks";
 import { tourTarget } from "@/components/tour/tourTargets";
 import { useFirstRunTour } from "@/hooks/useFirstRunTour";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
+import { ArrowIcon, CameraIcon, StarIcon, ToolIcon } from "@/components/studio/StudioIcons";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -55,15 +67,31 @@ const GUTTER = theme.v2Layout.gutterWide;
  * the room is in, the tiles come up to full strength and a tap goes straight to
  * the tool.
  *
+ * <p><b>v3 layout (redesign v3, 2026-10-10).</b> Top to bottom: the brand
+ * lockup and credit pill; a one-line serif headline with a muted subline that
+ * says where to start; one full-width gold "Add your room" card (the camera /
+ * library choice still lives in the sheet it opens); "Or try a sample" — two
+ * equal sample photos; and "What to do with it" — the tools as a three-column
+ * grid of small icon tiles instead of photographs. The photographs had become
+ * the loudest thing on the screen while being the thing you could NOT tap yet;
+ * the gold card is now the only bright surface until a room is in.
+ *
+ * <p><b>Animation.</b> When a room is picked the card cross-fades from gold to
+ * the photo and settles with a small spring (0.96 → 1), then the tool tiles
+ * light up one after another (~80 ms apart), so the eye travels from the room
+ * to what can be done with it. The nudge pulse on a dimmed-tool tap stays.
+ * Under iOS Reduce Motion everything renders its end state without moving.
+ *
  * <p>🔴 <b>The height budget is a contract.</b> Everything below must fit
  * 393 × 852 with no vertical scroll — there is no ScrollView on this screen
- * on purpose. Content runs ~637px against a tab-bar top of 774px. Adding a
- * block means removing one.
+ * on purpose. v3 content runs ~612px against ~654px available between the
+ * safe-area top (59) and the tab bar plus its gap (96 + 43). Two-line tool
+ * labels (German, Dutch) can add ~12px. Adding a block means removing one.
  */
 export default function StudioScreen() {
     const { t } = useTranslation();
     const setMode = useStudioStore((s) => s.setMode);
-    const setPhoto = useStudioStore((s) => s.setPhoto);
+    const setPhoto = useStudioStore((s) => s.replacePhoto);
     const planCode = useEffectivePlanCode();
     // 🔴 The lock comes from the SERVER's plan_features, not from the client
     // catalogue's `minPlan`. The two had already drifted: only Outdoor carried
@@ -237,16 +265,20 @@ export default function StudioScreen() {
                     flex: 1,
                     paddingHorizontal: GUTTER,
                     paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
+                    // One rhythm between every block (mockup: 22, trimmed to
+                    // 18 to keep the 393 × 852 budget — see the top comment).
+                    gap: SECTION_GAP,
                 }}
             >
                 <Header balance={balance} planCode={planCode} />
-                <IntakeRow
+                <Headline />
+                <AddRoomCard
                     busy={isUploading}
                     photoUri={previewUri ?? justPicked}
                     nudge={nudge}
-                    onAddPhoto={() => setSourceSheet(true)}
-                    onSample={(m) => addPhoto({ kind: "sample", module: m })}
+                    onPress={() => setSourceSheet(true)}
                 />
+                <SampleRow busy={isUploading} onSample={(m) => addPhoto({ kind: "sample", module: m })} />
                 <FeatureGrid
                     isLocked={(code) =>
                         features.length > 0 &&
@@ -278,12 +310,20 @@ export default function StudioScreen() {
     );
 }
 
+/** Vertical rhythm between the screen's blocks. */
+const SECTION_GAP = 18;
+
 /* ── header ─────────────────────────────────────────────────────────── */
 
 /**
  * The credit pill is the ONLY place credits appear on this screen. The v1
  * design repeated the balance on three surfaces; repeating a number the user
  * has no feel for is worse than stating it once.
+ *
+ * <p>v3 gives it an outline and a star instead of a filled lozenge — the gold
+ * fill now belongs to the add card alone. The pill is drawn 34pt tall and its
+ * hitSlop brings the target to 44pt, which the budget could not afford as
+ * drawn height.
  */
 function Header({ balance, planCode }: { balance: number; planCode: string | null }) {
     const { t } = useTranslation();
@@ -311,10 +351,7 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                paddingTop: 10,
-                // The intake tile used to start 14px under the lockup, which
-                // read as one block rather than a header and a first action.
-                paddingBottom: 26,
+                paddingTop: 6,
             }}
         >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -329,20 +366,22 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={t("credits.balance_label", { count: balance })}
-                hitSlop={12}
+                hitSlop={{ top: 5, bottom: 5, left: 8, right: 8 }}
                 style={{
+                    height: 34,
+                    minWidth: 44,
                     flexDirection: "row",
                     alignItems: "center",
+                    justifyContent: "center",
                     gap: 6,
-                    backgroundColor: U.lineAccent,
                     borderWidth: 1,
-                    borderColor: U.lineAccent,
+                    borderColor: U.accent,
                     borderRadius: R.pill,
-                    paddingVertical: 6,
                     paddingHorizontal: 12,
                 }}
             >
-                <Text style={{ fontFamily: "Inter-Bold", fontSize: 13, color: U.accentBright }}>
+                <StarIcon color={U.accentBright} />
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accentBright }}>
                     {balance}
                 </Text>
                 {showRefill && (
@@ -355,102 +394,207 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
     );
 }
 
+/**
+ * One serif line and one muted line. Both are held to a single line and
+ * shrink instead of wrapping: a wrapped headline would cost ~34px the budget
+ * does not have, and "Ihr Raum, neu gestaltet." is longer than the English.
+ * The owner set the size to 28 so the English fits at full size (mockup
+ * review, 10 Oct).
+ */
+function Headline() {
+    const { t } = useTranslation();
+    return (
+        <View style={{ gap: 4 }}>
+            <Text
+                accessibilityRole="header"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={{ fontFamily: "NotoSerif", fontSize: 28, lineHeight: 34, letterSpacing: -0.3, color: U.ink }}
+            >
+                {t("studio.home_headline", { defaultValue: "Your room, redesigned." })}
+            </Text>
+            <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                style={{ fontFamily: "Inter", fontSize: 14, lineHeight: 20, color: U.inkMuted }}
+            >
+                {t("studio.home_subline", { defaultValue: "Start with a photo of the room as it is." })}
+            </Text>
+        </View>
+    );
+}
+
 /* ── intake ─────────────────────────────────────────────────────────── */
+
+/** Height of the add card — fixed, so the photo state does not move the grid. */
+const CARD_HEIGHT = 132;
 
 /**
  * One way in, not two.
  *
  * <p>The row used to spend two of its three columns on "Shoot the room" and
  * "Choose a photo" — one decision split across two tiles, asked before the
- * user has decided they want to give a photo at all. They are now a single
- * tile carrying a "+", wide enough to be the obvious thing on the screen, and
- * the camera-or-library question moves to the sheet that opens on tap.
+ * user has decided they want to give a photo at all. They became a single
+ * tile, and in v3 that tile is a full-width gold card: the one bright surface
+ * on the screen, so there is no question where to start. The camera-or-library
+ * question still moves to the sheet that opens on tap, and the subline names
+ * both sources so the camera glyph is not read as a promise.
  *
- * <p>The label is neutral on purpose. The tile now leads to both sources, so
- * naming the camera on it would be a promise the sheet immediately breaks.
- *
- * <p>The tile shows the room picked on THIS visit (never an earlier one —
+ * <p>The card shows the room picked on THIS visit (never an earlier one —
  * 19 Sep founder call), and while that room uploads it is already on the
- * tile under a spinner. Before there is a preview to show — the file is still
- * being read or downscaled — the "+" itself turns into the spinner. Each
- * `nudge` bump — a dimmed tool was tapped — makes the tile pulse once
- * (skipped under Reduce Motion; the haptic stays).
+ * card under a spinner. Before there is a preview to show — the file is still
+ * being read or downscaled — the camera itself turns into the spinner (build
+ * 91: the tap must visibly take).
+ *
+ * <p><b>Motion.</b> The photo layer sits over the gold one and fades in on the
+ * first preview (null → uri), while the card dips to 0.96 and springs back —
+ * the "settle". Each `nudge` bump — a dimmed tool was tapped — makes the card
+ * pulse once. Both share one scale value, so a nudge mid-settle continues from
+ * wherever the card is rather than jumping. Under Reduce Motion the photo
+ * simply appears and nothing scales; the haptic stays.
  */
-function IntakeRow({
+function AddRoomCard({
     busy,
     photoUri,
     nudge,
-    onAddPhoto,
-    onSample,
+    onPress,
 }: {
     busy: boolean;
-    /** Bu ziyarette seçilen (ya da şu an yüklenen) fotoğraf; null ise karo boş "+" olarak durur. */
+    /** Bu ziyarette seçilen (ya da şu an yüklenen) fotoğraf; null ise kart altın "Odanı ekle" olarak durur. */
     photoUri: string | null;
     nudge: number;
-    onAddPhoto: () => void;
-    onSample: (module: number) => void;
+    onPress: () => void;
 }) {
     const { t } = useTranslation();
-    // The green-sofa living room (Redesign, the owner's Prompt Lab room) and the empty room
-    // (Empty Room) — owner's choice, 5 Oct. The others stay in the per-mode lists.
-    const samples = ["green_living_room", "empty_room"]
-        .map((k) => SAMPLE_ROOMS.find((s) => s.key === k))
-        .filter((s): s is (typeof SAMPLE_ROOMS)[number] => !!s);
-    const pulse = useRef(new Animated.Value(1)).current;
+    const reduceMotion = useReduceMotion();
+    const scale = useSharedValue(1);
+    const photoOpacity = useSharedValue(photoUri ? 1 : 0);
+    const hadPhoto = useRef(photoUri != null);
 
     useEffect(() => {
-        if (nudge === 0) return;
-        let cancelled = false;
-        AccessibilityInfo.isReduceMotionEnabled()
-            .catch(() => false)
-            .then((reduce) => {
-                if (cancelled || reduce) return;
-                pulse.setValue(1);
-                Animated.sequence([
-                    Animated.timing(pulse, { toValue: 1.05, duration: 120, useNativeDriver: true }),
-                    Animated.spring(pulse, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }),
-                ]).start();
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [nudge, pulse]);
+        const has = photoUri != null;
+        if (has && !hadPhoto.current) {
+            if (reduceMotion) {
+                photoOpacity.value = 1;
+            } else {
+                photoOpacity.value = withTiming(1, { duration: 240 });
+                scale.value = withSequence(
+                    withTiming(0.96, { duration: 110 }),
+                    withSpring(1, { damping: 12, stiffness: 180 }),
+                );
+            }
+        } else if (!has) {
+            // Upload failed or the visit was reset: back to gold at once —
+            // fading a room out reads as "something is still happening".
+            cancelAnimation(photoOpacity);
+            photoOpacity.value = 0;
+        }
+        hadPhoto.current = has;
+    }, [photoUri, reduceMotion, photoOpacity, scale]);
+
+    // Pulse once per bump — not again when the Reduce Motion setting changes.
+    const lastNudge = useRef(nudge);
+    useEffect(() => {
+        if (nudge === lastNudge.current) return;
+        lastNudge.current = nudge;
+        if (reduceMotion) return;
+        scale.value = withSequence(
+            withTiming(1.05, { duration: 120 }),
+            withSpring(1, { damping: 6, stiffness: 160 }),
+        );
+    }, [nudge, reduceMotion, scale]);
+
+    const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+    const photoStyle = useAnimatedStyle(() => ({ opacity: photoOpacity.value }));
 
     return (
-        <View ref={tourTarget("studio.photo")} collapsable={false} style={{ flexDirection: "row", gap: 10, height: 100 }}>
-            <Animated.View style={{ flex: 2, transform: [{ scale: pulse }] }}>
+        // The tour measures this plain wrapper, never the scaled view inside it.
+        <View ref={tourTarget("studio.photo")} collapsable={false}>
+            <Animated.View
+                style={[
+                    {
+                        height: CARD_HEIGHT,
+                        borderRadius: R.card,
+                        backgroundColor: U.buttonFill,
+                        shadowColor: U.accent,
+                        shadowOpacity: 0.18,
+                        shadowRadius: 11,
+                        shadowOffset: { width: 0, height: 4 },
+                    },
+                    cardStyle,
+                ]}
+            >
                 <Pressable
-                    onPress={onAddPhoto}
+                    onPress={onPress}
                     disabled={busy}
                     accessibilityRole="button"
                     accessibilityLabel={
-                        photoUri ? t("studio.replace") : busy ? t("studio.uploading") : t("studio.add_a_photo")
+                        photoUri
+                            ? t("studio.replace")
+                            : busy
+                              ? t("studio.uploading")
+                              : t("studio.add_your_room", { defaultValue: "Add your room" })
+                    }
+                    accessibilityHint={
+                        photoUri || busy
+                            ? undefined
+                            : t("studio.add_your_room_sub", { defaultValue: "Camera or photo library" })
                     }
                     accessibilityState={{ busy }}
-                    style={{
-                        flex: 1,
-                        backgroundColor: photoUri ? U.surface : U.buttonFill,
-                        borderRadius: R.card,
-                        overflow: "hidden",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        paddingHorizontal: 12,
-                        borderWidth: photoUri ? 1.5 : 0,
-                        borderColor: U.accent,
-                    }}
+                    style={{ flex: 1, borderRadius: R.card, overflow: "hidden" }}
                 >
+                    {/* Gold layer — always mounted, so the photo fades in over it. */}
+                    <LinearGradient
+                        colors={[U.accentBright, U.accent]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ flex: 1, padding: 18, justifyContent: "space-between" }}
+                    >
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                            <View
+                                style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 13,
+                                    borderWidth: 1.5,
+                                    borderColor: U.buttonInk,
+                                    opacity: busy && !photoUri ? 1 : 0.85,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                {busy && !photoUri ? (
+                                    <ActivityIndicator color={U.buttonInk} />
+                                ) : (
+                                    <CameraIcon color={U.buttonInk} />
+                                )}
+                            </View>
+                            <ArrowIcon color={U.buttonInk} />
+                        </View>
+                        <View style={{ gap: 2 }}>
+                            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ ...V.button, lineHeight: 20, color: U.buttonInk }}>
+                                {busy && !photoUri
+                                    ? t("studio.uploading")
+                                    : t("studio.add_your_room", { defaultValue: "Add your room" })}
+                            </Text>
+                            <Text
+                                numberOfLines={1}
+                                style={{ fontFamily: "Inter", fontSize: 13, lineHeight: 18, color: U.buttonInk, opacity: 0.75 }}
+                            >
+                                {t("studio.add_your_room_sub", { defaultValue: "Camera or photo library" })}
+                            </Text>
+                        </View>
+                    </LinearGradient>
+
                     {photoUri ? (
-                        <>
-                            <Image
-                                source={{ uri: photoUri }}
-                                style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-                                resizeMode="cover"
-                            />
+                        <Animated.View style={[StyleSheet.absoluteFill, photoStyle]}>
+                            <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                             {busy ? (
                                 <View
                                     style={{
-                                        position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
+                                        ...StyleSheet.absoluteFillObject,
                                         backgroundColor: U.overlayScrim,
                                         alignItems: "center", justifyContent: "center", gap: 6,
                                     }}
@@ -465,9 +609,11 @@ function IntakeRow({
                                    perdesi — tema rengi değil, fotoğraf kromu. */
                                 <View
                                     style={{
-                                        position: "absolute", left: 0, right: 0, bottom: 0,
-                                        paddingHorizontal: 10, paddingTop: 16, paddingBottom: 8,
-                                        backgroundColor: "rgba(0,0,0,0.55)",
+                                        position: "absolute", left: 12, bottom: 12,
+                                        paddingHorizontal: 12, paddingVertical: 7,
+                                        borderRadius: R.pill,
+                                        backgroundColor: U.photoChrome,
+                                        borderWidth: 1, borderColor: U.photoChromeBorder,
                                         flexDirection: "row", alignItems: "center", gap: 6,
                                     }}
                                 >
@@ -480,91 +626,75 @@ function IntakeRow({
                                     </Text>
                                 </View>
                             )}
-                        </>
-                    ) : busy ? (
-                        /* Picked, but no preview yet: iOS is still reading the
-                           file (an iCloud original downloads first) or it is
-                           being downscaled. Same tile, the "+" swapped for a
-                           spinner, so the tap visibly took (build 91). The
-                           spinner sits in the glyph's 34px so the label does
-                           not move. */
-                        <>
-                            <View style={{ height: 34, justifyContent: "center" }}>
-                                <ActivityIndicator color={U.buttonInk} />
-                            </View>
-                            <Text
-                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                                numberOfLines={1}
-                            >
-                                {t("studio.uploading")}
-                            </Text>
-                        </>
-                    ) : (
-                        <>
-                            <PlusGlyph color={U.buttonInk} />
-                            <Text
-                                style={{ fontFamily: "Inter-Bold", fontSize: 15, color: U.buttonInk, textAlign: "center" }}
-                                numberOfLines={1}
-                            >
-                                {t("studio.add_a_photo")}
-                            </Text>
-                        </>
-                    )}
+                            {/* The accent hairline the photo tile has always had. */}
+                            <View
+                                pointerEvents="none"
+                                style={{
+                                    ...StyleSheet.absoluteFillObject,
+                                    borderRadius: R.card,
+                                    borderWidth: 1.5,
+                                    borderColor: U.accent,
+                                }}
+                            />
+                        </Animated.View>
+                    ) : null}
                 </Pressable>
             </Animated.View>
+        </View>
+    );
+}
 
-            <View style={{ flex: 1, gap: 8 }}>
-                {samples.map((s, i) => (
+/**
+ * Two samples, equal width. The green-sofa living room (Redesign, the owner's
+ * Prompt Lab room) and the empty room (Empty Room) — owner's choice, 5 Oct.
+ * The others stay in the per-mode lists. Each carries its own name now (v3):
+ * with two equal tiles a single "Try a sample" caption no longer says which
+ * one is which, and the section label above already says what they are for.
+ */
+function SampleRow({ busy, onSample }: { busy: boolean; onSample: (module: number) => void }) {
+    const { t } = useTranslation();
+    const samples = ["green_living_room", "empty_room"]
+        .map((k) => SAMPLE_ROOMS.find((s) => s.key === k))
+        .filter((s): s is (typeof SAMPLE_ROOMS)[number] => !!s);
+
+    return (
+        <View style={{ gap: 8 }}>
+            <Text style={{ ...V.kicker, color: U.inkMuted }} numberOfLines={1}>
+                {t("studio.or_try_a_sample", { defaultValue: "Or try a sample" })}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 12, height: 104 }}>
+                {samples.map((s) => (
                     <Pressable
                         key={s.key}
                         onPress={() => onSample(s.module)}
                         disabled={busy}
                         accessibilityRole="button"
-                        accessibilityLabel={t("studio.try_a_sample")}
-                        style={{ flex: 1, borderRadius: R.tile, overflow: "hidden" }}
+                        accessibilityLabel={`${t("studio.try_a_sample")}: ${t(s.labelKey)}`}
+                        accessibilityState={{ disabled: busy }}
+                        style={{ flex: 1, borderRadius: R.tile, overflow: "hidden", backgroundColor: U.surface }}
                     >
                         <Image source={s.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                        {i === 0 && (
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    paddingHorizontal: 6,
-                                    paddingBottom: 4,
-                                    paddingTop: 12,
-                                    backgroundColor: "rgba(0,0,0,0.55)",
-                                }}
-                            >
-                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, color: "#fff" }}>
-                                    {t("studio.try_a_sample")}
-                                </Text>
-                            </View>
-                        )}
+                        <View
+                            style={{
+                                position: "absolute",
+                                left: 8,
+                                bottom: 8,
+                                maxWidth: "85%",
+                                paddingHorizontal: 10,
+                                paddingVertical: 5,
+                                borderRadius: R.pill,
+                                backgroundColor: U.photoChrome,
+                                borderWidth: 1,
+                                borderColor: U.photoChromeBorder,
+                            }}
+                        >
+                            <Text numberOfLines={1} style={{ fontFamily: "Inter-SemiBold", fontSize: 12, lineHeight: 16, color: U.ink }}>
+                                {t(s.labelKey)}
+                            </Text>
+                        </View>
                     </Pressable>
                 ))}
             </View>
-        </View>
-    );
-}
-
-/** A rounded square holding a plus — the shape the tile is built around. */
-function PlusGlyph({ color }: { color: string }) {
-    return (
-        <View
-            style={{
-                width: 38,
-                height: 34,
-                borderWidth: 2,
-                borderColor: color,
-                borderRadius: 9,
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <View style={{ position: "absolute", width: 16, height: 2, backgroundColor: color, borderRadius: 1 }} />
-            <View style={{ position: "absolute", width: 2, height: 16, backgroundColor: color, borderRadius: 1 }} />
         </View>
     );
 }
@@ -573,17 +703,21 @@ function PlusGlyph({ color }: { color: string }) {
 
 /** How far the tools step back while there is no room yet. */
 const DIMMED = 0.38;
+/** Delay between one tool lighting up and the next. */
+const LIGHT_UP_STAGGER = 80;
 
 /**
- * Five tiles — three across, then two wide. The wide pair is the paid pair —
- * the extra width is the point, since this is the only place a free user
- * meets what a plan buys.
+ * Five small tiles, three across — icon, label, and a PRO tag on the locked
+ * ones. v2 drew the tools as photographs and gave the paid pair double width;
+ * in v3 the add card carries the screen's weight and the tools are a quiet
+ * menu of what comes next, so every tool gets the same tile and the PRO tag
+ * alone says what costs money.
  *
- * <p>Until a room is in ({@code enabled} false) the whole grid is dimmed and
+ * <p>Until a room is in ({@code enabled} false) every tile is dimmed and
  * reported as disabled to VoiceOver, with the hint saying what comes first.
  * The tiles still receive the tap so the screen can answer it (buzz + pulse on
- * the intake tile) instead of swallowing it. When the room arrives the grid
- * fades up to full strength.
+ * the add card) instead of swallowing it. When the room arrives they light up
+ * one after another (see {@link ToolTile}).
  */
 function FeatureGrid({
     isLocked,
@@ -595,143 +729,144 @@ function FeatureGrid({
         unlocked flash is recoverable, a wrongly locked tile is not. */
     isLocked: (featureCode: string) => boolean;
     onPress: (key: string, locked: boolean) => void;
-    t: (k: string) => string;
+    t: (k: string, o?: Record<string, unknown>) => string;
     enabled: boolean;
 }) {
-    const byKey = Object.fromEntries(STUDIO_FEATURES.map((f) => [f.key, f]));
-    const fade = useRef(new Animated.Value(enabled ? 1 : DIMMED)).current;
+    const items = STUDIO_FEATURES.map((f) => ({ key: f.key as string, label: t(f.titleKey) }));
+    const rows: (typeof items)[] = [];
+    for (let i = 0; i < items.length; i += 3) rows.push(items.slice(i, i + 3));
 
-    useEffect(() => {
-        let cancelled = false;
-        AccessibilityInfo.isReduceMotionEnabled()
-            .catch(() => false)
-            .then((reduce) => {
-                if (cancelled) return;
-                const to = enabled ? 1 : DIMMED;
-                if (reduce) {
-                    fade.setValue(to);
-                } else {
-                    Animated.timing(fade, { toValue: to, duration: 260, useNativeDriver: true }).start();
-                }
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [enabled, fade]);
-
-    const row1 = [
-        { key: "REDESIGN", label: t("studio.mode_redesign") },
-        { key: "EMPTY_ROOM", label: t("studio.mode_empty_room") },
-        { key: "INPAINT", label: t("studio.mode_inpaint") },
-    ];
-    const row2 = [
-        { key: "STYLE_TRANSFER", label: t("studio.mode_style_transfer") },
-        { key: "OUTDOOR", label: t("studio.mode_outdoor") },
-    ];
-
-    const tile = (item: { key: string; label: string }, width: string) => {
-        const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
-        const locked = isLocked(featureCode);
-        const image = imageFor(byKey[item.key]);
-        return (
-            <Pressable
-                key={item.key}
-                onPress={() => onPress(item.key, locked)}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !enabled }}
-                accessibilityLabel={locked ? `${item.label}, PRO` : item.label}
-                accessibilityHint={enabled ? undefined : t("studio.photo_source_title")}
-                style={{
-                    width: width as never,
-                    backgroundColor: U.surface,
-                    borderWidth: 1,
-                    borderColor: U.lineNeutral,
-                    borderRadius: R.tile,
-                    overflow: "hidden",
-                }}
-            >
-                {/* flex, not a fixed 72: the tile's height now comes from the
-                    row, and the image takes whatever the label does not. */}
-                <View style={{ flex: 1, minHeight: 72 }}>
-                    {image ? (
-                        <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                    ) : null}
-                    {locked && (
-                        <View
-                            style={{
-                                position: "absolute",
-                                top: 6,
-                                right: 6,
-                                backgroundColor: U.ground,
-                                borderWidth: 1,
-                                borderColor: U.accent,
-                                borderRadius: 5,
-                                paddingVertical: 3,
-                                paddingHorizontal: 6,
-                            }}
-                        >
-                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8.5, letterSpacing: 1, color: U.accentBright }}>
-                                PRO
-                            </Text>
-                        </View>
-                    )}
-                </View>
-                {/* The tile's height is set by the image, never by the label —
-                    German "Stilübertragung" and Dutch "Buitenontwerp" wrap to
-                    two lines and must not change the grid. */}
-                <View style={{ paddingHorizontal: 9, paddingTop: 9, paddingBottom: 11, minHeight: 46 }}>
-                    {/* A single long word ("Réaménagement") must shrink, not
-                        split mid-word — iOS broke it as "Réaménagem / ent" on
-                        the French home screen (simulator, 26 Sep). Labels with
-                        a space keep their two lines. */}
-                    <Text
-                        numberOfLines={item.label.includes(" ") ? 2 : 1}
-                        adjustsFontSizeToFit={!item.label.includes(" ")}
-                        minimumFontScale={0.7}
-                        style={{ ...V.tile, color: U.ink }}
-                    >
-                        {item.label}
-                    </Text>
-                </View>
-            </Pressable>
-        );
-    };
-
-    /**
-     * The grid takes the height the furniture band used to occupy.
-     *
-     * <p>Removing the band left roughly 250px of dead space under the tiles.
-     * The options were to centre the block (which floats), to add something
-     * (which the spec forbids — "text is the last resort") or to let the
-     * photographs grow into it. The photographs ARE the description of each
-     * feature, so they grew: the rows share the remaining height with flex,
-     * which also means the screen fills correctly on a 17 Pro and a 17 Pro
-     * Max without either one being tuned by hand.
-     */
     return (
-        <Animated.View style={{ flex: 1, marginTop: 18, gap: 8, maxHeight: 420, opacity: fade }}>
-            {/* What the first-run tour measures — the grid's own frame, without
-                wrapping (and so re-flowing) it. */}
-            <View
-                ref={tourTarget("studio.tools")}
-                collapsable={false}
-                pointerEvents="none"
-                style={StyleSheet.absoluteFill}
-            />
-            <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
-                {row1.map((i) => tile(i, "31.5%"))}
+        <View style={{ gap: 8 }}>
+            <Text style={{ ...V.kicker, color: U.inkMuted }} numberOfLines={1}>
+                {t("studio.what_to_do_with_it", { defaultValue: "What to do with it" })}
+            </Text>
+            <View style={{ gap: 8 }}>
+                {/* What the first-run tour measures — the grid's own frame, without
+                    wrapping (and so re-flowing) it. */}
+                <View
+                    ref={tourTarget("studio.tools")}
+                    collapsable={false}
+                    pointerEvents="none"
+                    style={StyleSheet.absoluteFill}
+                />
+                {rows.map((row, r) => (
+                    <View key={r} style={{ flexDirection: "row", gap: 8 }}>
+                        {row.map((item, c) => {
+                            const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
+                            const locked = isLocked(featureCode);
+                            return (
+                                <ToolTile
+                                    key={item.key}
+                                    mode={item.key}
+                                    label={item.label}
+                                    locked={locked}
+                                    enabled={enabled}
+                                    index={r * 3 + c}
+                                    hint={enabled ? undefined : t("studio.photo_source_title")}
+                                    onPress={() => onPress(item.key, locked)}
+                                />
+                            );
+                        })}
+                        {/* A short last row keeps the column width instead of stretching. */}
+                        {Array.from({ length: 3 - row.length }).map((_, k) => (
+                            <View key={`pad-${k}`} style={{ flex: 1 }} />
+                        ))}
+                    </View>
+                ))}
             </View>
-            <View style={{ flex: 1.15, flexDirection: "row", gap: 8 }}>
-                {row2.map((i) => tile(i, "48.7%"))}
-            </View>
-        </Animated.View>
+        </View>
     );
 }
 
-/** The feature registry stores media in three shapes; the tile wants one still. */
-function imageFor(feature?: (typeof STUDIO_FEATURES)[number]) {
-    if (!feature) return null;
-    const m = feature.media;
-    if (m.kind === "single") return m.image;
-    return m.after;
+/**
+ * One tool. Its opacity is its own, so the grid can light up in order: when
+ * {@code enabled} turns true the tile waits {@code index × 80 ms} and fades
+ * from {@link DIMMED} to 1. Dimming again (the visit was reset after a job) is
+ * immediate-ish and not staggered — nothing is being presented. Reduce Motion
+ * jumps straight to the end value.
+ *
+ * <p>Redesign is the default first tool, so it keeps the accent outline and a
+ * gold icon even while dimmed; the rest are neutral.
+ */
+function ToolTile({
+    mode,
+    label,
+    locked,
+    enabled,
+    index,
+    hint,
+    onPress,
+}: {
+    mode: string;
+    label: string;
+    locked: boolean;
+    enabled: boolean;
+    index: number;
+    hint?: string;
+    onPress: () => void;
+}) {
+    const reduceMotion = useReduceMotion();
+    const opacity = useSharedValue(enabled ? 1 : DIMMED);
+
+    useEffect(() => {
+        const to = enabled ? 1 : DIMMED;
+        if (reduceMotion) {
+            cancelAnimation(opacity);
+            opacity.value = to;
+        } else if (enabled) {
+            opacity.value = withDelay(index * LIGHT_UP_STAGGER, withTiming(1, { duration: 260 }));
+        } else {
+            opacity.value = withTiming(DIMMED, { duration: 200 });
+        }
+    }, [enabled, reduceMotion, index, opacity]);
+
+    const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+    const primary = mode === "REDESIGN";
+
+    return (
+        <Animated.View style={[{ flex: 1 }, style]}>
+            <Pressable
+                onPress={onPress}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !enabled }}
+                accessibilityLabel={locked ? `${label}, PRO` : label}
+                accessibilityHint={hint}
+                // 🔴 No flex:1 here: the Animated wrapper has no height of its own, so a
+                // flex child collapses it to zero and the second row drew over the first
+                // (simulator, 10 Oct). The tile sizes itself; the row stretches siblings.
+                style={{
+                    minHeight: 76,
+                    backgroundColor: U.surface,
+                    borderWidth: 1,
+                    borderColor: primary ? U.accent : U.lineNeutral,
+                    borderRadius: R.tile,
+                    paddingVertical: 12,
+                    paddingHorizontal: 10,
+                    justifyContent: "space-between",
+                    gap: 6,
+                }}
+            >
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <ToolIcon mode={mode} color={primary ? U.accentBright : U.ink} />
+                    {locked && (
+                        <Text style={{ ...V.captionStrong, letterSpacing: 1.2, color: U.accentBright }}>PRO</Text>
+                    )}
+                </View>
+                {/* A single long word ("Réaménagement") must shrink, not
+                    split mid-word — iOS broke it as "Réaménagem / ent" on
+                    the French home screen (simulator, 26 Sep). Labels with
+                    a space keep their two lines; the row grows ~6px and the
+                    budget allows it. */}
+                <Text
+                    numberOfLines={label.includes(" ") ? 2 : 1}
+                    adjustsFontSizeToFit={!label.includes(" ")}
+                    minimumFontScale={0.7}
+                    style={{ ...V.tile, color: U.ink }}
+                >
+                    {label}
+                </Text>
+            </Pressable>
+        </Animated.View>
+    );
 }

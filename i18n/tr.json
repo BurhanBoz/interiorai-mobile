@@ -355,7 +355,20 @@
     "mask_ready": "Değişecek alan seçildi",
     "edit_mask": "Düzenle",
     "reference_ready": "Referans fotoğrafı seçildi",
-    "change_reference": "Değiştir"
+    "change_reference": "Değiştir",
+    "home_headline": "Odan, yeniden tasarlandı.",
+    "home_subline": "Odanın şu anki hâlinin fotoğrafıyla başla.",
+    "add_your_room": "Odanı ekle",
+    "add_your_room_sub": "Kamera ya da fotoğraf arşivi",
+    "or_try_a_sample": "Ya da bir örnek dene",
+    "what_to_do_with_it": "Neler yapabilirsin",
+    "which_room": "Hangi oda?",
+    "pick_style": "Bir stil seç",
+    "advanced_hint": "Palet, yoğunluk",
+    "summary_room_placeholder": "Oda",
+    "summary_style_placeholder": "Stil",
+    "summary_pieces_one": "+1 parça",
+    "summary_pieces_other": "+{{count}} parça"
   },
   "furniture": {
     "title": "Mobilya",
@@ -408,7 +421,10 @@
     "v2_empty_line": "Burada henüz bir şey yok.",
     "v2_new_design": "+ Yeni tasarım",
     "video_badge": "VİDEO",
-    "design_fallback": "Tasarım"
+    "design_fallback": "Tasarım",
+    "v3_count_one": "{{count}} tasarım",
+    "v3_count_other": "{{count}} tasarım",
+    "v3_days_ago": "{{count}} gün önce"
   },
   "history": {
     "title": "Geçmiş",
@@ -484,7 +500,10 @@
     "account_fallback_name": "Hesabın",
     "name_and_email": "İsim ve e-posta",
     "manage_subscription": "Aboneliği yönet",
-    "rate_app": "Roomframe'i değerlendir"
+    "rate_app": "Roomframe'i değerlendir",
+    "section_account": "Hesap",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "her gün yenilenir"
   },
   "plans": {
     "title": "Planını Seç",
@@ -751,7 +770,11 @@
     "video_failed_body": "Video tamamlanamadı. Kredilerin kullanılmadı — tekrar dene.",
     "video_phase_planning": "Kamera hareketi planlanıyor",
     "video_phase_rendering": "Oda videon oluşturuluyor",
-    "video_phase_ready": "Videon hazır"
+    "video_phase_ready": "Videon hazır",
+    "designing_room": "{{room}} tasarlanıyor",
+    "style_about_a_minute": "{{style}} · yaklaşık bir dakika",
+    "about_a_minute": "Yaklaşık bir dakika",
+    "leave_app_hint": "Uygulamadan çıkabilirsin — tasarım devam ediyor."
   },
   "styles": {
     "scandinavian": "İskandinav tasarımı sıcak minimalizmi kutlar — açık ahşaplar, yumuşak nötr tonlar ve bol doğal ışık. Her nesne, işlevi ve dürüst zanaatı sayesinde yerini kazanır.",
@@ -870,7 +893,12 @@
     "video_share_dialog_title": "Videoyu paylaş",
     "video_unavailable": "Video şu anda kullanılamıyor.",
     "video_in_progress_hint": "Birkaç dakika · bitince bildirim gelir",
-    "video_in_progress_hint_gallery": "Birkaç dakika · bitince galerinde olur"
+    "video_in_progress_hint_gallery": "Birkaç dakika · bitince galerinde olur",
+    "video_walk_title": "İçinde gezin",
+    "video_walk_sub": "Sesli, 8 saniyelik oda videosu",
+    "more_styles": "Daha fazla stil",
+    "more_actions": "Diğer işlemler",
+    "reminder_turn_off": "Kredi hatırlatmasını kapat"
   },
   "settings": {
     "notifications_title": "Bildirimler",
@@ -1262,7 +1290,10 @@
     "then_price_month": "sonra {{price}}/ay",
     "renewal_month": "Aylık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
     "renewal_intro_month": "İlk ay {{intro}}, sonra aylık {{price}}. Otomatik yenilenir; yenilemeden en az 24 saat önce Ayarlar'dan istediğin an iptal edebilirsin.",
-    "save_pct": "%{{pct}} tasarruf"
+    "save_pct": "%{{pct}} tasarruf",
+    "hero_one_room_title": "Bu yalnızca bir odaydı.",
+    "value_line": "Pro her odayı istediğin stilde yeniden tasarlar; oda videoları var, filigran yok.",
+    "price_today": "Bugün {{price}}"
   },
   "purchase_errors": {
     "sheet_title": "Apple'ın ödeme ekranı açılmadı",
@@ -1359,6 +1390,7 @@
     "advanced_title": "İstersen ince ayar yap",
     "advanced_body": "Renk paleti, değişimin ne kadar cesur olacağı ve düzeni koruma burada. İsteğe bağlı; varsayılanlar iyi çalışır.",
     "generate_title": "Tasarımını oluştur",
-    "generate_body": "Hazır olduğunda buraya dokun. Bedeli hemen üstünde yazar."
+    "generate_body": "Hazır olduğunda buraya dokun. Bedeli hemen üstünde yazar.",
+    "room_strip_body": "Kaydır ve odanı seç. Odayı ve stili sen seçersin; oluşturmak için ikisi de gerekli."
   }
 }

@@ -355,7 +355,20 @@
     "mask_ready": "Area to change is set",
     "edit_mask": "Edit",
     "reference_ready": "Reference photo set",
-    "change_reference": "Change"
+    "change_reference": "Change",
+    "home_headline": "Your room, redesigned.",
+    "home_subline": "Start with a photo of the room as it is.",
+    "add_your_room": "Add your room",
+    "add_your_room_sub": "Camera or photo library",
+    "or_try_a_sample": "Or try a sample",
+    "what_to_do_with_it": "What to do with it",
+    "which_room": "Which room is it?",
+    "pick_style": "Pick a style",
+    "advanced_hint": "Palette, intensity",
+    "summary_room_placeholder": "Room",
+    "summary_style_placeholder": "Style",
+    "summary_pieces_one": "+1 piece",
+    "summary_pieces_other": "+{{count}} pieces"
   },
   "furniture": {
     "title": "Furniture",
@@ -408,7 +421,10 @@
     "v2_empty_line": "Nothing here yet.",
     "v2_new_design": "+ New design",
     "video_badge": "VIDEO",
-    "design_fallback": "Design"
+    "design_fallback": "Design",
+    "v3_count_one": "{{count}} design",
+    "v3_count_other": "{{count}} designs",
+    "v3_days_ago": "{{count}} days ago"
   },
   "history": {
     "title": "History",
@@ -484,7 +500,10 @@
     "account_fallback_name": "Your account",
     "name_and_email": "Name and email",
     "manage_subscription": "Manage subscription",
-    "rate_app": "Rate Roomframe"
+    "rate_app": "Rate Roomframe",
+    "section_account": "Account",
+    "section_roomframe": "Roomframe",
+    "refills_daily": "refills daily"
   },
   "plans": {
     "title": "Choose Your Plan",
@@ -751,7 +770,11 @@
     "video_failed_body": "The video didn't finish. Your credits weren't used — try again.",
     "video_phase_planning": "Planning the camera move",
     "video_phase_rendering": "Rendering your room video",
-    "video_phase_ready": "Your video is ready"
+    "video_phase_ready": "Your video is ready",
+    "designing_room": "Designing your {{room}}",
+    "style_about_a_minute": "{{style}} · about a minute",
+    "about_a_minute": "About a minute",
+    "leave_app_hint": "You can leave the app — the design keeps going."
   },
   "styles": {
     "scandinavian": "Scandinavian design celebrates warm minimalism — pale woods, soft neutrals, and abundant natural light. Every object earns its place through utility and honest craftsmanship.",
@@ -870,7 +893,12 @@
     "video_share_dialog_title": "Share video",
     "video_unavailable": "The video isn't available right now.",
     "video_in_progress_hint": "A few minutes · we'll notify you",
-    "video_in_progress_hint_gallery": "A few minutes · it'll be in your gallery"
+    "video_in_progress_hint_gallery": "A few minutes · it'll be in your gallery",
+    "video_walk_title": "Walk through it",
+    "video_walk_sub": "An 8-second room video with sound",
+    "more_styles": "More styles",
+    "more_actions": "More actions",
+    "reminder_turn_off": "Turn off the credit reminder"
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1262,7 +1290,10 @@
     "then_price_month": "then {{price}}/month",
     "renewal_month": "{{price}} a month. Renews automatically; cancel anytime in Settings, at least 24 h before renewal.",
     "renewal_intro_month": "{{intro}} for the first month, then {{price}} a month. Renews automatically; cancel anytime in Settings, at least 24 h before renewal.",
-    "save_pct": "Save {{pct}}%"
+    "save_pct": "Save {{pct}}%",
+    "hero_one_room_title": "This was one room.",
+    "value_line": "Pro redesigns every room in any style, with room videos and no watermark.",
+    "price_today": "{{price}} today"
   },
   "purchase_errors": {
     "sheet_title": "Apple's payment screen didn't open",
@@ -1359,6 +1390,7 @@
     "advanced_title": "Fine-tune, if you like",
     "advanced_body": "Color palette, how bold the change is and keeping your layout live here. Optional — the defaults work well.",
     "generate_title": "Create your design",
-    "generate_body": "Tap here when you're ready. The cost is shown just above."
+    "generate_body": "Tap here when you're ready. The cost is shown just above.",
+    "room_strip_body": "Scroll and tap your room. You choose the room and the style — both are needed to create."
   }
 }
