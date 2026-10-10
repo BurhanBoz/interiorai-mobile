@@ -1,0 +1,6 @@
+{
+  "shape": "package",
+  "pkg": "roomframe-ai",
+  "globalName": "RoomframeDS",
+  "readmeHeader": ".design-sync/conventions.md"
+}
