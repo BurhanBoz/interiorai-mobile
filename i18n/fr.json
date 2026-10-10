@@ -355,7 +355,20 @@
     "mask_ready": "Zone à modifier définie",
     "edit_mask": "Modifier",
     "reference_ready": "Photo de référence définie",
-    "change_reference": "Changer"
+    "change_reference": "Changer",
+    "home_headline": "Votre pièce, repensée.",
+    "home_subline": "Commencez par une photo de la pièce telle qu'elle est.",
+    "add_your_room": "Ajoutez votre pièce",
+    "add_your_room_sub": "Appareil photo ou photothèque",
+    "or_try_a_sample": "Ou essayez un exemple",
+    "what_to_do_with_it": "Ce que vous pouvez en faire",
+    "which_room": "Quelle pièce est-ce ?",
+    "pick_style": "Choisissez un style",
+    "advanced_hint": "Palette, intensité",
+    "summary_room_placeholder": "Pièce",
+    "summary_style_placeholder": "Style",
+    "summary_pieces_one": "+1 pièce de mobilier",
+    "summary_pieces_other": "+{{count}} pièces de mobilier"
   },
   "furniture": {
     "title": "Mobilier",
@@ -751,7 +764,11 @@
     "video_failed_body": "La vidéo n'a pas abouti. Tes crédits n'ont pas été utilisés — réessaie.",
     "video_phase_planning": "Préparation du mouvement de caméra",
     "video_phase_rendering": "Création de la vidéo de ta pièce",
-    "video_phase_ready": "Ta vidéo est prête"
+    "video_phase_ready": "Ta vidéo est prête",
+    "designing_room": "Votre {{room}} prend forme",
+    "style_about_a_minute": "{{style}} · environ une minute",
+    "about_a_minute": "Environ une minute",
+    "leave_app_hint": "Vous pouvez quitter l'app, le design continue."
   },
   "styles": {
     "scandinavian": "Le design scandinave célèbre un minimalisme chaleureux — bois clairs, neutres doux et lumière naturelle généreuse. Chaque objet gagne sa place par son utilité et son artisanat honnête.",
@@ -870,7 +887,12 @@
     "video_share_dialog_title": "Partager la vidéo",
     "video_unavailable": "La vidéo n'est pas disponible pour le moment.",
     "video_in_progress_hint": "Quelques minutes · on te prévient",
-    "video_in_progress_hint_gallery": "Quelques minutes · ensuite dans ta galerie"
+    "video_in_progress_hint_gallery": "Quelques minutes · ensuite dans ta galerie",
+    "video_walk_title": "Visitez-la",
+    "video_walk_sub": "Une vidéo de 8 secondes avec son",
+    "more_styles": "Plus de styles",
+    "more_actions": "Autres actions",
+    "reminder_turn_off": "Désactiver le rappel de crédits"
   },
   "settings": {
     "notifications_title": "Notifications",
@@ -1262,7 +1284,10 @@
     "then_price_month": "puis {{price}}/mois",
     "renewal_month": "{{price}} par mois. Renouvellement automatique ; résiliable à tout moment dans les Réglages, au moins 24 h avant l'échéance.",
     "renewal_intro_month": "{{intro}} le premier mois, puis {{price}} par mois. Renouvellement automatique ; résiliable à tout moment dans les Réglages, au moins 24 h avant l'échéance.",
-    "save_pct": "Économisez {{pct}} %"
+    "save_pct": "Économisez {{pct}} %",
+    "hero_one_room_title": "Ce n'était qu'une pièce.",
+    "value_line": "Pro repense chaque pièce dans n'importe quel style, avec vidéos et sans filigrane.",
+    "price_today": "{{price}} aujourd'hui"
   },
   "purchase_errors": {
     "sheet_title": "L'écran de paiement d'Apple ne s'est pas ouvert",
@@ -1359,6 +1384,7 @@
     "advanced_title": "Affinez si vous le souhaitez",
     "advanced_body": "Palette de couleurs, intensité du changement et conservation de l'agencement. Facultatif — les réglages par défaut fonctionnent bien.",
     "generate_title": "Créez votre design",
-    "generate_body": "Touchez ici quand vous êtes prêt. Le coût est indiqué juste au-dessus."
+    "generate_body": "Touchez ici quand vous êtes prêt. Le coût est indiqué juste au-dessus.",
+    "room_strip_body": "Faites défiler et touchez votre pièce. Vous choisissez la pièce et le style : les deux sont nécessaires."
   }
 }

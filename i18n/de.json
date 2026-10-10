@@ -355,7 +355,20 @@
     "mask_ready": "Bereich ist festgelegt",
     "edit_mask": "Bearbeiten",
     "reference_ready": "Referenzfoto gesetzt",
-    "change_reference": "Ändern"
+    "change_reference": "Ändern",
+    "home_headline": "Dein Raum, neu gestaltet.",
+    "home_subline": "Starte mit einem Foto des Raums, wie er ist.",
+    "add_your_room": "Raum hinzufügen",
+    "add_your_room_sub": "Kamera oder Fotomediathek",
+    "or_try_a_sample": "Oder ein Beispiel testen",
+    "what_to_do_with_it": "Was du damit machen kannst",
+    "which_room": "Welcher Raum ist es?",
+    "pick_style": "Wähle einen Stil",
+    "advanced_hint": "Palette, Intensität",
+    "summary_room_placeholder": "Raum",
+    "summary_style_placeholder": "Stil",
+    "summary_pieces_one": "+1 Stück",
+    "summary_pieces_other": "+{{count}} Stücke"
   },
   "furniture": {
     "title": "Möbel",
@@ -751,7 +764,11 @@
     "video_failed_body": "Das Video wurde nicht fertig. Dein Guthaben wurde nicht verwendet — versuch es noch einmal.",
     "video_phase_planning": "Kamerafahrt wird geplant",
     "video_phase_rendering": "Dein Raumvideo wird erstellt",
-    "video_phase_ready": "Dein Video ist fertig"
+    "video_phase_ready": "Dein Video ist fertig",
+    "designing_room": "Dein Raum wird gestaltet: {{room}}",
+    "style_about_a_minute": "{{style}} · etwa eine Minute",
+    "about_a_minute": "Etwa eine Minute",
+    "leave_app_hint": "Du kannst die App verlassen – das Design läuft weiter."
   },
   "styles": {
     "scandinavian": "Skandinavisches Design feiert warmen Minimalismus — helle Hölzer, weiche Neutraltöne und reichlich natürliches Licht. Jedes Objekt verdient seinen Platz durch Nützlichkeit und ehrliches Handwerk.",
@@ -870,7 +887,12 @@
     "video_share_dialog_title": "Video teilen",
     "video_unavailable": "Das Video ist gerade nicht verfügbar.",
     "video_in_progress_hint": "Ein paar Minuten · wir sagen Bescheid",
-    "video_in_progress_hint_gallery": "Ein paar Minuten · danach in deiner Galerie"
+    "video_in_progress_hint_gallery": "Ein paar Minuten · danach in deiner Galerie",
+    "video_walk_title": "Geh hindurch",
+    "video_walk_sub": "Ein 8-Sekunden-Raumvideo mit Ton",
+    "more_styles": "Weitere Stile",
+    "more_actions": "Weitere Aktionen",
+    "reminder_turn_off": "Guthaben-Erinnerung ausschalten"
   },
   "settings": {
     "notifications_title": "Benachrichtigungen",
@@ -1262,7 +1284,10 @@
     "then_price_month": "danach {{price}}/Monat",
     "renewal_month": "{{price}} pro Monat. Verlängert sich automatisch; jederzeit in den Einstellungen kündbar, spätestens 24 Std. vor Verlängerung.",
     "renewal_intro_month": "{{intro}} für den ersten Monat, danach {{price}} pro Monat. Verlängert sich automatisch; jederzeit in den Einstellungen kündbar, spätestens 24 Std. vor Verlängerung.",
-    "save_pct": "{{pct}} % sparen"
+    "save_pct": "{{pct}} % sparen",
+    "hero_one_room_title": "Das war ein Raum.",
+    "value_line": "Pro gestaltet jeden Raum in jedem Stil neu – mit Raumvideos und ohne Wasserzeichen.",
+    "price_today": "Heute {{price}}"
   },
   "purchase_errors": {
     "sheet_title": "Apples Zahlungsfenster hat sich nicht geöffnet",
@@ -1359,6 +1384,7 @@
     "advanced_title": "Feinabstimmung, wenn du magst",
     "advanced_body": "Farbpalette, wie stark die Veränderung ausfällt und ob dein Layout bleibt. Optional – die Standardwerte funktionieren gut.",
     "generate_title": "Erstelle dein Design",
-    "generate_body": "Tippe hier, wenn du bereit bist. Die Kosten stehen direkt darüber."
+    "generate_body": "Tippe hier, wenn du bereit bist. Die Kosten stehen direkt darüber.",
+    "room_strip_body": "Wische und tippe auf deinen Raum. Du wählst Raum und Stil – beides wird zum Erstellen gebraucht."
   }
 }

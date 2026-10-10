@@ -66,6 +66,8 @@ interface StudioState {
     objectRefs: ObjectRef[];
     setStep: (step: 1 | 2 | 3 | 4) => void;
     setPhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
+    /** setPhoto for a user's NEW pick: also clears room type and style when it replaces a different photo. */
+    replacePhoto: (photo: { uri: string; fileId: string; width?: number | null; height?: number | null } | null) => void;
     setRoomType: (roomType: CatalogItemResponse | null) => void;
     setDesignStyle: (style: CatalogItemResponse | null) => void;
     setMode: (mode: DesignMode) => void;
@@ -143,6 +145,18 @@ export const useStudioStore = create<StudioState>((set) => ({
     // A mask is drawn against ONE specific photo — changing (or clearing)
     // the photo invalidates it.
     setPhoto: (photo) => set({ photo, maskFileId: null, maskStrokes: null, maskMode: null }),
+    replacePhoto: (photo) =>
+        set((s) => {
+            // A DIFFERENT room replacing one already in the store (redesign v3, 2026-10-10): room
+            // type and style are required choices now, so the previous room's choices must not ride
+            // along onto a new photo. A first photo keeps them — an ad deep link (app/design.tsx)
+            // preselects room and style before any photo exists, and that choice is the user's.
+            const changed = !!s.photo?.fileId && s.photo.fileId !== photo?.fileId;
+            return {
+                photo, maskFileId: null, maskStrokes: null, maskMode: null,
+                ...(changed ? { roomType: null, designStyle: null } : {}),
+            };
+        }),
     setRoomType: (roomType) => set({ roomType }),
     setDesignStyle: (designStyle) => set({ designStyle }),
     setMode: (mode) =>

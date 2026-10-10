@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Image, Linking,
-    Animated, Easing, AccessibilityInfo, Dimensions,
+    View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking, Dimensions,
 } from "react-native";
-import { Image as ExpoImage, type ImageSource } from "expo-image";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
-import { theme, track as tracking } from "@/config/theme";
+import { theme } from "@/config/theme";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
+import { PaywallHero, type PaywallHeroSpec } from "@/components/paywall/PaywallHero";
+import { PaywallPlanRow, FadeSwapText } from "@/components/paywall/PaywallPlanRow";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useStorePricesStore } from "@/stores/storePricesStore";
 import { useCreditPacksStore } from "@/stores/creditPacksStore";
@@ -31,6 +32,18 @@ import { usePostPurchaseStore } from "@/stores/postPurchaseStore";
 import { useStudioStore } from "@/stores/studioStore";
 
 const U = theme.umber;
+
+/**
+ * v3 — "plan rows with the charge" (5B, owner's pick, 2026-10-10).
+ *
+ * <p>Only the visual layer moved. The picture now runs full-bleed under the
+ * status bar (the user's own after on FIRST_RESULT, their before as an inset
+ * thumbnail) with the headline sitting on it; each plan row says what Apple
+ * will charge TODAY and, under an offer, the regular price it renews at; the
+ * gold button repeats today's charge. Purchase, restore, telemetry, intro
+ * eligibility and the credits-exhausted pack are the code that was already
+ * running. The X is pinned over the screen so it never scrolls away.
+ */
 
 /**
  * First-open paywall (2026-08-31).
@@ -103,14 +116,6 @@ const SAMPLE_AFTER = require("@/assets/features/paywall_after.jpg");
 /** How long a pending eligibility answer may hold the Pro price back. */
 const INTRO_WAIT_MS = 1200;
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
-/** What the top of the screen shows — the moment that opened it. */
-type HeroSpec =
-    | { kind: "wipe"; before: ImageSource | number; after: ImageSource | number }
-    | { kind: "photo"; image: ImageSource | number; chip: string; icon: IoniconName; moving: boolean }
-    | { kind: "pro" };
-
 export default function PaywallScreen() {
     const { t } = useTranslation();
     const plans = useSubscriptionStore((s) => s.plans);
@@ -165,29 +170,14 @@ export default function PaywallScreen() {
     }, []);
     const [busy, setBusy] = useState(false);
 
-    // Hero reveal. Width is animated rather than a transform because the
-    // "before" layer has to stay put while its window narrows — translating it
-    // would slide the kitchen instead of wiping between two of them. That rules
-    // out the native driver, which is fine for one narrow view.
-    // The hero sits inside the screen's 18pt side padding.
-    const heroWidth = Dimensions.get("window").width - 36;
     // The hero takes what the screen can spare. The rule for redesigned
-    // screens is "fits 393x852 without scrolling"; both plan rows must be in
-    // view on a 390x844 phone even with the first-week offer and a long
-    // language, so the picture gives way first: ~154pt there, 190pt on a Pro
-    // Max, never below 110pt (an SE scrolls, and says so).
-    const heroHeight = Math.round(Math.min(190, Math.max(110, Dimensions.get("window").height - 690)));
-    const reveal = useRef(new Animated.Value(1)).current;
-    const revealWidth = reveal.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, heroWidth],
-    });
-    // A slow push-in on a still — "this design, moving" — for the video hero.
-    const drift = useRef(new Animated.Value(0)).current;
-    const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
-    useEffect(() => {
-        AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => setReduceMotion(false));
-    }, []);
+    // screens is "fits 393x852 without scrolling"; v3's full-bleed picture
+    // includes the status bar, so ~39% of the height is 330pt on a 390x844
+    // phone and leaves both plan rows, the button and the terms in view. Never
+    // below 220pt — an SE scrolls the picture, never the button.
+    const insets = useSafeAreaInsets();
+    const heroHeight = Math.round(Math.min(350, Math.max(220, Dimensions.get("window").height * 0.39)));
+    const reduceMotion = useReduceMotion();
 
     useEffect(() => {
         if (!plans) fetchPlans().catch(() => {});
@@ -508,27 +498,43 @@ export default function PaywallScreen() {
     };
 
     // ── The moment that opened the screen ────────────────────────────
-    const hero: HeroSpec = (() => {
-        if (PRO_TOOL_SOURCES.has(source)) return { kind: "pro" };
+    const proTools: PaywallHeroSpec = {
+        kind: "pro",
+        left: { image: require("@/assets/features/style_after.jpg"), label: t("studio.mode_style_transfer") },
+        // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
+        // "asset missing" pattern, not a photograph.
+        right: { image: require("@/assets/features/outdoor_after.jpg"), label: t("studio.mode_outdoor") },
+    };
+    const hero: PaywallHeroSpec = (() => {
+        if (PRO_TOOL_SOURCES.has(source)) return proTools;
         if (source === SOURCE_FIRST_RESULT && ownAfter) {
             return ownBefore
-                ? { kind: "wipe", before: { uri: ownBefore, headers: authHeaders }, after: { uri: ownAfter } }
-                : { kind: "photo", image: { uri: ownAfter }, chip: t("result.after"), icon: "sparkles-outline", moving: false };
+                ? { kind: "pair", before: { uri: ownBefore, headers: authHeaders }, after: { uri: ownAfter } }
+                : { kind: "photo", image: { uri: ownAfter }, chip: t("result.after"), icon: "sparkles-outline" };
         }
         if (source === SOURCE_RESULT_VIDEO || (source === SOURCE_CREDITS_EXHAUSTED && ownAfter)) {
             return {
                 kind: "photo", image: ownAfter ? { uri: ownAfter } : SAMPLE_AFTER,
-                chip: t("paywall.chip_video"), icon: "videocam", moving: true,
+                chip: t("paywall.chip_video"), icon: "videocam",
             };
         }
         if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
-            return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline", moving: false };
+            return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline" };
         }
-        if (subscribed) return { kind: "pro" };
-        return { kind: "wipe", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+        if (subscribed) return proTools;
+        return { kind: "pair", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
     })();
 
+    /**
+     * v3: "This was one room." only where it is literally true — the first
+     * result, with the user's own design as the picture. On the sample room it
+     * would be a claim about someone else's room, so every other placement
+     * keeps the headline it already had (and its line becomes the value line).
+     */
     const headline: { title: string; sub: string | null } = (() => {
+        if (!subscribed && source === SOURCE_FIRST_RESULT && ownAfter) {
+            return { title: t("paywall.hero_one_room_title"), sub: t("paywall.value_line") };
+        }
         if (subscribed) {
             return {
                 title: source === SOURCE_CREDITS_EXHAUSTED
@@ -547,38 +553,6 @@ export default function PaywallScreen() {
         }
         return { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
     })();
-
-    const wantsWipe = hero.kind === "wipe";
-    const wantsDrift = hero.kind === "photo" && hero.moving;
-    useEffect(() => {
-        if (reduceMotion === null) return;
-        if (!wantsWipe) return;
-        if (reduceMotion) {
-            // Still show both rooms — just stop moving between them.
-            reveal.setValue(0.5);
-            return;
-        }
-        const hold = (v: number, ms: number) =>
-            Animated.timing(reveal, { toValue: v, duration: ms, easing: Easing.inOut(Easing.cubic), useNativeDriver: false });
-        const loop = Animated.loop(Animated.sequence([
-            Animated.delay(600),
-            hold(0.08, 1500),   // wipe to the redesigned room
-            Animated.delay(1400),
-            hold(0.95, 1500),   // and back to the original
-            Animated.delay(700),
-        ]));
-        loop.start();
-        return () => loop.stop();
-    }, [wantsWipe, reduceMotion]);
-    useEffect(() => {
-        if (!wantsDrift || reduceMotion !== false) return;
-        const loop = Animated.loop(Animated.sequence([
-            Animated.timing(drift, { toValue: 1, duration: 6000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-            Animated.timing(drift, { toValue: 0, duration: 6000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        ]));
-        loop.start();
-        return () => loop.stop();
-    }, [wantsDrift, reduceMotion]);
 
     // ── Money lines ──────────────────────────────────────────────────
     const chosenPrice = !chosen || pricesLoading
@@ -599,89 +573,42 @@ export default function PaywallScreen() {
     const rowA11y = (tier: string, price: string | null, period: string) =>
         [tier, price ? `${price}${period}` : null].filter(Boolean).join(", ");
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
-            {/* Kapatma sağ üstte, bir çarpı. Bu ekran bir yığın adımı değil,
-                üstüne açılan bir teklif — ve açılış kapısı olarak geldiğinde
-                arkasında dönülecek bir ekran yok. Çarpı ikisinde de doğru. */}
-            <View style={{
-                paddingHorizontal: 18, paddingTop: 8, paddingBottom: 6,
-                flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-            }}>
-                <Text style={{ ...theme.v2.brand, color: U.inkMuted }} accessibilityElementsHidden importantForAccessibility="no">
-                    Roomframe
-                </Text>
-                <Pressable
-                    onPress={() => leave("DISMISSED")}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("common.close")}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    style={{
-                        width: 34, height: 34, borderRadius: 17,
-                        backgroundColor: U.lineNeutral,
-                        alignItems: "center", justifyContent: "center",
-                    }}
-                >
-                    <Ionicons name="close" size={19} color={U.ink} />
-                </Pressable>
-            </View>
+    const weeklyRowPrice = introPending ? null : weeklyIntroShown ? weeklyIntro!.priceString : weeklyPrice;
+    const monthlyRowPrice = introPending ? null : monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice;
+    const ctaDisabled = anythingToBuy ? busy || !chosen : false;
+    const ctaPrice = anythingToBuy && chosenPrice && !introPending ? chosenPrice : null;
 
+    return (
+        <View style={{ flex: 1, backgroundColor: U.ground }}>
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 14 }}
+                contentContainerStyle={{ paddingBottom: 14 }}
                 showsVerticalScrollIndicator={false}
+                bounces={false}
             >
-                <Text style={{ ...theme.v2.displayL, color: U.ink }} accessibilityRole="header">
-                    {headline.title}
-                </Text>
-                {headline.sub ? (
-                    <Text style={{ ...theme.v2.body, color: U.inkMuted, marginTop: 8 }}>
-                        {headline.sub}
-                    </Text>
-                ) : null}
+                <PaywallHero
+                    spec={hero}
+                    height={heroHeight}
+                    topInset={insets.top}
+                    // The product's name, not copy — same as the "Roomframe"
+                    // lockup this screen always drew untranslated.
+                    kicker="Roomframe Pro"
+                    title={headline.title}
+                    beforeLabel={t("result.before")}
+                    reduceMotion={reduceMotion}
+                />
 
-                <View style={{ marginTop: 16 }}>
-                    {hero.kind === "pro" ? (
-                        <View style={{ flexDirection: "row", gap: 10 }}>
-                            <ProCard
-                                image={require("@/assets/features/style_after.jpg")}
-                                label={t("studio.mode_style_transfer")}
-                                height={heroHeight - 30}
-                            />
-                            <ProCard
-                                // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
-                                // "asset missing" pattern, not a photograph.
-                                image={require("@/assets/features/outdoor_after.jpg")}
-                                label={t("studio.mode_outdoor")}
-                                height={heroHeight - 30}
-                            />
-                        </View>
-                    ) : hero.kind === "wipe" ? (
-                        <WipeHero
-                            before={hero.before}
-                            after={hero.after}
-                            width={heroWidth}
-                            height={heroHeight}
-                            revealWidth={revealWidth}
-                            beforeLabel={t("result.before")}
-                            afterLabel={t("result.after")}
-                        />
-                    ) : (
-                        <PhotoHero
-                            image={hero.image}
-                            chip={hero.chip}
-                            icon={hero.icon}
-                            height={heroHeight}
-                            drift={hero.moving ? drift : null}
-                        />
-                    )}
-                </View>
+                <View style={{ paddingHorizontal: theme.v2Layout.gutterWide, paddingTop: 14, gap: 12 }}>
+                    {headline.sub ? (
+                        <Text style={{ ...theme.v2.body, fontSize: 14, lineHeight: 21, color: theme.color.onSurfaceVariant }}>
+                            {headline.sub}
+                        </Text>
+                    ) : null}
 
-                {/* İki satır: aynı Pro, iki dönem. */}
-                <View style={{ gap: 10, marginTop: 16 }}>
-                    <UmberPlanRow
+                    {/* İki satır: aynı Pro, iki dönem — her biri BUGÜN ne çekileceğini söylüyor. */}
+                    <PaywallPlanRow
                         label={`Pro · ${t("paywall.weekly")}`}
-                        price={introPending ? null : weeklyIntroShown ? weeklyIntro!.priceString : weeklyPrice}
+                        price={weeklyRowPrice}
                         period={weeklyIntroShown ? t("paywall.first_week") : t("paywall.per_week")}
                         then={weeklyIntroShown && weeklyPrice ? t("paywall.then_price_week", { price: weeklyPrice }) : null}
                         badge={weeklyIntroShown ? introBadge(weekly, weeklyIntro) : null}
@@ -692,6 +619,7 @@ export default function PaywallScreen() {
                         a11yLabel={rowA11y(`Pro ${t("paywall.weekly")}`,
                             weeklyIntroShown ? weeklyIntro!.priceString : weeklyPrice,
                             weeklyIntroShown ? ` ${t("paywall.first_week")}` : t("paywall.per_week"))}
+                        reduceMotion={reduceMotion}
                         onPress={() => {
                             if (!offersWeekly) return;
                             touchedAPlan.current = true;
@@ -699,9 +627,9 @@ export default function PaywallScreen() {
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_WEEKLY });
                         }}
                     />
-                    <UmberPlanRow
+                    <PaywallPlanRow
                         label={`Pro · ${t("paywall.monthly")}`}
-                        price={introPending ? null : monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice}
+                        price={monthlyRowPrice}
                         period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
                         then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
                         badge={monthlyIntroShown
@@ -714,6 +642,7 @@ export default function PaywallScreen() {
                         a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
                             monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
                             monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
+                        reduceMotion={reduceMotion}
                         onPress={() => {
                             if (!offersMonthly) return;
                             touchedAPlan.current = true;
@@ -721,72 +650,85 @@ export default function PaywallScreen() {
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
                         }}
                     />
-                </View>
 
-                {/* The out-of-credits placement keeps its low-commitment step:
-                    someone who has just run dry is the one person for whom a
-                    one-off pack is the right size of decision. */}
-                {exhaustedPack && (
-                    <Pressable
-                        onPress={handlePack}
-                        disabled={busy}
-                        accessibilityRole="button"
-                        style={{
-                            borderWidth: 1, borderColor: U.lineNeutral,
-                            borderRadius: 13, paddingVertical: 12, paddingHorizontal: 14,
-                            marginTop: 10, flexDirection: "row", gap: 12,
-                            alignItems: "center", justifyContent: "space-between",
-                        }}
-                    >
-                        <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
-                            {t("paywall.pack_line", { credits: exhaustedPack.credits })}
-                        </Text>
-                        <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
-                            {priceOfPack(exhaustedPack)}
-                        </Text>
-                    </Pressable>
-                )}
+                    {/* The out-of-credits placement keeps its low-commitment step:
+                        someone who has just run dry is the one person for whom a
+                        one-off pack is the right size of decision. */}
+                    {exhaustedPack && (
+                        <Pressable
+                            onPress={handlePack}
+                            disabled={busy}
+                            accessibilityRole="button"
+                            style={{
+                                minHeight: 44,
+                                borderWidth: 1, borderColor: U.lineNeutral,
+                                borderRadius: theme.v2Layout.radius.inline, paddingVertical: 12, paddingHorizontal: 16,
+                                flexDirection: "row", gap: 12,
+                                alignItems: "center", justifyContent: "space-between",
+                            }}
+                        >
+                            <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
+                                {t("paywall.pack_line", { credits: exhaustedPack.credits })}
+                            </Text>
+                            <Text style={{ ...theme.v2.row, color: U.accentBright }}>
+                                {priceOfPack(exhaustedPack)}
+                            </Text>
+                        </Pressable>
+                    )}
+                </View>
             </ScrollView>
 
-            {/* Always in view: the button, what it will charge, and the three
-                things Apple and a doubtful buyer both look for. */}
-            <View style={{ paddingHorizontal: 18, paddingTop: 10, borderTopWidth: 1, borderTopColor: U.lineNeutral }}>
+            {/* Always in view: the button, what it will charge today, and the
+                three things Apple and a doubtful buyer both look for. */}
+            <View style={{
+                paddingHorizontal: theme.v2Layout.gutterWide, paddingTop: 10,
+                paddingBottom: Math.max(insets.bottom, 12),
+            }}>
                 {/* Satın alınacak bir şey varsa abonelik düğmesi; yoksa —
                     yani zaten en üstteyse — dürüst olan tek kapı kredi paketi.
                     Abonelik düğmesini orada bırakmak, kullanıcıyı Apple'ın
                     "bu abonelikte zaten varsınız" uyarısına göndermekti. */}
                 <Pressable
                     onPress={anythingToBuy ? handleContinue : () => router.replace("/credits/packs" as never)}
-                    disabled={anythingToBuy ? busy || !chosen : false}
+                    disabled={ctaDisabled}
                     accessibilityRole="button"
-                    accessibilityLabel={chosenPrice && anythingToBuy ? `${ctaLabel}, ${chosenPrice}` : ctaLabel}
-                    accessibilityState={{ disabled: anythingToBuy ? busy || !chosen : false, busy }}
+                    accessibilityLabel={ctaPrice ? `${ctaLabel}, ${t("paywall.price_today", { price: ctaPrice })}` : ctaLabel}
+                    accessibilityState={{ disabled: ctaDisabled, busy }}
                     style={{
-                        height: 56, borderRadius: 16, backgroundColor: U.buttonFill,
+                        borderRadius: theme.v2Layout.radius.button,
                         opacity: anythingToBuy && (busy || !chosen) ? 0.5 : 1,
-                        flexDirection: "row", alignItems: "center",
-                        justifyContent: "space-between", paddingHorizontal: 22,
+                        ...theme.elevation.goldGlowSoft,
                     }}
                 >
-                    {busy ? (
-                        <View style={{ flex: 1, alignItems: "center" }}>
-                            <ActivityIndicator color={U.buttonInk} />
-                        </View>
-                    ) : (
-                        <>
-                            <Text style={{ ...theme.v2.button, color: U.buttonInk, flexShrink: 1 }} numberOfLines={1} adjustsFontSizeToFit>
-                                {ctaLabel}
-                            </Text>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                                {anythingToBuy && chosenPrice && !introPending ? (
-                                    <Text style={{ fontFamily: "NotoSerif", fontSize: 18, color: U.buttonInk }}>
-                                        {chosenPrice}
-                                    </Text>
-                                ) : null}
-                                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                    <LinearGradient
+                        colors={theme.gradient.primary}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                            height: 56, borderRadius: theme.v2Layout.radius.button,
+                            flexDirection: "row", alignItems: "center",
+                            justifyContent: "space-between", paddingHorizontal: 22, gap: 12,
+                        }}
+                    >
+                        {busy ? (
+                            <View style={{ flex: 1, alignItems: "center" }}>
+                                <ActivityIndicator color={U.buttonInk} />
                             </View>
-                        </>
-                    )}
+                        ) : (
+                            <>
+                                <Text style={{ ...theme.v2.button, color: U.buttonInk, flexShrink: 1 }} numberOfLines={1} adjustsFontSizeToFit>
+                                    {ctaLabel}
+                                </Text>
+                                {ctaPrice ? (
+                                    <FadeSwapText
+                                        text={t("paywall.price_today", { price: ctaPrice })}
+                                        style={{ fontFamily: "NotoSerif", fontSize: 17, lineHeight: 23, color: U.buttonInk }}
+                                        reduceMotion={reduceMotion}
+                                    />
+                                ) : null}
+                            </>
+                        )}
+                    </LinearGradient>
                 </Pressable>
 
                 {/* 🔴 App Store 3.1.2: what is charged, how often, that it
@@ -794,14 +736,14 @@ export default function PaywallScreen() {
                     a subscription can be bought. With the first-week offer the
                     regular price is spelled out in the same sentence. */}
                 {renewal ? (
-                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 9, textAlign: "center" }}>
+                    <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 10, textAlign: "center" }}>
                         {renewal}
                     </Text>
                 ) : null}
 
                 <View style={{
                     flexDirection: "row", justifyContent: "center", alignItems: "center",
-                    gap: 6, marginTop: 6, marginBottom: 4,
+                    gap: 6, marginTop: 6,
                 }}>
                     <FooterLink label={t("paywall.restore_link")} onPress={handleRestore} disabled={busy} role="button" />
                     <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>·</Text>
@@ -810,115 +752,24 @@ export default function PaywallScreen() {
                     <FooterLink label={t("paywall.privacy")} onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})} role="link" />
                 </View>
             </View>
-        </SafeAreaView>
-    );
-}
 
-/** A locked capability, shown rather than described. */
-function ProCard({ image, label, height }: { image: number; label: string; height: number }) {
-    return (
-        <View
-            style={{ flex: 1, height, borderRadius: 16, overflow: "hidden", backgroundColor: U.surface }}
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel={label}
-        >
-            <Image source={image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-            <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.9)"]}
-                style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingTop: 30, paddingHorizontal: 12, paddingBottom: 10 }}
-            >
-                <Text style={{ fontFamily: "Inter-Bold", fontSize: 14, color: "#fff" }} numberOfLines={2}>
-                    {label}
-                </Text>
-            </LinearGradient>
-        </View>
-    );
-}
-
-/** A pill over a photograph: its own dark fill, whatever the photo. */
-function PhotoChip({ label, icon }: { label: string; icon?: IoniconName }) {
-    const { i18n } = useTranslation();
-    return (
-        <View style={{
-            flexDirection: "row", alignItems: "center", gap: 5,
-            paddingHorizontal: 9, paddingVertical: 4, borderRadius: 100,
-            backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
-        }}>
-            {icon ? <Ionicons name={icon} size={12} color="#fff" /> : null}
-            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10.5, letterSpacing: tracking(0.8), color: "#fff" }}>
-                {label.toLocaleUpperCase(i18n.language)}
-            </Text>
-        </View>
-    );
-}
-
-/**
- * Before and after, wiping between the two — the user's own first result when
- * there is one, the sample room otherwise. The "before" window narrows over
- * the "after" photo; its image keeps full width so nothing slides.
- */
-function WipeHero({
-    before, after, width, height, revealWidth, beforeLabel, afterLabel,
-}: {
-    before: ImageSource | number; after: ImageSource | number;
-    width: number; height: number;
-    revealWidth: Animated.AnimatedInterpolation<number>;
-    beforeLabel: string; afterLabel: string;
-}) {
-    return (
-        <View
-            style={{ height, borderRadius: 18, overflow: "hidden", backgroundColor: U.surface }}
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel={`${beforeLabel} / ${afterLabel}`}
-        >
-            <ExpoImage source={after} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
-            <Animated.View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: revealWidth, overflow: "hidden" }}>
-                <ExpoImage source={before} style={{ width, height }} contentFit="cover" transition={200} />
-            </Animated.View>
-            <Animated.View
+            {/* Kapatma sağ üstte, bir çarpı — fotoğrafın üstünde, kendi koyu
+                zemininde. Bu ekran bir yığın adımı değil, üstüne açılan bir
+                teklif; açılış kapısı olarak geldiğinde arkasında dönülecek bir
+                ekran yok. Ekrana sabit: kaydırmayla asla kaybolmaz. */}
+            <Pressable
+                onPress={() => leave("DISMISSED")}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.close")}
                 style={{
-                    position: "absolute", top: 0, bottom: 0, width: 2, marginLeft: -1,
-                    left: revealWidth, backgroundColor: U.accentBright,
+                    position: "absolute", top: insets.top + 8, right: 20,
+                    width: 44, height: 44, borderRadius: 22,
+                    backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
+                    alignItems: "center", justifyContent: "center",
                 }}
-            />
-            <View style={{ position: "absolute", top: 10, left: 10 }}>
-                <PhotoChip label={beforeLabel} />
-            </View>
-            <View style={{ position: "absolute", top: 10, right: 10 }}>
-                <PhotoChip label={afterLabel} />
-            </View>
-        </View>
-    );
-}
-
-/** One photograph with a label — the room waiting for credits, or the design about to move. */
-function PhotoHero({
-    image, chip, icon, height, drift,
-}: {
-    image: ImageSource | number; chip: string; icon: IoniconName; height: number;
-    drift: Animated.Value | null;
-}) {
-    const transform = drift
-        ? [
-            { scale: drift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
-            { translateX: drift.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) },
-        ]
-        : undefined;
-    return (
-        <View
-            style={{ height, borderRadius: 18, overflow: "hidden", backgroundColor: U.surface }}
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel={chip}
-        >
-            <Animated.View style={{ width: "100%", height: "100%", transform }}>
-                <ExpoImage source={image} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
-            </Animated.View>
-            <View style={{ position: "absolute", left: 10, bottom: 10 }}>
-                <PhotoChip label={chip} icon={icon} />
-            </View>
+            >
+                <Ionicons name="close" size={18} color={U.ink} />
+            </Pressable>
         </View>
     );
 }
@@ -938,125 +789,6 @@ function FooterLink({
             <Text style={{ ...theme.v2.caption, color: U.inkMuted, textDecorationLine: "underline" }}>
                 {label}
             </Text>
-        </Pressable>
-    );
-}
-
-/** A price that has not arrived yet: a quiet bar, never a wrong number. */
-function PriceSkeleton() {
-    const pulse = useRef(new Animated.Value(0.35)).current;
-    useEffect(() => {
-        const loop = Animated.loop(Animated.sequence([
-            Animated.timing(pulse, { toValue: 0.7, duration: 650, useNativeDriver: true }),
-            Animated.timing(pulse, { toValue: 0.35, duration: 650, useNativeDriver: true }),
-        ]));
-        loop.start();
-        return () => loop.stop();
-    }, []);
-    return (
-        <Animated.View
-            style={{ width: 66, height: 24, borderRadius: 6, backgroundColor: U.lineAccent, opacity: pulse, marginBottom: 4 }}
-        />
-    );
-}
-
-/**
- * Merdivenin bir basamağı.
- *
- * <p>Üç hâl: seçilebilir, seçili, ve satın alınamaz. Üçüncüsü sönük çiziliyor
- * ama FİYATI DURUYOR — kullanıcı kendi planının ne kadar olduğunu ve bir alt
- * basamağın ne kadar olduğunu görebilmeli; satın alma hakkının olmaması bunu
- * gizlemek için gerekçe değil. Üstünde bulunulan basamak ayrıca etiketli,
- * yoksa sönük satır "tükendi" gibi okunur.
- *
- * <p>2.0.0: a plan and its price, nothing else — the owner's call on
- * 26 Sep was "as plain as possible": no credit counts, no "≈ 20 designs",
- * no feature lists. With the first-week offer the price column reads
- * "$6.99 · first week · then $8.99/week" — the regular price never leaves
- * the row the offer is on.
- */
-function UmberPlanRow({
-    label, price, period, then, badge, selected, current, locked, currentLabel, a11yLabel, onPress,
-}: {
-    /** "Pro · Weekly" — the tier and the period, as one line. */
-    label: string;
-    /** Null while the store price is on its way — drawn as a skeleton. */
-    price: string | null; period: string;
-    /** "then $8.99/week" under an introductory price; null otherwise. */
-    then: string | null;
-    /** The first-week offer, when the store has it AND this Apple ID may take it. */
-    badge: string | null;
-    selected: boolean; current: boolean; locked: boolean;
-    currentLabel: string; a11yLabel: string;
-    onPress: () => void;
-}) {
-    // Locale-aware: Turkish "i" is "İ" in capitals, not "I".
-    const { i18n } = useTranslation();
-    const upper = (s: string) => s.toLocaleUpperCase(i18n.language);
-    return (
-        <Pressable
-            onPress={onPress}
-            disabled={locked}
-            accessibilityRole="radio"
-            accessibilityLabel={a11yLabel}
-            accessibilityState={{ selected, disabled: locked }}
-            style={{
-                borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16,
-                borderWidth: selected || current ? 1.5 : 1,
-                borderColor: selected ? U.accent : current ? U.accentBright : U.lineNeutral,
-                backgroundColor: U.surface,
-                flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-                gap: 12,
-                // Üstünde olunan plan sönmez — o bir bilgi, bir kısıt değil.
-                opacity: locked && !current ? 0.45 : 1,
-            }}
-        >
-            <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <View style={{
-                        width: 16, height: 16, borderRadius: 8, borderWidth: 1.5,
-                        borderColor: selected ? U.accent : U.lineNeutral,
-                        alignItems: "center", justifyContent: "center",
-                    }}>
-                        {selected ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: U.accent }} /> : null}
-                    </View>
-                    <Text style={{ ...theme.v2.tier, color: U.accentBright }}>
-                        {upper(label)}
-                    </Text>
-                    {current ? (
-                        <View style={{
-                            paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100,
-                            backgroundColor: U.lineAccent, borderWidth: 1, borderColor: U.accent,
-                        }}>
-                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.accentBright }}>
-                                {upper(currentLabel)}
-                            </Text>
-                        </View>
-                    ) : badge ? (
-                        // Dolu rozet: bu satırdaki en güçlü tek argüman ve
-                        // "mevcut plan" ile aynı anda asla görünmez.
-                        <View style={{
-                            paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: 100,
-                            backgroundColor: U.accent,
-                        }}>
-                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 9.5, letterSpacing: tracking(0.8), color: U.buttonInk }}>
-                                {upper(badge)}
-                            </Text>
-                        </View>
-                    ) : null}
-                </View>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-                {price ? (
-                    <Text style={{ ...theme.v2.price, color: U.ink }}>{price}</Text>
-                ) : (
-                    <PriceSkeleton />
-                )}
-                <Text style={{ ...theme.v2.caption, color: then ? U.accentBright : U.inkMuted }}>{period}</Text>
-                {then ? (
-                    <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>{then}</Text>
-                ) : null}
-            </View>
         </Pressable>
     );
 }

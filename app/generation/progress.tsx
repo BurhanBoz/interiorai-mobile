@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  Pressable,
-  Animated,
-  Easing,
-  ScrollView,
-} from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDismissible } from "@/hooks/useDismissible";
 import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
@@ -24,18 +17,30 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
-import { Brand } from "@/components/brand/Brand";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
+import { ScanCard } from "@/components/generation/ScanCard";
+import { GoldProgressBar } from "@/components/generation/GoldProgressBar";
 import { theme } from "@/config/theme";
-import type { JobResponse, JobStatus } from "@/types/api";
+import type { JobResponse } from "@/types/api";
+
+const U = theme.umber;
 
 /**
  * Maps raw API status + elapsed time to a single visual phase the user can read.
- * Each phase owns a label, a percentage range, and an icon.
+ * Each phase owns a label and a percentage range.
  *
  * The backend exposes status transitions PENDING → SUBMITTED → PROCESSING → COMPLETED,
  * so we mirror those instead of relying on a fake timer loop like the previous version.
  * Within PROCESSING we still animate through sub-phases so the copy doesn't feel frozen
  * during the long render window.
+ *
+ * v3 look (redesign, 2026-10-10): the spinner rings are gone. The user's own
+ * room fills the screen blurred and darkened, falling to the ground; the same
+ * photo sits sharp in a gold-edged card with a gold scan line sweeping down it
+ * (ScanCard), over "Designing your <room>", "<style> · about a minute" and a
+ * thin gold bar (GoldProgressBar) that shows the same progress value as
+ * before. The live phase moved into the bar's accessibility label. Reduce
+ * Motion rests the band at the current progress instead of looping.
  */
 type Phase = "planning" | "queued" | "submitted" | "rendering" | "polishing" | "ready" | "error";
 
@@ -48,7 +53,8 @@ export default function GenerationProgressScreen() {
   // Retry replays the SAME request through the money path — same key, so a
   // transient failure cannot become a second charge.
   const { generate } = useGenerate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const reduceMotion = useReduceMotion();
   const catalogLabel = useCatalogLabel();
   const { jobId: jobIdParam, pending } = useLocalSearchParams<{ jobId?: string; pending?: string }>();
   // Opened by Generate before the job exists: the request finishes here (pendingGenerationStore).
@@ -68,7 +74,10 @@ export default function GenerationProgressScreen() {
   // design takes is the natural moment for "we'll tell you when it's done",
   // and it keeps the result screen for the rating alone. First generation
   // only, 3.5 s in, once per install — the hook rations it.
-  usePushPermissionAsk(!!jobId && !errorMessage);
+  // From the moment the screen opens, not from the job id: the id arrives only after the plan
+  // (most of the minute), so waiting for it put the question right before the result and,
+  // with the hook's own 3.5 s delay, on top of the first-result paywall (simulator, 10 Oct).
+  usePushPermissionAsk((planning || !!jobId) && !errorMessage);
 
   // The room being worked on, blurred behind the progress (2026-10-05): the
   // minute-long wait reads as "my room is being designed", not a bare spinner.
@@ -76,6 +85,8 @@ export default function GenerationProgressScreen() {
   // opened from the gallery it is the job's input through the file proxy.
   const authHeaders = useAuthHeaders();
   const studioPhotoUri = useStudioStore((s) => s.photo?.uri ?? null);
+  const studioRoomName = useStudioStore((s) => s.roomType?.name ?? null);
+  const studioStyleName = useStudioStore((s) => s.designStyle?.name ?? null);
   const jobInputId = job?.inputFile?.id ?? null;
   const backdrop = pending && studioPhotoUri
     ? { uri: studioPhotoUri }
@@ -92,48 +103,6 @@ export default function GenerationProgressScreen() {
   useEffect(() => {
     if (pendingRequest?.error) setErrorMessage(pendingRequest.error);
   }, [pendingRequest?.error]);
-
-  const rotation = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(0.3)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
-
-  // ─── Spinner animations ───────────────────────────────
-  // Motion durations flow through `theme.motion` so the generate phase
-  // shares a signature cadence with every other wait state in the app.
-  // The rotation is a generous 10× base duration (slow spin = calm);
-  // the pulse uses glacial/2 for the two halves of a breath.
-  useEffect(() => {
-    const rotationLoop = Animated.loop(
-      Animated.timing(rotation, {
-        toValue: 360,
-        duration: theme.motion.duration.base * 12, // ~2880ms
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 0.7,
-          duration: theme.motion.duration.glacial * 3, // ~1680ms
-          easing: theme.motion.easing.standard,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0.3,
-          duration: theme.motion.duration.glacial * 3,
-          easing: theme.motion.easing.standard,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    rotationLoop.start();
-    pulseLoop.start();
-    return () => {
-      rotationLoop.stop();
-      pulseLoop.stop();
-    };
-  }, [rotation, pulse]);
 
   // ─── Elapsed-time ticker ──────────────────────────────
   useEffect(() => {
@@ -219,20 +188,6 @@ export default function GenerationProgressScreen() {
     return Math.min(95, Math.round(84 + linear * 11));
   }, [phase, elapsedMs, renderElapsedMs]);
 
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: targetProgress,
-      duration: theme.motion.duration.glacial, // ~560ms — matches token scale
-      easing: theme.motion.easing.exit,
-      useNativeDriver: false,
-    }).start();
-  }, [targetProgress, progressAnim]);
-
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-  });
-
   // ─── Style info card data ─────────────────────────────
   const styleName = job?.designStyleName ?? null;
   const styleDescription = useMemo(() => {
@@ -243,17 +198,6 @@ export default function GenerationProgressScreen() {
       ? translated
       : t("generation.style_hint_generic");
   }, [styleName, t]);
-
-  const spinStyle = {
-    transform: [
-      {
-        rotate: rotation.interpolate({
-          inputRange: [0, 360],
-          outputRange: ["0deg", "360deg"],
-        }),
-      },
-    ],
-  };
 
   const handleClose = () => {
     if (router.canGoBack()) router.back();
@@ -304,10 +248,26 @@ export default function GenerationProgressScreen() {
   const showStyleHint = !errorMessage && !!styleName && styleHintVisible;
 
   const phaseLabel = t(`generation.phase_${phase === "error" ? "ready" : phase}`);
-  const title = errorMessage ? t("generation.failed") : t("generation.creating");
+
+  // v3 title: "Designing your living room". The room comes from the studio
+  // while the request is still planning here, from the job once it exists.
+  const roomName = catalogLabel("room", job?.roomTypeName ?? (pending ? studioRoomName : null));
+  const styleLabel = catalogLabel("style", job?.designStyleName ?? (pending ? studioStyleName : null));
+  const title = errorMessage
+    ? t("generation.failed")
+    : roomName
+      ? t("generation.designing_room", {
+          room: i18n.language?.startsWith("en") ? roomName.toLowerCase() : roomName,
+        })
+      : t("generation.creating");
+  const subline = errorMessage
+    ?? (styleLabel
+      ? t("generation.style_about_a_minute", { style: styleLabel })
+      : t("generation.about_a_minute"));
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-surface">
+    <View style={{ flex: 1, backgroundColor: U.ground }}>
+      {/* The room, blurred and darkened, falling to the ground at the bottom. */}
       {backdrop ? (
         <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
           <Image
@@ -315,251 +275,186 @@ export default function GenerationProgressScreen() {
             blurRadius={36}
             contentFit="cover"
             transition={400}
-            style={{ width: "100%", height: "100%", opacity: 0.85 }}
+            style={{ width: "100%", height: "100%", opacity: 0.8 }}
           />
           <LinearGradient
-            colors={["rgba(25,21,16,0.35)", "rgba(25,21,16,0.62)", "rgba(25,21,16,0.92)"]}
+            colors={["rgba(25,21,16,0.55)", "rgba(25,21,16,0.45)", U.ground]}
+            locations={[0, 0.45, 1]}
             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           />
         </View>
       ) : null}
-      {/* Top bar */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <Brand variant="inline" size="sm" tone="gold" />
-        <Pressable
-          onPress={handleClose}
-          className="items-center justify-center rounded-full"
-          style={{
-            width: 40,
-            height: 40,
-            backgroundColor: theme.color.surfaceContainerHigh,
-          }}
-        >
-          <Ionicons name="close" size={20} color={theme.color.onSurface} />
-        </Pressable>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: theme.space.gutter,
-          paddingBottom: 40,
-          flexGrow: 1,
-          // The style card is a spotlight overlay now — the spinner block
-          // owns the center on every run.
-          justifyContent: "center",
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero spinner */}
-        <View
-          className="items-center justify-center"
-          style={{ width: "100%", height: 200, marginTop: 12 }}
-        >
-          {/* Outer static ring */}
-          <View
-            className="absolute rounded-full"
-            style={{
-              width: 180,
-              height: 180,
-              borderWidth: 1,
-              borderColor: "rgba(153,143,131,0.18)",
-            }}
-          />
-          {/* Pulsing warm glow */}
-          <Animated.View
-            className="absolute rounded-full"
-            style={{
-              width: 160,
-              height: 160,
-              borderWidth: 1,
-              borderColor: "#DDB477",
-              opacity: pulse,
-              shadowColor: "#FEDFB5",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.6,
-              shadowRadius: 24,
-            }}
-          />
-          {/* Spinning gold arc */}
-          <Animated.View
-            style={[
-              {
-                position: "absolute",
-                width: 180,
-                height: 180,
-                borderRadius: 90,
-                borderWidth: 2,
-                borderColor: "transparent",
-                borderTopColor: "#FEDFB5",
-                borderRightColor: "rgba(254,223,181,0.3)",
-              },
-              spinStyle,
-            ]}
-          />
-          {/* Center icon reflects current phase */}
-          <PhaseIcon phase={phase} />
-        </View>
-
-        {/* Title */}
-        <Text
-          className="font-headline text-on-background text-center mt-10"
-          style={{ ...theme.text.display, fontStyle: "italic" }}
-        >
-          {title}
-        </Text>
-
-        {/* Phase label (live) */}
-        <Text
-          className="text-center mt-4"
-          style={{
-            ...theme.text.caption,
-            color: phase === "error" ? "#FFB4AB" : "#DDB477",
-          }}
-        >
-          {errorMessage ?? phaseLabel}
-        </Text>
-
-        {/* Progress bar */}
-        <View className="mt-8 mx-2">
-          <View
-            className="overflow-hidden rounded-full"
-            style={{ height: 3, backgroundColor: "rgba(77,70,60,0.25)" }}
-          >
-            <Animated.View style={{ height: "100%", width: progressWidth }}>
-              <LinearGradient
-                colors={
-                  phase === "error" ? ["#93000A", "#FFB4AB"] : ["#DDB477", "#FEDFB5"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  flex: 1,
-                  borderRadius: theme.radius.pill,
-                  shadowColor: "#FEDFB5",
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 6,
-                }}
-              />
-            </Animated.View>
-          </View>
-
-          {/* Elapsed / percentage row */}
-          <View className="flex-row justify-between items-center mt-3">
-            <Text
-              className="font-label"
-              style={{
-                ...theme.text.caption,
-                color: "rgba(209,197,184,0.6)",
-              }}
-            >
-              {t("generation.elapsed_label")} · {formatElapsed(elapsedMs, t)}
-            </Text>
-            <Text
-              className="font-headline"
-              style={{
-                ...theme.text.title,
-                color: phase === "error" ? "#FFB4AB" : "#FEDFB5",
-              }}
-            >
-              {errorMessage ? "—" : `${Math.min(100, targetProgress)}%`}
-            </Text>
-          </View>
-        </View>
-
-        {/* Retry button (error-only) */}
-        {errorMessage && (
-          <Pressable
-            onPress={handleRetry}
-            className="mt-8 self-center rounded-xl"
-            style={{
-              paddingHorizontal: theme.space.gutter,
-              paddingVertical: 14,
-              backgroundColor: "#2C2519",
-              borderWidth: 1,
-              borderColor: "rgba(196,168,130,0.3)",
-            }}
-          >
-            <Text
-              className="font-label text-secondary"
-              style={{
-                ...theme.text.caption,
-              }}
-            >
-              {t("common.try_again")}
-            </Text>
-          </Pressable>
-        )}
-
-      </ScrollView>
-
-      {/* "About this style" — one-shot SPOTLIGHT (2026-07-15 founder spec).
-          Shown once per style; X or any tap dismisses, leaving the screen
-          gets the same seen-once marking via shownRef above. */}
-      <OneShotSpotlight
-        visible={showStyleHint}
-        onDismiss={dismissStyleHint}
-        align="stretch"
-      >
+      <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1 }}>
+        {/* Top bar — brand + close on photo chrome */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingBottom: 14,
-            marginBottom: 4,
-            borderBottomWidth: 1,
-            borderBottomColor: "rgba(77,70,60,0.18)",
-            marginRight: 26,
+            paddingHorizontal: theme.v2Layout.gutterWide,
+            paddingTop: 4,
           }}
         >
           <Text
+            style={{ ...theme.v2.brand, color: U.accent }}
+            accessibilityRole="header"
+          >
+            Roomframe
+          </Text>
+          <Pressable
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            hitSlop={6}
             style={{
-              ...theme.text.caption,
-              color: "#DDB477",
+              width: 44,
+              height: 44,
+              borderRadius: theme.v2Layout.radius.pill,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: U.photoChrome,
+              borderWidth: 1,
+              borderColor: U.photoChromeBorder,
             }}
           >
-            {t("generation.about_this_style")}
-          </Text>
-          <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
+            <Ionicons name="close" size={18} color={U.ink} />
+          </Pressable>
         </View>
-        <Text
-          className="font-headline text-on-surface"
-          style={{ ...theme.text.headline }}
+
+        {/* Center — the room under the scan line, title, line, bar */}
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: theme.v2Layout.gutterWide,
+          }}
         >
-          {catalogLabel("style", styleName)}
-        </Text>
-        <Text
-          className="font-body text-on-surface-variant"
-          style={{ ...theme.text.body, fontStyle: "italic" }}
+          <ScanCard
+            source={backdrop}
+            scanning={!errorMessage && phase !== "ready"}
+            ready={phase === "ready"}
+            reduceMotion={reduceMotion}
+            progress={targetProgress}
+            accessibilityLabel={roomName || undefined}
+          />
+
+          <View style={{ alignItems: "center", marginTop: 28 }}>
+            <Text
+              style={{ ...theme.v2.displayS, color: U.ink, textAlign: "center" }}
+              accessibilityRole="header"
+            >
+              {title}
+            </Text>
+            <Text
+              style={{
+                ...theme.v2.body,
+                fontSize: 14,
+                lineHeight: 21,
+                marginTop: 8,
+                textAlign: "center",
+                color: errorMessage ? "#FFB4AB" : U.inkMuted,
+              }}
+            >
+              {subline}
+            </Text>
+          </View>
+
+          <View style={{ marginTop: 28 }}>
+            <GoldProgressBar
+              value={errorMessage ? 100 : targetProgress}
+              error={!!errorMessage}
+              reduceMotion={reduceMotion}
+              accessibilityLabel={errorMessage ?? phaseLabel}
+            />
+          </View>
+
+          {/* Retry button (error-only) */}
+          {errorMessage && (
+            <Pressable
+              onPress={handleRetry}
+              accessibilityRole="button"
+              style={{
+                marginTop: 28,
+                paddingHorizontal: theme.space.gutter,
+                paddingVertical: 14,
+                borderRadius: theme.v2Layout.radius.button,
+                backgroundColor: U.photoChrome,
+                borderWidth: 1,
+                borderColor: theme.umber.lineAccent,
+              }}
+            >
+              <Text style={{ ...theme.v2.button, color: U.accentBright }}>
+                {t("common.try_again")}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Bottom — true: the job runs server-side and this screen recovers it on return. */}
+        {!errorMessage ? (
+          <Text
+            style={{
+              ...theme.v2.rowQuiet,
+              color: U.inkMuted,
+              textAlign: "center",
+              paddingHorizontal: theme.v2Layout.gutterWide,
+              paddingBottom: 20,
+            }}
+          >
+            {t("generation.leave_app_hint")}
+          </Text>
+        ) : null}
+
+        {/* "About this style" — one-shot SPOTLIGHT (2026-07-15 founder spec).
+            Shown once per style; X or any tap dismisses, leaving the screen
+            gets the same seen-once marking via shownRef above. */}
+        <OneShotSpotlight
+          visible={showStyleHint}
+          onDismiss={dismissStyleHint}
+          align="stretch"
         >
-          {styleDescription}
-        </Text>
-      </OneShotSpotlight>
-    </SafeAreaView>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingBottom: 14,
+              marginBottom: 4,
+              borderBottomWidth: 1,
+              borderBottomColor: "rgba(77,70,60,0.18)",
+              marginRight: 26,
+            }}
+          >
+            <Text
+              style={{
+                ...theme.text.caption,
+                color: "#DDB477",
+              }}
+            >
+              {t("generation.about_this_style")}
+            </Text>
+            <Ionicons name="sparkles-outline" size={16} color="#D1C5B8" />
+          </View>
+          <Text
+            className="font-headline text-on-surface"
+            style={{ ...theme.text.headline }}
+          >
+            {catalogLabel("style", styleName)}
+          </Text>
+          <Text
+            className="font-body text-on-surface-variant"
+            style={{ ...theme.text.body, fontStyle: "italic" }}
+          >
+            {styleDescription}
+          </Text>
+        </OneShotSpotlight>
+      </SafeAreaView>
+    </View>
   );
 }
 
 // ─── Helpers ─────────────────────────────────────────────
-
-function PhaseIcon({ phase }: { phase: Phase }) {
-  const base = { size: 40, color: "#FEDFB5" } as const;
-  switch (phase) {
-    case "queued":
-      return <Ionicons name="hourglass-outline" size={base.size} color={base.color} />;
-    case "submitted":
-      return <Ionicons name="cloud-upload-outline" size={base.size} color={base.color} />;
-    case "rendering":
-      return <Ionicons name="color-palette-outline" size={base.size} color={base.color} />;
-    case "polishing":
-      return <Ionicons name="sparkles-outline" size={base.size} color={base.color} />;
-    case "ready":
-      return <Ionicons name="checkmark-circle" size={base.size} color="#4CAF50" />;
-    case "error":
-      return <Ionicons name="alert-circle" size={base.size} color="#FFB4AB" />;
-  }
-}
 
 /**
  * Reduces a user-facing style name (e.g. "Mid-Century Modern", "Art Déco")
@@ -574,11 +469,3 @@ function normalizeStyleKey(name: string): string {
     .replace(/^_+|_+$/g, "");
 }
 
-function formatElapsed(ms: number, t: (k: string, o?: any) => string): string {
-  const totalSec = Math.max(0, Math.floor(ms / 1000));
-  if (totalSec < 60) return t("generation.seconds_short", { count: totalSec });
-  const mins = Math.floor(totalSec / 60);
-  const secs = totalSec % 60;
-  if (secs === 0) return t("generation.minutes_short", { count: mins });
-  return t("generation.minutes_seconds", { mins, secs });
-}

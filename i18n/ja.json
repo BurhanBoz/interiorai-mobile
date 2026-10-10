@@ -354,7 +354,20 @@
     "mask_ready": "変更する範囲を設定済み",
     "edit_mask": "編集",
     "reference_ready": "参考写真を設定済み",
-    "change_reference": "変更"
+    "change_reference": "変更",
+    "home_headline": "あなたの部屋を、新しく。",
+    "home_subline": "今の部屋の写真から始めましょう。",
+    "add_your_room": "部屋を追加",
+    "add_your_room_sub": "カメラまたは写真ライブラリ",
+    "or_try_a_sample": "またはサンプルで試す",
+    "what_to_do_with_it": "できること",
+    "which_room": "どの部屋ですか？",
+    "pick_style": "スタイルを選ぶ",
+    "advanced_hint": "パレット、強さ",
+    "summary_room_placeholder": "部屋",
+    "summary_style_placeholder": "スタイル",
+    "summary_pieces_one": "+1点",
+    "summary_pieces_other": "+{{count}}点"
   },
   "furniture": {
     "title": "家具",
@@ -747,7 +760,11 @@
     "video_failed_body": "動画を完成できませんでした。クレジットは使われていません。もう一度お試しください。",
     "video_phase_planning": "カメラの動きを計画中",
     "video_phase_rendering": "部屋の動画を作成中",
-    "video_phase_ready": "動画が完成しました"
+    "video_phase_ready": "動画が完成しました",
+    "designing_room": "{{room}}をデザイン中",
+    "style_about_a_minute": "{{style}} · 約1分",
+    "about_a_minute": "約1分",
+    "leave_app_hint": "アプリを閉じても、デザインは続きます。"
   },
   "styles": {
     "scandinavian": "スカンジナビアデザインは温かいミニマリズムを称えます — 淡い木材、柔らかなニュートラルトーン、そして豊かな自然光。すべてのオブジェクトが実用性と誠実な職人技を通じてその場所を得ます。",
@@ -866,7 +883,12 @@
     "video_share_dialog_title": "動画を共有",
     "video_unavailable": "現在この動画は利用できません。",
     "video_in_progress_hint": "数分 · 完了したら通知します",
-    "video_in_progress_hint_gallery": "数分 · 完了後はギャラリーに入ります"
+    "video_in_progress_hint_gallery": "数分 · 完了後はギャラリーに入ります",
+    "video_walk_title": "中を歩いてみる",
+    "video_walk_sub": "音付き8秒のルーム動画",
+    "more_styles": "他のスタイル",
+    "more_actions": "その他の操作",
+    "reminder_turn_off": "クレジットのリマインダーをオフ"
   },
   "settings": {
     "notifications_title": "通知",
@@ -1258,7 +1280,10 @@
     "then_price_month": "以降 {{price}}／月",
     "renewal_month": "{{price}}／月。自動更新されます。更新の24時間前までに、設定からいつでも解約できます。",
     "renewal_intro_month": "初月は{{intro}}、以降は{{price}}／月。自動更新されます。更新の24時間前までに、設定からいつでも解約できます。",
-    "save_pct": "{{pct}}%お得"
+    "save_pct": "{{pct}}%お得",
+    "hero_one_room_title": "これはひと部屋だけ。",
+    "value_line": "Proならどの部屋もどのスタイルでも。ルーム動画付き、透かしなし。",
+    "price_today": "本日 {{price}}"
   },
   "purchase_errors": {
     "sheet_title": "Appleの支払い画面が開きませんでした",
@@ -1355,6 +1380,7 @@
     "advanced_title": "お好みで細かく調整",
     "advanced_body": "カラーパレット、変化の強さ、レイアウトの維持をここで設定できます。設定しなくても大丈夫です。",
     "generate_title": "デザインを作成",
-    "generate_body": "準備ができたらここをタップ。必要なクレジットはすぐ上に表示されます。"
+    "generate_body": "準備ができたらここをタップ。必要なクレジットはすぐ上に表示されます。",
+    "room_strip_body": "スクロールして部屋をタップ。部屋とスタイルの両方を選ぶと作成できます。"
   }
 }

@@ -354,7 +354,20 @@
     "mask_ready": "تم تحديد المنطقة المراد تغييرها",
     "edit_mask": "تعديل",
     "reference_ready": "تم تحديد الصورة المرجعية",
-    "change_reference": "تغيير"
+    "change_reference": "تغيير",
+    "home_headline": "غرفتك، بتصميم جديد.",
+    "home_subline": "ابدأ بصورة للغرفة كما هي.",
+    "add_your_room": "أضف غرفتك",
+    "add_your_room_sub": "الكاميرا أو مكتبة الصور",
+    "or_try_a_sample": "أو جرّب مثالًا",
+    "what_to_do_with_it": "ماذا يمكنك أن تفعل بها",
+    "which_room": "ما هذه الغرفة؟",
+    "pick_style": "اختر نمطًا",
+    "advanced_hint": "الألوان، الشدة",
+    "summary_room_placeholder": "الغرفة",
+    "summary_style_placeholder": "النمط",
+    "summary_pieces_one": "+قطعة واحدة",
+    "summary_pieces_other": "+{{count}} قطع"
   },
   "furniture": {
     "title": "الأثاث",
@@ -747,7 +760,11 @@
     "video_failed_body": "لم يكتمل الفيديو. لم تُستخدم أرصدتك — حاول مرة أخرى.",
     "video_phase_planning": "نخطط لحركة الكاميرا",
     "video_phase_rendering": "نصنع فيديو غرفتك",
-    "video_phase_ready": "الفيديو جاهز"
+    "video_phase_ready": "الفيديو جاهز",
+    "designing_room": "جارٍ تصميم {{room}}",
+    "style_about_a_minute": "{{style}} · نحو دقيقة",
+    "about_a_minute": "نحو دقيقة",
+    "leave_app_hint": "يمكنك مغادرة التطبيق، فالتصميم يستمر."
   },
   "styles": {
     "scandinavian": "يحتفي التصميم الاسكندنافي بالحد الأدنى الدافئ — خشب فاتح، ألوان محايدة ناعمة، وضوء طبيعي وافر. كل قطعة تكسب مكانها من خلال الفائدة والحرفة الصادقة.",
@@ -866,7 +883,12 @@
     "video_share_dialog_title": "مشاركة الفيديو",
     "video_unavailable": "الفيديو غير متاح حاليًا.",
     "video_in_progress_hint": "بضع دقائق · سنُشعرك عند الانتهاء",
-    "video_in_progress_hint_gallery": "بضع دقائق · ثم ستجده في معرضك"
+    "video_in_progress_hint_gallery": "بضع دقائق · ثم ستجده في معرضك",
+    "video_walk_title": "تجوّل فيها",
+    "video_walk_sub": "فيديو للغرفة مدته 8 ثوانٍ مع صوت",
+    "more_styles": "المزيد من الأنماط",
+    "more_actions": "إجراءات أخرى",
+    "reminder_turn_off": "إيقاف تذكير الرصيد"
   },
   "settings": {
     "notifications_title": "الإشعارات",
@@ -1258,7 +1280,10 @@
     "then_price_month": "ثم {{price}}/شهر",
     "renewal_month": "{{price}} شهريًا. يتجدد تلقائيًا، ويمكنك الإلغاء في أي وقت من الإعدادات قبل التجديد بـ24 ساعة على الأقل.",
     "renewal_intro_month": "{{intro}} للشهر الأول، ثم {{price}} شهريًا. يتجدد تلقائيًا، ويمكنك الإلغاء في أي وقت من الإعدادات قبل التجديد بـ24 ساعة على الأقل.",
-    "save_pct": "وفّر {{pct}}٪"
+    "save_pct": "وفّر {{pct}}٪",
+    "hero_one_room_title": "كانت هذه غرفة واحدة.",
+    "value_line": "يعيد Pro تصميم كل غرفة بأي نمط، مع فيديوهات للغرفة ودون علامة مائية.",
+    "price_today": "{{price}} اليوم"
   },
   "purchase_errors": {
     "sheet_title": "لم تُفتح شاشة الدفع من Apple",
@@ -1355,6 +1380,7 @@
     "advanced_title": "اضبط التفاصيل إن أردت",
     "advanced_body": "لوحة الألوان وقوة التغيير والحفاظ على التخطيط هنا. اختياري — الإعدادات الافتراضية تعمل جيدًا.",
     "generate_title": "أنشئ تصميمك",
-    "generate_body": "اضغط هنا عندما تكون جاهزًا. تظهر التكلفة فوقه مباشرة."
+    "generate_body": "اضغط هنا عندما تكون جاهزًا. تظهر التكلفة فوقه مباشرة.",
+    "room_strip_body": "مرّر واضغط على غرفتك. أنت تختار الغرفة والنمط، وكلاهما مطلوب للإنشاء."
   }
 }

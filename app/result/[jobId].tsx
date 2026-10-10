@@ -1,3 +1,19 @@
+/**
+ * The result of a design (and, by early return, of a clip — VideoResult).
+ *
+ * <p><b>Redesign v3 (2026-10-10, owner's pick "4B · framed card").</b> One
+ * large framed card shows the design; a BEFORE / AFTER pill on it replaces the
+ * drag slider, and the fullscreen viewer is the same Modal as before. Under it,
+ * in order: Save (gold, two thirds) + Share, the room video as a "Walk through
+ * it" card, and "Try another style" as one row of thumbnails. Add furniture,
+ * New design and the credits-refill reminder moved behind the header's "…"
+ * menu — they are still one tap from the screen, but the screen itself shows
+ * the design and its actions, nothing else (owner's rule). On arrival the
+ * after wipes in over the before, then the actions rise in; Reduce Motion
+ * shows the end state. Only layout and motion changed: the rating ladder, the
+ * dwell timer, the output signals, the first-result paywall and the video
+ * polling below are untouched.
+ */
 import {
   View,
   Text,
@@ -10,10 +26,8 @@ import {
   StatusBar,
   Alert,
   AppState,
-  Animated,
-  PanResponder,
-  AccessibilityInfo,
-  Easing,
+  ActionSheetIOS,
+  Platform,
 } from "react-native";
 import { theme } from "@/config/theme";
 import { useCatalogStore } from "@/stores/catalogStore";
@@ -26,11 +40,10 @@ import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 const U = theme.umber;
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type ComponentProps } from "react";
 import * as Notifications from "expo-notifications";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { Image } from "expo-image";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -61,9 +74,26 @@ import { ResumeNote } from "@/components/ui/ResumeNote";
 import { isPushAskOnScreen } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 import { useFirstResultPaywall } from "@/hooks/useFirstResultPaywall";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
+import { ResultFrame } from "@/components/result/ResultFrame";
+import { Rise } from "@/components/result/Rise";
+import { WalkThroughCard } from "@/components/result/WalkThroughCard";
+import { AnotherStyleRow } from "@/components/result/AnotherStyleRow";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
+/**
+ * The framed card: 470pt on an 844pt phone (the approved mockup), the same
+ * share of the screen on a smaller one so the actions under it stay in view.
+ */
+const FRAME_HEIGHT = Math.min(470, Math.round(SCREEN_HEIGHT * 0.557));
+/**
+ * The actions rise in once the after starts its wipe — a little before it
+ * lands, so the screen reads as one arrival rather than two. And never later
+ * than the fallback: a slow or broken picture must not hide Save.
+ */
+const ACTIONS_AFTER_WIPE_MS = 480;
+const ACTIONS_FALLBACK_MS = 1500;
 
 /**
  * Resolve the image URL for display.
@@ -313,6 +343,9 @@ export default function ResultDetailScreen() {
   // (budget spent, too soon, unavailable) — and the rating in turn waits for
   // anything still on screen, so no two sheets stack.
   const otherAskOnScreen = useRef(false);
+  // v3: the header's "…" menu is an action sheet — while it is up, the system
+  // rating sheet would land on top of a choice the user is making.
+  const menuOnScreen = useRef(false);
 
   // THE RATING WAITS; IT DOES NOT STAND DOWN (2.0.0)
   //
@@ -373,10 +406,40 @@ export default function ResultDetailScreen() {
     !screenFocused.current
     || otherAskOnScreen.current // the account alert
     || isPushAskOnScreen()      // the progress screen's question, if it is still up
-    || fullscreenUrl != null,   // the fullscreen viewer is a Modal
+    || fullscreenUrl != null    // the fullscreen viewer is a Modal
+    || menuOnScreen.current,    // the header's "…" action sheet (v3)
   );
   const accountAskOnScreen = useAccountPrompt(outputs.length > 0 && ratingTurn === "clear");
   otherAskOnScreen.current = accountAskOnScreen;
+
+  /* ── The arrival (v3) ──────────────────────────────────────────────
+   *
+   * The card wipes the after in over the before (ResultFrame), and the
+   * actions rise in behind it. Pure presentation: nothing here feeds the
+   * rating, the dwell timer above (which counts from the outputs arriving,
+   * not from the animation ending) or the first-result paywall's own clock.
+   * `actionsShown` only ever turns true; the fallback guarantees Save is on
+   * screen within 1.5 s of the result even if the picture never loads.
+   */
+  const reduceMotion = useReduceMotion();
+  const [actionsShown, setActionsShown] = useState(false);
+  useEffect(() => {
+    if (outputs.length === 0 || actionsShown) return;
+    if (reduceMotion) {
+      setActionsShown(true);
+      return;
+    }
+    const timer = setTimeout(() => setActionsShown(true), ACTIONS_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [outputs.length, actionsShown, reduceMotion]);
+  const arrivalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (arrivalTimer.current) clearTimeout(arrivalTimer.current);
+  }, []);
+  const handleArrived = useCallback(() => {
+    if (arrivalTimer.current) return;
+    arrivalTimer.current = setTimeout(() => setActionsShown(true), ACTIONS_AFTER_WIPE_MS);
+  }, []);
 
   // How long the result actually held attention (V74). Without this the
   // only thing we could see was that 11% of people downloaded, which says
@@ -553,6 +616,53 @@ export default function ResultDetailScreen() {
   };
 
   /**
+   * The header's "…" (v3): the three things that used to sit under the
+   * design and did not fit the framed card — Add furniture, New design, and
+   * the credits-refill reminder. Same handlers as before; only the door moved.
+   * The reminder line says what the tap will do (turn it on / off), because a
+   * menu row cannot show a switch's state.
+   */
+  const handleMore = () => {
+    Haptics.selectionAsync();
+    const items: { label: string; run: () => void }[] = [
+      {
+        label: t("studio.add_furniture"),
+        run: () => router.push({ pathname: "/studio/composer", params: { sheet: "catalogue" } } as never),
+      },
+      { label: t("result.new_design"), run: handleNewDesign },
+      {
+        label: remind ? t("result.reminder_turn_off") : t("result.remind_me"),
+        run: () => { void handleRemindChange(!remind); },
+      },
+    ];
+    const done = (i: number | undefined) => {
+      menuOnScreen.current = false;
+      if (i != null && i < items.length) items[i].run();
+    };
+    menuOnScreen.current = true;
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...items.map((x) => x.label), t("common.cancel")],
+          cancelButtonIndex: items.length,
+          userInterfaceStyle: "dark",
+        },
+        done,
+      );
+    } else {
+      Alert.alert(
+        t("result.more_actions"),
+        undefined,
+        [
+          ...items.map((x, i) => ({ text: x.label, onPress: () => done(i) })),
+          { text: t("common.cancel"), style: "cancel" as const, onPress: () => done(undefined) },
+        ],
+        { cancelable: true, onDismiss: () => done(undefined) },
+      );
+    }
+  };
+
+  /**
    * The button's three faces, straight from the clip's status. A finished
    * clip is "watch" — a second tap on a finished render can never buy a
    * second clip — and a failed one is "make" again, its credits already back.
@@ -680,153 +790,170 @@ export default function ResultDetailScreen() {
    *
    * 🔴 Everything above this line — the prompt ladder, the rating gate, the
    * dwell timer, the output signals — is unchanged. Only the layout moved.
+   *
+   * v3 (2026-10-10): the four thumbnails are now one row (two styles,
+   * Reference, "+") under the video card; the framed design comes first.
    */
 
   const afterUrl = currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
   const beforeUrl = job.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
+  // The presigned URL changes on every read of the job (each focus re-reads
+  // it); keyed by id, the picture is not fetched again and does not flash.
+  const afterKey = currentOutput?.id ? `output-${currentOutput.id}` : undefined;
+  const beforeKey = job.inputFile?.id ? `input-${job.inputFile.id}` : undefined;
+  const kicker = [catalogLabel("style", job.designStyleName), catalogLabel("room", job.roomTypeName)]
+    .filter(Boolean)
+    .join(" · ")
+    .toLocaleUpperCase(i18n.language);
+  const showRestyle = studioPhotoFileId != null && studioPhotoFileId === job.inputFile?.id;
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
-      <View style={{ flex: 1, paddingHorizontal: 18 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 8, paddingBottom: 14 }}>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back")}
-            hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-            style={{
-              width: 34, height: 34, borderRadius: 17,
-              backgroundColor: U.lineNeutral,
-              alignItems: "center", justifyContent: "center",
-            }}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: theme.v2Layout.gutterWide, paddingBottom: 24 }}
+        alwaysBounceVertical={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 4, paddingBottom: 16, gap: 8 }}>
+          <HeaderButton icon="chevron-back" label={t("common.back")} onPress={() => router.back()} />
+          <Text
+            style={{ ...theme.v2.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }}
+            numberOfLines={1}
           >
-            <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
-          </Pressable>
-          <Text style={{ ...theme.v2.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }}>
-            {catalogLabel("style", job.designStyleName).toLocaleUpperCase(i18n.language)}
+            {kicker}
           </Text>
-          <View style={{ width: 34 }} />
+          <HeaderButton icon="ellipsis-horizontal" label={t("result.more_actions")} onPress={handleMore} />
         </View>
 
-        <BeforeAfter
+        {/* BEFORE / AFTER is the old slider's two pictures behind a pill; a
+            tap on the picture or ⤢ is the same fullscreen viewer (and the
+            same "fullscreen" value signal) as before. */}
+        <ResultFrame
           beforeUrl={beforeUrl}
+          beforeHeaders={authHeaders}
+          beforeCacheKey={beforeKey}
           afterUrl={afterUrl}
-          authHeaders={authHeaders}
+          afterCacheKey={afterKey}
+          height={FRAME_HEIGHT}
+          reduceMotion={reduceMotion}
           onOpen={openFullscreen}
-          onTap={openFullscreen}
+          onArrived={handleArrived}
         />
 
-        <View style={{ flexDirection: "row", gap: 9, marginTop: 12 }}>
-          <ResultAction flex={1} label={t("result.save")} busy={isDownloading} onPress={handleDownload} />
-          <ResultAction flex={1} label={t("result.share")} busy={isSharing} onPress={handleShare} />
-          <ResultAction
-            flex={1.3}
-            label={t("studio.add_furniture")}
-            tone="accent"
-            onPress={() => router.push({ pathname: "/studio/composer", params: { sheet: "catalogue" } } as never)}
-          />
-        </View>
+        <Rise shown={actionsShown} index={0} reduceMotion={reduceMotion} style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
+          <Pressable
+            onPress={handleDownload}
+            disabled={isDownloading}
+            accessibilityRole="button"
+            accessibilityLabel={t("result.save")}
+            accessibilityState={{ disabled: isDownloading, busy: isDownloading }}
+            style={{ flex: 2, opacity: isDownloading ? 0.7 : 1 }}
+          >
+            <LinearGradient
+              colors={[U.accentBright, U.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                height: 56, borderRadius: theme.v2Layout.radius.button,
+                flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
+              }}
+            >
+              {isDownloading ? (
+                <ActivityIndicator size="small" color={U.buttonInk} />
+              ) : (
+                <>
+                  <Ionicons name="download-outline" size={20} color={U.buttonInk} />
+                  <Text style={{ ...theme.v2.button, color: U.buttonInk }} numberOfLines={1}>
+                    {t("result.save")}
+                  </Text>
+                </>
+              )}
+            </LinearGradient>
+          </Pressable>
+          <Pressable
+            onPress={handleShare}
+            disabled={isSharing}
+            accessibilityRole="button"
+            accessibilityLabel={t("result.share")}
+            accessibilityState={{ disabled: isSharing, busy: isSharing }}
+            style={{
+              flex: 1, height: 56, borderRadius: theme.v2Layout.radius.button,
+              backgroundColor: U.surface, borderWidth: 1, borderColor: U.lineNeutral,
+              flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+              opacity: isSharing ? 0.7 : 1,
+            }}
+          >
+            {isSharing ? (
+              <ActivityIndicator size="small" color={U.inkMuted} />
+            ) : (
+              <>
+                <Ionicons name="share-outline" size={18} color={U.ink} />
+                <Text style={{ ...theme.v2.row, color: U.ink }} numberOfLines={1}>
+                  {t("result.share")}
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </Rise>
 
-        {/* Bring it to life (V183): a five-second clip of this render. 60% wide
-            and centred — narrower than "New design" on purpose, it is an
-            option, not the exit. Hidden on an upscale: the backend makes clips
-            from original renders only (Kling reads the frame at its own size). */}
-        {!isAlreadyUpscaled && resumeVideo && (
-          <View style={{ marginTop: 12, marginBottom: -2 }}>
-            <ResumeNote text={t("resume.video", { cta: t("result.video_cta") })} />
-          </View>
-        )}
+        {/* 🔴 Static styles on every Pressable here, never `style={({ pressed }) => …}`: in this
+            app's NativeWind setup the function form was dropped whole on the v3 rows (simulator,
+            10 Oct) — no background, no row layout. */}
+        {/* Bring it to life (V183), now "Walk through it". Hidden on an
+            upscale: the backend makes clips from original renders only (Kling
+            reads the frame at its own size). The resume note is the one the
+            paywall left when it was opened from here. */}
         {!isAlreadyUpscaled && (
-          <VideoCta
-            state={videoState}
-            cost={videoCost}
-            locked={!videoFeatureEnabled}
-            busy={videoSubmitting || restyling}
-            pushGranted={pushGranted}
-            onPress={handleVideo}
-          />
+          <Rise shown={actionsShown} index={1} reduceMotion={reduceMotion} style={{ marginTop: 16 }}>
+            {resumeVideo && (
+              <View style={{ marginBottom: 10 }}>
+                <ResumeNote text={t("resume.video", { cta: t("result.video_walk_title") })} />
+              </View>
+            )}
+            <WalkThroughCard
+              state={videoState}
+              cost={videoCost}
+              locked={!videoFeatureEnabled}
+              busy={videoSubmitting || restyling}
+              pushGranted={pushGranted}
+              thumbUrl={afterUrl}
+              thumbCacheKey={afterKey}
+              onPress={handleVideo}
+            />
+          </Rise>
         )}
 
         {/* "Same room, another style" re-runs the STUDIO's photo with a new
             style. Opened from the gallery, this render's photo may not be
-            the one the studio holds any more — the strip would then render
+            the one the studio holds any more — the row would then render
             a different room and charge for it. So it shows only when the
             two match, which is always true straight after a generation. */}
-        {studioPhotoFileId != null && studioPhotoFileId === job.inputFile?.id && (
-          <>
+        {showRestyle && (
+          <Rise shown={actionsShown} index={2} reduceMotion={reduceMotion} style={{ marginTop: 16 }}>
             {resumeRestyle && (
-              <View style={{ marginTop: 16, marginBottom: -8 }}>
+              <View style={{ marginBottom: 10 }}>
                 <ResumeNote text={t("resume.restyle")} />
               </View>
             )}
-            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 20, marginBottom: 12, gap: 12 }}>
-              <Text style={{ ...theme.v2.displayS, color: U.ink, flexShrink: 1 }} numberOfLines={1}>
-                {t("result.another_style")}
-              </Text>
-              {/* Every tap here is a charge; the price sits where the tap is. */}
-              <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>
-                {t("studio.credit_cost", { count: restyleCost })}
-              </Text>
-            </View>
-
-            {/* No explanatory line under the heading — the thumbnails carry it. */}
-            <AnotherStyleStrip
+            <AnotherStyleRow
               currentStyleCode={
                 designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
               }
+              cost={restyleCost}
               onPick={handleRestyle}
               onLocked={() => router.push("/paywall?source=RESULT_STYLE" as never)}
+              // Every other style: the composer, the same photo still loaded.
+              onMore={() => {
+                hideResumeRestyle();
+                router.push("/studio/composer" as never);
+              }}
               busy={restyling || videoSubmitting}
               pendingCode={restyleCode}
             />
-          </>
+          </Rise>
         )}
-
-        <View style={{ flex: 1 }} />
-
-        {/* Buradan çıkış. Sol üstteki geri oku üretim ilerlemesine dönüyordu;
-            biten bir işten sonra kullanıcının istediği tek yer bir sonraki
-            tasarım. Dolu düğme değil — Kaydet/Paylaş hâlâ bu ekranın işi,
-            bu yalnızca kapı. */}
-        <Pressable
-          onPress={handleNewDesign}
-          accessibilityRole="button"
-          style={{
-            height: 52,
-            borderRadius: theme.v2Layout.radius.button,
-            borderWidth: 1,
-            borderColor: U.accent,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <Text style={{ ...theme.v2.button, color: U.accentBright }}>
-            {t("result.new_design")}
-          </Text>
-          <Text style={{ color: U.accentBright, fontSize: 16 }}>→</Text>
-        </Pressable>
-
-        <View
-          style={{
-            borderTopWidth: 1,
-            borderTopColor: U.lineNeutral,
-            marginTop: 14,
-            paddingTop: 14,
-            paddingBottom: 8,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }} numberOfLines={1}>
-            {remind ? t("result.reminder_on") : t("result.remind_me")}
-          </Text>
-          <ReminderToggle value={remind} onChange={handleRemindChange} />
-        </View>
-      </View>
+      </ScrollView>
 
       {/* ── Tam ekran, yakınlaştırılabilir ────────────────────────────────
           Modal, çünkü kapanınca altındaki ekran olduğu gibi duruyor:
@@ -873,477 +1000,27 @@ export default function ResultDetailScreen() {
   );
 }
 
-/**
- * The comparison, with the reveal following the finger.
- *
- * <p>Kept from v1 because it is the clearest thing in the app: the before is
- * clipped to a left-hand window whose width the user drags. Clamped to 2–98%
- * so neither image can be dragged entirely out of existence, and reset to 55%
- * on every new result.
- */
-function BeforeAfter({
-  beforeUrl, afterUrl, authHeaders, onOpen, onTap,
+/** A round 44pt button in the header — back, and the "…" menu. */
+function HeaderButton({
+  icon, label, onPress,
 }: {
-  beforeUrl: string;
-  afterUrl?: string;
-  authHeaders: Record<string, string>;
-  onOpen: () => void;
-  /** Sürüklemeden ayırt edilmiş bir dokunuş — tam ekranı açar. */
-  onTap: () => void;
-}) {
-  const { t } = useTranslation();
-  const [width, setWidth] = useState(0);
-  const [reveal, setReveal] = useState(55);
-  const enter = useRef(new Animated.Value(0)).current;
-  /**
-   * Açılış süpürmesi (2026-10-05): ekran "önce" fotoğrafının tamamıyla açılır,
-   * sonra çizgi kayıp tasarımı 55%'e kadar açar — kullanıcı farkı kaydırıcıyı
-   * bulmadan görür. Parmak değdiği an durur; hareket azaltma açıksa hiç oynamaz.
-   */
-  const sweep = useRef(new Animated.Value(55)).current;
-  const sweepAnim = useRef<Animated.CompositeAnimation | null>(null);
-
-  useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: 450, useNativeDriver: true }).start();
-    let cancelled = false;
-    const id = sweep.addListener(({ value }) => setReveal(value));
-    setReveal(55);
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((reduce) => {
-        if (cancelled || reduce || !afterUrl) return;
-        sweep.setValue(98);
-        sweepAnim.current = Animated.timing(sweep, {
-          toValue: 55,
-          duration: 1100,
-          delay: 400,
-          easing: Easing.inOut(Easing.cubic),
-          useNativeDriver: false,
-        });
-        sweepAnim.current.start();
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-      sweepAnim.current?.stop();
-      sweep.removeListener(id);
-    };
-  }, [afterUrl, enter, sweep]);
-
-  /**
-   * Kaydırma mı, dokunuş mu.
-   *
-   * <p>PanResponder her dokunuşu kendine alıyor (onStartShouldSet → true),
-   * o yüzden resmin üstüne konan basit bir Pressable hiç ateşlemez — el
-   * kaydırıcıya gider. Ayrımı burada yapıyoruz: parmak kalktığında toplam
-   * hareket 6 puandan küçük ve süre 250 ms'den kısaysa bu bir dokunuştur,
-   * tam ekran açılır. Aksi hâlde kaydırma olarak kalır ve reveal'i sürer.
-   *
-   * <p>Eşikler el titremesi payı: 6 pt, iOS'un kendi kaydırma eşiğinin
-   * (10 pt) altında, yani gerçek bir sürüklemeyi asla dokunuş sanmaz.
-   */
-  const onTapRef = useRef(onTap);
-  onTapRef.current = onTap;
-  const gestureMoved = useRef(false);
-  const gestureStart = useRef(0);
-
-  const pan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        sweepAnim.current?.stop();
-        gestureMoved.current = false;
-        gestureStart.current = Date.now();
-      },
-      onPanResponderMove: (_, g) => {
-        if (Math.abs(g.dx) > 6 || Math.abs(g.dy) > 6) gestureMoved.current = true;
-        setWidth((w) => {
-          if (w > 0) {
-            const pct = Math.max(2, Math.min(98, (g.moveX - 18) / w * 100));
-            setReveal(pct);
-          }
-          return w;
-        });
-      },
-      onPanResponderRelease: () => {
-        if (!gestureMoved.current && Date.now() - gestureStart.current < 250) {
-          onTapRef.current();
-        }
-      },
-    }),
-  ).current;
-
-  return (
-    <Animated.View
-      style={{
-        height: 330,
-        borderRadius: 20,
-        overflow: "hidden",
-        backgroundColor: U.surface,
-        opacity: enter,
-        transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
-      }}
-      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-      {...pan.panHandlers}
-    >
-      {afterUrl ? (
-        <Image source={{ uri: afterUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-      ) : null}
-
-      {beforeUrl ? (
-        <View style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${reveal}%`, overflow: "hidden" }}>
-          <Image
-            source={{ uri: beforeUrl, headers: authHeaders }}
-            style={{ width, height: "100%" }}
-            contentFit="cover"
-          />
-        </View>
-      ) : null}
-
-      <View style={{ position: "absolute", top: 0, bottom: 0, left: `${reveal}%`, width: 2, backgroundColor: "#fff" }} />
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: `${reveal}%`,
-          marginLeft: -18,
-          marginTop: -18,
-          width: 36, height: 36, borderRadius: 18,
-          backgroundColor: "#fff",
-          alignItems: "center", justifyContent: "center",
-        }}
-      >
-        <Text style={{ color: "#111", fontSize: 14 }}>⇄</Text>
-      </View>
-
-      <PhotoTag style={{ top: 12, left: 12 }} label={t("result.before")} />
-      <PhotoTag style={{ top: 12, right: 12 }} label={t("result.after")} />
-
-      <Pressable
-        onPress={onOpen}
-        accessibilityRole="button"
-        accessibilityLabel={t("result.open_fullscreen")}
-        style={{ position: "absolute", bottom: 12, right: 12, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
-      >
-        <View style={{
-          backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder,
-          borderRadius: 100, paddingHorizontal: 10, paddingVertical: 6,
-        }}>
-          <Text style={{ color: "#fff", fontSize: 12 }}>⤢</Text>
-        </View>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-/** A pill on a photograph: its own fill and hairline, never a theme colour. */
-function PhotoTag({ label, style }: { label: string; style: object }) {
-  return (
-    <View
-      style={{
-        position: "absolute",
-        backgroundColor: U.photoChrome,
-        borderWidth: 1,
-        borderColor: U.photoChromeBorder,
-        borderRadius: 100,
-        paddingVertical: 5,
-        paddingHorizontal: 11,
-        ...style,
-      }}
-    >
-      <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10.5, color: "#fff", letterSpacing: 0.6 }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function ResultAction({
-  label, flex, tone = "ink", busy, onPress,
-}: {
-  label: string; flex: number; tone?: "ink" | "accent"; busy?: boolean; onPress: () => void;
+  icon: ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={busy}
       accessibilityRole="button"
+      accessibilityLabel={label}
       style={{
-        flex,
-        height: 44,
-        borderRadius: 12,
+        width: 44, height: 44, borderRadius: 22,
         backgroundColor: U.surface,
-        borderWidth: 1,
-        borderColor: U.lineAccent,
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: busy ? 0.6 : 1,
+        borderWidth: 1, borderColor: U.lineNeutral,
+        alignItems: "center", justifyContent: "center",
       }}
     >
-      {busy ? (
-        <ActivityIndicator size="small" color={U.inkMuted} />
-      ) : (
-        <Text
-          style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: tone === "accent" ? U.accentBright : U.ink }}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
-
-/**
- * Four ways back in.
- *
- * <p>Three styles the user has not used on this room, plus Reference — the
- * PRO one, which taps through to the paywall rather than pretending to be
- * available. The current style is excluded: offering the thing they are
- * already looking at is the one option that cannot be interesting.
- */
-function AnotherStyleStrip({
-  currentStyleCode, onPick, onLocked, busy, pendingCode,
-}: {
-  currentStyleCode: string | null;
-  onPick: (code: string) => void;
-  onLocked: () => void;
-  busy: boolean;
-  /** The style whose render is being submitted — it carries the spinner. */
-  pendingCode: string | null;
-}) {
-  const { t } = useTranslation();
-  const styles = useCatalogStore((s) => s.designStyles);
-
-  const picks = useMemo(() => {
-    const preferred = ["MINIMALIST", "SCANDINAVIAN", "WARM_MOCHA", "MODERN", "INDUSTRIAL"];
-    const byCode = new Map(styles.map((s) => [s.code?.toUpperCase(), s]));
-    const out: { code: string; name: string }[] = [];
-    for (const code of preferred) {
-      if (out.length === 3) break;
-      if (code === currentStyleCode?.toUpperCase()) continue;
-      const s = byCode.get(code);
-      // The composer's name for it, in the user's language — the catalogue
-      // row carries only the English one.
-      if (s) out.push({ code: s.code, name: catalogName(t, "style", s) });
-    }
-    return out;
-  }, [styles, currentStyleCode, t]);
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 9 }}>
-      {picks.map((p) => (
-        <Pressable
-          key={p.code}
-          onPress={() => onPick(p.code)}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={p.name}
-          style={{ width: 98, opacity: busy ? 0.5 : 1 }}
-        >
-          <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
-            {getStyleImage(p.code) ? (
-              <Image source={getStyleImage(p.code)!} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-            ) : null}
-            {pendingCode === p.code ? (
-              <View style={{
-                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center",
-              }}>
-                <ActivityIndicator size="small" color={U.accentBright} />
-              </View>
-            ) : null}
-          </View>
-          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
-            {p.name}
-          </Text>
-        </Pressable>
-      ))}
-
-      <Pressable onPress={onLocked} accessibilityRole="button" style={{ width: 98 }}>
-        <View style={{ height: 82, borderRadius: 12, overflow: "hidden", backgroundColor: U.surface }}>
-          <Image
-            source={require("@/assets/features/style_after.jpg")}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-          />
-          <View style={{
-            position: "absolute", top: 6, right: 6,
-            backgroundColor: U.ground, borderWidth: 1, borderColor: U.accent,
-            borderRadius: 5, paddingVertical: 2, paddingHorizontal: 5,
-          }}>
-            <Text style={{ fontFamily: "Inter-Bold", fontSize: 8, letterSpacing: 1, color: U.accentBright }}>
-              PRO
-            </Text>
-          </View>
-        </View>
-        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, color: U.ink, marginTop: 6 }} numberOfLines={1}>
-          {t("result.reference_style")}
-        </Text>
-      </Pressable>
-    </ScrollView>
-  );
-}
-
-/**
- * The clip button (V183). Three faces from one control: make (with the price,
- * or a PRO tag when the plan is below it), in progress (opens the wait
- * screen), watch (opens the clip). The price is printed ON the button, the
- * same rule the composer follows for Generate — nobody is charged a number
- * they did not see.
- */
-function VideoCta({
-  state, cost, locked, busy, pushGranted, onPress,
-}: {
-  state: "make" | "progress" | "watch";
-  cost: number | null;
-  locked: boolean;
-  busy: boolean;
-  /** False = no push will come; the hint promises the gallery instead. */
-  pushGranted: boolean | null;
-  onPress: () => void;
-}) {
-  const { t } = useTranslation();
-  const label =
-    state === "watch" ? t("result.video_watch")
-    : state === "progress" ? t("result.video_in_progress")
-    : t("result.video_cta");
-  const hint =
-    state === "watch" ? null
-    : state === "progress"
-      ? t(pushGranted === false ? "result.video_in_progress_hint_gallery" : "result.video_in_progress_hint")
-    : locked ? t("result.video_locked_hint")
-    : t("result.video_cta_hint", { cost: cost ?? "" });
-
-  return (
-    <View style={{ alignItems: "center", marginTop: 10 }}>
-      <Pressable
-        onPress={onPress}
-        // In progress there is nothing to do here: the clip renders on its
-        // own and the push brings the user back.
-        disabled={busy || state === "progress"}
-        accessibilityRole="button"
-        accessibilityLabel={hint ? `${label}. ${hint}` : label}
-        style={{
-          width: "60%",
-          minHeight: 48,
-          borderRadius: 14,
-          backgroundColor: U.lineAccent,
-          borderWidth: 1,
-          borderColor: U.accent,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 7,
-          opacity: busy ? 0.6 : 1,
-        }}
-      >
-        {busy || state === "progress" ? (
-          <ActivityIndicator size="small" color={U.accentBright} />
-        ) : state === "make" ? (
-          <VideoTeaser />
-        ) : (
-          <Ionicons name="play" size={16} color={U.accentBright} />
-        )}
-        <View style={{ alignItems: "center", flexShrink: 1 }}>
-          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13.5, color: U.accentBright }} numberOfLines={1}>
-            {label}
-          </Text>
-          {hint ? (
-            // Two lines, not one: the button is 60% wide and a hint that
-            // ends in an ellipsis told the user nothing (seen in the first
-            // simulator pass — "…bitince bildiri…").
-            <Text style={{ ...theme.v2.caption, color: U.inkMuted, marginTop: 2, textAlign: "center" }} numberOfLines={2}>
-              {hint}
-            </Text>
-          ) : null}
-        </View>
-        {locked && state === "make" ? (
-          // A lock, not a plan name: since V187 the clip is on Base and Pro,
-          // and the hint under the label says so in the user's language.
-          <View style={{
-            borderWidth: 1, borderColor: U.accent, borderRadius: 5,
-            paddingVertical: 2, paddingHorizontal: 4,
-          }}>
-            <Ionicons name="lock-closed" size={10} color={U.accentBright} />
-          </View>
-        ) : null}
-      </Pressable>
-    </View>
-  );
-}
-
-/**
- * Three silent seconds of a real room clip (MiniMax H3, the live video model —
- * the owner's 2026-09-27 test) in place of the camera icon, so "bring it to
- * life" shows what it makes before anyone pays for it. Muted and mixed with
- * other audio: it must never stop the user's music. Still under reduce-motion.
- * Never paused by hand — pause() on a player expo-video has already released
- * throws (1.7.0 (82)), and a muted 47 KB loop costs nothing to leave running.
- */
-const VIDEO_TEASER = require("@/assets/features/video_teaser.mp4");
-
-function VideoTeaser() {
-  const player = useVideoPlayer(VIDEO_TEASER, (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.audioMixingMode = "mixWithOthers";
-  });
-  useEffect(() => {
-    let cancelled = false;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((reduce) => {
-        if (!cancelled && !reduce) {
-          try { player.play(); } catch {}
-        }
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [player]);
-  return (
-    <View style={{ width: 34, height: 34, borderRadius: 8, overflow: "hidden", backgroundColor: U.surface }}>
-      <VideoView
-        player={player}
-        style={{ width: "100%", height: "100%" }}
-        contentFit="cover"
-        nativeControls={false}
-        allowsPictureInPicture={false}
-        pointerEvents="none"
-      />
-    </View>
-  );
-}
-
-/** 48 × 28, knob 22, 200ms on translateX. */
-function ReminderToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  const { t } = useTranslation();
-  const x = useRef(new Animated.Value(value ? 23 : 3)).current;
-  useEffect(() => {
-    Animated.timing(x, { toValue: value ? 23 : 3, duration: 200, useNativeDriver: true }).start();
-  }, [value, x]);
-  return (
-    <Pressable
-      onPress={() => onChange(!value)}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
-      accessibilityLabel={t("result.remind_me")}
-      hitSlop={10}
-      style={{
-        width: 48, height: 28, borderRadius: 14,
-        backgroundColor: value ? U.accent : U.lineNeutral,
-        justifyContent: "center",
-      }}
-    >
-      <Animated.View
-        style={{
-          width: 22, height: 22, borderRadius: 11,
-          backgroundColor: U.ground,
-          transform: [{ translateX: x }],
-        }}
-      />
+      <Ionicons name={icon} size={18} color={U.ink} />
     </Pressable>
   );
 }

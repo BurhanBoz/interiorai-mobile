@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
@@ -147,6 +147,9 @@ export function usePushPermissionAsk(generating: boolean): boolean {
     // taken" long after both alerts were gone. The rating now waits for this
     // to clear instead of giving up.
     const [onScreen, setOnScreen] = useState(false);
+    /** True while the caller still wants the question — cleared on unmount or when it stops asking. */
+    const wanted = useRef(false);
+
     const ask = useCallback(async () => {
         if (Platform.OS !== "ios") return;
         // Expo Go cannot register for remote notifications; asking there
@@ -173,6 +176,13 @@ export function usePushPermissionAsk(generating: boolean): boolean {
             await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
             return;
         }
+
+        // 🔴 Still wanted? Every await above can outlast the screen (simulator, 10 Oct): the
+        // job finished while this was reading storage, the progress screen gave way to the
+        // result and its first-result paywall, and the alert landed on top of the offer. A
+        // global Alert survives navigation, so the check has to be here, just before it.
+        // Nothing is marked yet — the next generation asks instead.
+        if (!wanted.current) return;
 
         // Mark BEFORE prompting: the ask is one-shot on iOS whatever the answer,
         // and re-asking is worse than occasionally missing one.
@@ -203,6 +213,7 @@ export function usePushPermissionAsk(generating: boolean): boolean {
     }, [t]);
 
     useEffect(() => {
+        wanted.current = generating;
         if (!generating) return;
         let cancelled = false;
         const timer = setTimeout(() => {
@@ -210,6 +221,7 @@ export function usePushPermissionAsk(generating: boolean): boolean {
         }, ASK_DELAY_MS);
         return () => {
             cancelled = true;
+            wanted.current = false;
             clearTimeout(timer);
         };
     }, [generating, ask]);

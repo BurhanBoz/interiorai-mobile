@@ -355,7 +355,20 @@
     "mask_ready": "Te wijzigen gebied ingesteld",
     "edit_mask": "Bewerken",
     "reference_ready": "Referentiefoto ingesteld",
-    "change_reference": "Wijzigen"
+    "change_reference": "Wijzigen",
+    "home_headline": "Je kamer, opnieuw ontworpen.",
+    "home_subline": "Begin met een foto van de kamer zoals hij is.",
+    "add_your_room": "Voeg je kamer toe",
+    "add_your_room_sub": "Camera of fotobibliotheek",
+    "or_try_a_sample": "Of probeer een voorbeeld",
+    "what_to_do_with_it": "Wat je ermee kunt",
+    "which_room": "Welke kamer is het?",
+    "pick_style": "Kies een stijl",
+    "advanced_hint": "Palet, intensiteit",
+    "summary_room_placeholder": "Kamer",
+    "summary_style_placeholder": "Stijl",
+    "summary_pieces_one": "+1 stuk",
+    "summary_pieces_other": "+{{count}} stuks"
   },
   "furniture": {
     "title": "Meubels",
@@ -751,7 +764,11 @@
     "video_failed_body": "De video is niet afgemaakt. Je credits zijn niet gebruikt — probeer het opnieuw.",
     "video_phase_planning": "Camerabeweging wordt gepland",
     "video_phase_rendering": "Je kamervideo wordt gemaakt",
-    "video_phase_ready": "Je video is klaar"
+    "video_phase_ready": "Je video is klaar",
+    "designing_room": "Je {{room}} wordt ontworpen",
+    "style_about_a_minute": "{{style}} · ongeveer een minuut",
+    "about_a_minute": "Ongeveer een minuut",
+    "leave_app_hint": "Je kunt de app verlaten — het ontwerp gaat door."
   },
   "styles": {
     "scandinavian": "Scandinavisch design viert warm minimalisme — licht hout, zachte neutralen en volop daglicht. Elk object verdient zijn plek door bruikbaarheid en eerlijk vakmanschap.",
@@ -870,7 +887,12 @@
     "video_share_dialog_title": "Video delen",
     "video_unavailable": "De video is nu niet beschikbaar.",
     "video_in_progress_hint": "Een paar minuten · we sturen een melding",
-    "video_in_progress_hint_gallery": "Een paar minuten · daarna in je galerij"
+    "video_in_progress_hint_gallery": "Een paar minuten · daarna in je galerij",
+    "video_walk_title": "Loop erdoorheen",
+    "video_walk_sub": "Een kamervideo van 8 seconden met geluid",
+    "more_styles": "Meer stijlen",
+    "more_actions": "Meer acties",
+    "reminder_turn_off": "Krediet-herinnering uitzetten"
   },
   "settings": {
     "notifications_title": "Meldingen",
@@ -1262,7 +1284,10 @@
     "then_price_month": "daarna {{price}}/maand",
     "renewal_month": "{{price}} per maand. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
     "renewal_intro_month": "{{intro}} voor de eerste maand, daarna {{price}} per maand. Wordt automatisch verlengd; opzeggen kan altijd in Instellingen, uiterlijk 24 uur voor de verlenging.",
-    "save_pct": "Bespaar {{pct}}%"
+    "save_pct": "Bespaar {{pct}}%",
+    "hero_one_room_title": "Dit was één kamer.",
+    "value_line": "Pro ontwerpt elke kamer opnieuw in elke stijl, met kamervideo's en zonder watermerk.",
+    "price_today": "Vandaag {{price}}"
   },
   "purchase_errors": {
     "sheet_title": "Het betaalscherm van Apple ging niet open",
@@ -1359,6 +1384,7 @@
     "advanced_title": "Verfijn als je wilt",
     "advanced_body": "Kleurenpalet, hoe sterk de verandering is en je indeling behouden. Optioneel — de standaardinstellingen werken goed.",
     "generate_title": "Maak je ontwerp",
-    "generate_body": "Tik hier als je klaar bent. De kosten staan er direct boven."
+    "generate_body": "Tik hier als je klaar bent. De kosten staan er direct boven.",
+    "room_strip_body": "Scrol en tik op je kamer. Jij kiest de kamer en de stijl — beide zijn nodig."
   }
 }

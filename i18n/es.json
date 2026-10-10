@@ -355,7 +355,20 @@
     "mask_ready": "Zona a cambiar definida",
     "edit_mask": "Editar",
     "reference_ready": "Foto de referencia definida",
-    "change_reference": "Cambiar"
+    "change_reference": "Cambiar",
+    "home_headline": "Tu habitación, rediseñada.",
+    "home_subline": "Empieza con una foto de la habitación tal como está.",
+    "add_your_room": "Añade tu habitación",
+    "add_your_room_sub": "Cámara o fototeca",
+    "or_try_a_sample": "O prueba un ejemplo",
+    "what_to_do_with_it": "Qué hacer con ella",
+    "which_room": "¿Qué habitación es?",
+    "pick_style": "Elige un estilo",
+    "advanced_hint": "Paleta, intensidad",
+    "summary_room_placeholder": "Habitación",
+    "summary_style_placeholder": "Estilo",
+    "summary_pieces_one": "+1 pieza",
+    "summary_pieces_other": "+{{count}} piezas"
   },
   "furniture": {
     "title": "Muebles",
@@ -751,7 +764,11 @@
     "video_failed_body": "El vídeo no se completó. No se usaron tus créditos: inténtalo de nuevo.",
     "video_phase_planning": "Planificando el movimiento de cámara",
     "video_phase_rendering": "Creando el vídeo de tu habitación",
-    "video_phase_ready": "Tu vídeo está listo"
+    "video_phase_ready": "Tu vídeo está listo",
+    "designing_room": "Diseñando tu {{room}}",
+    "style_about_a_minute": "{{style}} · cerca de un minuto",
+    "about_a_minute": "Cerca de un minuto",
+    "leave_app_hint": "Puedes salir de la app: el diseño sigue."
   },
   "styles": {
     "scandinavian": "El diseño escandinavo celebra un minimalismo cálido: maderas claras, tonos neutros suaves y abundante luz natural. Cada objeto gana su lugar por su utilidad y una artesanía honesta.",
@@ -870,7 +887,12 @@
     "video_share_dialog_title": "Compartir vídeo",
     "video_unavailable": "El vídeo no está disponible ahora mismo.",
     "video_in_progress_hint": "Unos minutos · te avisaremos",
-    "video_in_progress_hint_gallery": "Unos minutos · luego estará en tu galería"
+    "video_in_progress_hint_gallery": "Unos minutos · luego estará en tu galería",
+    "video_walk_title": "Recórrela",
+    "video_walk_sub": "Un vídeo de 8 segundos con sonido",
+    "more_styles": "Más estilos",
+    "more_actions": "Más acciones",
+    "reminder_turn_off": "Desactivar el recordatorio de créditos"
   },
   "settings": {
     "notifications_title": "Notificaciones",
@@ -1262,7 +1284,10 @@
     "then_price_month": "luego {{price}}/mes",
     "renewal_month": "{{price}} al mes. Se renueva automáticamente; cancela cuando quieras en Ajustes, al menos 24 h antes de la renovación.",
     "renewal_intro_month": "{{intro}} el primer mes, luego {{price}} al mes. Se renueva automáticamente; cancela cuando quieras en Ajustes, al menos 24 h antes de la renovación.",
-    "save_pct": "Ahorra un {{pct}} %"
+    "save_pct": "Ahorra un {{pct}} %",
+    "hero_one_room_title": "Esto fue una habitación.",
+    "value_line": "Pro rediseña cada habitación en cualquier estilo, con vídeos y sin marca de agua.",
+    "price_today": "{{price}} hoy"
   },
   "purchase_errors": {
     "sheet_title": "No se abrió la pantalla de pago de Apple",
@@ -1359,6 +1384,7 @@
     "advanced_title": "Ajusta si quieres",
     "advanced_body": "Paleta de colores, intensidad del cambio y conservar la distribución. Opcional: los valores por defecto funcionan bien.",
     "generate_title": "Crea tu diseño",
-    "generate_body": "Toca aquí cuando estés listo. El coste aparece justo encima."
+    "generate_body": "Toca aquí cuando estés listo. El coste aparece justo encima.",
+    "room_strip_body": "Desliza y toca tu habitación. Tú eliges la habitación y el estilo: hacen falta los dos."
   }
 }
