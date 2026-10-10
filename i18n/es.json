@@ -368,7 +368,8 @@
     "summary_room_placeholder": "Habitación",
     "summary_style_placeholder": "Estilo",
     "summary_pieces_one": "+1 pieza",
-    "summary_pieces_other": "+{{count}} piezas"
+    "summary_pieces_other": "+{{count}} piezas",
+    "remove_photo": "Quitar foto"
   },
   "furniture": {
     "title": "Muebles",

@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.roomframeai.mobile",
-      "buildNumber": "104",
+      "buildNumber": "105",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -59,7 +59,15 @@
           "ar",
           "nl"
         ],
-        "CFBundleDevelopmentRegion": "en"
+        "CFBundleDevelopmentRegion": "en",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
+        ]
       },
       "associatedDomains": [
         "applinks:roomframeai.com",

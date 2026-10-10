@@ -367,7 +367,8 @@
     "summary_room_placeholder": "방",
     "summary_style_placeholder": "스타일",
     "summary_pieces_one": "+1개",
-    "summary_pieces_other": "+{{count}}개"
+    "summary_pieces_other": "+{{count}}개",
+    "remove_photo": "사진 삭제"
   },
   "furniture": {
     "title": "가구",
