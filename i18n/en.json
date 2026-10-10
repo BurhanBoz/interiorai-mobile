@@ -368,7 +368,8 @@
     "summary_room_placeholder": "Room",
     "summary_style_placeholder": "Style",
     "summary_pieces_one": "+1 piece",
-    "summary_pieces_other": "+{{count}} pieces"
+    "summary_pieces_other": "+{{count}} pieces",
+    "remove_photo": "Remove photo"
   },
   "furniture": {
     "title": "Furniture",

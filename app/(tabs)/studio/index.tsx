@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, StyleSheet } from "react-native";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { View, Text, Pressable, Image, ActivityIndicator, StyleSheet, type ImageSourcePropType } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
     cancelAnimation,
+    Easing,
     useAnimatedStyle,
     useSharedValue,
     withDelay,
@@ -30,7 +31,7 @@ import { CoachMarks } from "@/components/tour/CoachMarks";
 import { tourTarget } from "@/components/tour/tourTargets";
 import { useFirstRunTour } from "@/hooks/useFirstRunTour";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
-import { ArrowIcon, CameraIcon, StarIcon, ToolIcon } from "@/components/studio/StudioIcons";
+import { ArrowIcon, CameraIcon, StarIcon } from "@/components/studio/StudioIcons";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -81,6 +82,12 @@ const GUTTER = theme.v2Layout.gutterWide;
  * light up one after another (~80 ms apart), so the eye travels from the room
  * to what can be done with it. The nudge pulse on a dimmed-tool tap stays.
  * Under iOS Reduce Motion everything renders its end state without moving.
+ *
+ * <p><b>2.4.0 polish (owner, 10 Oct).</b> The serif headline is gone — only
+ * the muted subline stays. "Or try a sample" shows only while there is no
+ * room: picking one folds it away and the tools move up; the × on the photo
+ * card removes the room and the samples fold back in. The tool tiles carry
+ * each tool's real result photo instead of an icon.
  *
  * <p>🔴 <b>The height budget is a contract.</b> Everything below must fit
  * 393 × 852 with no vertical scroll — there is no ScrollView on this screen
@@ -212,6 +219,17 @@ export default function StudioScreen() {
     };
 
     /**
+     * The × on the photo card: back to the first state — gold card, samples,
+     * dimmed tools. replacePhoto(null) also drops the room type and style chosen
+     * for the old photo, as picking a different photo would.
+     */
+    const removePhoto = () => {
+        Haptics.selectionAsync();
+        setPhoto(null);
+        setJustPicked(null);
+    };
+
+    /**
      * Arrival with a tool already chosen (2.3.0): the welcome screen after a purchase offers
      * "Empty Room", "Style Transfer"… and sends the choice here as `intent`. A tool without a
      * room is a dead end — it used to open the composer on an empty frame — so the photo
@@ -271,14 +289,19 @@ export default function StudioScreen() {
                 }}
             >
                 <Header balance={balance} planCode={planCode} />
-                <Headline />
+                <Subline />
                 <AddRoomCard
                     busy={isUploading}
                     photoUri={previewUri ?? justPicked}
                     nudge={nudge}
                     onPress={() => setSourceSheet(true)}
+                    onRemove={removePhoto}
                 />
-                <SampleRow busy={isUploading} onSample={(m) => addPhoto({ kind: "sample", module: m })} />
+                {/* Samples are for the empty state only (owner, 10 Oct): once a room is
+                    in they fold away, and they come back if the room is removed. */}
+                <Collapsible open={(previewUri ?? justPicked) == null}>
+                    <SampleRow busy={isUploading} onSample={(m) => addPhoto({ kind: "sample", module: m })} />
+                </Collapsible>
                 <FeatureGrid
                     isLocked={(code) =>
                         features.length > 0 &&
@@ -395,34 +418,72 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
 }
 
 /**
- * One serif line and one muted line. Both are held to a single line and
- * shrink instead of wrapping: a wrapped headline would cost ~34px the budget
- * does not have, and "Ihr Raum, neu gestaltet." is longer than the English.
- * The owner set the size to 28 so the English fits at full size (mockup
- * review, 10 Oct).
+ * The muted line that says where to start. The serif headline above it was
+ * removed (owner, 10 Oct): the gold card already says it, and the screen is
+ * calmer without it. Held to one line; it shrinks instead of wrapping.
  */
-function Headline() {
+function Subline() {
     const { t } = useTranslation();
     return (
-        <View style={{ gap: 4 }}>
-            <Text
-                accessibilityRole="header"
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
-                style={{ fontFamily: "NotoSerif", fontSize: 28, lineHeight: 34, letterSpacing: -0.3, color: U.ink }}
+        <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+            style={{ fontFamily: "Inter", fontSize: 15, lineHeight: 21, color: U.inkMuted }}
+        >
+            {t("studio.home_subline", { defaultValue: "Start with a photo of the room as it is." })}
+        </Text>
+    );
+}
+
+/**
+ * Folds its child away (height and opacity together) and back. The child is
+ * laid out out of flow and measured at its natural height; the wrapper animates between that and
+ * zero. The wrapper also swallows the column's {@link SECTION_GAP} above it —
+ * negative margin, then the same gap as padding inside — so a folded block
+ * leaves no empty gap behind. Under Reduce Motion it snaps.
+ */
+function Collapsible({ open, children }: { open: boolean; children: ReactNode }) {
+    const reduceMotion = useReduceMotion();
+    const [h, setH] = useState(0);
+    const progress = useSharedValue(open ? 1 : 0);
+
+    useEffect(() => {
+        const to = open ? 1 : 0;
+        if (reduceMotion) {
+            cancelAnimation(progress);
+            progress.value = to;
+        } else {
+            progress.value = withTiming(to, { duration: open ? 320 : 280, easing: Easing.out(Easing.cubic) });
+        }
+    }, [open, reduceMotion, progress]);
+
+    const style = useAnimatedStyle(() => {
+        if (h === 0) return { height: 0, opacity: 0 };
+        return { height: h * progress.value, opacity: progress.value };
+    });
+
+    return (
+        <Animated.View
+            pointerEvents={open ? "auto" : "none"}
+            accessibilityElementsHidden={!open}
+            importantForAccessibility={open ? "auto" : "no-hide-descendants"}
+            style={[{ overflow: "hidden", marginTop: -SECTION_GAP }, style]}
+        >
+            {/* 🔴 Absolute, so the folded wrapper cannot squeeze it: in normal flow the
+                rows shrank to nothing while folded, onLayout reported only the
+                padding, and the samples came back as an empty 18px strip
+                (simulator, 10 Oct). Out of flow it always measures its natural height. */}
+            <View
+                style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: SECTION_GAP }}
+                onLayout={(e) => {
+                    const next = e.nativeEvent.layout.height;
+                    if (next > 0 && Math.abs(next - h) > 0.5) setH(next);
+                }}
             >
-                {t("studio.home_headline", { defaultValue: "Your room, redesigned." })}
-            </Text>
-            <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.8}
-                style={{ fontFamily: "Inter", fontSize: 14, lineHeight: 20, color: U.inkMuted }}
-            >
-                {t("studio.home_subline", { defaultValue: "Start with a photo of the room as it is." })}
-            </Text>
-        </View>
+                {children}
+            </View>
+        </Animated.View>
     );
 }
 
@@ -460,12 +521,15 @@ function AddRoomCard({
     photoUri,
     nudge,
     onPress,
+    onRemove,
 }: {
     busy: boolean;
     /** Bu ziyarette seçilen (ya da şu an yüklenen) fotoğraf; null ise kart altın "Odanı ekle" olarak durur. */
     photoUri: string | null;
     nudge: number;
     onPress: () => void;
+    /** Clears the room picked on this visit. */
+    onRemove: () => void;
 }) {
     const { t } = useTranslation();
     const reduceMotion = useReduceMotion();
@@ -626,6 +690,23 @@ function AddRoomCard({
                                     </Text>
                                 </View>
                             )}
+                            {!busy && (
+                                <Pressable
+                                    onPress={onRemove}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t("studio.remove_photo", { defaultValue: "Remove photo" })}
+                                    hitSlop={8}
+                                    style={{
+                                        position: "absolute", top: 10, right: 10,
+                                        width: 30, height: 30, borderRadius: 15,
+                                        backgroundColor: U.photoChrome,
+                                        borderWidth: 1, borderColor: U.photoChromeBorder,
+                                        alignItems: "center", justifyContent: "center",
+                                    }}
+                                >
+                                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, lineHeight: 18, color: "#fff" }}>✕</Text>
+                                </Pressable>
+                            )}
                             {/* The accent hairline the photo tile has always had. */}
                             <View
                                 pointerEvents="none"
@@ -701,8 +782,8 @@ function SampleRow({ busy, onSample }: { busy: boolean; onSample: (module: numbe
 
 /* ── feature grid ───────────────────────────────────────────────────── */
 
-/** How far the tools step back while there is no room yet. */
-const DIMMED = 0.38;
+/** How dark the veil over a tool photo is while there is no room yet. */
+const PHOTO_VEIL = 0.5;
 /** Delay between one tool lighting up and the next. */
 const LIGHT_UP_STAGGER = 80;
 
@@ -732,7 +813,9 @@ function FeatureGrid({
     t: (k: string, o?: Record<string, unknown>) => string;
     enabled: boolean;
 }) {
-    const items = STUDIO_FEATURES.map((f) => ({ key: f.key as string, label: t(f.titleKey) }));
+    // Each tile shows the tool's own result photo — the same real "after" its
+    // teaser on the feature sheet uses (owner, 10 Oct: no empty tiles).
+    const items = STUDIO_FEATURES.map((f) => ({ key: f.key as string, label: t(f.titleKey), image: "after" in f.media ? f.media.after : f.media.image }));
     const rows: (typeof items)[] = [];
     for (let i = 0; i < items.length; i += 3) rows.push(items.slice(i, i + 3));
 
@@ -760,6 +843,7 @@ function FeatureGrid({
                                     key={item.key}
                                     mode={item.key}
                                     label={item.label}
+                                    image={item.image}
                                     locked={locked}
                                     enabled={enabled}
                                     index={r * 3 + c}
@@ -779,19 +863,27 @@ function FeatureGrid({
     );
 }
 
+/** Tile height — photo with the label on a scrim. */
+const TOOL_TILE_HEIGHT = 92;
+
 /**
- * One tool. Its opacity is its own, so the grid can light up in order: when
- * {@code enabled} turns true the tile waits {@code index × 80 ms} and fades
- * from {@link DIMMED} to 1. Dimming again (the visit was reset after a job) is
- * immediate-ish and not staggered — nothing is being presented. Reduce Motion
- * jumps straight to the end value.
+ * One tool: the tool's result photo, full bleed, with its name on a dark scrim
+ * along the bottom and a PRO tag top right on the locked ones (v3 + photos,
+ * owner 10 Oct).
  *
- * <p>Redesign is the default first tool, so it keeps the accent outline and a
- * gold icon even while dimmed; the rest are neutral.
+ * <p>Its opacity is its own, so the grid can light up in order: when
+ * {@code enabled} turns true the tile waits {@code index × 80 ms} and lifts
+ * its veil ({@link PHOTO_VEIL} → 0). Dimming again (the visit was reset after a job, or
+ * the room was removed) is quick and not staggered. Reduce Motion jumps
+ * straight to the end value.
+ *
+ * <p>Redesign is the default first tool, so it keeps the accent outline even
+ * while dimmed; the rest have the neutral hairline.
  */
 function ToolTile({
     mode,
     label,
+    image,
     locked,
     enabled,
     index,
@@ -800,6 +892,7 @@ function ToolTile({
 }: {
     mode: string;
     label: string;
+    image: ImageSourcePropType;
     locked: boolean;
     enabled: boolean;
     index: number;
@@ -807,25 +900,28 @@ function ToolTile({
     onPress: () => void;
 }) {
     const reduceMotion = useReduceMotion();
-    const opacity = useSharedValue(enabled ? 1 : DIMMED);
+    // The dimming is a veil over the photo, not the tile's opacity: at 38%
+    // opacity the photos vanished into the ground and the tiles read as empty
+    // (simulator, 10 Oct). The veil keeps them visible but clearly not ready.
+    const veil = useSharedValue(enabled ? 0 : PHOTO_VEIL);
 
     useEffect(() => {
-        const to = enabled ? 1 : DIMMED;
+        const to = enabled ? 0 : PHOTO_VEIL;
         if (reduceMotion) {
-            cancelAnimation(opacity);
-            opacity.value = to;
+            cancelAnimation(veil);
+            veil.value = to;
         } else if (enabled) {
-            opacity.value = withDelay(index * LIGHT_UP_STAGGER, withTiming(1, { duration: 260 }));
+            veil.value = withDelay(index * LIGHT_UP_STAGGER, withTiming(0, { duration: 260 }));
         } else {
-            opacity.value = withTiming(DIMMED, { duration: 200 });
+            veil.value = withTiming(PHOTO_VEIL, { duration: 200 });
         }
-    }, [enabled, reduceMotion, index, opacity]);
+    }, [enabled, reduceMotion, index, veil]);
 
-    const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+    const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
     const primary = mode === "REDESIGN";
 
     return (
-        <Animated.View style={[{ flex: 1 }, style]}>
+        <View style={{ flex: 1 }}>
             <Pressable
                 onPress={onPress}
                 accessibilityRole="button"
@@ -834,39 +930,68 @@ function ToolTile({
                 accessibilityHint={hint}
                 // 🔴 No flex:1 here: the Animated wrapper has no height of its own, so a
                 // flex child collapses it to zero and the second row drew over the first
-                // (simulator, 10 Oct). The tile sizes itself; the row stretches siblings.
+                // (simulator, 10 Oct). The tile has a fixed height instead.
                 style={{
-                    minHeight: 76,
+                    height: TOOL_TILE_HEIGHT,
                     backgroundColor: U.surface,
-                    borderWidth: 1,
-                    borderColor: primary ? U.accent : U.lineNeutral,
                     borderRadius: R.tile,
-                    paddingVertical: 12,
-                    paddingHorizontal: 10,
-                    justifyContent: "space-between",
-                    gap: 6,
+                    overflow: "hidden",
                 }}
             >
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                    <ToolIcon mode={mode} color={primary ? U.accentBright : U.ink} />
-                    {locked && (
-                        <Text style={{ ...V.captionStrong, letterSpacing: 1.2, color: U.accentBright }}>PRO</Text>
-                    )}
-                </View>
-                {/* A single long word ("Réaménagement") must shrink, not
-                    split mid-word — iOS broke it as "Réaménagem / ent" on
-                    the French home screen (simulator, 26 Sep). Labels with
-                    a space keep their two lines; the row grows ~6px and the
-                    budget allows it. */}
+                {/* Explicit 100% box, as the sample tiles use: with absoluteFill a bundled
+                    (require) image drew at its intrinsic size and only its top-left
+                    corner showed (simulator, 10 Oct). */}
+                <Image source={image} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} resizeMode="cover" />
+                {/* Photo chrome, not a theme colour: the label must read on any photo. */}
+                <LinearGradient
+                    colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.78)"]}
+                    start={{ x: 0, y: 0.25 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                />
+                <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, { backgroundColor: U.ground }, veilStyle]}
+                />
+                {locked && (
+                    <View
+                        style={{
+                            position: "absolute", top: 6, right: 6,
+                            paddingHorizontal: 7, paddingVertical: 2,
+                            borderRadius: R.pill,
+                            backgroundColor: U.photoChrome,
+                            borderWidth: 1, borderColor: U.photoChromeBorder,
+                        }}
+                    >
+                        <Text style={{ ...V.captionStrong, fontSize: 10, letterSpacing: 1.2, color: U.accentBright }}>PRO</Text>
+                    </View>
+                )}
+                {/* A single long word ("Réaménagement") must shrink, not split
+                    mid-word — iOS broke it as "Réaménagem / ent" on the French
+                    home screen (simulator, 26 Sep). Labels with a space keep
+                    their two lines. */}
                 <Text
                     numberOfLines={label.includes(" ") ? 2 : 1}
                     adjustsFontSizeToFit={!label.includes(" ")}
                     minimumFontScale={0.7}
-                    style={{ ...V.tile, color: U.ink }}
+                    style={{
+                        ...V.tile,
+                        position: "absolute", left: 9, right: 9, bottom: 8,
+                        color: "#fff",
+                    }}
                 >
                     {label}
                 </Text>
+                <View
+                    pointerEvents="none"
+                    style={{
+                        ...StyleSheet.absoluteFillObject,
+                        borderRadius: R.tile,
+                        borderWidth: primary ? 1.5 : 1,
+                        borderColor: primary ? U.accent : U.lineNeutral,
+                    }}
+                />
             </Pressable>
-        </Animated.View>
+        </View>
     );
 }

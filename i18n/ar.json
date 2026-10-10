@@ -367,7 +367,8 @@
     "summary_room_placeholder": "الغرفة",
     "summary_style_placeholder": "النمط",
     "summary_pieces_one": "+قطعة واحدة",
-    "summary_pieces_other": "+{{count}} قطع"
+    "summary_pieces_other": "+{{count}} قطع",
+    "remove_photo": "إزالة الصورة"
   },
   "furniture": {
     "title": "الأثاث",

@@ -368,7 +368,8 @@
     "summary_room_placeholder": "Pièce",
     "summary_style_placeholder": "Style",
     "summary_pieces_one": "+1 pièce de mobilier",
-    "summary_pieces_other": "+{{count}} pièces de mobilier"
+    "summary_pieces_other": "+{{count}} pièces de mobilier",
+    "remove_photo": "Retirer la photo"
   },
   "furniture": {
     "title": "Mobilier",

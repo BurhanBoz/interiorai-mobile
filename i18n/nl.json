@@ -368,7 +368,8 @@
     "summary_room_placeholder": "Kamer",
     "summary_style_placeholder": "Stijl",
     "summary_pieces_one": "+1 stuk",
-    "summary_pieces_other": "+{{count}} stuks"
+    "summary_pieces_other": "+{{count}} stuks",
+    "remove_photo": "Foto verwijderen"
   },
   "furniture": {
     "title": "Meubels",

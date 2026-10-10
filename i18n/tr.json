@@ -368,7 +368,8 @@
     "summary_room_placeholder": "Oda",
     "summary_style_placeholder": "Stil",
     "summary_pieces_one": "+1 parça",
-    "summary_pieces_other": "+{{count}} parça"
+    "summary_pieces_other": "+{{count}} parça",
+    "remove_photo": "Fotoğrafı kaldır"
   },
   "furniture": {
     "title": "Mobilya",
