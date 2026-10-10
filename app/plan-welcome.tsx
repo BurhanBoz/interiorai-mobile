@@ -63,7 +63,9 @@ export default function PlanWelcomeScreen() {
     const entry = ENTRY_SOURCES.has(source);
     const primary = () => {
         track("plan_welcome_continue", { source, entry });
-        if (entry) router.replace("/(tabs)/studio" as never);
+        // dismissTo, not replace: replace stacks a second tab navigator when the tabs
+        // are already below (utils/tabNavigation). With nothing below it replaces.
+        if (entry) router.dismissTo("/(tabs)/studio" as never);
         else router.back();
     };
 
@@ -75,7 +77,7 @@ export default function PlanWelcomeScreen() {
     const openMode = (mode: string) => {
         track("plan_welcome_try", { mode });
         setMode(mode as never);
-        router.replace({ pathname: "/(tabs)/studio", params: { intent: mode } } as never);
+        router.dismissTo({ pathname: "/(tabs)/studio", params: { intent: mode } } as never);
     };
 
     const tries: { key: string; icon: keyof typeof Ionicons.glyphMap; label: string; sub?: string; onPress: () => void }[] = [];
@@ -83,7 +85,7 @@ export default function PlanWelcomeScreen() {
         tries.push({
             key: "video", icon: "film-outline", label: t("plan_welcome.try_video"),
             sub: t("plan_welcome.try_video_sub", { cta: t("result.video_cta") }),
-            onPress: () => { track("plan_welcome_try", { mode: "ROOM_VIDEO" }); router.replace("/(tabs)/gallery" as never); },
+            onPress: () => { track("plan_welcome_try", { mode: "ROOM_VIDEO" }); router.dismissTo("/(tabs)/gallery" as never); },
         });
     }
     tries.push({

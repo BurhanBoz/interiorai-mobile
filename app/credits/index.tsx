@@ -25,6 +25,8 @@ import { theme } from "@/config/theme";
 import { buildLedgerRows, parseLedgerLine, type LedgerRowModel } from "@/utils/ledger";
 import type { CreditLedgerEntry } from "@/types/api";
 
+const U = theme.umber;
+
 /**
  * "Today" / "Yesterday" / "19 September" — the heading over one day's rows.
  *
@@ -151,7 +153,7 @@ function LedgerRow({
 
 /* ─────────────────── Main Screen ─────────────────── */
 export default function CreditsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const balance = useCreditStore(s => s.balance);
   const fetchBalance = useCreditStore(s => s.fetchBalance);
   const subscription = useSubscriptionStore(s => s.subscription);
@@ -279,8 +281,16 @@ export default function CreditsScreen() {
     }
   };
 
+  /*
+   * Redesign v3 (2026-10-10): the same screen in the paywall's language —
+   * umber tokens instead of the old hex literals and NativeWind classes, a
+   * gold kicker, the serif balance, and the cycle card and each day's rows on
+   * the umber surface. What it shows did not change: balance, next cycle and
+   * its progress, the ledger with its three filters, the empty state, and the
+   * promo code field.
+   */
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.umber.ground }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
       {/* Composer-language header: 34px back, a kicker, a matching spacer.
           The brand lockup and the avatar menu came off — this is a record the
           user opened on purpose, not a place that needs to re-introduce the
@@ -289,7 +299,7 @@ export default function CreditsScreen() {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: 18,
+          paddingHorizontal: theme.v2Layout.gutterNarrow,
           paddingTop: 8,
           paddingBottom: 14,
         }}
@@ -303,15 +313,17 @@ export default function CreditsScreen() {
             width: 34,
             height: 34,
             borderRadius: 17,
-            backgroundColor: theme.umber.lineNeutral,
+            backgroundColor: U.surface,
+            borderWidth: 1,
+            borderColor: U.lineNeutral,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: theme.umber.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+          <Ionicons name="chevron-back" size={18} color={U.ink} />
         </Pressable>
-        <Text style={{ ...theme.v2.kicker, color: theme.umber.inkMuted, flex: 1, textAlign: "center" }}>
-          {t("profile.billing_history").toUpperCase()}
+        <Text style={{ ...theme.v2.kicker, color: U.accent, flex: 1, textAlign: "center" }}>
+          {t("profile.billing_history").toLocaleUpperCase(i18n.language)}
         </Text>
         <View style={{ width: 34 }} />
       </View>
@@ -324,18 +336,19 @@ export default function CreditsScreen() {
             <Text
               style={{
                 ...theme.v2.kicker,
-                color: theme.umber.inkMuted,
+                color: U.inkMuted,
                 marginBottom: 8,
                 marginLeft: 2,
               }}
             >
-              {section.label.toUpperCase()}
+              {section.label.toLocaleUpperCase(i18n.language)}
             </Text>
             <View
               style={{
+                backgroundColor: U.surface,
                 borderWidth: 1,
-                borderColor: theme.umber.lineNeutral,
-                borderRadius: 16,
+                borderColor: U.lineNeutral,
+                borderRadius: theme.v2Layout.radius.card,
                 overflow: "hidden",
               }}
             >
@@ -352,7 +365,7 @@ export default function CreditsScreen() {
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
-        contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: theme.v2Layout.gutterWide, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
@@ -362,7 +375,7 @@ export default function CreditsScreen() {
                 "credits in vault" — for a number the Settings screen already
                 shows. */}
             <View style={{ paddingTop: 6, paddingBottom: 22 }}>
-              <Text style={{ ...theme.v2.displayL, color: theme.umber.ink }}>
+              <Text style={{ ...theme.v2.displayL, color: U.ink }}>
                 {t("credits.headline_balance", { count: balance })}
               </Text>
             </View>
@@ -381,50 +394,47 @@ export default function CreditsScreen() {
             {/* ── Next Cycle & Progress ── */}
             {subscription?.currentPeriodEnd && (
               <View
-                className="bg-surface-container-low rounded-xl"
-                style={{ padding: 24, marginBottom: 28 }}
+                style={{
+                  backgroundColor: U.surface,
+                  borderWidth: 1,
+                  borderColor: U.lineNeutral,
+                  borderRadius: theme.v2Layout.radius.card,
+                  padding: 20,
+                  marginBottom: 28,
+                }}
               >
-                <View style={{ marginBottom: 24 }}>
-                  <Text
-                    className="font-label text-secondary"
-                    style={{
-                      ...theme.text.caption,
-                      marginBottom: 8,
-                    }}
-                  >
+                <View style={{ marginBottom: 18 }}>
+                  <Text style={{ ...theme.v2.kicker, color: U.accent, marginBottom: 8 }}>
                     {t("credits.next_cycle")}
                   </Text>
-                  <Text
-                    className="font-body text-on-surface-variant"
-                    style={{ ...theme.text.body }}
-                  >
+                  <Text style={{ ...theme.v2.displayXS, color: U.ink }}>
                     {resetDateFormatted}
                   </Text>
                 </View>
 
                 {/* Progress bar */}
                 <View
-                  className="bg-surface-container-highest rounded-full overflow-hidden"
-                  style={{ height: 8, marginBottom: 12 }}
+                  style={{
+                    height: 6,
+                    marginBottom: 10,
+                    borderRadius: theme.v2Layout.radius.pill,
+                    backgroundColor: U.lineNeutral,
+                    overflow: "hidden",
+                  }}
                 >
                   <LinearGradient
-                    colors={["#DDB477", "#C09B62"]}
+                    colors={theme.gradient.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
                       width: `${Math.round(progressPct * 100)}%`,
                       height: "100%",
-                      borderRadius: theme.radius.pill,
+                      borderRadius: theme.v2Layout.radius.pill,
                     }}
                   />
                 </View>
-                <View className="items-end">
-                  <Text
-                    className="font-label text-secondary"
-                    style={{
-                      ...theme.text.caption,
-                    }}
-                  >
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text style={{ ...theme.v2.caption, color: U.inkMuted }}>
                     {t("credits.days_remaining", { count: daysRemaining })}
                   </Text>
                 </View>
@@ -439,53 +449,48 @@ export default function CreditsScreen() {
             <View
               style={{
                 height: 1,
-                backgroundColor: "rgba(225,195,155,0.14)",
+                backgroundColor: U.lineAccent,
                 marginBottom: 18,
               }}
             />
             <View
-              className="flex-row items-center justify-between"
-              style={{ marginBottom: 16 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 14,
+              }}
             >
-              <Text
-                className="font-label"
-                style={{
-                  ...theme.text.caption,
-                  color: "#DDB477",
-                }}
-              >
+              <Text style={{ ...theme.v2.kicker, color: U.accent }}>
                 {t("credits.ledger_title")}
               </Text>
             </View>
 
             {/* Filter chips */}
-            <View
-              className="flex-row"
-              style={{ gap: 8, marginBottom: 20 }}
-            >
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
               {(["ALL", "EARNED", "SPENT"] as const).map(f => {
                 const active = activityFilter === f;
                 return (
                   <Pressable
                     key={f}
                     onPress={() => setActivityFilter(f)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
                     style={{
                       paddingHorizontal: 14,
                       paddingVertical: 7,
-                      borderRadius: theme.radius.pill,
+                      borderRadius: theme.v2Layout.radius.pill,
                       borderWidth: 1,
-                      borderColor: active
-                        ? "rgba(254,223,181,0.6)"
-                        : "rgba(77,70,60,0.4)",
-                      backgroundColor: active
-                        ? "rgba(225,195,155,0.15)"
-                        : "transparent",
+                      borderColor: active ? U.accent : U.lineNeutral,
+                      backgroundColor: active ? U.lineAccent : "transparent",
                     }}
                   >
                     <Text
                       style={{
-                        ...theme.text.caption,
-                        color: active ? "#DDB477" : "#F6F1E7",
+                        ...theme.v2.captionStrong,
+                        fontSize: 12,
+                        lineHeight: 16,
+                        color: active ? U.accentBright : U.ink,
                       }}
                     >
                       {t(`credits.filter_${f.toLowerCase()}`)}
@@ -498,16 +503,20 @@ export default function CreditsScreen() {
         }
         ListEmptyComponent={
           !loadingLedger ? (
-            <View className="items-center" style={{ paddingVertical: 32 }}>
+            <View style={{ alignItems: "center", paddingVertical: 32 }}>
               <Ionicons
                 name="receipt-outline"
                 size={36}
-                color="#9A8F7D"
+                color={U.inkMuted}
                 style={{ marginBottom: 12 }}
               />
               <Text
-                className="font-headline text-on-surface text-center"
-                style={{ ...theme.text.title, marginBottom: 6 }}
+                style={{
+                  ...theme.v2.displayXS,
+                  color: U.ink,
+                  textAlign: "center",
+                  marginBottom: 6,
+                }}
               >
                 {t(
                   activityFilter === "ALL"
@@ -516,9 +525,12 @@ export default function CreditsScreen() {
                 )}
               </Text>
               <Text
-                className="font-body text-on-surface-variant text-center"
                 style={{
-                  ...theme.text.body,
+                  ...theme.v2.rowQuiet,
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: U.inkMuted,
+                  textAlign: "center",
                   maxWidth: 280,
                   marginBottom: 18,
                 }}
@@ -532,20 +544,16 @@ export default function CreditsScreen() {
               {activityFilter === "ALL" && (
                 <Pressable
                   onPress={() => router.push("/(tabs)/studio")}
+                  accessibilityRole="button"
                   style={{
                     paddingHorizontal: 22,
                     paddingVertical: 10,
-                    borderRadius: theme.radius.pill,
+                    borderRadius: theme.v2Layout.radius.pill,
                     borderWidth: 1,
-                    borderColor: "#DDB477",
+                    borderColor: U.accent,
                   }}
                 >
-                  <Text
-                    style={{
-                      ...theme.text.caption,
-                      color: "#DDB477",
-                    }}
-                  >
+                  <Text style={{ ...theme.v2.row, color: U.accentBright }}>
                     {t("credits.empty_cta")}
                   </Text>
                 </Pressable>
@@ -557,7 +565,7 @@ export default function CreditsScreen() {
           <View>
             {loadingLedger && (
               <ActivityIndicator
-                color="#DDB477"
+                color={U.accent}
                 style={{ marginVertical: 16 }}
               />
             )}
@@ -566,43 +574,50 @@ export default function CreditsScreen() {
             <View
               style={{
                 borderTopWidth: 1,
-                borderTopColor: "rgba(77,70,60,0.20)",
-                paddingTop: 32,
+                borderTopColor: U.lineNeutral,
+                paddingTop: 28,
                 marginTop: 16,
               }}
             >
               <Pressable
                 onPress={() => setPromoExpanded(!promoExpanded)}
-                className="flex-row items-center justify-between"
-                style={{ marginBottom: promoExpanded ? 24 : 0 }}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: promoExpanded }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: 32,
+                  marginBottom: promoExpanded ? 16 : 0,
+                }}
               >
-                <Text
-                  className="font-label text-secondary"
-                  style={{
-                    ...theme.text.caption,
-                  }}
-                >
+                <Text style={{ ...theme.v2.kicker, color: U.inkMuted }}>
                   {t("credits.promo_code_label")}
                 </Text>
                 <Ionicons
                   name={promoExpanded ? "chevron-up" : "chevron-down"}
                   size={20}
-                  color="#DDB477"
+                  color={U.accent}
                 />
               </Pressable>
 
               {promoExpanded && (
-                <View className="flex-row" style={{ gap: 12 }}>
+                <View style={{ flexDirection: "row", gap: 12 }}>
                   <TextInput
                     value={promoCode}
                     onChangeText={setPromoCode}
                     placeholder={t("credits.promo_placeholder")}
-                    placeholderTextColor="rgba(209,197,184,0.4)"
+                    placeholderTextColor={U.inkMuted}
                     autoCapitalize="characters"
                     editable={!promoLoading}
-                    className="flex-1 bg-surface-container-high rounded-lg text-on-surface"
                     style={{
-                      ...theme.text.body,
+                      ...theme.v2.body,
+                      flex: 1,
+                      color: U.ink,
+                      backgroundColor: U.surface,
+                      borderWidth: 1,
+                      borderColor: U.lineNeutral,
+                      borderRadius: theme.v2Layout.radius.inline,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                     }}
@@ -610,26 +625,22 @@ export default function CreditsScreen() {
                   <Pressable
                     onPress={handleRedeemPromo}
                     disabled={promoLoading}
+                    accessibilityRole="button"
                     style={{
-                      paddingHorizontal: theme.space.gutter,
+                      paddingHorizontal: 20,
                       paddingVertical: 12,
-                      borderRadius: theme.radius.sm,
+                      borderRadius: theme.v2Layout.radius.inline,
                       borderWidth: 1,
-                      borderColor: "#DDB477",
+                      borderColor: U.accent,
                       justifyContent: "center",
                       alignItems: "center",
                       opacity: promoLoading ? 0.5 : 1,
                     }}
                   >
                     {promoLoading ? (
-                      <ActivityIndicator color="#DDB477" size="small" />
+                      <ActivityIndicator color={U.accent} size="small" />
                     ) : (
-                      <Text
-                        style={{
-                          ...theme.text.caption,
-                          color: "#DDB477",
-                        }}
-                      >
+                      <Text style={{ ...theme.v2.row, color: U.accentBright }}>
                         {t("credits.promo_apply")}
                       </Text>
                     )}
@@ -639,10 +650,9 @@ export default function CreditsScreen() {
 
               {promoError !== "" && (
                 <Text
-                  className="font-body"
                   style={{
-                    ...theme.text.caption,
-                    color: "#ffb4ab",
+                    ...theme.v2.caption,
+                    color: theme.color.danger,
                     marginTop: 8,
                   }}
                 >

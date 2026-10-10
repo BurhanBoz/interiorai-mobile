@@ -1,10 +1,11 @@
 /*
- * Umber palette (2026-09-19). The colour literals below were the v1 near-black
- * set; they are mapped onto the new tokens one for one.
+ * Redesign v3 (2026-10-10): every colour comes from theme.umber / theme.v2 —
+ * no hex literals in this file. Chips are the Gallery's GalleryFilterChip,
+ * product cards and the own-photo card live in components/furniture/.
  *
- * 🔴 The product plate stays LIGHT (#F6F1E7). Every catalogue image is a
- * cut-out shot against white, so a plate that darkened with the rest of the
- * palette would leave each sofa floating on its own pale halo.
+ * 🔴 The product plate stays LIGHT (umber.productPlate). Every catalogue image
+ * is a cut-out shot against white, so a plate that darkened with the rest of
+ * the palette would leave each sofa floating on its own pale halo.
  */
 import {
   ActivityIndicator,
@@ -17,8 +18,14 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { theme } from "@/config/theme";
+import { GalleryFilterChip } from "@/components/gallery/GalleryFilterChip";
+import { FurnitureHeader } from "@/components/furniture/FurnitureHeader";
+import { FurnitureTile } from "@/components/furniture/FurnitureTile";
+import { OwnPhotoCard } from "@/components/furniture/OwnPhotoCard";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -46,8 +53,30 @@ const CATEGORIES = [
   "SOFA", "CHAIR", "TABLE", "BED", "LAMP", "RUG", "PLANT", "STORAGE", "DECOR",
 ] as const;
 
+const U = theme.umber;
+const V = theme.v2;
+const L = theme.v2Layout;
+const EDGE = L.gutterWide;
+const GAP = 10;
+/** Only the first rows stagger in; later tiles mount settled. */
+const ENTER_CAP = 12;
+const ENTER_STAGGER = 35;
+
+/**
+ * Close the picker. The screen is a modal over the composer, but it can also
+ * be the first route (a cold deep link, a restored state) — then there is
+ * nothing to go back to and a bare back() is a no-op that strands the user.
+ */
+const close = () => {
+  if (router.canGoBack()) router.back();
+  else router.replace("/(tabs)/studio" as never);
+};
+
 export default function FurnitureScreen() {
   const { t } = useTranslation();
+  const reduceMotion = useReduceMotion();
+  const { width: screenWidth } = useWindowDimensions();
+  const tileWidth = Math.floor((screenWidth - EDGE * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
   const objectRefs = useStudioStore((s) => s.objectRefs);
   const addObjectRef = useStudioStore((s) => s.addObjectRef);
   const { pickImage: pickObjectImage, isUploading } = useImagePicker();
@@ -100,7 +129,7 @@ export default function FurnitureScreen() {
       catalogItemId: item.id,
       name: item.name,
     });
-    router.back();
+    close();
   };
 
   const chooseOwnPhoto = async () => {
@@ -117,7 +146,7 @@ export default function FurnitureScreen() {
   const useOnce = () => {
     if (!pending) return;
     addObjectRef({ uri: pending.uri, fileId: pending.fileId });
-    router.back();
+    close();
   };
 
   /** Save it as a catalogue piece; the cutout runs server-side. */
@@ -154,90 +183,93 @@ export default function FurnitureScreen() {
   // ── V178: name the piece you just photographed ──────────────────────
   if (pending) {
     const input = {
-      color: "#F6F1E7",
-      backgroundColor: "rgba(255,255,255,0.05)",
+      color: U.ink,
+      backgroundColor: U.surface,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.10)",
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 11,
+      borderColor: U.lineNeutral,
+      borderRadius: L.radius.inline,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
       ...theme.text.body,
     } as const;
+    const label = { ...V.captionStrong, color: U.inkMuted } as const;
+    const canSave = !saving && !!form.name.trim();
     return (
-      <SafeAreaView className="flex-1 bg-surface" edges={["top", "bottom"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View
-            className="flex-row items-center justify-between"
-            style={{ paddingHorizontal: theme.space.gutter, paddingBottom: 10 }}
-          >
-            <Text style={{ ...theme.text.headline, color: "#F6F1E7" }}>
-              {t("furniture.save_title")}
-            </Text>
-            <Pressable onPress={() => setPending(null)} hitSlop={10}>
-              <Ionicons name="close" size={24} color="#9A8F7D" />
-            </Pressable>
-          </View>
+          <FurnitureHeader
+            title={t("furniture.save_title")}
+            closeLabel={t("common.close")}
+            onClose={() => setPending(null)}
+          />
 
           <ScrollView
-            contentContainerStyle={{ paddingHorizontal: theme.space.gutter, paddingBottom: 28, gap: 14 }}
+            contentContainerStyle={{ paddingHorizontal: EDGE, paddingBottom: 28, gap: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="rounded-xl overflow-hidden bg-surface-container-low" style={{ height: 180 }}>
-              <Image source={{ uri: pending.uri }} style={{ width: "100%", height: "100%" }} contentFit="contain" />
+            <View
+              style={{
+                height: 190,
+                padding: 6,
+                borderRadius: L.radius.card,
+                backgroundColor: U.surface,
+                borderWidth: 1,
+                borderColor: U.lineNeutral,
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: L.radius.card - 6,
+                  overflow: "hidden",
+                  backgroundColor: U.sheetSurface,
+                }}
+              >
+                <Image source={{ uri: pending.uri }} style={{ width: "100%", height: "100%" }} contentFit="contain" />
+              </View>
             </View>
 
-            <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_name")}</Text>
+            <View style={{ gap: 7 }}>
+              <Text style={label}>{t("furniture.field_name")}</Text>
               <TextInput
                 value={form.name}
                 onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
                 placeholder={t("furniture.field_name_hint")}
-                placeholderTextColor="#6E665D"
+                placeholderTextColor={U.inkMuted}
+                selectionColor={U.accent}
                 maxLength={120}
                 style={input}
               />
             </View>
 
-            <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_category")}</Text>
+            <View style={{ gap: 7 }}>
+              <Text style={label}>{t("furniture.field_category")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                style={{ flexGrow: 0, flexShrink: 0 }}
-                contentContainerStyle={{ gap: 8, alignItems: "center" }}
+                style={{ flexGrow: 0, flexShrink: 0, marginHorizontal: -EDGE }}
+                contentContainerStyle={{ gap: 8, alignItems: "center", paddingHorizontal: EDGE, paddingVertical: 4 }}
               >
-                {CATEGORIES.map((c) => {
-                  const on = form.category === c;
-                  return (
-                    <Pressable
-                      key={c}
-                      onPress={() => setForm((f) => ({ ...f, category: c }))}
-                      className="rounded-full"
-                      style={{
-                        paddingHorizontal: 14,
-                        paddingVertical: 7,
-                        backgroundColor: on ? "rgba(225,195,155,0.16)" : "rgba(255,255,255,0.05)",
-                        borderWidth: 1,
-                        borderColor: on ? "rgba(225,195,155,0.42)" : "rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      <Text style={{ ...theme.text.caption, color: on ? "#DDB477" : "#9A8F7D" }}>
-                        {t(`furniture.category.${c.toLowerCase()}`)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {CATEGORIES.map((c) => (
+                  <GalleryFilterChip
+                    key={c}
+                    label={t(`furniture.category.${c.toLowerCase()}`)}
+                    active={form.category === c}
+                    onPress={() => setForm((f) => ({ ...f, category: c }))}
+                    reduceMotion={reduceMotion}
+                  />
+                ))}
               </ScrollView>
             </View>
 
             {/* Centimetres are the reason a catalogue piece beats a photograph:
                 they are the one fact the model otherwise has to guess, and
                 scale is what it guesses wrong. Optional, but asked for. */}
-            <View style={{ gap: 6 }}>
-              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.field_size")}</Text>
+            <View style={{ gap: 7 }}>
+              <Text style={label}>{t("furniture.field_size")}</Text>
               <View className="flex-row" style={{ gap: 8 }}>
                 {(["w", "d", "h"] as const).map((k) => (
                   <TextInput
@@ -245,7 +277,8 @@ export default function FurnitureScreen() {
                     value={form[k]}
                     onChangeText={(v) => setForm((f) => ({ ...f, [k]: v.replace(/[^0-9]/g, "") }))}
                     placeholder={t(`furniture.field_${k}`)}
-                    placeholderTextColor="#6E665D"
+                    placeholderTextColor={U.inkMuted}
+                    selectionColor={U.accent}
                     keyboardType="number-pad"
                     maxLength={4}
                     style={{ ...input, flex: 1, textAlign: "center" }}
@@ -257,20 +290,30 @@ export default function FurnitureScreen() {
             <Pressable
               onPress={saveToCatalogue}
               disabled={saving || !form.name.trim()}
-              className="rounded-xl items-center justify-center"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSave, busy: saving }}
               style={{
-                paddingVertical: 15,
-                backgroundColor: "#DDB477",
-                opacity: saving || !form.name.trim() ? 0.45 : 1,
+                height: 54,
+                marginTop: 4,
+                borderRadius: L.radius.button,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: U.buttonFill,
+                opacity: canSave || saving ? 1 : 0.45,
               }}
             >
               {saving
-                ? <ActivityIndicator size="small" color="#191510" />
-                : <Text style={{ ...theme.text.title, color: "#191510" }}>{t("furniture.save_action")}</Text>}
+                ? <ActivityIndicator size="small" color={U.buttonInk} />
+                : <Text style={{ ...V.button, color: U.buttonInk }}>{t("furniture.save_action")}</Text>}
             </Pressable>
 
-            <Pressable onPress={useOnce} disabled={saving} style={{ alignItems: "center", paddingVertical: 8 }}>
-              <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>{t("furniture.use_once")}</Text>
+            <Pressable
+              onPress={useOnce}
+              disabled={saving}
+              accessibilityRole="button"
+              style={{ alignItems: "center", paddingVertical: 10 }}
+            >
+              <Text style={{ ...V.row, color: U.accent }}>{t("furniture.use_once")}</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -279,19 +322,12 @@ export default function FurnitureScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={["top", "bottom"]}>
-      {/* header */}
-      <View
-        className="flex-row items-center justify-between"
-        style={{ paddingHorizontal: theme.space.gutter, paddingBottom: 10 }}
-      >
-        <Text style={{ ...theme.text.headline, color: "#F6F1E7" }}>
-          {t("furniture.title")}
-        </Text>
-        <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button">
-          <Ionicons name="close" size={24} color="#9A8F7D" />
-        </Pressable>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: U.ground }} edges={["top", "bottom"]}>
+      <FurnitureHeader
+        title={t("furniture.title")}
+        closeLabel={t("common.close")}
+        onClose={close}
+      />
 
       {/* categories */}
       {/* flexGrow 0: the parent is flex-1 and the grid below it shrinks when a
@@ -303,42 +339,31 @@ export default function FurnitureScreen() {
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0, flexShrink: 0 }}
         contentContainerStyle={{
-          paddingHorizontal: theme.space.gutter,
+          paddingHorizontal: EDGE,
           gap: 8,
-          paddingBottom: 14,
+          paddingTop: 4,
+          paddingBottom: 16,
           alignItems: "center",
         }}
       >
-        {[null, ...CATEGORIES].map((c) => {
-          const active = category === c;
-          return (
-            <Pressable
-              key={c ?? "ALL"}
-              onPress={() => setCategory(c)}
-              className="rounded-full"
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 7,
-                backgroundColor: active ? "rgba(225,195,155,0.16)" : "rgba(255,255,255,0.05)",
-                borderWidth: 1,
-                borderColor: active ? "rgba(225,195,155,0.42)" : "rgba(255,255,255,0.08)",
-              }}
-            >
-              <Text style={{ ...theme.text.caption, color: active ? "#DDB477" : "#9A8F7D" }}>
-                {c === null ? t("furniture.all") : t(`furniture.category.${c.toLowerCase()}`)}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {[null, ...CATEGORIES].map((c) => (
+          <GalleryFilterChip
+            key={c ?? "ALL"}
+            label={c === null ? t("furniture.all") : t(`furniture.category.${c.toLowerCase()}`)}
+            active={category === c}
+            onPress={() => setCategory(c)}
+            reduceMotion={reduceMotion}
+          />
+        ))}
       </ScrollView>
 
       {full && (
         <Text
           style={{
-            ...theme.text.caption,
-            color: "#F0CE99",
-            paddingHorizontal: theme.space.gutter,
-            paddingBottom: 10,
+            ...V.rowQuiet,
+            color: U.accentBright,
+            paddingHorizontal: EDGE,
+            paddingBottom: 12,
           }}
         >
           {t("furniture.limit_reached")}
@@ -349,61 +374,43 @@ export default function FurnitureScreen() {
         data={items}
         keyExtractor={(i) => i.id}
         numColumns={COLUMNS}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: theme.space.gutter,
+          paddingHorizontal: EDGE,
           paddingBottom: 32,
-          gap: 12,
+          gap: GAP,
         }}
-        columnWrapperStyle={{ gap: 12 }}
+        columnWrapperStyle={{ gap: GAP }}
         ListHeaderComponent={
-          <View style={{ paddingBottom: 12 }}>
-            <Pressable onPress={chooseOwnPhoto} disabled={full || isUploading}>
-              <View
-                className="flex-row items-center rounded-xl bg-surface-container-low"
-                style={{
-                  padding: 14,
-                  gap: 12,
-                  borderWidth: 1.5,
-                  borderColor: "rgba(225,195,155,0.32)",
-                  borderStyle: "dashed",
-                  opacity: full ? 0.45 : 1,
-                }}
-              >
-                {isUploading ? (
-                  <ActivityIndicator size="small" color="#DDB477" />
-                ) : (
-                  <Ionicons name="camera-outline" size={22} color="#DDB477" />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...theme.text.title, color: "#F6F1E7" }}>
-                    {t("furniture.own_photo")}
-                  </Text>
-                  <Text style={{ ...theme.text.caption, color: "#9A8F7D" }}>
-                    {t("furniture.own_photo_hint")}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
+          <View style={{ paddingBottom: 14 }}>
+            <OwnPhotoCard
+              title={t("furniture.own_photo")}
+              hint={t("furniture.own_photo_hint")}
+              uploading={isUploading}
+              disabled={full || isUploading}
+              reduceMotion={reduceMotion}
+              onPress={chooseOwnPhoto}
+            />
           </View>
         }
         ListEmptyComponent={
           loading ? (
             <View style={{ paddingVertical: 48, alignItems: "center" }}>
-              <ActivityIndicator size="small" color="#DDB477" />
+              <ActivityIndicator size="small" color={U.accent} />
             </View>
           ) : (
-            <View style={{ paddingVertical: 40, alignItems: "center", gap: 6 }}>
+            <View style={{ paddingVertical: 40, alignItems: "center", gap: 8 }}>
               <Ionicons
                 name={failed ? "cloud-offline-outline" : "bed-outline"}
                 size={28}
-                color="#6E665D"
+                color={U.inkMuted}
               />
-              <Text style={{ ...theme.text.caption, color: "#9A8F7D", textAlign: "center" }}>
+              <Text style={{ ...V.rowQuiet, color: U.inkMuted, textAlign: "center" }}>
                 {failed ? t("furniture.load_failed") : t("furniture.empty")}
               </Text>
               {failed && (
-                <Pressable onPress={() => load(category)} hitSlop={8}>
-                  <Text style={{ ...theme.text.caption, color: "#DDB477" }}>
+                <Pressable onPress={() => load(category)} hitSlop={8} accessibilityRole="button">
+                  <Text style={{ ...V.row, color: U.accent }}>
                     {t("common.retry")}
                   </Text>
                 </Pressable>
@@ -411,59 +418,21 @@ export default function FurnitureScreen() {
             </View>
           )
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const already = chosen.has(item.id);
           const disabled = already || full;
           return (
-            <Pressable
-              onPress={() => choose(item)}
+            <FurnitureTile
+              width={tileWidth}
+              name={item.name}
+              imageUrl={item.imageUrl}
+              widthCm={item.widthCm}
+              chosen={already}
               disabled={disabled}
-              style={{ flex: 1 / COLUMNS, opacity: disabled ? 0.4 : 1 }}
-              accessibilityRole="button"
-              accessibilityLabel={item.name}
-            >
-              <View
-                className="rounded-xl overflow-hidden bg-surface-container-low"
-                style={{ aspectRatio: 1 }}
-              >
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  style={{ width: "100%", height: "100%" }}
-                  contentFit="contain"
-                  transition={160}
-                />
-                {already && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 6,
-                      width: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      backgroundColor: "rgba(19,19,19,0.9)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="checkmark" size={13} color="#DDB477" />
-                  </View>
-                )}
-              </View>
-              <Text
-                style={{ ...theme.text.caption, color: "#F6F1E7", marginTop: 5 }}
-                numberOfLines={1}
-              >
-                {item.name}
-              </Text>
-              {/* Centimetres, because the whole point of the catalogue is that
-                  the size is known rather than inferred from a photograph. */}
-              {item.widthCm ? (
-                <Text style={{ ...theme.text.caption, color: "#6E665D", fontSize: 10 }}>
-                  {item.widthCm} cm
-                </Text>
-              ) : null}
-            </Pressable>
+              enterDelay={index < ENTER_CAP ? index * ENTER_STAGGER : null}
+              reduceMotion={reduceMotion}
+              onPress={() => choose(item)}
+            />
           );
         }}
       />

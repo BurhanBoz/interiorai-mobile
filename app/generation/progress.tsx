@@ -16,6 +16,7 @@ import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
+import { backToTab } from "@/utils/tabNavigation";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { ScanCard } from "@/components/generation/ScanCard";
@@ -201,7 +202,8 @@ export default function GenerationProgressScreen() {
 
   const handleClose = () => {
     if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/studio" as any);
+    // Not replace: that stacks a second tab navigator (utils/tabNavigation).
+    else backToTab("studio");
   };
 
   /**

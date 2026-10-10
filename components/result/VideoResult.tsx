@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ActivityIndicator, Modal, StatusBar, AppState } from "react-native";
+import { backToTab } from "@/utils/tabNavigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router, useFocusEffect, useNavigation } from "expo-router";
@@ -233,7 +234,8 @@ export function VideoResult({
 
   const handleNewDesign = () => {
     Haptics.selectionAsync();
-    router.replace("/(tabs)/studio" as never);
+    // Not replace: that stacks a second tab navigator (utils/tabNavigation).
+    backToTab("studio");
   };
 
   return (

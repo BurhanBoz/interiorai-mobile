@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, ActivityIndicator as Spinner } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, ActivityIndicator as Spinner, InteractionManager } from "react-native";
+import { consumeCatalogueOnArrive } from "@/utils/catalogueOnArrive";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated from "react-native-reanimated";
@@ -24,6 +25,9 @@ import { catalogName } from "@/utils/catalogI18n";
 import { MaskOverlay } from "@/components/ui/MaskOverlay";
 import { ResumeNote } from "@/components/ui/ResumeNote";
 import { useResumeNote } from "@/hooks/useResumeNote";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { Ionicons } from "@expo/vector-icons";
+import { Image as ExpoImage } from "expo-image";
 import { CoachMarks } from "@/components/tour/CoachMarks";
 import { tourTarget } from "@/components/tour/tourTargets";
 import { useFirstRunTour } from "@/hooks/useFirstRunTour";
@@ -104,15 +108,26 @@ export default function ComposerScreen() {
 
     const [sheet, setSheet] = useState<null | "advanced">(null);
 
-    // Arriving from the Furniture tile opens the catalogue straight away.
-    // It is a route presented modally rather than a component, so it opens by
-    // navigation — see studio/_layout.tsx.
+    // Arriving from "Add furniture" opens the catalogue straight away. It is a
+    // route presented modally, so it opens by navigation (studio/_layout.tsx).
+    //
+    // 🔴 One-shot, and after the arrival transition (TestFlight 2.4.0, 11 Oct).
+    // It used to read a `?sheet=catalogue` param on mount: the param stayed on
+    // the route, so every remount of this composer — returning to Studio from
+    // another tab — opened the catalogue again, and its × closed onto another
+    // copy. The request is now a flag cleared on read (utils/catalogueOnArrive);
+    // the old param is still honoured once for any link that carries it, then
+    // removed from the route. Presenting the modal in the same frame as the push
+    // that brought this screen in can drop one of the two transitions on iOS, so
+    // it waits for interactions to settle.
     useEffect(() => {
-        if (params.sheet === "catalogue") {
+        const fromParam = params.sheet === "catalogue";
+        if (fromParam) router.setParams({ sheet: undefined } as never);
+        if (!consumeCatalogueOnArrive() && !fromParam) return;
+        const task = InteractionManager.runAfterInteractions(() => {
             router.push("/studio/furniture" as never);
-        }
-        // Once only: re-running on every param read would re-open the sheet
-        // each time the user came back from it.
+        });
+        return () => task.cancel();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     const [products, setProducts] = useState<FurnitureItem[]>([]);
@@ -444,6 +459,10 @@ function PhotoFrame({
     maskMode?: string | null;
 }) {
     const { t } = useTranslation();
+    // A room carried over from a result ("Add furniture") is the server's copy of
+    // the input photo, which needs the auth header; a local pick does not.
+    const authHeaders = useAuthHeaders();
+    const remote = !!uri && /^https?:/i.test(uri);
     return (
         <View
             style={{
@@ -457,12 +476,26 @@ function PhotoFrame({
         >
             {uri ? (
                 <>
-                    <Image
-                        source={{ uri }}
-                        style={{ width: "100%", height: "100%" }}
-                        resizeMode="cover"
-                        accessibilityIgnoresInvertColors
-                    />
+                    {remote ? (
+                        // expo-image, as the result screen's "before": RN's Image did not
+                        // reload when the auth header arrived a tick after the URI, so the
+                        // carried-over room stayed blank (simulator, 11 Oct).
+                        authHeaders.Authorization ? (
+                            <ExpoImage
+                                source={{ uri, headers: authHeaders, cacheKey: `studio-${uri.split("?")[0]}` }}
+                                style={{ width: "100%", height: "100%" }}
+                                contentFit="cover"
+                                transition={200}
+                            />
+                        ) : null
+                    ) : (
+                        <Image
+                            source={{ uri }}
+                            style={{ width: "100%", height: "100%" }}
+                            resizeMode="cover"
+                            accessibilityIgnoresInvertColors
+                        />
+                    )}
                     {maskStrokes && maskStrokes.length > 0 && width && height ? (
                         <MaskOverlay
                             strokes={maskStrokes as never}
@@ -472,10 +505,33 @@ function PhotoFrame({
                         />
                     ) : null}
                 </>
-            ) : (
+            ) : busy ? (
                 <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                     <ActivityIndicator color={U.inkMuted} />
                 </View>
+            ) : (
+                // 🔴 No room and nothing uploading: it used to spin here forever
+                // (simulator, 11 Oct — "Add furniture" from a result arrived with no
+                // photo). The frame now asks for one; the same picker as Replace.
+                <Pressable
+                    onPress={onReplace}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("studio.add_your_room", { defaultValue: "Add your room" })}
+                    style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 10 }}
+                >
+                    <View
+                        style={{
+                            width: 52, height: 52, borderRadius: 16,
+                            borderWidth: 1.5, borderColor: U.accent,
+                            alignItems: "center", justifyContent: "center",
+                        }}
+                    >
+                        <Ionicons name="camera-outline" size={24} color={U.accentBright} />
+                    </View>
+                    <Text style={{ ...theme.v2.button, color: U.accentBright }} numberOfLines={1}>
+                        {t("studio.add_your_room", { defaultValue: "Add your room" })}
+                    </Text>
+                </Pressable>
             )}
 
             {/* Transparent stops are the ground colour at zero alpha, not
