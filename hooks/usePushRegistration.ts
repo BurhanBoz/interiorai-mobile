@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, InteractionManager, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
@@ -88,6 +88,8 @@ export async function resetPushAsk(): Promise<void> {
  * reach. The counter now counts generations started, not results viewed.
  */
 const ASK_ON_NTH_SUCCESS = 1;
+/** How long after the screen has settled the question waits before it appears. */
+const ASK_SETTLE_MS = 900;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
 const ASK_DELAY_MS = 3500;
 
@@ -176,6 +178,15 @@ export function usePushPermissionAsk(generating: boolean): boolean {
             await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
             return;
         }
+
+        // 🔴 Not during the screen's arrival (TestFlight 2.4.0, 11 Oct): the progress
+        // screen asks the moment it mounts, and an alert presented while its push
+        // transition is still running left the user on the composer with a spinning
+        // Create button — the progress screen had been pushed underneath and only
+        // showed after backing out. Wait for the transition, then a beat more so the
+        // screen is seen before anything covers it.
+        await new Promise<void>((resolve) => InteractionManager.runAfterInteractions(() => resolve()));
+        await new Promise((resolve) => setTimeout(resolve, ASK_SETTLE_MS));
 
         // 🔴 Still wanted? Every await above can outlast the screen (simulator, 10 Oct): the
         // job finished while this was reading storage, the progress screen gave way to the

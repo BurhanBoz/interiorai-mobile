@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, useWindowDimensions, AccessibilityInfo, I
 import Svg, { Defs, Mask, Rect } from "react-native-svg";
 import Animated, {
     Easing,
+    FadeIn,
     useAnimatedProps,
     useAnimatedStyle,
     useReducedMotion,
@@ -202,11 +203,21 @@ export function CoachMarks({
     const arrowLeft = Math.min(Math.max(centerX - cardLeft - 7, 22), cardW - 36);
 
     return (
-        <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={advance}>
+        // 🔴 animationType "none", with the fade done inside (TestFlight 2.4.0, 11 Oct).
+        // With "fade" the Modal's view controller kept dismissing for ~300 ms after the
+        // last step; the composer's tour ends on Create, and a Create tapped in that
+        // window pushed the progress screen during a modal dismissal — it ended up
+        // underneath and the button just spun. Closing is now instant; opening still
+        // fades in (skipped under Reduce Motion).
+        <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={advance}>
             {/* Geometry here is physical — measureInWindow reports it that way —
                 but under RTL React Native swaps left and right. The overlay is
                 laid out LTR; the card's content gets the reading direction back. */}
-            <View style={{ flex: 1, direction: "ltr" }} accessibilityViewIsModal>
+            <Animated.View
+                entering={reduceMotion ? undefined : FadeIn.duration(220)}
+                style={{ flex: 1, direction: "ltr" }}
+                accessibilityViewIsModal
+            >
                 <Pressable
                     style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
                     onPress={advance}
@@ -350,7 +361,7 @@ export function CoachMarks({
                         </Animated.View>
                     </>
                 )}
-            </View>
+            </Animated.View>
         </Modal>
     );
 }

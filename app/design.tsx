@@ -93,7 +93,9 @@ export default function DesignDeepLink() {
                 // `replace`, not `push`: this screen is a router, not a
                 // destination. On the stack it becomes a blank spinner behind
                 // the back gesture.
-                router.replace("/(tabs)/studio");
+                // dismissTo: a deep link opened while the app runs must not stack a
+                // second tab navigator (utils/tabNavigation); with none below it replaces.
+                router.dismissTo("/(tabs)/studio");
             }
         })();
     }, [ensureLoaded, params.room, params.style, params.mode]);

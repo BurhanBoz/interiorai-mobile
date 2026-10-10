@@ -63,6 +63,8 @@ import { useImageActions } from "@/hooks/useImageActions";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useStudioStore } from "@/stores/studioStore";
+import { backToTab, backToStudioThen } from "@/utils/tabNavigation";
+import { requestCatalogueOnArrive } from "@/utils/catalogueOnArrive";
 import { useEntitlement, useEffectiveWatermark, useEffectiveCreditRules, useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
@@ -169,6 +171,8 @@ export default function ResultDetailScreen() {
   // override in ModelRoutingServiceImpl + JobServiceImpl.validateEntitlement.
   const { enabled: upscaleFeatureEnabled } = useEntitlement("ULTRA_HD_UPSCALE");
   const resetStudio = useStudioStore(s => s.reset);
+  const setStudioPhoto = useStudioStore(s => s.replacePhoto);
+  const setStudioMode = useStudioStore(s => s.setMode);
   const setDesignStyle = useStudioStore(s => s.setDesignStyle);
   // The photo the studio holds. "Same room, another style" re-runs the studio
   // with a new style, so it is only the SAME room when that photo is this
@@ -607,12 +611,37 @@ export default function ResultDetailScreen() {
    * <p>🔴 Sonuç ekranının tek çıkışı sol üstteki geri okuydu ve o, üretim
    * ilerleme ekranına geri dönüyordu — yani biten bir işin ilerlemesine.
    * Kullanıcının buradan gitmek istediği tek yer bir sonraki tasarım.
-   * push değil REPLACE: sonuç ekranı yığından düşüyor, böylece Stüdyo'dan
-   * geri gelince bitmiş bir işin sonucuna düşülmüyor.
+   * 🔴 replace değil dismissTo (TestFlight 2.4.0, 11 Eki): replace kökteki
+   * yığına İKİNCİ bir sekme gezgini koyuyordu; katalog ve Oluştur başka
+   * kopyada açılıyordu. backToTab var olan sekmelere geri sarar — sonuç ekranı
+   * yine yığından düşer, Stüdyo'dan geri gelince bitmiş işe düşülmez.
    */
   const handleNewDesign = () => {
     Haptics.selectionAsync();
-    router.replace("/(tabs)/studio" as never);
+    backToTab("studio");
+  };
+
+  /**
+   * Add furniture: this render's ROOM goes to the composer, then the catalogue
+   * opens once. 🔴 It used to push "/studio/composer?sheet=catalogue" from here
+   * — a second tab navigator on top of this screen, with no photo in it (the
+   * composer spun forever) and a param that re-opened the catalogue on every
+   * remount. Room type and style are not carried: the job only names them, and
+   * both are chosen again on the composer anyway (they are required).
+   */
+  const handleAddFurniture = () => {
+    const input = job?.inputFile;
+    if (input?.id) {
+      setStudioPhoto({
+        uri: getFileDownloadUrl(input.id),
+        fileId: input.id,
+        width: input.width ?? null,
+        height: input.height ?? null,
+      });
+    }
+    setStudioMode(job?.designMode === "EMPTY_ROOM" ? "EMPTY_ROOM" : "REDESIGN");
+    requestCatalogueOnArrive();
+    backToStudioThen("/studio/composer");
   };
 
   /**
@@ -627,7 +656,7 @@ export default function ResultDetailScreen() {
     const items: { label: string; run: () => void }[] = [
       {
         label: t("studio.add_furniture"),
-        run: () => router.push({ pathname: "/studio/composer", params: { sheet: "catalogue" } } as never),
+        run: handleAddFurniture,
       },
       { label: t("result.new_design"), run: handleNewDesign },
       {
@@ -924,13 +953,34 @@ export default function ResultDetailScreen() {
           </Rise>
         )}
 
+        {/* New design, under the clip card too (owner, 11 Oct): the "…" menu
+            keeps it, but the next room should not hide behind a menu. Back to
+            Studio's first screen. */}
+        <Rise shown={actionsShown} index={2} reduceMotion={reduceMotion} style={{ marginTop: 12 }}>
+          <Pressable
+            onPress={handleNewDesign}
+            accessibilityRole="button"
+            accessibilityLabel={t("result.new_design")}
+            style={{
+              height: 52, borderRadius: theme.v2Layout.radius.button,
+              borderWidth: 1, borderColor: U.accent,
+              flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+            }}
+          >
+            <Ionicons name="add" size={20} color={U.accentBright} />
+            <Text style={{ ...theme.v2.row, color: U.accentBright }} numberOfLines={1}>
+              {t("result.new_design")}
+            </Text>
+          </Pressable>
+        </Rise>
+
         {/* "Same room, another style" re-runs the STUDIO's photo with a new
             style. Opened from the gallery, this render's photo may not be
             the one the studio holds any more — the row would then render
             a different room and charge for it. So it shows only when the
             two match, which is always true straight after a generation. */}
         {showRestyle && (
-          <Rise shown={actionsShown} index={2} reduceMotion={reduceMotion} style={{ marginTop: 16 }}>
+          <Rise shown={actionsShown} index={3} reduceMotion={reduceMotion} style={{ marginTop: 16 }}>
             {resumeRestyle && (
               <View style={{ marginBottom: 10 }}>
                 <ResumeNote text={t("resume.restyle")} />
@@ -946,7 +996,9 @@ export default function ResultDetailScreen() {
               // Every other style: the composer, the same photo still loaded.
               onMore={() => {
                 hideResumeRestyle();
-                router.push("/studio/composer" as never);
+                // Not a push from here: that stacks a second tab navigator
+                // (see utils/tabNavigation). The studio still holds this photo.
+                backToStudioThen("/studio/composer");
               }}
               busy={restyling || videoSubmitting}
               pendingCode={restyleCode}
