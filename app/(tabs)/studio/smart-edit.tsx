@@ -113,9 +113,11 @@ export default function SmartEditScreen() {
   // shows ONCE as a spotlight card — X or a tap anywhere dismisses it for
   // good. The persistent inline hint is gone; the mode toggle's own labels
   // carry the semantics afterwards.
-  const [introVisible, dismissIntro] = useDismissible("magic_edit_intro_seen");
-  // Keep paints the opposite thing, so it teaches once on its own.
-  const [keepIntroVisible, dismissKeepIntro] = useDismissible("magic_keep_intro_seen");
+  // Keep paints the opposite thing, so it teaches once on its own. ONE hook, keyed by the
+  // tool: useDismissible marks a key seen the moment it shows, so a second hook for Keep
+  // spent Keep's hint on the first Replace visit without ever showing it (simulator, 12 Oct).
+  const [introVisible, dismissIntro] = useDismissible(
+    tool === "keep" ? "magic_keep_intro_seen" : "magic_edit_intro_seen");
 
   const strokeColor = TINT[maskMode];
 
@@ -468,8 +470,8 @@ export default function SmartEditScreen() {
 
       {/* One-shot teaching spotlight — shared pattern (OneShotSpotlight). */}
       <OneShotSpotlight
-        visible={tool === "keep" ? keepIntroVisible : introVisible}
-        onDismiss={tool === "keep" ? dismissKeepIntro : dismissIntro}
+        visible={introVisible}
+        onDismiss={dismissIntro}
         icon={tool === "keep" ? "shield-checkmark-outline" : "color-wand-outline"}
         text={t(tool === "keep" ? "studio.smart_edit_hint_keep" : "studio.smart_edit_hint")}
       />
