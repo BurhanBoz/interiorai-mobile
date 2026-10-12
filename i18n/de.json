@@ -373,7 +373,16 @@
     "summary_pieces_other": "+{{count}} Stücke",
     "remove_photo": "Foto entfernen",
     "locked_sample": "Beispielergebnis",
-    "locked_unlock": "Mit Pro freischalten"
+    "locked_unlock": "Mit Pro freischalten",
+    "tool_replace": "Ersetzen / Entfernen",
+    "tool_keep": "Behalten & Neu gestalten",
+    "feature_replace_desc": "Male ein Objekt an — ersetze es durch ein neues Stück oder entferne es. Der Rest bleibt genau so.",
+    "feature_keep_desc": "Male das Stück an, das du liebst — es bleibt, und der Raum wird darum herum neu gestaltet.",
+    "smart_edit_mode_replace": "Ersetzen",
+    "smart_edit_mode_remove": "Entfernen",
+    "smart_edit_hint_keep": "Male das Stück an, das bleiben soll — es bleibt genau so, und der Raum wird darum herum neu gestaltet.",
+    "mask_ready_remove": "Zu entfernendes Objekt gewählt",
+    "mask_ready_keep": "Zu behaltendes Stück gewählt"
   },
   "furniture": {
     "title": "Möbel",

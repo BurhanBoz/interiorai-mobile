@@ -371,7 +371,16 @@
     "summary_pieces_other": "+{{count}}点",
     "remove_photo": "写真を削除",
     "locked_sample": "サンプル結果",
-    "locked_unlock": "Proで利用する"
+    "locked_unlock": "Proで利用する",
+    "tool_replace": "置き換え・削除",
+    "tool_keep": "残して一新",
+    "feature_replace_desc": "物をなぞるだけ。新しい家具に置き換えるか、取り除きます。ほかはそのまま。",
+    "feature_keep_desc": "お気に入りの家具をなぞると、それを残して部屋全体を一新します。",
+    "smart_edit_mode_replace": "置き換える",
+    "smart_edit_mode_remove": "取り除く",
+    "smart_edit_hint_keep": "残したい家具をなぞってください。そのまま残し、周りの部屋を一新します。",
+    "mask_ready_remove": "取り除く物を選びました",
+    "mask_ready_keep": "残す家具を選びました"
   },
   "furniture": {
     "title": "家具",

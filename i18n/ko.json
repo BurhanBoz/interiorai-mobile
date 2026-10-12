@@ -371,7 +371,16 @@
     "summary_pieces_other": "+{{count}}개",
     "remove_photo": "사진 삭제",
     "locked_sample": "예시 결과",
-    "locked_unlock": "Pro로 잠금 해제"
+    "locked_unlock": "Pro로 잠금 해제",
+    "tool_replace": "교체 · 삭제",
+    "tool_keep": "남기고 새로",
+    "feature_replace_desc": "물건을 칠하면 새 가구로 바꾸거나 없애 드려요. 나머지는 그대로예요.",
+    "feature_keep_desc": "아끼는 가구를 칠하면 그대로 두고 방을 새로 꾸며 드려요.",
+    "smart_edit_mode_replace": "교체",
+    "smart_edit_mode_remove": "삭제",
+    "smart_edit_hint_keep": "남기고 싶은 가구를 칠해 주세요. 그대로 두고 주변을 새로 꾸며요.",
+    "mask_ready_remove": "삭제할 물건을 골랐어요",
+    "mask_ready_keep": "남길 가구를 골랐어요"
   },
   "furniture": {
     "title": "가구",

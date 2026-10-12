@@ -20,7 +20,7 @@ import { theme } from "@/config/theme";
 import { useStudioStore } from "@/stores/studioStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
-import { STUDIO_FEATURES } from "@/components/studio/featureCatalog";
+import { STUDIO_FEATURES, type MagicTool } from "@/components/studio/featureCatalog";
 import { SAMPLE_ROOMS } from "@/components/studio/sampleRooms";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { HexMark } from "@/components/brand/HexMark";
@@ -183,11 +183,12 @@ export default function StudioScreen() {
         STYLE_TRANSFER: "/studio/style-transfer",
     };
 
-    const goComposer = (mode: string, opts?: { catalogue?: boolean }) => {
+    const goComposer = (mode: string, opts?: { catalogue?: boolean; tool?: MagicTool }) => {
         setMode(mode as never);
         const dedicated = MODE_ROUTES[mode];
         if (dedicated) {
-            router.push(dedicated as never);
+            // Magic Edit's two tools share one screen; the tool says which modes it offers.
+            router.push((opts?.tool ? `${dedicated}?tool=${opts.tool}` : dedicated) as never);
             return;
         }
         router.push({
@@ -262,7 +263,7 @@ export default function StudioScreen() {
     /** The locked tool whose sample is on screen (2.4.1), or null. */
     const [lockedPreview, setLockedPreview] = useState<string | null>(null);
 
-    const onFeature = (key: string, locked: boolean) => {
+    const onFeature = (key: string, locked: boolean, tool?: MagicTool) => {
         // A locked tool shows its own sample first, with or without a room (2.4.1):
         // the room is not what is missing here, the plan is.
         if (locked) {
@@ -279,7 +280,7 @@ export default function StudioScreen() {
             return;
         }
         Haptics.selectionAsync();
-        goComposer(key);
+        goComposer(key, { tool });
     };
 
     return (
@@ -834,13 +835,13 @@ function FeatureGrid({
     /** Server truth. Returns false until plan_features has loaded — an
         unlocked flash is recoverable, a wrongly locked tile is not. */
     isLocked: (featureCode: string) => boolean;
-    onPress: (key: string, locked: boolean) => void;
+    onPress: (key: string, locked: boolean, tool?: MagicTool) => void;
     t: (k: string, o?: Record<string, unknown>) => string;
     enabled: boolean;
 }) {
     // Each tile shows the tool's own result photo — the same real "after" its
     // teaser on the feature sheet uses (owner, 10 Oct: no empty tiles).
-    const items = STUDIO_FEATURES.map((f) => ({ key: f.key as string, label: t(f.titleKey), image: "after" in f.media ? f.media.after : f.media.image }));
+    const items = STUDIO_FEATURES.map((f) => ({ id: f.id, key: f.key as string, tool: f.tool, label: t(f.titleKey), image: "after" in f.media ? f.media.after : f.media.image }));
     const rows: (typeof items)[] = [];
     for (let i = 0; i < items.length; i += 3) rows.push(items.slice(i, i + 3));
 
@@ -865,7 +866,7 @@ function FeatureGrid({
                             const locked = isLocked(featureCode);
                             return (
                                 <ToolTile
-                                    key={item.key}
+                                    key={item.id}
                                     mode={item.key}
                                     label={item.label}
                                     image={item.image}
@@ -873,7 +874,7 @@ function FeatureGrid({
                                     enabled={enabled}
                                     index={r * 3 + c}
                                     hint={enabled ? undefined : t("studio.photo_source_title")}
-                                    onPress={() => onPress(item.key, locked)}
+                                    onPress={() => onPress(item.key, locked, item.tool)}
                                 />
                             );
                         })}

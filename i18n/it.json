@@ -373,7 +373,16 @@
     "summary_pieces_other": "+{{count}} pezzi",
     "remove_photo": "Rimuovi foto",
     "locked_sample": "Risultato di esempio",
-    "locked_unlock": "Sblocca con Pro"
+    "locked_unlock": "Sblocca con Pro",
+    "tool_replace": "Sostituisci / Rimuovi",
+    "tool_keep": "Mantieni e Rinnova",
+    "feature_replace_desc": "Dipingi un oggetto: sostituiscilo con un pezzo nuovo o rimuovilo. Il resto resta com'è.",
+    "feature_keep_desc": "Dipingi il pezzo che ami: resta, e la stanza viene ridisegnata intorno a lui.",
+    "smart_edit_mode_replace": "Sostituire",
+    "smart_edit_mode_remove": "Rimuovere",
+    "smart_edit_hint_keep": "Dipingi il pezzo da tenere: resta identico e la stanza viene ridisegnata intorno a lui.",
+    "mask_ready_remove": "Oggetto da rimuovere scelto",
+    "mask_ready_keep": "Pezzo da tenere scelto"
   },
   "furniture": {
     "title": "Arredamento",

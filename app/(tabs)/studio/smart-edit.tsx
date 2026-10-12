@@ -28,6 +28,11 @@ import { Input } from "@/components/ui/Input";
 /**
  * Smart Edit (INPAINT) — mask drawing screen.
  *
+ * Two tools open it since 2.4.1 (`tool` param): Replace offers "replace it" (CHANGE)
+ * and "remove it" (REMOVE); Keep is PROTECT only — paint the piece that stays, the
+ * room is redesigned around it. Each tool lists only its own modes, so the toggle
+ * says what the tile already promised.
+ *
  * The user paints the areas they want the AI to CHANGE; everything left
  * unpainted is preserved pixel-perfect by flux-fill-pro (V37). In PROTECT
  * mode the backend routes to an instruction-edit model instead (V49) — the
@@ -53,12 +58,25 @@ const MAX_POINTS_PER_STROKE = 600;
 const GOLD = "#DDB477";
 /** PROTECT-mode stroke tint — cool green reads as "safe/kept". */
 const PROTECT_GREEN = "#9CC5B0";
+/** REMOVE-mode stroke tint — a warm coral reads as "this goes". */
+const REMOVE_CORAL = "#E59A86";
+
+const TINT: Record<MaskMode, string> = { CHANGE: GOLD, REMOVE: REMOVE_CORAL, PROTECT: PROTECT_GREEN };
+const MODE_LABEL: Record<MaskMode, string> = {
+  CHANGE: "studio.smart_edit_mode_replace",
+  REMOVE: "studio.smart_edit_mode_remove",
+  PROTECT: "studio.smart_edit_mode_protect",
+};
+const TOOL_MODES: Record<"replace" | "keep", MaskMode[]> = {
+  replace: ["CHANGE", "REMOVE"],
+  keep: ["PROTECT"],
+};
 
 export default function SmartEditScreen() {
   const { t } = useTranslation();
   // wizard=1 → entered right after photo upload (2026-07 IA rework):
   // saving continues the chain forward instead of popping back.
-  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
+  const { wizard, tool: toolParam } = useLocalSearchParams<{ wizard?: string; tool?: string }>();
   const photo = useStudioStore(s => s.photo);
   const setMode = useStudioStore(s => s.setMode);
   const setMask = useStudioStore(s => s.setMask);
@@ -74,10 +92,18 @@ export default function SmartEditScreen() {
   const prompt = useStudioStore(s => s.prompt);
   const setPrompt = useStudioStore(s => s.setPrompt);
 
-  const [strokes, setStrokes] = useState<MaskStroke[]>(() => savedStrokes ?? []);
+  const [strokes, setStrokes] = useState<MaskStroke[]>(() =>
+    savedStrokes && savedMaskMode && TOOL_MODES[toolOf(toolParam, savedMaskMode)].includes(savedMaskMode)
+      ? savedStrokes : []);
   const [livePoints, setLivePoints] = useState<{ x: number; y: number }[]>([]);
   const [brushRatio, setBrushRatio] = useState<number>(BRUSHES[1].ratio);
-  const [maskMode, setMaskMode] = useState<MaskMode>(() => savedMaskMode ?? "CHANGE");
+  // An old mask from the other tool does not carry over: Keep never opens on a Replace
+  // mask, and the reverse.
+  const tool = toolOf(toolParam, savedMaskMode);
+  const modes = TOOL_MODES[tool];
+  const [maskMode, setMaskMode] = useState<MaskMode>(() =>
+    savedMaskMode && modes.includes(savedMaskMode) ? savedMaskMode : modes[0]);
+  const title = t(tool === "keep" ? "studio.tool_keep" : "studio.tool_replace");
   const [saving, setSaving] = useState(false);
   const [attempted, setAttempted] = useState(false);
   // Drawing and scrolling share the same finger — the ScrollView yields
@@ -88,8 +114,10 @@ export default function SmartEditScreen() {
   // good. The persistent inline hint is gone; the mode toggle's own labels
   // carry the semantics afterwards.
   const [introVisible, dismissIntro] = useDismissible("magic_edit_intro_seen");
+  // Keep paints the opposite thing, so it teaches once on its own.
+  const [keepIntroVisible, dismissKeepIntro] = useDismissible("magic_keep_intro_seen");
 
-  const strokeColor = maskMode === "PROTECT" ? PROTECT_GREEN : GOLD;
+  const strokeColor = TINT[maskMode];
 
   // Canvas geometry — computed up-front from the photo's aspect ratio so
   // normalized coordinates are exact (no onLayout race).
@@ -214,7 +242,7 @@ export default function SmartEditScreen() {
     } catch (e: any) {
       const msg = e?.response?.data?.message;
       Alert.alert(
-        t("studio.smart_edit_title"),
+        title,
         msg || t("studio.smart_edit_error"),
       );
     } finally {
@@ -226,7 +254,7 @@ export default function SmartEditScreen() {
   if (!photo?.uri || !photo.fileId) {
     return (
       <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#191510" }}>
-        <Header title={t("studio.smart_edit_title")} />
+        <Header title={title} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Ionicons name="image-outline" size={40} color={GOLD} />
           <Text style={{ ...theme.text.subtitle, color: "#EDE4D7", textAlign: "center", marginTop: 16 }}>
@@ -239,7 +267,7 @@ export default function SmartEditScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#191510" }}>
-      <Header title={t("studio.smart_edit_title")} />
+      <Header title={title} />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -248,9 +276,9 @@ export default function SmartEditScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      {/* Mode: paint-to-change vs paint-to-protect. Both mental models are
-          valid (a tester painted the sofa meaning "keep this"); make the
-          semantic an explicit choice instead of a footnote. */}
+      {/* Mode: what happens to the painted object. Replace offers "replace it" and
+          "remove it"; Keep has one mode and no toggle — its tile already said it. */}
+      {modes.length > 1 && (
       <View
         style={{
           flexDirection: "row",
@@ -263,9 +291,9 @@ export default function SmartEditScreen() {
           padding: 3,
         }}
       >
-        {(["CHANGE", "PROTECT"] as const).map(m => {
+        {modes.map(m => {
           const active = maskMode === m;
-          const tint = m === "PROTECT" ? PROTECT_GREEN : GOLD;
+          const tint = TINT[m];
           return (
             <Pressable
               key={m}
@@ -284,12 +312,13 @@ export default function SmartEditScreen() {
               }}
             >
               <Text style={{ ...theme.text.body, color: active ? tint : "#8D8271" }}>
-                {t(m === "CHANGE" ? "studio.smart_edit_mode_change" : "studio.smart_edit_mode_protect")}
+                {t(MODE_LABEL[m])}
               </Text>
             </Pressable>
           );
         })}
       </View>
+      )}
 
 
       {/* Region content — CHANGE only. Optional: left blank the backend
@@ -439,13 +468,19 @@ export default function SmartEditScreen() {
 
       {/* One-shot teaching spotlight — shared pattern (OneShotSpotlight). */}
       <OneShotSpotlight
-        visible={introVisible}
-        onDismiss={dismissIntro}
-        icon="color-wand-outline"
-        text={t("studio.smart_edit_hint")}
+        visible={tool === "keep" ? keepIntroVisible : introVisible}
+        onDismiss={tool === "keep" ? dismissKeepIntro : dismissIntro}
+        icon={tool === "keep" ? "shield-checkmark-outline" : "color-wand-outline"}
+        text={t(tool === "keep" ? "studio.smart_edit_hint_keep" : "studio.smart_edit_hint")}
       />
     </SafeAreaView>
   );
+}
+
+/** The tool named by the route, or — reopened without one — the tool the saved mask was drawn with. */
+function toolOf(param: string | undefined, saved: MaskMode | null): "replace" | "keep" {
+  if (param === "keep" || param === "replace") return param;
+  return saved === "PROTECT" ? "keep" : "replace";
 }
 
 function clampToCanvas(
@@ -497,7 +532,7 @@ function ControlButton({
   );
 }
 
-/** Translucent stroke (gold=change, green=protect); a lone point renders as a dot. */
+/** Translucent stroke (gold=replace, coral=remove, green=keep); a lone point renders as a dot. */
 function StrokeShape({
   points,
   width,

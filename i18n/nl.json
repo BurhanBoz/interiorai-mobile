@@ -373,7 +373,16 @@
     "summary_pieces_other": "+{{count}} stuks",
     "remove_photo": "Foto verwijderen",
     "locked_sample": "Voorbeeldresultaat",
-    "locked_unlock": "Ontgrendel met Pro"
+    "locked_unlock": "Ontgrendel met Pro",
+    "tool_replace": "Vervangen / Weghalen",
+    "tool_keep": "Behouden & Vernieuwen",
+    "feature_replace_desc": "Kleur een object in — vervang het door een nieuw stuk of haal het weg. De rest blijft precies zoals het is.",
+    "feature_keep_desc": "Kleur het stuk in waar je van houdt — het blijft, en de kamer wordt eromheen opnieuw ontworpen.",
+    "smart_edit_mode_replace": "Vervangen",
+    "smart_edit_mode_remove": "Weghalen",
+    "smart_edit_hint_keep": "Kleur het stuk in dat je wilt houden — het blijft precies zo, en de kamer wordt eromheen vernieuwd.",
+    "mask_ready_remove": "Te verwijderen object gekozen",
+    "mask_ready_keep": "Te behouden stuk gekozen"
   },
   "furniture": {
     "title": "Meubels",
