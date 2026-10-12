@@ -9,7 +9,7 @@ import { useCreditCost } from "@/hooks/useCreditCost";
 import { createJob } from "@/services/jobs";
 import { usePendingGenerationStore } from "@/stores/pendingGenerationStore";
 import { aspectRatioFor } from "@/hooks/useImagePicker";
-import type { CatalogItemResponse } from "@/types/api";
+import type { CatalogItemResponse, DesignMode } from "@/types/api";
 
 /**
  * The generate action: validate, check the wallet, submit, navigate.
@@ -67,6 +67,18 @@ function untilActive(): Promise<void> {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** What a caller that has just changed the studio hands in, because this closure cannot see it yet. */
+export type GenerateOverrides = {
+  designStyle?: CatalogItemResponse | null;
+  roomType?: CatalogItemResponse | null;
+  mode?: DesignMode;
+  maskFileId?: string;
+  /** "" sends no prompt. */
+  prompt?: string;
+  /** Replace the current screen with the progress screen instead of pushing it. */
+  replace?: boolean;
+};
+
 export function useGenerate() {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,19 +88,19 @@ export function useGenerate() {
   const photo = useStudioStore((s) => s.photo);
   const roomType = useStudioStore((s) => s.roomType);
   const designStyle = useStudioStore((s) => s.designStyle);
-  const mode = useStudioStore((s) => s.mode);
+  const modeFromStore = useStudioStore((s) => s.mode);
   const qualityTier = useStudioStore((s) => s.qualityTier);
   const speedMode = useStudioStore((s) => s.speedMode);
   const numOutputs = useStudioStore((s) => s.numOutputs);
   const preserveLayout = useStudioStore((s) => s.preserveLayout);
-  const prompt = useStudioStore((s) => s.prompt);
+  const promptFromStore = useStudioStore((s) => s.prompt);
   const negativePrompt = useStudioStore((s) => s.negativePrompt);
   const colorPalette = useStudioStore((s) => s.colorPalette);
   const seed = useStudioStore((s) => s.seed);
   const strength = useStudioStore((s) => s.strength);
   const guidanceScale = useStudioStore((s) => s.guidanceScale);
   const referencePhoto = useStudioStore((s) => s.referencePhoto);
-  const maskFileId = useStudioStore((s) => s.maskFileId);
+  const maskFromStore = useStudioStore((s) => s.maskFileId);
   const extraStyleRefs = useStudioStore((s) => s.extraStyleRefs);
   const objectRefs = useStudioStore((s) => s.objectRefs);
 
@@ -110,9 +122,16 @@ export function useGenerate() {
      *   a style the strip never offers on a Minimalist render). The caller now
      *   hands the style in; everything else still comes from the studio.
      */
-    const run = async (overrides?: { designStyle?: CatalogItemResponse | null; replace?: boolean }) => {
+    const run = async (overrides?: GenerateOverrides) => {
       const style = overrides?.designStyle ?? designStyle;
-      if (!photo?.fileId || !roomType?.id || !style?.id) {
+      // Same closure problem as the style above, for Magic Edit's Remove (2.4.1): it saves the
+      // mask and generates in the same tap, so the mask id, the mode and the cleared prompt
+      // must come in by hand — the store's new values are not in this closure yet.
+      const room = overrides?.roomType ?? roomType;
+      const mode = overrides?.mode ?? modeFromStore;
+      const maskFileId = overrides?.maskFileId ?? maskFromStore;
+      const prompt = overrides?.prompt !== undefined ? overrides.prompt : promptFromStore;
+      if (!photo?.fileId || !room?.id || !style?.id) {
         Alert.alert(
           "Missing Info",
           "Please complete all steps before generating.",
@@ -180,7 +199,7 @@ export function useGenerate() {
         const computedAspectRatio = aspectRatioFor(photo.width, photo.height);
         const body = {
           inputFileId: photo.fileId,
-          roomTypeId: roomType.id,
+          roomTypeId: room.id,
           designStyleId: style.id,
           designMode: mode,
           qualityTier,
@@ -200,7 +219,8 @@ export function useGenerate() {
           // only on the ST screen, OBJECT refs only on free-form options.
           // The store clears them on mode/preserve changes, so what's here
           // is always valid for the current request shape.
-          extraReferences: (() => {
+          // Magic Edit never carries references: the backend refuses them on INPAINT.
+          extraReferences: mode === "INPAINT" ? undefined : (() => {
             // V177 — a catalogue piece travels as catalogItemId, an uploaded
             // photo as fileId. The backend rejects a reference carrying both
             // or neither, so exactly one is sent per entry.
@@ -277,7 +297,7 @@ export function useGenerate() {
      * job, but it should never have been sent). A ref is read and set in the
      * same tick, so the second tap finds the door already shut.
      */
-    const handleGenerate = async (overrides?: { designStyle?: CatalogItemResponse | null; replace?: boolean }) => {
+    const handleGenerate = async (overrides?: GenerateOverrides) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
