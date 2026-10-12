@@ -26,8 +26,10 @@ import type { DesignMode } from "@/types/api";
  *       carousel and the paywall hero fallback ({@code assets/trial/}).</li>
  *   <li>empty room — the "before" of the Empty Room card and store frame 02
  *       (Prompt Lab A/B, 2026-10-05).</li>
- *   <li>garden — the exact file frame 07 is cut from; {@code compose.py}
- *       reads {@code assets/features/outdoor_before.png} directly.</li>
+ *   <li>garden — since 12 Oct the neglected back garden of the Outdoor card
+ *       (outdoor_before.jpg). Store frame 07 is still cut from the old garden,
+ *       {@code assets/features/outdoor_before.png}, which {@code compose.py}
+ *       reads directly and the app no longer bundles.</li>
  * </ul>
  */
 export type SampleRoom = {
@@ -74,7 +76,7 @@ export const SAMPLE_ROOMS: SampleRoom[] = [
     },
     {
         key: "garden",
-        module: require("@/assets/features/outdoor_before.png"),
+        module: require("@/assets/features/outdoor_before.jpg"),
         labelKey: "studio.sample_garden",
         modes: ["OUTDOOR"],
     },

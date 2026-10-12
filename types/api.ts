@@ -66,7 +66,8 @@ export interface MaskStroke {
  * preserved); PROTECT = painted area is preserved (rest repainted — the
  * backend inverts the mask).
  */
-export type MaskMode = "CHANGE" | "PROTECT";
+/** REMOVE: app 2.4.1 — the painted object is taken out (backend 2026-10-12). */
+export type MaskMode = "CHANGE" | "REMOVE" | "PROTECT";
 
 export interface CreateJobRequest {
     inputFileId: string;

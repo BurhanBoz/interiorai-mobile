@@ -310,9 +310,10 @@ export default function ComposerScreen() {
                         user can go back and change. */}
                     {mode === "INPAINT" && (
                         <CollectedRow
-                            label={t("studio.mask_ready")}
+                            label={t(maskMode === "PROTECT" ? "studio.mask_ready_keep"
+                                : maskMode === "REMOVE" ? "studio.mask_ready_remove" : "studio.mask_ready")}
                             action={t("studio.edit_mask")}
-                            onPress={() => router.push("/studio/smart-edit" as never)}
+                            onPress={() => router.push(`/studio/smart-edit?tool=${maskMode === "PROTECT" ? "keep" : "replace"}` as never)}
                         />
                     )}
                     {mode === "STYLE_TRANSFER" && (
@@ -501,7 +502,7 @@ function PhotoFrame({
                             strokes={maskStrokes as never}
                             imageWidth={width}
                             imageHeight={height}
-                            color={maskMode === "PROTECT" ? "#7BB38A" : U.accent}
+                            color={maskMode === "PROTECT" ? "#7BB38A" : maskMode === "REMOVE" ? "#E59A86" : U.accent}
                         />
                     ) : null}
                 </>

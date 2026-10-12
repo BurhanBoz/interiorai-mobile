@@ -371,7 +371,16 @@
     "summary_pieces_other": "+{{count}} قطع",
     "remove_photo": "إزالة الصورة",
     "locked_sample": "نتيجة نموذجية",
-    "locked_unlock": "افتح مع Pro"
+    "locked_unlock": "افتح مع Pro",
+    "tool_replace": "استبدال / إزالة",
+    "tool_keep": "احتفظ وجدّد",
+    "feature_replace_desc": "لوّن قطعة — استبدلها بقطعة جديدة أو أزلها. يبقى الباقي كما هو تمامًا.",
+    "feature_keep_desc": "لوّن القطعة التي تحبها — تبقى، ويُعاد تصميم الغرفة من حولها.",
+    "smart_edit_mode_replace": "استبدال",
+    "smart_edit_mode_remove": "إزالة",
+    "smart_edit_hint_keep": "لوّن القطعة التي تريد الاحتفاظ بها — تبقى كما هي تمامًا، وتتجدد الغرفة من حولها.",
+    "mask_ready_remove": "تم تحديد القطعة المراد إزالتها",
+    "mask_ready_keep": "تم تحديد القطعة المراد الاحتفاظ بها"
   },
   "furniture": {
     "title": "الأثاث",

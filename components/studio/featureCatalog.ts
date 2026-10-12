@@ -15,11 +15,11 @@ import { tierAtLeast, type PlanTier } from "@/utils/planTier";
  *   - "single"   → static image (also plays GIFs via expo-image, if the
  *                  marketing team ever ships animated teasers)
  *
- * <p>Redesign, Empty Room and Style Transfer show the owner's Prompt Lab A/B
- * runs (2026-10-05, arm C3: the photo-anchored prompt with Sonnet 5.5 on Nano
- * Banana 2 1K + thinking) — the same pipeline that is live, so the card
- * promises what the app delivers. Magic Edit and Outdoor are still the
- * founder's July/August runs.
+ * <p>Redesign and Empty Room show the owner's Prompt Lab A/B runs (2026-10-05,
+ * arm C3: the photo-anchored prompt with Sonnet 5.5 on Nano Banana 2 1K +
+ * thinking) — the same pipeline that is live, so the card promises what the app
+ * delivers. Style Transfer, Outdoor and Keep were renewed on 12 Oct from the Magic
+ * Edit lab on the live pipeline. Replace is still the founder's July run.
  *
  * <p>Titles reuse the existing studio.mode_* i18n keys (already in all 8
  * locales); only the one-line descriptions are new.
@@ -47,8 +47,18 @@ export type FeatureMedia =
       }
     | { kind: "single"; image: ImageSourcePropType };
 
+/**
+ * Magic Edit is two tools on the home screen since 2.4.1 (owner, 12 Oct: the one "Magic
+ * Edit" tile did not say what makes it different). Both are INPAINT; the tool decides
+ * which mask modes its screen offers: Replace (CHANGE or REMOVE) or Keep (PROTECT).
+ */
+export type MagicTool = "replace" | "keep";
+
 export interface StudioFeature {
+    /** Unique per tile. Equal to {@link key} except for the two Magic Edit tools. */
+    id: string;
     key: DesignMode;
+    tool?: MagicTool;
     titleKey: string;
     descKey: string;
     media: FeatureMedia;
@@ -68,6 +78,7 @@ export interface StudioFeature {
 
 export const STUDIO_FEATURES: StudioFeature[] = [
     {
+        id: "REDESIGN",
         key: "REDESIGN",
         titleKey: "studio.mode_redesign",
         descKey: "studio.feature_redesign_desc",
@@ -78,6 +89,7 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         },
     },
     {
+        id: "EMPTY_ROOM",
         key: "EMPTY_ROOM",
         titleKey: "studio.mode_empty_room",
         descKey: "studio.feature_empty_room_desc",
@@ -88,9 +100,11 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         },
     },
     {
+        id: "INPAINT_REPLACE",
         key: "INPAINT",
-        titleKey: "studio.mode_inpaint",
-        descKey: "studio.feature_inpaint_desc",
+        tool: "replace",
+        titleKey: "studio.tool_replace",
+        descKey: "studio.feature_replace_desc",
         media: {
             // Authentic run (2026-07-11): brown sofa + wood coffee table →
             // grey patterned sofa + sage glass-top table. `paint` is that
@@ -104,6 +118,21 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         },
     },
     {
+        // Keep (2.4.1). The sample is a real run of the Magic Edit lab (12 Oct): the
+        // green sofa painted to stay, the room around it redesigned.
+        id: "INPAINT_KEEP",
+        key: "INPAINT",
+        tool: "keep",
+        titleKey: "studio.tool_keep",
+        descKey: "studio.feature_keep_desc",
+        media: {
+            kind: "pair",
+            before: require("@/assets/features/keep_before.jpg"),
+            after: require("@/assets/features/keep_after.jpg"),
+        },
+    },
+    {
+        id: "STYLE_TRANSFER",
         key: "STYLE_TRANSFER",
         titleKey: "studio.mode_style_transfer",
         descKey: "studio.feature_style_transfer_desc",
@@ -116,17 +145,17 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         },
     },
     {
-        // V52 — Outdoor Design (1.1). Real pair from the founder's first
-        // outdoor render (2026-08-03): weathered green timber house + wild
-        // garden → sage modern facade with landscaped beds. Same before→after
-        // teaser animation as the redesign/empty cards (kind:"pair").
+        // V52 — Outdoor Design (1.1). Pair renewed 12 Oct (owner: the old one did not
+        // sell it): a neglected back garden → Modern, a live-pipeline run (NB2) of the
+        // Magic Edit lab. The old garden photo stays as a sample room (sampleRooms.ts).
+        id: "OUTDOOR",
         key: "OUTDOOR",
         titleKey: "studio.mode_outdoor",
         descKey: "studio.feature_outdoor_desc",
         minPlan: "PRO",
         media: {
             kind: "pair",
-            before: require("@/assets/features/outdoor_before.png"),
+            before: require("@/assets/features/outdoor_before.jpg"),
             after: require("@/assets/features/outdoor_after.jpg"),
         },
     },

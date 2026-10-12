@@ -372,7 +372,16 @@
     "summary_pieces_other": "+{{count}} parça",
     "remove_photo": "Fotoğrafı kaldır",
     "locked_sample": "Örnek sonuç",
-    "locked_unlock": "Pro ile aç"
+    "locked_unlock": "Pro ile aç",
+    "tool_replace": "Değiştir / Kaldır",
+    "tool_keep": "Koru & Yenile",
+    "feature_replace_desc": "Bir nesneyi boya — yenisiyle değiştir ya da kaldır. Gerisi olduğu gibi kalır.",
+    "feature_keep_desc": "Sevdiğin parçayı boya — o kalsın, oda onun etrafında yeniden tasarlansın.",
+    "smart_edit_mode_replace": "Yenisini koy",
+    "smart_edit_mode_remove": "Kaldır",
+    "smart_edit_hint_keep": "Korumak istediğin parçayı boya — birebir aynı kalır, oda onun etrafında yenilenir.",
+    "mask_ready_remove": "Kaldırılacak nesne seçildi",
+    "mask_ready_keep": "Korunacak parça seçildi"
   },
   "furniture": {
     "title": "Mobilya",

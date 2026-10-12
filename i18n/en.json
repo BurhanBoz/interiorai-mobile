@@ -373,7 +373,16 @@
     "summary_pieces_other": "+{{count}} pieces",
     "remove_photo": "Remove photo",
     "locked_sample": "Sample result",
-    "locked_unlock": "Unlock with Pro"
+    "locked_unlock": "Unlock with Pro",
+    "tool_replace": "Replace or Remove",
+    "tool_keep": "Keep & Redesign",
+    "feature_replace_desc": "Paint an object — swap it for a new piece or remove it. The rest stays exactly as it is.",
+    "feature_keep_desc": "Paint the piece you love — it stays, and the room is redesigned around it.",
+    "smart_edit_mode_replace": "Replace it",
+    "smart_edit_mode_remove": "Remove it",
+    "smart_edit_hint_keep": "Paint over the piece you want to keep — it stays exactly as it is, and the room is redesigned around it.",
+    "mask_ready_remove": "Object to remove is set",
+    "mask_ready_keep": "Piece to keep is set"
   },
   "furniture": {
     "title": "Furniture",

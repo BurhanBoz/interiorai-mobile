@@ -373,7 +373,16 @@
     "summary_pieces_other": "+{{count}} piezas",
     "remove_photo": "Quitar foto",
     "locked_sample": "Resultado de ejemplo",
-    "locked_unlock": "Desbloquear con Pro"
+    "locked_unlock": "Desbloquear con Pro",
+    "tool_replace": "Cambiar / Quitar",
+    "tool_keep": "Conservar y Rediseñar",
+    "feature_replace_desc": "Pinta un objeto: cámbialo por una pieza nueva o quítalo. Lo demás queda tal cual.",
+    "feature_keep_desc": "Pinta la pieza que te encanta: se queda y la habitación se rediseña a su alrededor.",
+    "smart_edit_mode_replace": "Cambiar",
+    "smart_edit_mode_remove": "Quitar",
+    "smart_edit_hint_keep": "Pinta la pieza que quieres conservar: queda exactamente igual y la habitación se rediseña a su alrededor.",
+    "mask_ready_remove": "Objeto a quitar elegido",
+    "mask_ready_keep": "Pieza a conservar elegida"
   },
   "furniture": {
     "title": "Muebles",
