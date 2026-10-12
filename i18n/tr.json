@@ -1218,7 +1218,7 @@
   "ai_consent": {
     "title": "Fotoğrafların nasıl işlenir?",
     "body_what": "Tasarımın için oda fotoğrafın, varsa maske ya da referans görselin, tasarım seçimlerin ve yazdığın açıklama şifreli bağlantıyla AI sağlayıcılarımıza gider. İsim, e-posta, kişiler ya da konum paylaşılmaz.",
-    "body_who": "fal.ai (Features & Labels, Inc., ABD) görselleri ve videoları üretir; tasarımların çoğunda Google'ın Nano Banana 2 modeli (Google LLC, ABD) çalışır. “Düzeni Koru”, Sihirli Düzenleme, arka plan silme ve 4K'yı Replicate, Inc. (ABD) üretir. Anthropic, PBC (ABD) fotoğrafını analiz eder ve tasarımı planlar. fal.ai, Replicate ve Anthropic içeriğini yalnızca tasarımın için işler ve modellerini eğitmek için asla kullanmaz.",
+    "body_who": "fal.ai (Features & Labels, Inc., ABD) görselleri ve videoları üretir; tasarımların çoğunda Google'ın Nano Banana 2 modeli (Google LLC, ABD) çalışır. “Düzeni Koru”, arka plan silme ve 4K'yı Replicate, Inc. (ABD) üretir. Anthropic, PBC (ABD) fotoğrafını analiz eder ve tasarımı planlar. fal.ai, Replicate ve Anthropic içeriğini yalnızca tasarımın için işler ve modellerini eğitmek için asla kullanmaz.",
     "privacy_link": "Gizlilik Politikası",
     "accept": "Kabul Et ve Devam",
     "decline": "Şimdi değil",

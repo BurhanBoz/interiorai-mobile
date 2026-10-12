@@ -1214,7 +1214,7 @@
   "ai_consent": {
     "title": "写真の処理方法について",
     "body_what": "デザイン作成のため、部屋の写真、描いたマスクや参照画像、デザインの選択内容、任意のテキストを暗号化された接続でAIプロバイダーに送信します。氏名・メール・連絡先・位置情報は送信されません。",
-    "body_who": "画像と動画はfal.ai（Features & Labels, Inc.、米国）が生成し、多くのデザインにはGoogleのNano Banana 2モデル（Google LLC、米国）を使用します。「レイアウトを保持」、マジック編集、背景の削除、4KはReplicate, Inc.（米国）が生成します。写真の分析とデザインの計画はAnthropic, PBC（米国）が行います。fal.ai、Replicate、Anthropicはコンテンツをデザイン作成にのみ使用し、モデルの学習には一切使用しません。",
+    "body_who": "画像と動画はfal.ai（Features & Labels, Inc.、米国）が生成し、多くのデザインにはGoogleのNano Banana 2モデル（Google LLC、米国）を使用します。「レイアウトを保持」、背景の削除、4KはReplicate, Inc.（米国）が生成します。写真の分析とデザインの計画はAnthropic, PBC（米国）が行います。fal.ai、Replicate、Anthropicはコンテンツをデザイン作成にのみ使用し、モデルの学習には一切使用しません。",
     "privacy_link": "プライバシーポリシー",
     "accept": "同意して続ける",
     "decline": "今はしない",

@@ -1219,7 +1219,7 @@
   "ai_consent": {
     "title": "Comment vos photos sont traitées",
     "body_what": "Pour créer votre design, la photo de la pièce, le masque ou l'image de référence éventuels, vos choix de création et votre consigne facultative sont transmis à nos prestataires d'IA via une connexion chiffrée. Rien d'autre : ni nom, ni e-mail, ni contacts, ni localisation.",
-    "body_who": "fal.ai (Features & Labels, Inc., États-Unis) génère les images et les vidéos, la plupart des designs avec le modèle Nano Banana 2 de Google (Google LLC, États-Unis). « Conserver l'agencement », la Retouche magique, la suppression d'arrière-plan et la 4K sont générées par Replicate, Inc. (États-Unis). Anthropic, PBC (États-Unis) analyse votre photo et planifie le design. fal.ai, Replicate et Anthropic n'utilisent votre contenu que pour créer votre design, jamais pour entraîner leurs modèles.",
+    "body_who": "fal.ai (Features & Labels, Inc., États-Unis) génère les images et les vidéos, la plupart des designs avec le modèle Nano Banana 2 de Google (Google LLC, États-Unis). « Conserver l'agencement », la suppression d'arrière-plan et la 4K sont générées par Replicate, Inc. (États-Unis). Anthropic, PBC (États-Unis) analyse votre photo et planifie le design. fal.ai, Replicate et Anthropic n'utilisent votre contenu que pour créer votre design, jamais pour entraîner leurs modèles.",
     "privacy_link": "Politique de confidentialité",
     "accept": "Accepter et continuer",
     "decline": "Pas maintenant",

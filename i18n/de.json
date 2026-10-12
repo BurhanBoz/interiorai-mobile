@@ -1219,7 +1219,7 @@
   "ai_consent": {
     "title": "So werden deine Fotos verarbeitet",
     "body_what": "Für dein Design gehen dein Raumfoto, eine gemalte Maske oder ein Referenzbild, deine Design-Auswahl und dein optionaler Text verschlüsselt an unsere KI-Anbieter. Sonst nichts: kein Name, keine E-Mail, keine Kontakte, kein Standort.",
-    "body_who": "fal.ai (Features & Labels, Inc., USA) erzeugt die Bilder und Videos, die meisten Designs mit Googles Modell Nano Banana 2 (Google LLC, USA); „Layout beibehalten“, Magische Bearbeitung, Hintergrund entfernen und 4K erzeugt Replicate, Inc. (USA). Anthropic, PBC (USA) analysiert dein Foto und plant das Design. fal.ai, Replicate und Anthropic nutzen deine Inhalte nur für dein Design und nie zum Training ihrer Modelle.",
+    "body_who": "fal.ai (Features & Labels, Inc., USA) erzeugt die Bilder und Videos, die meisten Designs mit Googles Modell Nano Banana 2 (Google LLC, USA); „Layout beibehalten“, Hintergrund entfernen und 4K erzeugt Replicate, Inc. (USA). Anthropic, PBC (USA) analysiert dein Foto und plant das Design. fal.ai, Replicate und Anthropic nutzen deine Inhalte nur für dein Design und nie zum Training ihrer Modelle.",
     "privacy_link": "Datenschutzerklärung",
     "accept": "Zustimmen & Fortfahren",
     "decline": "Jetzt nicht",
