@@ -351,6 +351,7 @@
     "gallery": "Galería",
     "transformation": "Transformación",
     "pieces_chosen": "{{count}} muebles elegidos",
+    "pieces_chosen_one": "{{count}} mueble elegido",
     "remove_piece": "Quitar {{name}}",
     "mask_ready": "Zona a cambiar definida",
     "edit_mask": "Editar",
@@ -401,7 +402,8 @@
     "field_d": "P",
     "field_h": "Al",
     "saved_title": "Guardado",
-    "saved_body": "Estamos quitando el fondo. Aparecerá en tu catálogo en un momento."
+    "saved_body": "Estamos quitando el fondo. Aparecerá en tu catálogo en un momento.",
+    "limit_free": "Una pieza por diseño en el plan gratuito. Toca otra para cambiarla."
   },
   "gallery": {
     "title": "Galería",

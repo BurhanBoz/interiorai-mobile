@@ -351,6 +351,7 @@
     "gallery": "Galerie",
     "transformation": "Veränderung",
     "pieces_chosen": "{{count}} Stücke gewählt",
+    "pieces_chosen_one": "{{count}} Stück gewählt",
     "remove_piece": "{{name}} entfernen",
     "mask_ready": "Bereich ist festgelegt",
     "edit_mask": "Bearbeiten",
@@ -401,7 +402,8 @@
     "field_d": "T",
     "field_h": "H",
     "saved_title": "Gespeichert",
-    "saved_body": "Wir entfernen den Hintergrund. Gleich erscheint es in deinem Katalog."
+    "saved_body": "Wir entfernen den Hintergrund. Gleich erscheint es in deinem Katalog.",
+    "limit_free": "Im kostenlosen Plan ein Stück pro Design. Tippe ein anderes an, um zu tauschen."
   },
   "gallery": {
     "title": "Galerie",

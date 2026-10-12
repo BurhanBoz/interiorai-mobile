@@ -351,6 +351,7 @@
     "gallery": "Galleria",
     "transformation": "Trasformazione",
     "pieces_chosen": "{{count}} pezzi scelti",
+    "pieces_chosen_one": "{{count}} pezzo scelto",
     "remove_piece": "Rimuovi {{name}}",
     "mask_ready": "Area da modificare impostata",
     "edit_mask": "Modifica",
@@ -401,7 +402,8 @@
     "field_d": "P",
     "field_h": "A",
     "saved_title": "Salvato",
-    "saved_body": "Stiamo rimuovendo lo sfondo. Comparirà nel tuo catalogo tra poco."
+    "saved_body": "Stiamo rimuovendo lo sfondo. Comparirà nel tuo catalogo tra poco.",
+    "limit_free": "Un pezzo per design con il piano gratuito. Tocca un altro per sostituirlo."
   },
   "gallery": {
     "title": "Galleria",

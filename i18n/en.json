@@ -351,6 +351,7 @@
     "gallery": "Gallery",
     "transformation": "Transformation",
     "pieces_chosen": "{{count}} pieces chosen",
+    "pieces_chosen_one": "{{count}} piece chosen",
     "remove_piece": "Remove {{name}}",
     "mask_ready": "Area to change is set",
     "edit_mask": "Edit",
@@ -401,7 +402,8 @@
     "field_d": "D",
     "field_h": "H",
     "saved_title": "Saved",
-    "saved_body": "We're removing the background. It'll appear in your catalogue in a moment."
+    "saved_body": "We're removing the background. It'll appear in your catalogue in a moment.",
+    "limit_free": "One piece per design on the free plan. Tap another to swap it."
   },
   "gallery": {
     "title": "Gallery",

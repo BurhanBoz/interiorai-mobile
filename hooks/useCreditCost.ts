@@ -55,7 +55,11 @@ export function useCreditCost() {
     // would show 1 for a free user who attached three catalogue pieces and
     // will be charged 4.
     const clamped = flatRateApplies && base > 1 ? 1 : base;
-    const extraRefCount = extraStyleRefs.length + objectRefs.length;
+    // 2.4.1: on the FREE flat rate the first furniture piece is included — the
+    // same rule as JobServiceImpl.totalCreditCost(…, objectRefCount). Without it a
+    // free user with one credit who added one piece was sent to "out of credits".
+    const includedPiece = flatRateApplies && objectRefs.length > 0 ? 1 : 0;
+    const extraRefCount = extraStyleRefs.length + objectRefs.length - includedPiece;
 
     return { cost: clamped + extraRefCount, featureCode };
 }

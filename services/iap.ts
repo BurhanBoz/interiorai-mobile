@@ -1,4 +1,5 @@
 import * as Crypto from "expo-crypto";
+import { linkMetaToRevenueCat } from "@/services/metaAds";
 import Purchases, {
     PURCHASES_ERROR_CODE,
     type MakePurchaseResult,
@@ -143,6 +144,9 @@ export async function initializeIAP(userId: string | null): Promise<void> {
             // logIn aliases the previous anonymous customer to this user.
             await Purchases.logIn(userId);
         }
+        // 2.4.1: Meta's anonymous id for RevenueCat's Meta Ads integration — a no-op
+        // until the Meta App ID and client token are in the build (services/metaAds).
+        void linkMetaToRevenueCat();
     } catch (e) {
         // Still must not crash the app at boot. But swallowing it whole is
         // what made this invisible: isConfigured stayed false, initializeIAP

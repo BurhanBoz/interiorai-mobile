@@ -34,6 +34,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 import { useStudioStore } from "@/stores/studioStore";
+import { useCreditStore } from "@/stores/creditStore";
 import { furnitureService } from "@/services/furniture";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import type { FurnitureItem } from "@/types/api";
@@ -79,6 +80,7 @@ export default function FurnitureScreen() {
   const tileWidth = Math.floor((screenWidth - EDGE * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
   const objectRefs = useStudioStore((s) => s.objectRefs);
   const addObjectRef = useStudioStore((s) => s.addObjectRef);
+  const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
   const { pickImage: pickObjectImage, isUploading } = useImagePicker();
 
   const [items, setItems] = useState<FurnitureItem[]>([]);
@@ -93,7 +95,17 @@ export default function FurnitureScreen() {
   const [form, setForm] = useState({ name: "", category: "SOFA", w: "", d: "", h: "" });
   const [saving, setSaving] = useState(false);
 
-  const full = objectRefs.length >= 4;
+  // 2.4.1 (owner, 12 Oct): the FREE plan gets ONE piece per design, included in
+  // its one-credit price. Tapping another piece swaps it in instead of being
+  // refused. Paid plans keep four.
+  const freePlan = useCreditStore((s) => s.flatRateApplies);
+  const maxPieces = freePlan ? 1 : 4;
+  const swapping = freePlan && objectRefs.length >= 1;
+  const full = !swapping && objectRefs.length >= maxPieces;
+  /** Free plan: drop the one piece already chosen so the new one replaces it. */
+  const makeRoom = () => {
+    if (swapping) objectRefs.forEach((r) => removeObjectRef(r.fileId));
+  };
 
   const load = useCallback(async (cat: string | null) => {
     setLoading(true);
@@ -121,6 +133,7 @@ export default function FurnitureScreen() {
   const choose = (item: FurnitureItem) => {
     if (full || chosen.has(item.id)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    makeRoom();
     addObjectRef({
       uri: item.imageUrl,
       // The catalogue image is a file like any other, so removal and dedupe
@@ -145,6 +158,7 @@ export default function FurnitureScreen() {
   /** Use the photo for this design only — the pre-V178 behaviour. */
   const useOnce = () => {
     if (!pending) return;
+    makeRoom();
     addObjectRef({ uri: pending.uri, fileId: pending.fileId });
     close();
   };
@@ -357,7 +371,7 @@ export default function FurnitureScreen() {
         ))}
       </ScrollView>
 
-      {full && (
+      {(full || swapping) && (
         <Text
           style={{
             ...V.rowQuiet,
@@ -366,7 +380,7 @@ export default function FurnitureScreen() {
             paddingBottom: 12,
           }}
         >
-          {t("furniture.limit_reached")}
+          {swapping ? t("furniture.limit_free") : t("furniture.limit_reached")}
         </Text>
       )}
 
