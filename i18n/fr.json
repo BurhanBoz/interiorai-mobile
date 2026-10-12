@@ -351,6 +351,7 @@
     "gallery": "Galerie",
     "transformation": "Transformation",
     "pieces_chosen": "{{count}} meubles choisis",
+    "pieces_chosen_one": "{{count}} meuble choisi",
     "remove_piece": "Retirer {{name}}",
     "mask_ready": "Zone à modifier définie",
     "edit_mask": "Modifier",
@@ -401,7 +402,8 @@
     "field_d": "P",
     "field_h": "H",
     "saved_title": "Enregistré",
-    "saved_body": "Nous détourons le meuble. Il apparaîtra dans votre catalogue dans un instant."
+    "saved_body": "Nous détourons le meuble. Il apparaîtra dans votre catalogue dans un instant.",
+    "limit_free": "Une pièce par design avec l'offre gratuite. Touchez-en une autre pour l'échanger."
   },
   "gallery": {
     "title": "Galerie",

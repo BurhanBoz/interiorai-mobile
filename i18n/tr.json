@@ -401,7 +401,8 @@
     "field_d": "D",
     "field_h": "Y",
     "saved_title": "Kaydedildi",
-    "saved_body": "Arka planı siliyoruz. Birazdan kataloğunda görünecek."
+    "saved_body": "Arka planı siliyoruz. Birazdan kataloğunda görünecek.",
+    "limit_free": "Ücretsiz planda tasarım başına bir parça. Başkasına dokunursan değişir."
   },
   "gallery": {
     "title": "Galeri",

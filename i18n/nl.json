@@ -351,6 +351,7 @@
     "gallery": "Galerij",
     "transformation": "Transformatie",
     "pieces_chosen": "{{count}} meubels gekozen",
+    "pieces_chosen_one": "{{count}} meubel gekozen",
     "remove_piece": "{{name}} verwijderen",
     "mask_ready": "Te wijzigen gebied ingesteld",
     "edit_mask": "Bewerken",
@@ -401,7 +402,8 @@
     "field_d": "D",
     "field_h": "H",
     "saved_title": "Opgeslagen",
-    "saved_body": "We verwijderen de achtergrond. Het verschijnt zo in je catalogus."
+    "saved_body": "We verwijderen de achtergrond. Het verschijnt zo in je catalogus.",
+    "limit_free": "Eén stuk per ontwerp in het gratis plan. Tik op een ander om te wisselen."
   },
   "gallery": {
     "title": "Galerij",

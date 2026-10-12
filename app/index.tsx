@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { tierAtLeast } from "@/utils/planTier";
-import { isFlagSet } from "@/utils/oneShotFlag";
+import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 import { firstResultOfferFlag } from "@/hooks/useFirstResultPaywall";
 
 /**
@@ -23,6 +23,9 @@ const SUBSCRIPTION_WAIT_MS = 4000;
  * Deliberately NOT persisted: the next cold start is a new visit.
  */
 let offerShownThisLaunch = false;
+
+/** Set on an identity's first launch; the launch offer is skipped while it is unset. */
+const firstOpenFlag = (userId: string) => `first_open:${userId}`;
 
 /**
  * The single place that decides where a launch lands.
@@ -53,6 +56,8 @@ export default function RootIndex() {
   // null = not read yet; the flag read is async (Keychain) and the redirect
   // decision must not run ahead of it.
   const [metFirstOffer, setMetFirstOffer] = useState<boolean | null>(null);
+  /** False on this identity's very first launch (2.4.1); null until read. */
+  const [openedBefore, setOpenedBefore] = useState<boolean | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setWaitedLongEnough(true), SUBSCRIPTION_WAIT_MS);
@@ -74,11 +79,18 @@ export default function RootIndex() {
         const uid = useAuthStore.getState().user?.id
           ?? (await SecureStore.getItemAsync("user_id"));
         if (cancelled) return;
-        if (!uid) { setMetFirstOffer(false); return; }
+        if (!uid) { setMetFirstOffer(false); setOpenedBefore(true); return; }
         const v = await isFlagSet(firstResultOfferFlag(uid));
-        if (!cancelled) setMetFirstOffer(v);
+        // 2.4.1 (owner, 12 Oct): no offer on the very first open. 197 of 199 people
+        // met it before they had seen the product, and in 14 days it sold nothing.
+        // Recorded here, on the first launch that reaches this gate, so the second
+        // cold start onward is unchanged. Per identity, in the Keychain like the
+        // other one-shot flags, so a reinstall does not hand out a second skip.
+        const before = await isFlagSet(firstOpenFlag(uid));
+        if (!before) await setFlag(firstOpenFlag(uid));
+        if (!cancelled) { setMetFirstOffer(v); setOpenedBefore(before); }
       } catch {
-        if (!cancelled) setMetFirstOffer(false);
+        if (!cancelled) { setMetFirstOffer(false); setOpenedBefore(true); }
       }
     })();
     return () => { cancelled = true; };
@@ -114,7 +126,7 @@ export default function RootIndex() {
   if (!isAuthenticated) return <Redirect href="/(auth)/onboarding" />;
 
   if (!offerShownThisLaunch) {
-    const answersPending = !subscriptionResolved || metFirstOffer === null;
+    const answersPending = !subscriptionResolved || metFirstOffer === null || openedBefore === null;
     if (answersPending && !waitedLongEnough) return spinner;
 
     // Only a RESOLVED non-paying answer opens the offer; a timeout falls
@@ -138,6 +150,12 @@ export default function RootIndex() {
     // taps on "buy" came from people who had rendered nothing, a median ~10s
     // after the screen appeared, and every one of them backed out at Apple's
     // sheet. Restoring the condition is adding `&& metOffer` back here.
+    // First open: straight to Studio. Marked shown so a later navigation back to
+    // this index in the same process does not open it either.
+    if (openedBefore === false) {
+      offerShownThisLaunch = true;
+      return <Redirect href="/(tabs)/studio" />;
+    }
     if (subscriptionResolved
         && !tierAtLeast(subscription?.planCode, "BASE")) {
       offerShownThisLaunch = true;

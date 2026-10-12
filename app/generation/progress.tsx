@@ -17,6 +17,8 @@ import { useCreditStore } from "@/stores/creditStore";
 import { useGenerate } from "@/hooks/useGenerate";
 import { usePushPermissionAsk } from "@/hooks/usePushRegistration";
 import { backToTab } from "@/utils/tabNavigation";
+import { logFirstDesignToMeta } from "@/services/metaAds";
+import { useAuthStore } from "@/stores/authStore";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { ScanCard } from "@/components/generation/ScanCard";
@@ -120,6 +122,8 @@ export default function GenerationProgressScreen() {
       setJob(polled);
       if (polled.status === "COMPLETED") {
         fetchBalance();
+        // Meta "completed tutorial", once per identity; no-op until Meta is configured.
+        void logFirstDesignToMeta(useAuthStore.getState().user?.id);
         // Briefly show the "ready" phase before navigating so the transition feels finished.
         setTimeout(() => router.replace(`/result/${polled.id}` as any), 700);
       } else if (polled.status === "FAILED") {
