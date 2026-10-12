@@ -201,6 +201,15 @@ export type AnalyticsEvent =
     | "rating_asked"
     /** 2.3.3 — "Rate Roomframe" tapped in the "Saved to Photos" alert (opens the App Store review page). */
     | "rating_store_link"
+    // 2.4.1: quiet (provisional) permission, our pre-prompt and its answer, Apple's result.
+    | "push_provisional"
+    | "push_preprompt_shown"
+    | "push_preprompt_answer"
+    | "push_permission"
+    // 2.4.1: locked-tool preview sheet and the share card.
+    | "locked_preview_shown"
+    | "locked_preview_upgrade"
+    | "result_share_card"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.
     | "video_sound_toggled"
     /**

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, StyleSheet, type ImageSourcePropType } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, StyleSheet, InteractionManager, type ImageSourcePropType } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
@@ -32,6 +32,8 @@ import { tourTarget } from "@/components/tour/tourTargets";
 import { useFirstRunTour } from "@/hooks/useFirstRunTour";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { ArrowIcon, CameraIcon, StarIcon } from "@/components/studio/StudioIcons";
+import { LockedToolSheet } from "@/components/studio/LockedToolSheet";
+import { track } from "@/services/analytics";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -257,7 +259,18 @@ export default function StudioScreen() {
         })();
     }, [intent]);
 
+    /** The locked tool whose sample is on screen (2.4.1), or null. */
+    const [lockedPreview, setLockedPreview] = useState<string | null>(null);
+
     const onFeature = (key: string, locked: boolean) => {
+        // A locked tool shows its own sample first, with or without a room (2.4.1):
+        // the room is not what is missing here, the plan is.
+        if (locked) {
+            Haptics.selectionAsync();
+            track("locked_preview_shown", { mode: key });
+            setLockedPreview(key);
+            return;
+        }
         if (!photoReady) {
             // The room comes first. No navigation — a buzz and a pulse on the
             // tile that starts the flow.
@@ -266,10 +279,6 @@ export default function StudioScreen() {
             return;
         }
         Haptics.selectionAsync();
-        if (locked) {
-            router.push("/paywall?source=FEATURE_TILE" as never);
-            return;
-        }
         goComposer(key);
     };
 
@@ -321,6 +330,22 @@ export default function StudioScreen() {
                     { target: "studio.tools", title: t("tour.tools_title"), body: t("tour.tools_body") },
                 ]}
             />
+
+            {lockedPreview && (
+                <LockedToolSheet
+                    mode={lockedPreview}
+                    onClose={() => setLockedPreview(null)}
+                    onUnlock={() => {
+                        track("locked_preview_upgrade", { mode: lockedPreview });
+                        setLockedPreview(null);
+                        // The sheet is an RN Modal: open the paywall once it has gone, so the
+                        // push does not land in the same frame as the dismissal (sekme-gezgini).
+                        InteractionManager.runAfterInteractions(() =>
+                            router.push("/paywall?source=FEATURE_TILE" as never),
+                        );
+                    }}
+                />
+            )}
 
             {sourceSheet && (
                 <PhotoSourceSheet

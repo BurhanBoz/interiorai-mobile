@@ -27,7 +27,8 @@
     "coming_soon": "Bientôt disponible",
     "next_step": "Étape suivante",
     "on": "Activé",
-    "off": "Désactivé"
+    "off": "Désactivé",
+    "not_now": "Pas maintenant"
   },
   "tabs": {
     "studio": "Studio",
@@ -370,7 +371,9 @@
     "summary_style_placeholder": "Style",
     "summary_pieces_one": "+1 pièce de mobilier",
     "summary_pieces_other": "+{{count}} pièces de mobilier",
-    "remove_photo": "Retirer la photo"
+    "remove_photo": "Retirer la photo",
+    "locked_sample": "Exemple de résultat",
+    "locked_unlock": "Débloquer avec Pro"
   },
   "furniture": {
     "title": "Mobilier",
@@ -996,7 +999,7 @@
     "help_mail_subject": "Roomframe AI — Demande d'assistance",
     "help_mail_body": "Bonjour l'équipe Roomframe AI,\n\n[Décrivez votre problème ici]\n\n---\nVersion de l'app : {{version}}\nOffre : {{plan}}\nIdentifiant utilisateur : {{userId}}",
     "help_faq_q1_q": "Comment fonctionnent les crédits ?",
-    "help_faq_q1_a": "Chaque rendu consomme des crédits ; le coût s'affiche au-dessus du bouton Générer avant de commencer. Avec Free, vous recevez 1 crédit gratuit par jour — de quoi faire un design — et il ne se cumule pas. Pro inclut 75 crédits par semaine, ou 300 tous les 30 jours avec l'offre mensuelle ; les crédits hebdomadaires non utilisés se reportent jusqu'à 2× votre montant hebdomadaire.",
+    "help_faq_q1_a": "Chaque rendu consomme des crédits ; le coût s'affiche au-dessus du bouton Générer avant de commencer. Avec Free, vous commencez avec 2 crédits gratuits, puis recevez 1 crédit de plus chaque jour, jusqu'à 2 au maximum. Pro inclut 75 crédits par semaine, ou 300 tous les 30 jours avec l'offre mensuelle ; les crédits hebdomadaires non utilisés se reportent jusqu'à 2× votre montant hebdomadaire.",
     "help_faq_q2_q": "Quelle est la différence entre les offres ?",
     "help_faq_q2_a": "Tous les forfaits utilisent nos meilleurs modèles d'IA. Free offre 1 crédit par jour (non cumulable), avec filigrane — chaque rendu coûte 1 crédit. Pro (75 crédits/semaine ou 300/mois) retire le filigrane et débloque les vidéos de vos pièces, Transfert de style et Design extérieur.",
     "help_faq_q3_q": "Comment utiliser le transfert de style ?",

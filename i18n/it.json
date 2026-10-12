@@ -27,7 +27,8 @@
     "coming_soon": "Prossimamente",
     "next_step": "Passo Successivo",
     "on": "Attivo",
-    "off": "Disattivo"
+    "off": "Disattivo",
+    "not_now": "Non ora"
   },
   "tabs": {
     "studio": "Studio",
@@ -370,7 +371,9 @@
     "summary_style_placeholder": "Stile",
     "summary_pieces_one": "+1 pezzo",
     "summary_pieces_other": "+{{count}} pezzi",
-    "remove_photo": "Rimuovi foto"
+    "remove_photo": "Rimuovi foto",
+    "locked_sample": "Risultato di esempio",
+    "locked_unlock": "Sblocca con Pro"
   },
   "furniture": {
     "title": "Arredamento",
@@ -996,7 +999,7 @@
     "help_mail_subject": "Interior AI — Richiesta di supporto",
     "help_mail_body": "Ciao team Interior AI,\n\n[Descrivi la tua richiesta qui]\n\n---\nVersione: {{version}}\nPiano: {{plan}}\nUser ID: {{userId}}",
     "help_faq_q1_q": "Come funzionano i crediti?",
-    "help_faq_q1_a": "Ogni rendering consuma crediti; il costo appare sopra il pulsante Genera prima di iniziare. Con Free ricevi 1 credito gratuito al giorno — basta per un progetto — e non si accumula. Pro include 75 crediti a settimana, o 300 ogni 30 giorni con il piano mensile; i crediti settimanali non usati si accumulano fino a 2× la tua quota settimanale.",
+    "help_faq_q1_a": "Ogni rendering consuma crediti; il costo appare sopra il pulsante Genera prima di iniziare. Con Free inizi con 2 crediti gratuiti, poi ne ricevi 1 in più ogni giorno, fino a un massimo di 2. Pro include 75 crediti a settimana, o 300 ogni 30 giorni con il piano mensile; i crediti settimanali non usati si accumulano fino a 2× la tua quota settimanale.",
     "help_faq_q2_q": "Qual è la differenza tra i piani?",
     "help_faq_q2_a": "Ogni piano usa i nostri migliori modelli di IA. Free ti dà 1 credito al giorno (non cumulabile), con filigrana: ogni rendering costa 1 credito. Pro (75 crediti/settimana o 300/mese) rimuove la filigrana e sblocca i video delle stanze, Trasferimento di Stile e Design Esterni.",
     "help_faq_q3_q": "Come uso Style Transfer?",

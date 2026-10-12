@@ -7,4 +7,4 @@
  * At or above the ceiling the drip does not fire, so the Studio pill must not
  * promise "+1 in Xh", and the Settings bar is measured against it.
  */
-export const FREE_DAILY_CEILING = 1;
+export const FREE_DAILY_CEILING = 2;

@@ -27,7 +27,8 @@
     "coming_soon": "Coming Soon",
     "next_step": "Next Step",
     "on": "On",
-    "off": "Off"
+    "off": "Off",
+    "not_now": "Not now"
   },
   "tabs": {
     "studio": "Studio",
@@ -370,7 +371,9 @@
     "summary_style_placeholder": "Style",
     "summary_pieces_one": "+1 piece",
     "summary_pieces_other": "+{{count}} pieces",
-    "remove_photo": "Remove photo"
+    "remove_photo": "Remove photo",
+    "locked_sample": "Sample result",
+    "locked_unlock": "Unlock with Pro"
   },
   "furniture": {
     "title": "Furniture",
@@ -996,7 +999,7 @@
     "help_mail_subject": "Interior AI — Support Request",
     "help_mail_body": "Hi Interior AI team,\n\n[Please describe your issue here]\n\n---\nApp version: {{version}}\nPlan: {{plan}}\nUser ID: {{userId}}",
     "help_faq_q1_q": "How do credits work?",
-    "help_faq_q1_a": "Every render uses credits, and the cost is shown above the Generate button before you start. On Free you get 1 free credit a day — enough for one design — and it doesn't stack. Pro includes 75 credits a week, or 300 every 30 days on the monthly plan; unused weekly credits roll over up to 2× your weekly amount.",
+    "help_faq_q1_a": "Every render uses credits, and the cost is shown above the Generate button before you start. On Free you start with 2 free credits, then get 1 more each day, stacking up to 2. Pro includes 75 credits a week, or 300 every 30 days on the monthly plan; unused weekly credits roll over up to 2× your weekly amount.",
     "help_faq_q2_q": "What's the difference between the plans?",
     "help_faq_q2_a": "Every plan runs on our best AI models. Free gives you 1 credit a day (it doesn't stack), with a watermark — and every render costs 1 credit. Pro (75 credits a week, or 300 a month) removes the watermark and unlocks room videos, Style Transfer and Outdoor Design.",
     "help_faq_q3_q": "How do I use Style Transfer?",

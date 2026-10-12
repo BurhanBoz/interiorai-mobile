@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerPushToken } from "@/services/telemetry";
 import { isPostPurchaseQuiet } from "@/stores/postPurchaseStore";
+import { track } from "@/services/analytics";
 
 /**
  * APNs registration (V63).
@@ -35,12 +36,25 @@ function apnsEnvironment(): "SANDBOX" | "PRODUCTION" {
     return __DEV__ ? "SANDBOX" : "PRODUCTION";
 }
 
+/**
+ * Whether notifications can be delivered: full permission, or iOS PROVISIONAL
+ * (2.4.1). 🔴 expo-notifications reports provisional as top-level status
+ * "undetermined" (only `ios.status` says PROVISIONAL), so a plain
+ * `status === "granted"` check would never register a provisional token.
+ */
+export function canDeliverPush(perm: Notifications.NotificationPermissionsStatus): boolean {
+    if (perm.status === "granted") return true;
+    const ios = perm.ios?.status;
+    return ios === Notifications.IosAuthorizationStatus.PROVISIONAL
+        || ios === Notifications.IosAuthorizationStatus.EPHEMERAL;
+}
+
 /** Push the current device token to the backend, if permission already exists. */
 export async function syncPushTokenIfPermitted(): Promise<void> {
     if (Platform.OS !== "ios") return;
     try {
-        const { status } = await Notifications.getPermissionsAsync();
-        if (status !== "granted") return;
+        const perm = await Notifications.getPermissionsAsync();
+        if (!canDeliverPush(perm)) return;
 
         const token = await Notifications.getDevicePushTokenAsync();
         if (typeof token?.data !== "string" || !token.data) return;
@@ -51,11 +65,39 @@ export async function syncPushTokenIfPermitted(): Promise<void> {
     }
 }
 
-/** Cold-start token refresh. Mount once, at the root. */
+/**
+ * Quiet notifications without a prompt (2.4.1, owner's call 12 Oct).
+ *
+ * <p>Only 6 of 269 new users held a push token (12 Oct), so the five reminder
+ * tasks on the server — daily free credit, "try another style", unsaved design,
+ * re-engagement, trial ending — reached almost nobody. iOS PROVISIONAL
+ * authorization asks nothing: notifications are delivered quietly to
+ * Notification Center, where the user can keep them or turn them off. Requested
+ * only while permission is undetermined, so it never touches a user who already
+ * answered Apple's sheet.
+ */
+async function ensureProvisionalPush(): Promise<void> {
+    if (Platform.OS !== "ios" || Constants.appOwnership === "expo") return;
+    try {
+        const perm = await Notifications.getPermissionsAsync();
+        if (perm.ios?.status !== Notifications.IosAuthorizationStatus.NOT_DETERMINED) return;
+        const after = await Notifications.requestPermissionsAsync({
+            ios: { allowAlert: true, allowBadge: true, allowSound: true, allowProvisional: true },
+        });
+        track("push_provisional", { provisional: after.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL });
+    } catch {
+        /* no quiet channel this launch */
+    }
+}
+
+/** Cold-start: quiet permission if undetermined, then token refresh. Mount once, at the root. */
 export function usePushTokenSync(enabled: boolean) {
     useEffect(() => {
         if (!enabled) return;
-        syncPushTokenIfPermitted();
+        (async () => {
+            await ensureProvisionalPush();
+            await syncPushTokenIfPermitted();
+        })();
     }, [enabled]);
 }
 
@@ -78,7 +120,7 @@ export const isPushAskOnScreen = () => pushAskOnScreen;
 
 /** Owner's test aid (Help → long-press the version): the next generation asks again. */
 export async function resetPushAsk(): Promise<void> {
-    await AsyncStorage.multiRemove([PUSH_ASKED_KEY, SUCCESS_COUNT_KEY]).catch(() => {});
+    await AsyncStorage.multiRemove([PUSH_ASKED_KEY, SUCCESS_COUNT_KEY, PUSH_LATER_AT_KEY]).catch(() => {});
 }
 /**
  * 1st generation (2.3.2 made it the 1st success; 2.3.3 moved it to the progress
@@ -91,6 +133,10 @@ const ASK_ON_NTH_SUCCESS = 1;
 /** How long after the screen has settled the question waits before it appears. */
 const ASK_SETTLE_MS = 900;
 const SUCCESS_COUNT_KEY = "push_prompt_success_count";
+/** When the user last answered "Later" on our question (epoch ms). */
+const PUSH_LATER_AT_KEY = "push_preprompt_later_at";
+/** How long "Later" holds before a later generation asks again. */
+const LATER_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
 const ASK_DELAY_MS = 3500;
 
 /**
@@ -125,17 +171,17 @@ export async function requestPushPermission(): Promise<boolean> {
         }
         // iOS will not re-prompt after a hard denial; saying so beats a
         // sheet that never appears.
-        if (!existing.canAskAgain) return false;
+        if (!existing.canAskAgain) return canDeliverPush(existing);
 
         // The OS sheet is about to be spent. Mark it, so the rationed
         // pre-prompt (usePushPermissionAsk) never follows with "Get a
         // heads-up?" for a question the user has just answered — the room
         // video asks here, on the tap that starts the clip.
         await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") return false;
+        const after = await Notifications.requestPermissionsAsync();
+        track("push_permission", { status: after.status, source: "user_toggle" });
         await syncPushTokenIfPermitted();
-        return true;
+        return after.status === "granted";
     } catch {
         return false;
     }
@@ -159,6 +205,10 @@ export function usePushPermissionAsk(generating: boolean): boolean {
         if (Constants.appOwnership === "expo") return;
 
         if ((await AsyncStorage.getItem(PUSH_ASKED_KEY)) != null) return;
+        // "Later" on our own question no longer ends it forever (2.4.1): it waits
+        // LATER_COOLDOWN_MS and asks again on a later generation.
+        const laterAt = parseInt((await AsyncStorage.getItem(PUSH_LATER_AT_KEY)) ?? "0", 10) || 0;
+        if (laterAt && Date.now() - laterAt < LATER_COOLDOWN_MS) return;
         // Right after a purchase the person is finishing what they paid for;
         // this ask waits for a later result (the counter does not move).
         if (isPostPurchaseQuiet()) return;
@@ -173,7 +223,9 @@ export function usePushPermissionAsk(generating: boolean): boolean {
             await syncPushTokenIfPermitted();
             return;
         }
-        // Already denied? iOS will not re-prompt. Mark it and stop trying.
+        // PROVISIONAL is not "granted": quiet delivery already works, and this ask
+        // offers the upgrade to banners and sounds. Already denied? iOS will not
+        // re-prompt. Mark it and stop trying.
         if (!existing.canAskAgain) {
             await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
             return;
@@ -195,9 +247,6 @@ export function usePushPermissionAsk(generating: boolean): boolean {
         // Nothing is marked yet — the next generation asks instead.
         if (!wanted.current) return;
 
-        // Mark BEFORE prompting: the ask is one-shot on iOS whatever the answer,
-        // and re-asking is worse than occasionally missing one.
-        await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
         setOnScreen(true);
         pushAskOnScreen = true;
         try {
@@ -205,18 +254,26 @@ export function usePushPermissionAsk(generating: boolean): boolean {
             // sheet is refused by most people; a sentence saying WHAT we would
             // send (the daily credit, a trial ending) lets the user decline here
             // without spending Apple's prompt, and reach it already decided.
+            track("push_preprompt_shown", { provisional: canDeliverPush(existing) });
             const proceed = await new Promise<boolean>((resolve) =>
                 Alert.alert(t("push.preprompt_title"), t("push.preprompt_body"), [
                     { text: t("push.preprompt_later"), style: "cancel", onPress: () => resolve(false) },
                     { text: t("push.preprompt_yes"), onPress: () => resolve(true) },
                 ]),
             );
-            if (!proceed) return;
-
-            const { status } = await Notifications.requestPermissionsAsync();
-            if (status === "granted") {
-                await syncPushTokenIfPermitted();
+            track("push_preprompt_answer", { answer: proceed ? "yes" : "later" });
+            if (!proceed) {
+                // 🔴 Until 2.4.1 "Later" was recorded as "asked" and Apple's sheet was
+                // never offered again. Now it only starts a cooldown.
+                await AsyncStorage.setItem(PUSH_LATER_AT_KEY, String(Date.now()));
+                return;
             }
+
+            // Apple's sheet is spent whatever the answer: one-shot from here.
+            await AsyncStorage.setItem(PUSH_ASKED_KEY, "1");
+            const after = await Notifications.requestPermissionsAsync();
+            track("push_permission", { status: after.status, source: "preprompt" });
+            await syncPushTokenIfPermitted();
         } finally {
             setOnScreen(false);
             pushAskOnScreen = false;

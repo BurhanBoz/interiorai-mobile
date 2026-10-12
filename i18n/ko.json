@@ -27,7 +27,8 @@
     "coming_soon": "곧 공개",
     "next_step": "다음 단계",
     "on": "켜짐",
-    "off": "꺼짐"
+    "off": "꺼짐",
+    "not_now": "나중에"
   },
   "tabs": {
     "studio": "스튜디오",
@@ -368,7 +369,9 @@
     "summary_style_placeholder": "스타일",
     "summary_pieces_one": "+1개",
     "summary_pieces_other": "+{{count}}개",
-    "remove_photo": "사진 삭제"
+    "remove_photo": "사진 삭제",
+    "locked_sample": "예시 결과",
+    "locked_unlock": "Pro로 잠금 해제"
   },
   "furniture": {
     "title": "가구",
@@ -991,7 +994,7 @@
     "help_mail_subject": "Interior AI — 지원 요청",
     "help_mail_body": "Interior AI 팀께,\n\n[여기에 문의 내용을 적어주세요]\n\n---\n버전: {{version}}\n플랜: {{plan}}\n사용자 ID: {{userId}}",
     "help_faq_q1_q": "크레딧은 어떻게 작동하나요?",
-    "help_faq_q1_a": "생성마다 크레딧이 사용되며, 비용은 시작 전에 ‘생성’ 버튼 위에 표시됩니다. Free에서는 매일 무료 크레딧 1개가 지급되며(디자인 1회분) 누적되지 않습니다. Pro는 주 75크레딧, 월간 플랜은 30일마다 300크레딧이며, 남은 주간 크레딧은 주간 지급량의 2배까지 이월됩니다.",
+    "help_faq_q1_a": "생성마다 크레딧이 사용되며, 비용은 시작 전에 ‘생성’ 버튼 위에 표시됩니다. Free에서는 처음에 무료 크레딧 2개가 지급되고, 이후 매일 1개씩 최대 2개까지 쌓입니다. Pro는 주 75크레딧, 월간 플랜은 30일마다 300크레딧이며, 남은 주간 크레딧은 주간 지급량의 2배까지 이월됩니다.",
     "help_faq_q2_q": "플랜 간 차이는?",
     "help_faq_q2_a": "모든 플랜은 최고의 AI 모델로 동작합니다. Free는 매일 1크레딧(누적 없음)을 제공하며 워터마크가 있습니다 — 생성은 모두 1크레딧입니다. Pro(주 75 또는 월 300크레딧)는 워터마크를 제거하고 공간 영상, 스타일 전환, 야외 디자인을 해제합니다.",
     "help_faq_q3_q": "스타일 전송 사용 방법은?",
