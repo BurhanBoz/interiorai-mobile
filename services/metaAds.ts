@@ -5,14 +5,17 @@ import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
 /**
  * Meta (Facebook / Instagram) app-ads measurement — 2.4.1.
  *
- * <p><b>Off until configured.</b> Everything here is a no-op unless BOTH
- * `EXPO_PUBLIC_FB_APP_ID` and `EXPO_PUBLIC_FB_CLIENT_TOKEN` are set in the
- * build's env (.env.production). Info.plist carries
- * `FacebookAutoInitEnabled = false` and no FacebookAppID, so the native SDK
- * never starts by itself: a build without the two values behaves exactly like
- * a build without the SDK. Both values ship inside the app bundle anyway
- * (Meta designs the client token to be public), which is why they are
- * EXPO_PUBLIC_.
+ * <p><b>Configuration (12 Oct).</b> Meta app "Roomframe AI", App ID 1423480936538035.
+ * The SDK starts NATIVELY at launch: the Expo adapter calls Facebook's
+ * ApplicationDelegate before JS runs, so Info.plist carries FacebookAppID,
+ * FacebookClientToken and FacebookDisplayName — otherwise the first app
+ * activation would happen before any id is known and never be counted. App ID
+ * and display name are in app.json; the client token is NOT (it stays out of
+ * git): ios/ is not in git either, so after an `expo prebuild` it must be
+ * written into Info.plist again from .env.production. The JS below sets the
+ * same values from `EXPO_PUBLIC_FB_APP_ID` / `EXPO_PUBLIC_FB_CLIENT_TOKEN` and
+ * is a no-op when they are missing. Meta designs the client token to ship in
+ * the app bundle.
  *
  * <p><b>What it sends.</b>
  * <ul>

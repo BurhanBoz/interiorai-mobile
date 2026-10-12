@@ -68,8 +68,10 @@
             "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
           }
         ],
-        "FacebookAutoInitEnabled": false,
-        "FacebookAdvertiserIDCollectionEnabled": false
+        "FacebookAdvertiserIDCollectionEnabled": false,
+        "FacebookAppID": "1423480936538035",
+        "FacebookDisplayName": "Roomframe AI",
+        "FacebookAutoLogAppEventsEnabled": true
       },
       "associatedDomains": [
         "applinks:roomframeai.com",
