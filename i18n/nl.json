@@ -27,7 +27,8 @@
     "coming_soon": "Binnenkort",
     "next_step": "Volgende stap",
     "on": "Aan",
-    "off": "Uit"
+    "off": "Uit",
+    "not_now": "Niet nu"
   },
   "tabs": {
     "studio": "Studio",
@@ -370,7 +371,9 @@
     "summary_style_placeholder": "Stijl",
     "summary_pieces_one": "+1 stuk",
     "summary_pieces_other": "+{{count}} stuks",
-    "remove_photo": "Foto verwijderen"
+    "remove_photo": "Foto verwijderen",
+    "locked_sample": "Voorbeeldresultaat",
+    "locked_unlock": "Ontgrendel met Pro"
   },
   "furniture": {
     "title": "Meubels",
@@ -996,7 +999,7 @@
     "help_mail_subject": "Roomframe AI — Supportverzoek",
     "help_mail_body": "Beste Roomframe AI-team,\n\n[Beschrijf hier je probleem]\n\n---\nApp-versie: {{version}}\nAbonnement: {{plan}}\nGebruikers-ID: {{userId}}",
     "help_faq_q1_q": "Hoe werken credits?",
-    "help_faq_q1_a": "Elke render kost credits; de kosten staan boven de knop Genereren voordat je begint. Op Gratis krijg je elke dag 1 gratis credit — genoeg voor één ontwerp — en die stapelt niet op. Pro bevat 75 credits per week, of 300 per 30 dagen met het maandabonnement; ongebruikte weekcredits blijven staan tot maximaal 2× je weekbedrag.",
+    "help_faq_q1_a": "Elke render kost credits; de kosten staan boven de knop Genereren voordat je begint. Op Gratis begin je met 2 gratis credits en krijg je daarna elke dag 1 credit erbij, tot maximaal 2. Pro bevat 75 credits per week, of 300 per 30 dagen met het maandabonnement; ongebruikte weekcredits blijven staan tot maximaal 2× je weekbedrag.",
     "help_faq_q2_q": "Wat is het verschil tussen de abonnementen?",
     "help_faq_q2_a": "Elk abonnement draait op onze beste AI-modellen. Gratis geeft je 1 credit per dag (stapelt niet op), met een watermerk — en elke render kost 1 credit. Pro (75 credits per week of 300 per maand) haalt het watermerk weg en ontgrendelt kamervideo's, Stijloverdracht en Buitenontwerp.",
     "help_faq_q3_q": "Hoe gebruik ik Stijloverdracht?",

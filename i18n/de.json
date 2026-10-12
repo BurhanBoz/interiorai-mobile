@@ -27,7 +27,8 @@
     "coming_soon": "Demnächst",
     "next_step": "Nächster Schritt",
     "on": "An",
-    "off": "Aus"
+    "off": "Aus",
+    "not_now": "Jetzt nicht"
   },
   "tabs": {
     "studio": "Studio",
@@ -370,7 +371,9 @@
     "summary_style_placeholder": "Stil",
     "summary_pieces_one": "+1 Stück",
     "summary_pieces_other": "+{{count}} Stücke",
-    "remove_photo": "Foto entfernen"
+    "remove_photo": "Foto entfernen",
+    "locked_sample": "Beispielergebnis",
+    "locked_unlock": "Mit Pro freischalten"
   },
   "furniture": {
     "title": "Möbel",
@@ -996,7 +999,7 @@
     "help_mail_subject": "Interior AI — Support-Anfrage",
     "help_mail_body": "Hallo Interior AI Team,\n\n[Beschreibe dein Anliegen hier]\n\n---\nVersion: {{version}}\nPlan: {{plan}}\nUser ID: {{userId}}",
     "help_faq_q1_q": "Wie funktionieren Credits?",
-    "help_faq_q1_a": "Jede Generierung kostet Credits; die Kosten stehen vor dem Start über der Schaltfläche „Generieren“. Bei Free bekommst du jeden Tag 1 kostenlosen Credit — genug für ein Design — und er sammelt sich nicht an. Pro enthält 75 Credits pro Woche oder im Monatsplan 300 alle 30 Tage; ungenutzte Wochen-Credits werden bis zum 2-Fachen deiner Wochenmenge übertragen.",
+    "help_faq_q1_a": "Jede Generierung kostet Credits; die Kosten stehen vor dem Start über der Schaltfläche „Generieren“. Bei Free startest du mit 2 kostenlosen Credits und bekommst dann jeden Tag 1 dazu, bis maximal 2. Pro enthält 75 Credits pro Woche oder im Monatsplan 300 alle 30 Tage; ungenutzte Wochen-Credits werden bis zum 2-Fachen deiner Wochenmenge übertragen.",
     "help_faq_q2_q": "Was ist der Unterschied zwischen den Plänen?",
     "help_faq_q2_a": "Jeder Plan läuft auf unseren besten KI-Modellen. Free gibt dir 1 Credit pro Tag (sammelt sich nicht an), mit Wasserzeichen — jede Generierung kostet 1 Credit. Pro (75 Credits/Woche oder 300/Monat) entfernt das Wasserzeichen und schaltet Raumvideos, Stilübertragung und Außenbereich frei.",
     "help_faq_q3_q": "Wie nutze ich Style Transfer?",

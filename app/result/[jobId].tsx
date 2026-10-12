@@ -73,13 +73,15 @@ import { useReviewPrompt, type ReviewTrigger } from "@/hooks/useReviewPrompt";
 import { useSuccessCount } from "@/hooks/useSuccessCount";
 import { useResumeNote } from "@/hooks/useResumeNote";
 import { ResumeNote } from "@/components/ui/ResumeNote";
-import { isPushAskOnScreen } from "@/hooks/usePushRegistration";
+import { isPushAskOnScreen, canDeliverPush } from "@/hooks/usePushRegistration";
 import { useAccountPrompt } from "@/hooks/useAccountPrompt";
 import { useFirstResultPaywall } from "@/hooks/useFirstResultPaywall";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { ResultFrame } from "@/components/result/ResultFrame";
 import { Rise } from "@/components/result/Rise";
 import { WalkThroughCard } from "@/components/result/WalkThroughCard";
+import { ShareCard, SHARE_CARD_W, SHARE_CARD_H } from "@/components/result/ShareCard";
+import { captureRef } from "react-native-view-shot";
 import { AnotherStyleRow } from "@/components/result/AnotherStyleRow";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -256,6 +258,10 @@ export default function ResultDetailScreen() {
   const showWatermark = useEffectiveWatermark();
   const flatListRef = useRef<FlatList>(null);
   const authHeaders = useAuthHeaders();
+  /** The off-screen before/after card that "Share" captures (2.4.1). */
+  const shareCardRef = useRef<View>(null);
+  /** The cache keys whose pictures the card has finished loading — keyed, so a swapped output is not mistaken for loaded. */
+  const cardLoaded = useRef<{ before?: string; after?: string }>({});
 
   useEffect(() => {
     if (!jobId) return;
@@ -301,7 +307,7 @@ export default function ResultDetailScreen() {
 
   useEffect(() => {
     Notifications.getPermissionsAsync()
-      .then((p) => setPushGranted(p.status === "granted"))
+      .then((p) => setPushGranted(canDeliverPush(p)))
       .catch(() => setPushGranted(false));
   }, []);
 
@@ -511,11 +517,37 @@ export default function ResultDetailScreen() {
       feature: job?.featureCode ?? null,
     });
     signalValue("share");
+    // 2.4.1: the before/after card (components/result/ShareCard), captured from
+    // the off-screen view. Falls back to the plain render when either picture
+    // has not loaded or the capture fails — sharing must never get worse.
+    let shareUri = url;
+    const wantAfter = currentOutput?.id ? `output-${currentOutput.id}` : undefined;
+    const wantBefore = job?.inputFile?.id ? `input-${job.inputFile.id}` : undefined;
+    const ready = () => !!wantAfter && !!wantBefore
+      && cardLoaded.current.after === wantAfter && cardLoaded.current.before === wantBefore;
+    try {
+      const deadline = Date.now() + 2500;
+      while (!ready() && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      if (ready() && shareCardRef.current) {
+        const shot = await captureRef(shareCardRef, {
+          format: "jpg", quality: 0.92, result: "tmpfile",
+          // Points: view-shot multiplies by the screen scale (3× → 1080 × 1350).
+          width: SHARE_CARD_W, height: SHARE_CARD_H,
+        });
+        // view-shot can return a bare path; the share helper only treats file:// as local.
+        shareUri = shot.startsWith("file://") ? shot : `file://${shot}`;
+      }
+    } catch {
+      shareUri = url;
+    }
+    track("result_share_card", { card: shareUri !== url });
     // Share the actual image file (downloaded from the pre-signed S3
     // URL), not just the URL string. iMessage / WhatsApp / Mail get a
     // real attachment instead of a paste-this-into-a-browser link.
     // No auth headers — the URL is pre-signed (see getOutputImageUrl).
-    await shareImage(url, {
+    await shareImage(shareUri, {
       nameHint: job?.designStyleName?.toLowerCase().replace(/\s+/g, "-"),
     });
   };
@@ -858,6 +890,20 @@ export default function ResultDetailScreen() {
         {/* BEFORE / AFTER is the old slider's two pictures behind a pill; a
             tap on the picture or ⤢ is the same fullscreen viewer (and the
             same "fullscreen" value signal) as before. */}
+        {beforeUrl && afterUrl ? (
+          <ShareCard
+            ref={shareCardRef}
+            beforeUrl={beforeUrl}
+            beforeHeaders={authHeaders}
+            beforeCacheKey={beforeKey}
+            afterUrl={afterUrl}
+            afterCacheKey={afterKey}
+            beforeLabel={t("result.before")}
+            afterLabel={t("result.after")}
+            onBeforeLoad={() => { cardLoaded.current.before = beforeKey; }}
+            onAfterLoad={() => { cardLoaded.current.after = afterKey; }}
+          />
+        ) : null}
         <ResultFrame
           beforeUrl={beforeUrl}
           beforeHeaders={authHeaders}

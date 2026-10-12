@@ -131,7 +131,8 @@ export function useImageActions() {
                     );
                     return;
                 }
-                const localUri = await downloadToCache(url, opts);
+                // A file already on device (the result's share card, 2.4.1) is shared as is.
+                const localUri = url.startsWith("file://") ? url : url.startsWith("/") ? `file://${url}` : await downloadToCache(url, opts);
                 const video = opts.media === "video";
                 await Sharing.shareAsync(localUri, {
                     mimeType: video ? "video/mp4"

@@ -27,7 +27,8 @@
     "coming_soon": "Yakında",
     "next_step": "Sonraki Adım",
     "on": "Açık",
-    "off": "Kapalı"
+    "off": "Kapalı",
+    "not_now": "Şimdi değil"
   },
   "tabs": {
     "studio": "Stüdyo",
@@ -369,7 +370,9 @@
     "summary_style_placeholder": "Stil",
     "summary_pieces_one": "+1 parça",
     "summary_pieces_other": "+{{count}} parça",
-    "remove_photo": "Fotoğrafı kaldır"
+    "remove_photo": "Fotoğrafı kaldır",
+    "locked_sample": "Örnek sonuç",
+    "locked_unlock": "Pro ile aç"
   },
   "furniture": {
     "title": "Mobilya",
@@ -995,7 +998,7 @@
     "help_mail_subject": "Interior AI — Destek Talebi",
     "help_mail_body": "Merhaba Interior AI ekibi,\n\n[Sorununuzu burada açıklayın]\n\n---\nUygulama sürümü: {{version}}\nPlan: {{plan}}\nKullanıcı ID: {{userId}}",
     "help_faq_q1_q": "Krediler nasıl çalışır?",
-    "help_faq_q1_a": "Her üretim kredi harcar; maliyet, başlamadan önce Oluştur düğmesinin üstünde yazar. Free'de her gün 1 ücretsiz kredi alırsın — bir tasarıma yeter — ve birikmez. Pro haftada 75 kredi, aylık planda ise 30 günde 300 kredi içerir; kullanılmayan haftalık krediler haftalık miktarının 2 katına kadar birikir.",
+    "help_faq_q1_a": "Her üretim kredi harcar; maliyet, başlamadan önce Oluştur düğmesinin üstünde yazar. Free'de başlarken 2 ücretsiz kredi alırsın, sonra her gün 1 kredi eklenir ve en fazla 2'ye kadar birikir. Pro haftada 75 kredi, aylık planda ise 30 günde 300 kredi içerir; kullanılmayan haftalık krediler haftalık miktarının 2 katına kadar birikir.",
     "help_faq_q2_q": "Planlar arasındaki fark nedir?",
     "help_faq_q2_a": "Her plan en iyi AI modellerimizle çalışır. Free her gün 1 kredi verir (birikmez) ve çıktılar filigranlıdır — her üretim 1 kredidir. Pro (haftada 75 ya da ayda 300 kredi) filigranı kaldırır; oda videolarını, Stil Transferini ve Dış Mekân Tasarımını açar.",
     "help_faq_q3_q": "Style Transfer'ı nasıl kullanırım?",
