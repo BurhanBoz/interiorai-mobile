@@ -86,6 +86,8 @@ export const STUDIO_FEATURES: StudioFeature[] = [
         key: "SEASONAL",
         titleKey: "studio.mode_seasonal",
         descKey: "studio.feature_seasonal_desc",
+        // PRO at launch (owner, 13 Oct) — the server's plan_features is the lock, this mirrors it.
+        minPlan: "PRO",
         media: {
             kind: "pair",
             before: require("@/assets/features/seasonal_before.jpg"),
