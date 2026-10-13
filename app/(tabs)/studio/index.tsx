@@ -990,22 +990,44 @@ function ToolTile({
     // The dimming is a veil over the photo, not the tile's opacity: at 38%
     // opacity the photos vanished into the ground and the tiles read as empty
     // (simulator, 10 Oct). The veil keeps them visible but clearly not ready.
-    const veil = useSharedValue(enabled ? 0 : PHOTO_VEIL);
+    // The seasonal tile is veiled lighter than the rest while no room is in: it is
+    // the one to notice first (owner, 14 Oct: "biraz daha göz önünde").
+    const restVeil = festive ? PHOTO_VEIL * 0.35 : PHOTO_VEIL;
+    const veil = useSharedValue(enabled ? 0 : restVeil);
 
     useEffect(() => {
-        const to = enabled ? 0 : PHOTO_VEIL;
+        const to = enabled ? 0 : restVeil;
         if (reduceMotion) {
             cancelAnimation(veil);
             veil.value = to;
         } else if (enabled) {
             veil.value = withDelay(index * LIGHT_UP_STAGGER, withTiming(0, { duration: 260 }));
         } else {
-            veil.value = withTiming(PHOTO_VEIL, { duration: 200 });
+            veil.value = withTiming(restVeil, { duration: 200 });
         }
-    }, [enabled, reduceMotion, index, veil]);
+    }, [enabled, reduceMotion, index, veil, restVeil]);
 
     const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
     const primary = mode === "REDESIGN" || festive;
+    // A slow breathing glow on the seasonal tile's gold outline.
+    const glow = useSharedValue(0.35);
+    useEffect(() => {
+        if (!festive || reduceMotion) {
+            cancelAnimation(glow);
+            glow.value = festive ? 0.8 : 0;
+            return;
+        }
+        glow.value = withRepeat(
+            withSequence(
+                withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.ease) }),
+                withTiming(0.35, { duration: 1300, easing: Easing.inOut(Easing.ease) }),
+            ),
+            -1,
+            false,
+        );
+        return () => cancelAnimation(glow);
+    }, [festive, reduceMotion, glow]);
+    const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
 
     return (
         <View style={{ flex: span }}>
@@ -1036,6 +1058,17 @@ function ToolTile({
                     end={{ x: 0, y: 1 }}
                     style={StyleSheet.absoluteFill}
                 />
+                {festive && (
+                    // Photo chrome for the seasonal tile only: a warm red-to-ember wash
+                    // under the label, so the tile reads "Christmas" before the photo does.
+                    <LinearGradient
+                        pointerEvents="none"
+                        colors={["rgba(120,22,18,0)", "rgba(120,22,18,0.35)", "rgba(70,12,8,0.75)"]}
+                        locations={[0.35, 0.7, 1]}
+                        style={StyleSheet.absoluteFill}
+                    />
+                )}
+                {festive && <FestiveSparkles animate={!reduceMotion && enabled} />}
                 <Animated.View
                     pointerEvents="none"
                     style={[StyleSheet.absoluteFill, { backgroundColor: U.ground }, veilStyle]}
@@ -1088,8 +1121,11 @@ function ToolTile({
                     minimumFontScale={0.7}
                     style={{
                         ...V.tile,
-                        position: "absolute", left: 9, right: 9, bottom: 8,
+                        ...(festive ? { fontSize: 16, lineHeight: 19, letterSpacing: 0.2 } : null),
+                        position: "absolute", left: festive ? 11 : 9, right: 9, bottom: festive ? 9 : 8,
                         color: "#fff",
+                        textShadowColor: festive ? "rgba(240,206,153,0.55)" : undefined,
+                        textShadowRadius: festive ? 8 : undefined,
                     }}
                 >
                     {label}
@@ -1103,7 +1139,81 @@ function ToolTile({
                         borderColor: festive ? U.accentBright : primary ? U.accent : U.lineNeutral,
                     }}
                 />
+                {festive && (
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[{
+                            ...StyleSheet.absoluteFillObject,
+                            borderRadius: R.tile,
+                            borderWidth: 2.5,
+                            borderColor: U.accentBright,
+                        }, glowStyle]}
+                    />
+                )}
             </Pressable>
         </View>
+    );
+}
+
+
+/**
+ * Cozy Christmas (2.5.0): a few gold stars twinkling over the seasonal tile.
+ * Fixed spots in the upper half (the label lives in the lower), each on its own
+ * rhythm so they never blink together. Static at half strength under Reduce
+ * Motion or while the tile is dimmed.
+ */
+const SPARKLES: { top: string; left: string; size: number; delay: number }[] = [
+    { top: "10%", left: "8%", size: 11, delay: 0 },
+    { top: "22%", left: "38%", size: 8, delay: 650 },
+    { top: "8%", left: "62%", size: 13, delay: 1200 },
+    { top: "34%", left: "84%", size: 9, delay: 300 },
+    { top: "40%", left: "20%", size: 7, delay: 1700 },
+    { top: "16%", left: "88%", size: 7, delay: 950 },
+];
+
+function FestiveSparkles({ animate }: { animate: boolean }) {
+    return (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            {SPARKLES.map((s, i) => (
+                <Sparkle key={i} {...s} animate={animate} />
+            ))}
+        </View>
+    );
+}
+
+function Sparkle({ top, left, size, delay, animate }: { top: string; left: string; size: number; delay: number; animate: boolean }) {
+    const v = useSharedValue(0.5);
+    useEffect(() => {
+        if (!animate) {
+            cancelAnimation(v);
+            v.value = 0.5;
+            return;
+        }
+        v.value = 0;
+        v.value = withDelay(
+            delay,
+            withRepeat(
+                withSequence(
+                    withTiming(1, { duration: 700, easing: Easing.out(Easing.ease) }),
+                    withTiming(0.15, { duration: 900, easing: Easing.in(Easing.ease) }),
+                    withTiming(0.15, { duration: 600 }),
+                ),
+                -1,
+                false,
+            ),
+        );
+        return () => cancelAnimation(v);
+    }, [animate, delay, v]);
+    const style = useAnimatedStyle(() => ({ opacity: v.value, transform: [{ scale: 0.7 + v.value * 0.5 }] }));
+    return (
+        <Animated.Text
+            style={[{
+                position: "absolute", top: top as `${number}%`, left: left as `${number}%`,
+                fontSize: size, color: "#FFE9B8",
+                textShadowColor: "rgba(255,214,140,0.9)", textShadowRadius: 6,
+            }, style]}
+        >
+            ✦
+        </Animated.Text>
     );
 }
