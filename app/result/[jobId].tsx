@@ -575,7 +575,12 @@ export default function ResultDetailScreen() {
    * a different kind of transaction, and a second path to the wallet is a
    * second place for a double-charge to live.
    */
-  const designStyles = useCatalogStore((s) => s.designStyles);
+  const styleList = useCatalogStore((s) => s.designStyles);
+  const seasonalThemes = useCatalogStore((s) => s.seasonalThemes);
+  // A seasonal render (2.5.0) restyles with another THEME, never a style: the
+  // store still holds mode SEASONAL, and the server refuses a style on it.
+  const seasonalJob = job?.designMode === "SEASONAL";
+  const designStyles = seasonalJob ? seasonalThemes : styleList;
   const { generate, isSubmitting: restyling, cost: restyleCost } = useGenerate();
   // Which thumbnail is rendering, so the tap shows on the thing tapped.
   const [restyleCode, setRestyleCode] = useState<string | null>(null);
@@ -1033,6 +1038,7 @@ export default function ResultDetailScreen() {
               </View>
             )}
             <AnotherStyleRow
+              seasonal={seasonalJob}
               currentStyleCode={
                 designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
               }

@@ -8,6 +8,7 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
     withDelay,
+    withRepeat,
     withSequence,
     withSpring,
     withTiming,
@@ -18,6 +19,7 @@ import * as Haptics from "expo-haptics";
 
 import { theme } from "@/config/theme";
 import { useStudioStore } from "@/stores/studioStore";
+import { useCatalogStore } from "@/stores/catalogStore";
 import { useCreditStore } from "@/stores/creditStore";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES, type MagicTool } from "@/components/studio/featureCatalog";
@@ -839,11 +841,35 @@ function FeatureGrid({
     t: (k: string, o?: Record<string, unknown>) => string;
     enabled: boolean;
 }) {
+    // Cozy Christmas (2.5.0) shows only while the server lists seasonal themes —
+    // the season ends as data, not as a release. The catalogue is cached, so a
+    // second launch knows at once; the first paints without it and the tile
+    // arrives with the fetch.
+    const seasonalThemes = useCatalogStore((s) => s.seasonalThemes);
+    const ensureCatalog = useCatalogStore((s) => s.ensureLoaded);
+    useEffect(() => {
+        ensureCatalog().catch(() => {});
+    }, [ensureCatalog]);
+    const seasonOn = seasonalThemes.length > 0;
     // Each tile shows the tool's own result photo — the same real "after" its
     // teaser on the feature sheet uses (owner, 10 Oct: no empty tiles).
-    const items = STUDIO_FEATURES.map((f) => ({ id: f.id, key: f.key as string, tool: f.tool, label: t(f.titleKey), image: "after" in f.media ? f.media.after : f.media.image }));
+    const items = STUDIO_FEATURES
+        .filter((f) => f.key !== "SEASONAL" || seasonOn)
+        .map((f) => ({ id: f.id, key: f.key as string, tool: f.tool, label: t(f.titleKey), image: "after" in f.media ? f.media.after : f.media.image, span: f.key === "SEASONAL" ? 2 : 1 }));
+    // 🔴 The height budget (top of file) allows two rows. With the seasonal tile
+    // the grid is seven tiles, so it goes four wide: the seasonal tile takes
+    // two columns of the first row (it leads, and it is the one with the
+    // sparkle), the six tools share the rest. Without it: three wide, as before.
+    const perRow = seasonOn ? 4 : 3;
     const rows: (typeof items)[] = [];
-    for (let i = 0; i < items.length; i += 3) rows.push(items.slice(i, i + 3));
+    for (let i = 0, used = 0; i < items.length; ) {
+        const row: typeof items = [];
+        for (used = 0; i < items.length && used + items[i].span <= perRow; i++) {
+            row.push(items[i]);
+            used += items[i].span;
+        }
+        rows.push(row);
+    }
 
     return (
         <View style={{ gap: 8 }}>
@@ -862,7 +888,8 @@ function FeatureGrid({
                 {rows.map((row, r) => (
                     <View key={r} style={{ flexDirection: "row", gap: 8 }}>
                         {row.map((item, c) => {
-                            const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN" : item.key;
+                            const featureCode = item.key === "OUTDOOR" ? "OUTDOOR_DESIGN"
+                                : item.key === "SEASONAL" ? "SEASONAL_DECOR" : item.key;
                             const locked = isLocked(featureCode);
                             return (
                                 <ToolTile
@@ -872,14 +899,17 @@ function FeatureGrid({
                                     image={item.image}
                                     locked={locked}
                                     enabled={enabled}
-                                    index={r * 3 + c}
+                                    index={r * perRow + c}
+                                    span={item.span}
+                                    festive={item.key === "SEASONAL"}
+                                    newTag={item.key === "SEASONAL" ? t("studio.seasonal_new") : undefined}
                                     hint={enabled ? undefined : t("studio.photo_source_title")}
                                     onPress={() => onPress(item.key, locked, item.tool)}
                                 />
                             );
                         })}
                         {/* A short last row keeps the column width instead of stretching. */}
-                        {Array.from({ length: 3 - row.length }).map((_, k) => (
+                        {Array.from({ length: perRow - row.reduce((n, it) => n + it.span, 0) }).map((_, k) => (
                             <View key={`pad-${k}`} style={{ flex: 1 }} />
                         ))}
                     </View>
@@ -913,6 +943,9 @@ function ToolTile({
     locked,
     enabled,
     index,
+    span = 1,
+    festive = false,
+    newTag,
     hint,
     onPress,
 }: {
@@ -922,10 +955,38 @@ function ToolTile({
     locked: boolean;
     enabled: boolean;
     index: number;
+    /** Columns the tile takes in its row (the seasonal tile takes two). */
+    span?: number;
+    /** Cozy Christmas (2.5.0): gold outline, a slow light sweep and a NEW tag. */
+    festive?: boolean;
+    newTag?: string;
     hint?: string;
     onPress: () => void;
 }) {
     const reduceMotion = useReduceMotion();
+    // The festive sweep: a soft band of light crossing the tile every few
+    // seconds, so the tile reads as "lit" among the others without any of the
+    // photos changing. Off under Reduce Motion, off while the tile is dimmed.
+    const sweep = useSharedValue(-1);
+    useEffect(() => {
+        if (!festive || reduceMotion || !enabled) {
+            cancelAnimation(sweep);
+            sweep.value = -1;
+            return;
+        }
+        sweep.value = withRepeat(
+            withSequence(
+                withTiming(1.6, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+                withDelay(2600, withTiming(-1, { duration: 0 })),
+            ),
+            -1,
+            false,
+        );
+        return () => cancelAnimation(sweep);
+    }, [festive, reduceMotion, enabled, sweep]);
+    const sweepStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: sweep.value * 160 }, { rotate: "18deg" }],
+    }));
     // The dimming is a veil over the photo, not the tile's opacity: at 38%
     // opacity the photos vanished into the ground and the tiles read as empty
     // (simulator, 10 Oct). The veil keeps them visible but clearly not ready.
@@ -944,10 +1005,10 @@ function ToolTile({
     }, [enabled, reduceMotion, index, veil]);
 
     const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
-    const primary = mode === "REDESIGN";
+    const primary = mode === "REDESIGN" || festive;
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: span }}>
             <Pressable
                 onPress={onPress}
                 accessibilityRole="button"
@@ -979,6 +1040,31 @@ function ToolTile({
                     pointerEvents="none"
                     style={[StyleSheet.absoluteFill, { backgroundColor: U.ground }, veilStyle]}
                 />
+                {festive && !reduceMotion && (
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[{ position: "absolute", top: -40, bottom: -40, left: 0, width: 70 }, sweepStyle]}
+                    >
+                        <LinearGradient
+                            colors={["rgba(240,206,153,0)", "rgba(240,206,153,0.55)", "rgba(240,206,153,0)"]}
+                            start={{ x: 0, y: 0.5 }}
+                            end={{ x: 1, y: 0.5 }}
+                            style={{ flex: 1 }}
+                        />
+                    </Animated.View>
+                )}
+                {!locked && newTag ? (
+                    <View
+                        style={{
+                            position: "absolute", top: 6, right: 6,
+                            paddingHorizontal: 7, paddingVertical: 2,
+                            borderRadius: R.pill,
+                            backgroundColor: U.accent,
+                        }}
+                    >
+                        <Text style={{ ...V.captionStrong, fontSize: 10, letterSpacing: 1.2, color: U.ground }}>✦ {newTag}</Text>
+                    </View>
+                ) : null}
                 {locked && (
                     <View
                         style={{
@@ -1014,7 +1100,7 @@ function ToolTile({
                         ...StyleSheet.absoluteFillObject,
                         borderRadius: R.tile,
                         borderWidth: primary ? 1.5 : 1,
-                        borderColor: primary ? U.accent : U.lineNeutral,
+                        borderColor: festive ? U.accentBright : primary ? U.accent : U.lineNeutral,
                     }}
                 />
             </Pressable>

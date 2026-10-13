@@ -78,6 +78,21 @@ export interface StudioFeature {
 
 export const STUDIO_FEATURES: StudioFeature[] = [
     {
+        // Cozy Christmas (2.5.0). First on purpose (owner, 13 Oct: "en başa koyalım"); the
+        // Studio shows it only while the server lists seasonal themes, so the tile leaves
+        // with the season without a release. The pair is a real run of the mode's own
+        // prompt on the lab's living room 3 (classic theme), room untouched.
+        id: "SEASONAL",
+        key: "SEASONAL",
+        titleKey: "studio.mode_seasonal",
+        descKey: "studio.feature_seasonal_desc",
+        media: {
+            kind: "pair",
+            before: require("@/assets/features/seasonal_before.jpg"),
+            after: require("@/assets/features/seasonal_after.jpg"),
+        },
+    },
+    {
         id: "REDESIGN",
         key: "REDESIGN",
         titleKey: "studio.mode_redesign",

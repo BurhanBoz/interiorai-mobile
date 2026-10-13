@@ -27,8 +27,10 @@ const THUMB = 44;
  * tap.
  */
 export function AnotherStyleRow({
-    currentStyleCode, cost, onPick, onLocked, onMore, busy, pendingCode,
+    currentStyleCode, cost, onPick, onLocked, onMore, busy, pendingCode, seasonal = false,
 }: {
+    /** Cozy Christmas (2.5.0): offer the other themes instead of styles, no PRO door. */
+    seasonal?: boolean;
     currentStyleCode: string | null;
     cost: number | null | undefined;
     onPick: (code: string) => void;
@@ -39,10 +41,14 @@ export function AnotherStyleRow({
     pendingCode: string | null;
 }) {
     const { t } = useTranslation();
-    const styles = useCatalogStore((s) => s.designStyles);
+    const styleList = useCatalogStore((s) => s.designStyles);
+    const themes = useCatalogStore((s) => s.seasonalThemes);
+    const styles = seasonal ? themes : styleList;
 
     const picks = useMemo(() => {
-        const preferred = ["MINIMALIST", "SCANDINAVIAN", "WARM_MOCHA", "MODERN", "INDUSTRIAL"];
+        const preferred = seasonal
+            ? themes.map((th) => th.code?.toUpperCase()).filter((c): c is string => Boolean(c))
+            : ["MINIMALIST", "SCANDINAVIAN", "WARM_MOCHA", "MODERN", "INDUSTRIAL"];
         const byCode = new Map(styles.map((s) => [s.code?.toUpperCase(), s]));
         const out: { code: string; name: string }[] = [];
         for (const code of preferred) {
@@ -53,13 +59,13 @@ export function AnotherStyleRow({
             if (s) out.push({ code: s.code, name: catalogName(t, "style", s) });
         }
         return out;
-    }, [styles, currentStyleCode, t]);
+    }, [styles, themes, seasonal, currentStyleCode, t]);
 
     return (
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <View style={{ flexShrink: 1 }}>
                 <Text style={{ ...theme.v2.row, color: U.ink }} numberOfLines={2}>
-                    {t("result.try_another_style")}
+                    {t(seasonal ? "result.try_another_theme" : "result.try_another_style")}
                 </Text>
                 {cost != null ? (
                     <Text style={{ ...theme.v2.captionStrong, color: U.accentBright, marginTop: 2 }}>
@@ -93,7 +99,7 @@ export function AnotherStyleRow({
                     </Pressable>
                 ))}
 
-                <Pressable
+                {!seasonal && <Pressable
                     onPress={onLocked}
                     disabled={busy}
                     accessibilityRole="button"
@@ -113,7 +119,7 @@ export function AnotherStyleRow({
                             PRO
                         </Text>
                     </View>
-                </Pressable>
+                </Pressable>}
 
                 <Pressable
                     onPress={onMore}

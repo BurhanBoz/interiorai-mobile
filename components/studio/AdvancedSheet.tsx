@@ -68,7 +68,10 @@ export function AdvancedSheet({ onClose }: { onClose: () => void }) {
 
     // Style Transfer takes its character from the reference photo; a
     // transformation slider on top of it fights the thing the user chose.
-    const showStrength = mode !== "STYLE_TRANSFER";
+    // Cozy Christmas (2.5.0) is a decorate-only edit: it has no transformation
+    // amount and nothing to preserve or not — the room is kept by definition.
+    const seasonal = mode === "SEASONAL";
+    const showStrength = mode !== "STYLE_TRANSFER" && !seasonal;
     const percent = Math.round(strength * 100);
 
     return (
@@ -169,20 +172,22 @@ export function AdvancedSheet({ onClose }: { onClose: () => void }) {
                         </>
                     )}
 
-                    <View
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            marginTop: 26,
-                            gap: 12,
-                        }}
-                    >
-                        <Text style={{ ...V.row, color: U.ink, flex: 1 }}>
-                            {t("studio.preserve_layout")}
-                        </Text>
-                        <Toggle value={preserveLayout} onChange={setPreserveLayout} />
-                    </View>
+                    {!seasonal && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginTop: 26,
+                                gap: 12,
+                            }}
+                        >
+                            <Text style={{ ...V.row, color: U.ink, flex: 1 }}>
+                                {t("studio.preserve_layout")}
+                            </Text>
+                            <Toggle value={preserveLayout} onChange={setPreserveLayout} />
+                        </View>
+                    )}
                 </ScrollView>
 
                 <View style={{ paddingHorizontal: 20, paddingBottom: 28 }}>

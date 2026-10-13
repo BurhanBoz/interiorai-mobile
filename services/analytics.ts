@@ -169,6 +169,7 @@ export type AnalyticsEvent =
      * choose — and, joined against the wallet, which ones lead to paying.
      */
     | "style_selected"
+    | "theme_selected"
     /**
      * Whether the furniture catalogue is used at all, and whether people
      * reach for our pieces or their own photographs. It shipped in 1.5.0

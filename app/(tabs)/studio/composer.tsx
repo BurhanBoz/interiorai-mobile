@@ -97,8 +97,15 @@ export default function ComposerScreen() {
     const setPhoto = useStudioStore((s) => s.replacePhoto);
 
     const roomTypes = useCatalogStore((s) => s.roomTypes);
-    const designStyles = useCatalogStore((s) => s.designStyles);
+    const styleList = useCatalogStore((s) => s.designStyles);
+    const seasonalThemes = useCatalogStore((s) => s.seasonalThemes);
     const ensureCatalog = useCatalogStore((s) => s.ensureLoaded);
+    // Cozy Christmas (2.5.0): the second strip picks a THEME, in the same place
+    // and the same store field a style goes — the server tells the two apart
+    // by the row's scope. Everything downstream (summary, cost, Generate) is
+    // unchanged; only the list, the words and the analytics event differ.
+    const seasonal = mode === "SEASONAL";
+    const designStyles = seasonal ? seasonalThemes : styleList;
 
     const { pickImage, isUploading } = useImagePicker();
     const { generate, isSubmitting } = useGenerate();
@@ -253,7 +260,7 @@ export default function ComposerScreen() {
                 </View>
 
                 <View ref={tourTarget("composer.style")} collapsable={false} style={{ marginTop: 18 }}>
-                    <SectionTitle>{t("studio.pick_style")}</SectionTitle>
+                    <SectionTitle>{t(seasonal ? "studio.pick_theme" : "studio.pick_style")}</SectionTitle>
                     <StyleStrip
                         styles={designStyles}
                         selectedId={designStyle?.id ?? null}
@@ -267,7 +274,7 @@ export default function ComposerScreen() {
                             // analytics.ts'te durdu ama çağıran kalmadı.
                             // Son ölçümünde 7 günde 65 olay / 26 kişiydi —
                             // hangi stilin seçildiği tek sinyal bu.
-                            track("style_selected", { style: s.code ?? s.name });
+                            track(seasonal ? "theme_selected" : "style_selected", { style: s.code ?? s.name });
                         }}
                     />
                 </View>
@@ -281,13 +288,19 @@ export default function ComposerScreen() {
                     copy of a statement that had already been made. It is
                     still reachable from Settings. */}
                 <View style={{ paddingHorizontal: GUTTER, marginTop: 16, gap: 10 }}>
-                    <View ref={tourTarget("composer.advanced")} collapsable={false}>
-                        <CompactRow
-                            label={t("studio.advanced")}
-                            detail={t("studio.advanced_hint")}
-                            onPress={() => setSheet("advanced")}
-                        />
-                    </View>
+                    {/* Cozy Christmas has no palette and no intensity to set — the
+                        prompt is the theme and the room stays as it is — so the row
+                        would open a sheet of controls that do nothing. The tour
+                        skips a missing target (CoachMarks). */}
+                    {!seasonal && (
+                        <View ref={tourTarget("composer.advanced")} collapsable={false}>
+                            <CompactRow
+                                label={t("studio.advanced")}
+                                detail={t("studio.advanced_hint")}
+                                onPress={() => setSheet("advanced")}
+                            />
+                        </View>
+                    )}
 
                     {/* Furniture is a redesign concept. Magic Edit changes the
                         area the user painted and Style Transfer copies a
@@ -297,7 +310,7 @@ export default function ComposerScreen() {
                         v3: the four-plate card became one compact row so the
                         two required strips fit without a scroll; the
                         catalogue (a differentiator) keeps its own line. */}
-                    {mode !== "INPAINT" && mode !== "STYLE_TRANSFER" && (
+                    {mode !== "INPAINT" && mode !== "STYLE_TRANSFER" && !seasonal && (
                         <FurnitureRow
                             picked={objectRefs}
                             suggestions={products}
@@ -365,7 +378,7 @@ export default function ComposerScreen() {
                             </Text>
                             <Text style={{ color: U.inkMuted }}>{"  ·  "}</Text>
                             <Text style={{ color: styleName ? U.ink : U.inkMuted }}>
-                                {styleName ?? t("studio.summary_style_placeholder")}
+                                {styleName ?? t(seasonal ? "studio.summary_theme_placeholder" : "studio.summary_style_placeholder")}
                             </Text>
                             {pickedProduct ? (
                                 <Text style={{ color: U.inkMuted }}>
@@ -389,7 +402,7 @@ export default function ComposerScreen() {
                             !roomType
                                 ? t("studio.room_type_required")
                                 : !designStyle
-                                  ? t("studio.style_required")
+                                  ? t(seasonal ? "studio.theme_required" : "studio.style_required")
                                   : undefined
                         }
                         onPress={() => {

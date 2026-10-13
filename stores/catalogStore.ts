@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getRoomTypes, getDesignStyles } from "@/services/catalog";
+import { getRoomTypes, getDesignStyles, getSeasonalThemes } from "@/services/catalog";
 import type { CatalogItemResponse } from "@/types/api";
 
 /**
@@ -28,6 +28,8 @@ const STALE_AFTER_MS = 60 * 60 * 1000; // 1h — matches the server's Cache-Cont
 interface CatalogState {
     roomTypes: CatalogItemResponse[];
     designStyles: CatalogItemResponse[];
+    /** Seasonal themes (2.5.0). Empty = no season on = no tile. */
+    seasonalThemes: CatalogItemResponse[];
     /** Epoch ms of the last successful fetch; null when never fetched. */
     fetchedAt: number | null;
     /** True only when there is nothing cached to render. */
@@ -48,11 +50,15 @@ export const useCatalogStore = create<CatalogState>()(
                 if (inFlight) return inFlight;
                 inFlight = (async () => {
                     try {
-                        const [roomTypes, designStyles] = await Promise.all([
+                        // The themes must not take the catalogue down with them: a
+                        // 2.4.x server has no /seasonal-themes, and a 404 there must
+                        // still leave the rooms and styles the screen needs.
+                        const [roomTypes, designStyles, seasonalThemes] = await Promise.all([
                             getRoomTypes(),
                             getDesignStyles(),
+                            getSeasonalThemes().catch(() => [] as CatalogItemResponse[]),
                         ]);
-                        set({ roomTypes, designStyles, fetchedAt: Date.now(), isLoading: false });
+                        set({ roomTypes, designStyles, seasonalThemes, fetchedAt: Date.now(), isLoading: false });
                     } catch {
                         // Keep whatever we already have; only stop the spinner.
                         set({ isLoading: false });
@@ -66,6 +72,7 @@ export const useCatalogStore = create<CatalogState>()(
             return {
                 roomTypes: [],
                 designStyles: [],
+                seasonalThemes: [],
                 fetchedAt: null,
                 isLoading: false,
 
@@ -91,12 +98,20 @@ export const useCatalogStore = create<CatalogState>()(
         {
             name: "catalog-store",
             storage: createJSONStorage(() => AsyncStorage),
-            version: 1,
+            version: 2,
+            // v1 → v2 (2.5.0): the persisted copy predates seasonalThemes; an
+            // undefined list would crash the first render, so it rehydrates
+            // empty and the next fetch fills it.
+            migrate: (persisted) => {
+                const s = (persisted ?? {}) as Partial<CatalogState>;
+                return { ...s, seasonalThemes: s.seasonalThemes ?? [] } as CatalogState;
+            },
             // Never persist the transient flag — a launch that died mid-fetch
             // would otherwise rehydrate stuck in a loading state.
             partialize: (s) => ({
                 roomTypes: s.roomTypes,
                 designStyles: s.designStyles,
+                seasonalThemes: s.seasonalThemes,
                 fetchedAt: s.fetchedAt,
             }),
         },

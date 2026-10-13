@@ -1,5 +1,5 @@
 // ── Enums ──────────────────────────────────────
-export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR";
+export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR" | "SEASONAL";
 export type QualityTier = "STANDARD" | "HD" | "ULTRA_HD";
 export type JobStatus = "PENDING" | "SUBMITTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type StorageStatus = "PENDING" | "UPLOADED" | "FAILED";

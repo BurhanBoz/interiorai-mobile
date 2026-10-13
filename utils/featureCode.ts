@@ -26,6 +26,7 @@ export function resolveFeatureCode(
     if (mode === "INPAINT") return "INPAINT";
     if (mode === "STYLE_TRANSFER") return "STYLE_TRANSFER";
     if (mode === "OUTDOOR") return "OUTDOOR_DESIGN"; // V52 — tier-agnostic like EMPTY_ROOM
+    if (mode === "SEASONAL") return "SEASONAL_DECOR"; // V199 — Cozy Christmas (2.5.0)
     return "INTERIOR_REDESIGN";
 }
 
