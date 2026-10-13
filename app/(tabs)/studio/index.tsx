@@ -371,10 +371,10 @@ const SECTION_GAP = 18;
  * design repeated the balance on three surfaces; repeating a number the user
  * has no feel for is worse than stating it once.
  *
- * <p>v3 gives it an outline and a star instead of a filled lozenge — the gold
- * fill now belongs to the add card alone. The pill is drawn 34pt tall and its
- * hitSlop brings the target to 44pt, which the budget could not afford as
- * drawn height.
+ * <p>v3 gives it a star instead of a filled lozenge — the gold fill belongs to
+ * the add card alone; since 2.5.0 no outline either, just the star and the
+ * number (owner, 14 Oct). It is drawn 34pt tall and its hitSlop brings the
+ * target to 44pt, which the budget could not afford as drawn height.
  */
 function Header({ balance, planCode }: { balance: number; planCode: string | null }) {
     const { t } = useTranslation();
@@ -425,10 +425,7 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 6,
-                    borderWidth: 1,
-                    borderColor: U.accent,
-                    borderRadius: R.pill,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: 4,
                 }}
             >
                 <StarIcon color={U.accentBright} />
