@@ -20,6 +20,8 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { clearFlag } from "@/utils/oneShotFlag";
+import { firstResultOfferFlag } from "@/hooks/useFirstResultPaywall";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 
 const SUPPORT_EMAIL = "boz.burhan8@gmail.com";
@@ -429,7 +431,12 @@ export default function HelpScreen() {
           <Pressable
             delayLongPress={1500}
             onLongPress={() => {
-              Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk()]).then(() => {
+              // Build 115 (owner, 14 Oct): also forget this identity's first open and the first-result
+              // offer, so the next cold start plays the intro (app/intro.tsx) like a brand-new install.
+              // The keys mirror app/index.tsx and hooks/useFirstResultPaywall.ts.
+              const uid = useAuthStore.getState().user?.id;
+              const firstRun = uid ? [clearFlag(`first_open:${uid}`), clearFlag(firstResultOfferFlag(uid))] : [];
+              Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk(), ...firstRun]).then(() => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 setToursReset(true);
                 setTimeout(() => setToursReset(false), 2000);
