@@ -1135,7 +1135,11 @@
     "profile_edit_email_managed": "Gestito dal tuo accesso {{provider}}.",
     "delete_account": "Elimina account",
     "notifications_upsell_video_title": "Dai vita ai tuoi progetti",
-    "notifications_upsell_video_desc": "Trasforma un progetto finito in un video di 8 secondi della stanza, con morbidi suoni della natura. Incluso in Pro."
+    "notifications_upsell_video_desc": "Trasforma un progetto finito in un video di 8 secondi della stanza, con morbidi suoni della natura. Incluso in Pro.",
+    "reset_title": "Test reset",
+    "reset_body": "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone).",
+    "reset_first_run": "First-run screens",
+    "reset_full": "Full reset (new guest)"
   },
   "errors": {
     "network": "Errore di rete. Controlla la connessione.",

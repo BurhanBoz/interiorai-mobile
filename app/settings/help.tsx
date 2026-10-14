@@ -7,7 +7,9 @@ import {
   ScrollView,
   TextInput,
   Linking,
+  Alert,
 } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -436,11 +438,37 @@ export default function HelpScreen() {
               // The keys mirror app/index.tsx and hooks/useFirstResultPaywall.ts.
               const uid = useAuthStore.getState().user?.id;
               const firstRun = uid ? [clearFlag(`first_open:${uid}`), clearFlag(firstResultOfferFlag(uid))] : [];
-              Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk(), ...firstRun]).then(() => {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setToursReset(true);
-                setTimeout(() => setToursReset(false), 2000);
-              });
+              const softReset = () => Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk(), ...firstRun]);
+              // Build 117 (owner, 14 Oct): a second choice that also forgets the guest identity
+              // (device_key in the Keychain survives a reinstall), so the next screen is onboarding
+              // and a NEW guest account is created. The old account stays on the server; its
+              // gallery is no longer on this phone. Owner-only door, so it asks once, plainly.
+              Haptics.selectionAsync();
+              Alert.alert(
+                t("settings.reset_title", { defaultValue: "Test reset" }),
+                t("settings.reset_body", { defaultValue: "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone)." }),
+                [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("settings.reset_first_run", { defaultValue: "First-run screens" }),
+                    onPress: () => softReset().then(() => {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      setToursReset(true);
+                      setTimeout(() => setToursReset(false), 2000);
+                    }),
+                  },
+                  {
+                    text: t("settings.reset_full", { defaultValue: "Full reset (new guest)" }),
+                    style: "destructive",
+                    onPress: async () => {
+                      await softReset().catch(() => {});
+                      await SecureStore.deleteItemAsync("device_key").catch(() => {});
+                      await useAuthStore.getState().logout();
+                      router.replace("/(auth)/onboarding" as never);
+                    },
+                  },
+                ],
+              );
             }}
           >
             <Text

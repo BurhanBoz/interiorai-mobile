@@ -1130,7 +1130,11 @@
     "profile_edit_email_managed": "{{provider}} 로그인으로 관리됩니다.",
     "delete_account": "계정 삭제",
     "notifications_upsell_video_title": "디자인에 생명을 불어넣으세요",
-    "notifications_upsell_video_desc": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 8초 공간 영상으로 바꿔 보세요. Pro에 포함되어 있어요."
+    "notifications_upsell_video_desc": "완성된 디자인을 잔잔한 자연의 소리가 흐르는 8초 공간 영상으로 바꿔 보세요. Pro에 포함되어 있어요.",
+    "reset_title": "Test reset",
+    "reset_body": "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone).",
+    "reset_first_run": "First-run screens",
+    "reset_full": "Full reset (new guest)"
   },
   "errors": {
     "network": "네트워크 오류입니다. 연결을 확인해 주세요.",

@@ -30,6 +30,8 @@ import { planTier, tierRank } from "@/utils/planTier";
 import type { PlanResponse } from "@/types/api";
 import { usePostPurchaseStore } from "@/stores/postPurchaseStore";
 import { useStudioStore } from "@/stores/studioStore";
+import { useCatalogStore } from "@/stores/catalogStore";
+import { seasonMedia, seasonTitle } from "@/components/studio/seasonMedia";
 
 const U = theme.umber;
 
@@ -117,7 +119,13 @@ const SAMPLE_AFTER = require("@/assets/features/paywall_after.jpg");
 const INTRO_WAIT_MS = 1200;
 
 export default function PaywallScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    // Build 117 (owner, 14 Oct): the paywall's sample is the open season when there is one
+    // (Halloween now, Christmas from 1 Nov), the empty room furnished otherwise.
+    const leadingSeason = useCatalogStore((s) => s.seasons[0] ?? null);
+    const ensureCatalog = useCatalogStore((s) => s.ensureLoaded);
+    // The launch offer can open before Studio ever asked for the catalogue; a cached copy paints at once.
+    useEffect(() => { void ensureCatalog(); }, [ensureCatalog]);
     const plans = useSubscriptionStore((s) => s.plans);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
@@ -498,13 +506,15 @@ export default function PaywallScreen() {
     };
 
     // ── The moment that opened the screen ────────────────────────────
-    const proTools: PaywallHeroSpec = {
-        kind: "pro",
-        left: { image: require("@/assets/features/style_after.jpg"), label: t("studio.mode_style_transfer") },
-        // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
-        // "asset missing" pattern, not a photograph.
-        right: { image: require("@/assets/features/outdoor_after.jpg"), label: t("studio.mode_outdoor") },
-    };
+    // Build 117: the Style Transfer + Outdoor pair is retired from the paywall. Its place —
+    // and the default — is the open season's before/after, or the empty room without one.
+    const seasonPair = leadingSeason ? seasonMedia(leadingSeason) : null;
+    const proTools: PaywallHeroSpec = seasonPair
+        ? { kind: "pair", before: seasonPair.before as never, after: seasonPair.after as never }
+        : { kind: "pair", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+    const seasonHeadline = seasonPair && leadingSeason
+        ? { title: seasonTitle(leadingSeason, i18n.language), sub: t("studio.feature_seasonal_desc") }
+        : null;
     const hero: PaywallHeroSpec = (() => {
         if (PRO_TOOL_SOURCES.has(source)) return proTools;
         if (source === SOURCE_FIRST_RESULT && ownAfter) {
@@ -521,8 +531,7 @@ export default function PaywallScreen() {
         if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
             return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline" };
         }
-        if (subscribed) return proTools;
-        return { kind: "pair", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+        return proTools;
     })();
 
     /**
@@ -543,7 +552,7 @@ export default function PaywallScreen() {
                 sub: reloadNote,
             };
         }
-        if (PRO_TOOL_SOURCES.has(source)) return { title: t("paywall.two_things_headline"), sub: t("paywall.pro_tools_sub") };
+        if (PRO_TOOL_SOURCES.has(source)) return seasonHeadline ?? { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
         if (source === SOURCE_FIRST_RESULT) return { title: t("paywall.hero_first_title"), sub: t("paywall.hero_first_sub") };
         if (source === SOURCE_RESULT_VIDEO) return { title: t("paywall.hero_video_title"), sub: t("paywall.hero_video_sub") };
         if (source === SOURCE_CREDITS_EXHAUSTED) {
@@ -551,7 +560,7 @@ export default function PaywallScreen() {
                 ? { title: t("paywall.hero_room_title"), sub: t("paywall.hero_room_sub") }
                 : { title: t("paywall.title_out_of_credits"), sub: t("paywall.hero_exhausted_sub") };
         }
-        return { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
+        return seasonHeadline ?? { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
     })();
 
     // ── Money lines ──────────────────────────────────────────────────

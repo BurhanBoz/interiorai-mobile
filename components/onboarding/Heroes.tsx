@@ -71,6 +71,27 @@ function Tag({ label, side }: { label: string; side: "left" | "right" }) {
  * window narrows, the same construction as the result screen's slider.
  */
 export function WipeHero({ width, height, active }: { width: number; height: number; active: boolean }) {
+    return <PairWipe width={width} height={height} active={active} before={ROOM_BEFORE} after={ROOM_AFTER} />;
+}
+
+/**
+ * Build 117 (owner, 14 Oct): the three onboarding pages are three before/afters, the most
+ * striking first — Halloween, then Christmas (Classic), then the empty room furnished. The
+ * lab's own living room 3, the same pictures as the store's first two frames.
+ */
+const HALLOWEEN_BEFORE = require("@/assets/seasons/onb_halloween_before.jpg");
+const HALLOWEEN_AFTER = require("@/assets/seasons/onb_halloween_after.jpg");
+const CHRISTMAS_BEFORE = require("@/assets/seasons/onb_christmas_before.jpg");
+const CHRISTMAS_AFTER = require("@/assets/seasons/onb_christmas_after.jpg");
+
+export function HalloweenHero(p: { width: number; height: number; active: boolean }) {
+    return <PairWipe {...p} before={HALLOWEEN_BEFORE} after={HALLOWEEN_AFTER} />;
+}
+export function ChristmasHero(p: { width: number; height: number; active: boolean }) {
+    return <PairWipe {...p} before={CHRISTMAS_BEFORE} after={CHRISTMAS_AFTER} />;
+}
+
+function PairWipe({ width, height, active, before, after }: { width: number; height: number; active: boolean; before: number; after: number }) {
     const { t } = useTranslation();
     const reduce = useReduceMotion();
     const reveal = useRef(new Animated.Value(width)).current;
@@ -93,9 +114,9 @@ export function WipeHero({ width, height, active }: { width: number; height: num
 
     return (
         <View style={{ width, height, overflow: "hidden" }}>
-            <Image source={ROOM_AFTER} style={{ width, height }} contentFit="cover" />
+            <Image source={after} style={{ width, height }} contentFit="cover" />
             <Animated.View style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: reveal, overflow: "hidden" }}>
-                <Image source={ROOM_BEFORE} style={{ width, height }} contentFit="cover" />
+                <Image source={before} style={{ width, height }} contentFit="cover" />
             </Animated.View>
             <Animated.View style={{
                 position: "absolute", top: 0, bottom: 0, width: 2, backgroundColor: U.accentBright,

@@ -17,7 +17,7 @@ import * as SecureStore from "expo-secure-store";
 import { theme, track } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
 import { HexMark } from "@/components/brand/HexMark";
-import { ShowcaseHero, WallHero, WipeHero } from "@/components/onboarding/Heroes";
+import { WipeHero, HalloweenHero, ChristmasHero } from "@/components/onboarding/Heroes";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -41,23 +41,25 @@ const V = theme.v2;
  * are unchanged.
  */
 const SLIDES = [
+    // Build 117 (owner, 14 Oct): Halloween first, Christmas second, the empty room third — the
+    // most striking before/afters we have; the per-mode showcase and the wall are retired.
     {
         id: "restyled",
         headlineKey: "onboarding.v2_slide1_headline",
         bodyKey: "onboarding.v2_slide1_body",
-        Hero: WipeHero,
+        Hero: HalloweenHero,
     },
     {
         id: "six-ways",
         headlineKey: "onboarding.v2_slide2_headline",
         bodyKey: "onboarding.v2_slide2_body",
-        Hero: ShowcaseHero,
+        Hero: ChristmasHero,
     },
     {
         id: "free-today",
         headlineKey: "onboarding.v2_slide3_headline",
         bodyKey: "onboarding.v2_slide3_body",
-        Hero: WallHero,
+        Hero: WipeHero,
     },
 ] as const;
 

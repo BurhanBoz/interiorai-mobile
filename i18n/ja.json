@@ -1130,7 +1130,11 @@
     "profile_edit_email_managed": "{{provider}}のサインインで管理されています。",
     "delete_account": "アカウントを削除",
     "notifications_upsell_video_title": "デザインに命を吹き込む",
-    "notifications_upsell_video_desc": "完成したデザインを、やさしい自然の音が流れる8秒の部屋の動画に。Proで利用できます。"
+    "notifications_upsell_video_desc": "完成したデザインを、やさしい自然の音が流れる8秒の部屋の動画に。Proで利用できます。",
+    "reset_title": "Test reset",
+    "reset_body": "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone).",
+    "reset_first_run": "First-run screens",
+    "reset_full": "Full reset (new guest)"
   },
   "errors": {
     "network": "ネットワークエラーです。接続を確認してください。",

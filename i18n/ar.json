@@ -1130,7 +1130,11 @@
     "profile_edit_email_managed": "تتم إدارته عبر تسجيل الدخول بواسطة {{provider}}.",
     "delete_account": "حذف الحساب",
     "notifications_upsell_video_title": "أضِف الحياة إلى تصاميمك",
-    "notifications_upsell_video_desc": "حوّل تصميمًا مكتملًا إلى فيديو للغرفة مدته 8 ثوانٍ مع أصوات طبيعة هادئة. متاح في Pro."
+    "notifications_upsell_video_desc": "حوّل تصميمًا مكتملًا إلى فيديو للغرفة مدته 8 ثوانٍ مع أصوات طبيعة هادئة. متاح في Pro.",
+    "reset_title": "Test reset",
+    "reset_body": "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone).",
+    "reset_first_run": "First-run screens",
+    "reset_full": "Full reset (new guest)"
   },
   "errors": {
     "network": "خطأ في الشبكة. الرجاء التحقق من الاتصال.",

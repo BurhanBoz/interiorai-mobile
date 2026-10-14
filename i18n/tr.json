@@ -1134,7 +1134,11 @@
     "profile_edit_email_managed": "{{provider}} girişin tarafından yönetiliyor.",
     "delete_account": "Hesabı sil",
     "notifications_upsell_video_title": "Tasarımlarını canlandır",
-    "notifications_upsell_video_desc": "Bitmiş bir tasarımı hafif doğa sesleriyle 8 saniyelik bir oda videosuna dönüştür. Pro'da var."
+    "notifications_upsell_video_desc": "Bitmiş bir tasarımı hafif doğa sesleriyle 8 saniyelik bir oda videosuna dönüştür. Pro'da var.",
+    "reset_title": "Test sıfırlama",
+    "reset_body": "İlk açılış ekranları ya da yeni misafir olarak başlayan tam sıfırlama (bu hesabın galerisi bu telefondan gider).",
+    "reset_first_run": "İlk açılış ekranları",
+    "reset_full": "Tam sıfırla (yeni misafir)"
   },
   "errors": {
     "network": "Ağ hatası. Bağlantını kontrol et.",
