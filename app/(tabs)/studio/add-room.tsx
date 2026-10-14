@@ -128,30 +128,36 @@ export default function AddRoom() {
 
                 <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.add_room_for")}</Text>
 
-                <Pressable
-                    onPress={() => addPhoto({ kind: "camera" })}
-                    disabled={isUploading}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("studio.take_photo")}
-                    style={{ borderRadius: R.card, overflow: "hidden", marginTop: -8 }}
-                >
-                    <LinearGradient colors={[U.accentBright, U.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 64, flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 18 }}>
-                        <View style={{ width: 36, height: 36, borderRadius: 11, borderWidth: 1.5, borderColor: U.buttonInk, alignItems: "center", justifyContent: "center", opacity: 0.85 }}>
-                            <CameraIcon color={U.buttonInk} />
+                {/* Two square doors side by side (owner, 14 Oct): camera filled — the recommendation —
+                    and the library outlined. Same height, so neither reads as the small print. */}
+                <View style={{ flexDirection: "row", gap: 12, marginTop: -8 }}>
+                    <Pressable
+                        onPress={() => addPhoto({ kind: "camera" })}
+                        disabled={isUploading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("studio.take_photo")}
+                        style={{ flex: 1, borderRadius: R.card, overflow: "hidden" }}
+                    >
+                        <LinearGradient colors={[U.accentBright, U.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 124, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 12 }}>
+                            <View style={{ width: 44, height: 44, borderRadius: 13, borderWidth: 1.5, borderColor: U.buttonInk, alignItems: "center", justifyContent: "center", opacity: 0.85 }}>
+                                <CameraIcon color={U.buttonInk} />
+                            </View>
+                            <Text style={{ ...V.button, fontSize: 13, color: U.buttonInk, textAlign: "center" }} numberOfLines={2}>{t("studio.take_photo")}</Text>
+                        </LinearGradient>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => addPhoto({ kind: "gallery" })}
+                        disabled={isUploading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("studio.choose_from_library")}
+                        style={{ flex: 1, height: 124, borderRadius: R.card, borderWidth: 1.5, borderColor: U.accent, backgroundColor: U.surface, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 12 }}
+                    >
+                        <View style={{ width: 44, height: 44, borderRadius: 13, borderWidth: 1.5, borderColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
+                            <Ionicons name="images-outline" size={22} color={U.accentBright} />
                         </View>
-                        <Text style={{ ...V.button, color: U.buttonInk }}>{t("studio.take_photo")}</Text>
-                    </LinearGradient>
-                </Pressable>
-
-                <Pressable
-                    onPress={() => addPhoto({ kind: "gallery" })}
-                    disabled={isUploading}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("studio.choose_from_library")}
-                    style={{ height: 56, borderRadius: R.card, borderWidth: 1, borderColor: U.accent, alignItems: "center", justifyContent: "center", marginTop: -6 }}
-                >
-                    <Text style={{ ...V.button, color: U.accentBright }}>{t("studio.choose_from_library")}</Text>
-                </Pressable>
+                        <Text style={{ ...V.button, fontSize: 13, color: U.accentBright, textAlign: "center" }} numberOfLines={2}>{t("studio.choose_from_library")}</Text>
+                    </Pressable>
+                </View>
 
                 {samples.length > 0 && (
                     <View style={{ gap: 10 }}>

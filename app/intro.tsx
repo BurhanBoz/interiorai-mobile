@@ -27,10 +27,15 @@ const R = theme.v2Layout.radius;
  * result of the app on a real room with a handle the user drags — the one gesture the result
  * screen will ask of them later. One button; no skip (owner, 2.2.0: "Geç YOK"). No copy beyond
  * the tool's name and the button: the pictures are the pitch.
+ *
+ * <p>The cards page VERTICALLY. A horizontal swipe on the picture is the slider's — the first
+ * build paged sideways and every swipe moved the handle instead (simulator, 14 Oct) — so the
+ * next card is a swipe up, like stories.
  */
 export default function Intro() {
     const { t, i18n } = useTranslation();
     const { width } = useWindowDimensions();
+    const [pageH, setPageH] = useState(0);
     const reduceMotion = useReduceMotion();
     const seasons = useCatalogStore((s) => s.seasons);
     const [page, setPage] = useState(0);
@@ -59,7 +64,6 @@ export default function Intro() {
         router.replace("/(tabs)/studio" as never);
     };
 
-    const cardW = width - 32;
 
     return (
         <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: U.ground }}>
@@ -71,16 +75,15 @@ export default function Intro() {
             <FlatList
                 data={cards}
                 keyExtractor={(c) => c.key}
-                horizontal
                 pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={width}
+                showsVerticalScrollIndicator={false}
                 decelerationRate="fast"
                 onViewableItemsChanged={onViewable}
                 viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
                 style={{ flex: 1, marginTop: 14 }}
+                onLayout={(e) => setPageH(e.nativeEvent.layout.height)}
                 renderItem={({ item }) => (
-                    <View style={{ width, paddingHorizontal: 16, flex: 1 }}>
+                    <View style={{ width, height: pageH || undefined, paddingHorizontal: 16, paddingBottom: 10 }}>
                         <View style={{ flex: 1, borderRadius: R.card, overflow: "hidden", ...theme.elevation.lg }}>
                             <BeforeAfterSlider
                                 before={item.before as never}
@@ -105,7 +108,6 @@ export default function Intro() {
                                 )}
                             </LinearGradient>
                         </View>
-                        <View style={{ width: cardW }} />
                     </View>
                 )}
             />

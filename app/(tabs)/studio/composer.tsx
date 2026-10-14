@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator, ActivityIndicator as Spinner, InteractionManager } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, ActivityIndicator as Spinner, InteractionManager, ScrollView as HScroll } from "react-native";
+import { useCreditStore } from "@/stores/creditStore";
 import { consumeCatalogueOnArrive } from "@/utils/catalogueOnArrive";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -92,6 +93,32 @@ export default function ComposerScreen() {
     const maskStrokes = useStudioStore((s) => s.maskStrokes);
     const maskMode = useStudioStore((s) => s.maskMode);
     const removeObjectRef = useStudioStore((s) => s.removeObjectRef);
+    const addObjectRef = useStudioStore((s) => s.addObjectRef);
+    // 2.4.1: FREE gets ONE piece per design and a second tap swaps it; paid plans four
+    // (same rule as the furniture screen).
+    const freePlan = useCreditStore((s) => s.flatRateApplies);
+    const maxPieces = freePlan ? 1 : 4;
+    const pickCatalogue = (item: FurnitureItem) => {
+        if (objectRefs.some((r) => r.catalogItemId === item.id)) {
+            removeObjectRef(item.id);
+            return;
+        }
+        if (objectRefs.length >= maxPieces && !freePlan) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (freePlan) objectRefs.forEach((r) => removeObjectRef(r.fileId));
+        addObjectRef({ uri: item.imageUrl, fileId: item.id, catalogItemId: item.id, name: item.name });
+    };
+    const pickOwnPiece = async () => {
+        if (isUploading || (objectRefs.length >= maxPieces && !freePlan)) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // The composer's picker uploads an OBJECT photo like the furniture screen's — the
+        // consent gate inside applies. Used for this design only; naming and saving to the
+        // catalogue stay on the furniture screen ("Browse").
+        const picked = await pickImage("gallery").catch(() => null);
+        if (!picked?.fileId) return;
+        if (freePlan) objectRefs.forEach((r) => removeObjectRef(r.fileId));
+        addObjectRef({ uri: picked.uri, fileId: picked.fileId });
+    };
     const setRoomType = useStudioStore((s) => s.setRoomType);
     const setDesignStyle = useStudioStore((s) => s.setDesignStyle);
     const setPhoto = useStudioStore((s) => s.replacePhoto);
@@ -153,7 +180,7 @@ export default function ComposerScreen() {
         furnitureService
             .browse()
             .then((items) => {
-                if (!cancelled) setProducts(items.filter((i) => !i.mine).slice(0, 4));
+                if (!cancelled) setProducts(items.filter((i) => !i.mine).slice(0, 9));
             })
             .catch(() => {});
         return () => {
@@ -297,6 +324,25 @@ export default function ComposerScreen() {
                         prompt is the theme and the room stays as it is — so the row
                         would open a sheet of controls that do nothing. The tour
                         skips a missing target (CoachMarks). */}
+                    {/* Furniture is a redesign concept. Magic Edit changes the
+                        area the user painted and Style Transfer copies a
+                        reference — dropping a catalogue sofa into either is
+                        not a thing the backend does, so offering it would be
+                        a control that cannot work.
+                        Build 116 (owner, 14 Oct): a strip like the style strip — "Put a real
+                        piece in" with "Browse →" on the right, then your own photo as the first
+                        tile and the first nine catalogue pieces; Advanced moves under it. */}
+                    {mode !== "INPAINT" && mode !== "STYLE_TRANSFER" && !seasonal && (
+                        <FurnitureStrip
+                            picked={objectRefs}
+                            items={products}
+                            uploading={isUploading}
+                            onOwnPiece={pickOwnPiece}
+                            onPick={pickCatalogue}
+                            onBrowse={() => router.push("/studio/furniture" as never)}
+                        />
+                    )}
+
                     {!seasonal && (
                         <View ref={tourTarget("composer.advanced")} collapsable={false}>
                             <CompactRow
@@ -305,23 +351,6 @@ export default function ComposerScreen() {
                                 onPress={() => setSheet("advanced")}
                             />
                         </View>
-                    )}
-
-                    {/* Furniture is a redesign concept. Magic Edit changes the
-                        area the user painted and Style Transfer copies a
-                        reference — dropping a catalogue sofa into either is
-                        not a thing the backend does, so offering it would be
-                        a control that cannot work.
-                        v3: the four-plate card became one compact row so the
-                        two required strips fit without a scroll; the
-                        catalogue (a differentiator) keeps its own line. */}
-                    {mode !== "INPAINT" && mode !== "STYLE_TRANSFER" && !seasonal && (
-                        <FurnitureRow
-                            picked={objectRefs}
-                            suggestions={products}
-                            onBrowse={() => router.push("/studio/furniture" as never)}
-                            onRemove={removeObjectRef}
-                        />
                     )}
 
                     {/* What the collection step produced, shown as a fact the
@@ -771,115 +800,90 @@ function CompactRow({ label, detail, onPress }: { label: string; detail?: string
     );
 }
 
+/** One tile of the furniture strip: a white plate with the piece, its name under it. */
+const PIECE_TILE = 92;
+
 /**
- * "Put a real piece in" — the furniture catalogue, as one compact row.
- *
- * <p>It used to show the first four items of the CATALOGUE whatever the user
- * had picked, so choosing a leather two-seater left four unrelated sofas on
- * screen with the name changed underneath. The row shows the selection, and
- * each piece can be removed by tapping it: a choice you cannot take back is a
- * choice most people will not make. (The catalogue screen only adds; this row
- * is the only place a piece comes off.)
- *
- * <p>Empty, it shows catalogue pieces as an invitation rather than empty
- * plates — the same suggestion the Studio band used to carry, now in the one
- * place the room already exists.
- *
- * <p>v3 (2026-10-10): was a card of four 56pt plates plus a caption line; it
- * is now a single {@link ROW_HEIGHT} row — label on the left, 44pt thumbs on
- * the right — so the two required strips fit above the footer without a
- * vertical scroll. Suggestions shrink to three to leave the label its room.
+ * "Put a real piece in" as a strip (build 116): title + "Browse →", then tiles the size of the
+ * room tiles — the first is "Use my own photo" (dashed gold), the rest the catalogue's first
+ * nine. A chosen piece gets the gold outline and a check; tapping it again takes it off.
  */
-function FurnitureRow({
+function FurnitureStrip({
     picked,
-    suggestions,
+    items,
+    uploading,
+    onOwnPiece,
+    onPick,
     onBrowse,
-    onRemove,
 }: {
-    picked: { fileId: string; uri: string; name?: string }[];
-    suggestions: FurnitureItem[];
+    picked: { fileId: string; uri: string; name?: string; catalogItemId?: string }[];
+    items: FurnitureItem[];
+    uploading: boolean;
+    onOwnPiece: () => void;
+    onPick: (item: FurnitureItem) => void;
     onBrowse: () => void;
-    onRemove: (fileId: string) => void;
 }) {
     const { t } = useTranslation();
-    const hasPicks = picked.length > 0;
-    const thumb = {
-        width: 44,
-        height: 44,
-        borderRadius: 9,
-        backgroundColor: U.productPlate,
-        alignItems: "center" as const,
-        justifyContent: "center" as const,
-        overflow: "hidden" as const,
-    };
-
+    const chosen = new Set(picked.map((r) => r.catalogItemId).filter(Boolean));
+    const ownPicked = picked.filter((r) => !r.catalogItemId);
     return (
-        <View
-            style={{
-                height: ROW_HEIGHT,
-                paddingLeft: 16,
-                paddingRight: 6,
-                borderRadius: R.tile,
-                backgroundColor: U.surface,
-                borderWidth: 1,
-                borderColor: U.lineAccent,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-            }}
-        >
-            <Pressable
-                onPress={onBrowse}
-                accessibilityRole="button"
-                accessibilityHint={t("studio.browse")}
-                style={{ flex: 1, alignSelf: "stretch", justifyContent: "center" }}
-            >
-                <Text style={{ ...V.row, color: U.ink }} numberOfLines={1}>
-                    {hasPicks ? t("studio.pieces_chosen", { count: picked.length }) : t("studio.place_a_real_piece")}
-                </Text>
-                <Text style={{ fontFamily: "Inter-Bold", fontSize: 11.5, color: U.accentBright }}>
-                    {t("studio.browse")} →
-                </Text>
-            </Pressable>
+        <View style={{ gap: 8, marginHorizontal: -GUTTER }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: GUTTER }}>
+                <Text accessibilityRole="header" style={{ ...V.displayXS, color: U.ink }} numberOfLines={1}>{t("studio.place_a_real_piece")}</Text>
+                <Pressable onPress={onBrowse} accessibilityRole="button" hitSlop={8}>
+                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 12.5, color: U.accentBright }}>{t("studio.browse")} →</Text>
+                </Pressable>
+            </View>
+            <HScroll horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 10 }}>
+                {/* Your own piece — the first tile. Shows the photo once one is in. */}
+                <Pressable
+                    onPress={onOwnPiece}
+                    disabled={uploading}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("furniture.own_photo")}
+                    accessibilityHint={t("furniture.own_photo_hint")}
+                    style={{ width: PIECE_TILE, gap: 6 }}
+                >
+                    <View style={{ width: PIECE_TILE, height: PIECE_TILE, borderRadius: R.tile, borderWidth: 1.5, borderStyle: ownPicked.length ? "solid" : "dashed", borderColor: U.accent, backgroundColor: ownPicked.length ? U.productPlate : U.lineAccent, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                        {uploading ? (
+                            <ActivityIndicator color={U.accentBright} />
+                        ) : ownPicked.length ? (
+                            <Image source={{ uri: ownPicked[0].uri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+                        ) : (
+                            <Ionicons name="camera-outline" size={26} color={U.accentBright} />
+                        )}
+                        {ownPicked.length ? <Check /> : null}
+                    </View>
+                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, lineHeight: 14, color: U.ink }} numberOfLines={2}>{t("studio.own_piece")}</Text>
+                </Pressable>
+                {items.map((item) => {
+                    const on = chosen.has(item.id);
+                    return (
+                        <Pressable
+                            key={item.id}
+                            onPress={() => onPick(item)}
+                            accessibilityRole="button"
+                            accessibilityLabel={item.name}
+                            accessibilityState={{ selected: on }}
+                            style={{ width: PIECE_TILE, gap: 6 }}
+                        >
+                            <View style={{ width: PIECE_TILE, height: PIECE_TILE, borderRadius: R.tile, backgroundColor: U.productPlate, borderWidth: on ? 2 : 1, borderColor: on ? U.accentBright : U.lineNeutral, overflow: "hidden", alignItems: "center", justifyContent: "center" }}>
+                                <Image source={{ uri: item.imageUrl }} style={{ width: "88%", height: "88%" }} resizeMode="contain" />
+                                {on ? <Check /> : null}
+                            </View>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11.5, lineHeight: 14, color: on ? U.accentBright : U.ink }} numberOfLines={2}>{item.name}</Text>
+                        </Pressable>
+                    );
+                })}
+            </HScroll>
+        </View>
+    );
+}
 
-            {hasPicks
-                ? picked.slice(0, 4).map((ref) => (
-                      <Pressable
-                          key={ref.fileId}
-                          onPress={() => onRemove(ref.fileId)}
-                          accessibilityRole="button"
-                          accessibilityLabel={t("studio.remove_piece", { name: ref.name ?? "" })}
-                          style={thumb}
-                      >
-                          <Image source={{ uri: ref.uri }} style={{ width: "100%", height: 38 }} resizeMode="contain" />
-                          <View
-                              style={{
-                                  position: "absolute",
-                                  top: 2,
-                                  right: 2,
-                                  width: 16,
-                                  height: 16,
-                                  borderRadius: 8,
-                                  backgroundColor: U.ground,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                              }}
-                          >
-                              <Text style={{ color: U.ink, fontSize: 10, lineHeight: 12 }}>×</Text>
-                          </View>
-                      </Pressable>
-                  ))
-                : suggestions.slice(0, 3).map((item) => (
-                      <Pressable
-                          key={item.id}
-                          onPress={onBrowse}
-                          accessibilityRole="button"
-                          accessibilityLabel={item.name}
-                          style={thumb}
-                      >
-                          <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: 38 }} resizeMode="contain" />
-                      </Pressable>
-                  ))}
+function Check() {
+    return (
+        <View style={{ position: "absolute", top: 5, right: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="checkmark" size={13} color={U.buttonInk} />
         </View>
     );
 }

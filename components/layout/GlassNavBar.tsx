@@ -98,7 +98,7 @@ export function GlassNavBar({ state, navigation }: BottomTabBarProps) {
                     alignItems: "center",
                     justifyContent: "space-around",
                     overflow: "hidden",
-                    backgroundColor: "rgba(19,19,19,0.72)",
+                    backgroundColor: "rgba(30,25,20,0.78)",
                     borderTopWidth: 1,
                     borderTopColor: "rgba(225,195,155,0.10)",
                     paddingTop: 4,

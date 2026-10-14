@@ -154,9 +154,13 @@ export default function SettingsScreen() {
                         <Text style={{ ...V.displayS, color: U.ink }} numberOfLines={1}>
                             {displayName}
                         </Text>
-                        <Text style={{ ...V.rowQuiet, color: U.inkMuted }} numberOfLines={1}>
-                            {planLabel}
-                        </Text>
+                        <View style={{ flexDirection: "row" }}>
+                            <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: isFree ? U.lineNeutral : U.lineAccent, borderWidth: 1, borderColor: isFree ? U.lineNeutral : U.accent }}>
+                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11, letterSpacing: 0.6, color: isFree ? U.inkMuted : U.accentBright }} numberOfLines={1}>
+                                    {planLabel.toLocaleUpperCase()}
+                                </Text>
+                            </View>
+                        </View>
                     </View>
                     <ChevronIcon color={U.inkMuted} size={16} />
                 </Pressable>
