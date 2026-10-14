@@ -24,6 +24,8 @@ interface StudioState {
     roomType: CatalogItemResponse | null;
     designStyle: CatalogItemResponse | null;
     mode: DesignMode;
+    /** SEASONAL only (V202, build 114): which season's themes the composer offers. */
+    seasonCode: string | null;
     qualityTier: QualityTier;
     speedMode: SpeedMode;
     numOutputs: number;
@@ -71,6 +73,7 @@ interface StudioState {
     setRoomType: (roomType: CatalogItemResponse | null) => void;
     setDesignStyle: (style: CatalogItemResponse | null) => void;
     setMode: (mode: DesignMode) => void;
+    setSeasonCode: (seasonCode: string | null) => void;
     setQualityTier: (tier: QualityTier) => void;
     setSpeedMode: (mode: SpeedMode) => void;
     setNumOutputs: (n: number) => void;
@@ -112,6 +115,7 @@ const initialState = {
     roomType: null,
     designStyle: null,
     mode: "REDESIGN" as DesignMode,
+    seasonCode: null as string | null,
     qualityTier: "STANDARD" as QualityTier,
     speedMode: "BALANCED" as SpeedMode,
     numOutputs: 1,
@@ -173,6 +177,7 @@ export const useStudioStore = create<StudioState>((set) => ({
             extraStyleRefs: [],
             objectRefs: [],
         })),
+    setSeasonCode: (seasonCode) => set({ seasonCode }),
     setQualityTier: (qualityTier) => set({ qualityTier }),
     setSpeedMode: (speedMode) => set({ speedMode }),
     setNumOutputs: (numOutputs) => set({ numOutputs }),

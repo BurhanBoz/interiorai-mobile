@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "@/config/theme";
 import { BottomSheet } from "@/components/studio/BottomSheet";
 import { STUDIO_FEATURES } from "@/components/studio/featureCatalog";
+import { seasonMedia, seasonTitle } from "@/components/studio/seasonMedia";
+import type { SeasonResponse } from "@/types/api";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -20,19 +22,24 @@ const R = theme.v2Layout.radius;
  */
 export function LockedToolSheet({
     mode,
+    season,
     onUnlock,
     onClose,
 }: {
     mode: string;
+    /** SEASONAL (V202): the season whose tile was tapped — its title and pictures replace the feature's. */
+    season?: SeasonResponse | null;
     onUnlock: () => void;
     onClose: () => void;
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const feature = STUDIO_FEATURES.find((f) => f.key === mode);
     if (!feature) return null;
-    const media = feature.media as { before?: number; after?: number; image?: number };
-    const before = media.before;
-    const after = media.after ?? media.image;
+    const fm = feature.media as { before?: number; after?: number; image?: number };
+    const sm = season ? seasonMedia(season) : null;
+    const before = (sm?.before as number | { uri: string } | undefined) ?? fm.before;
+    const after = (sm?.after as number | { uri: string } | undefined) ?? fm.after ?? fm.image;
+    const title = season ? seasonTitle(season, i18n.language) : t(feature.titleKey);
 
     return (
         <BottomSheet onClose={onClose}>
@@ -40,7 +47,7 @@ export function LockedToolSheet({
                 <View style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: U.lineNeutral }} />
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                     <Text style={{ fontFamily: "NotoSerif", fontSize: 24, lineHeight: 30, color: U.ink, flexShrink: 1 }} numberOfLines={2}>
-                        {t(feature.titleKey)}
+                        {title}
                     </Text>
                     <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: R.pill, borderWidth: 1, borderColor: U.accent }}>
                         <Text style={{ ...V.captionStrong, letterSpacing: 1.2, color: U.accentBright }}>PRO</Text>
@@ -87,7 +94,7 @@ export function LockedToolSheet({
     );
 }
 
-function Tile({ source, label, accent }: { source: number; label: string; accent?: boolean }) {
+function Tile({ source, label, accent }: { source: number | { uri: string }; label: string; accent?: boolean }) {
     return (
         <View style={{ flex: 1, borderRadius: R.tile, overflow: "hidden", backgroundColor: U.surface }}>
             {/* Explicit 100% box: a bundled image with absoluteFill drew at intrinsic size. */}

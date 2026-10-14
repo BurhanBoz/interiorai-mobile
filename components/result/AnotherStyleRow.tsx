@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/config/theme";
 import { useCatalogStore } from "@/stores/catalogStore";
+import { seasonOfTheme } from "@/components/studio/seasonMedia";
 import { catalogName } from "@/utils/catalogI18n";
 import { getStyleImage } from "@/components/studio/styleImages";
 
@@ -42,7 +43,11 @@ export function AnotherStyleRow({
 }) {
     const { t } = useTranslation();
     const styleList = useCatalogStore((s) => s.designStyles);
-    const themes = useCatalogStore((s) => s.seasonalThemes);
+    const seasons = useCatalogStore((s) => s.seasons);
+    const leading = useCatalogStore((s) => s.seasonalThemes);
+    // V202: the themes of the SEASON this render belongs to — a Christmas render
+    // offers Christmas themes while Halloween leads the Studio.
+    const themes = seasonOfTheme(seasons, currentStyleCode)?.themes ?? leading;
     const styles = seasonal ? themes : styleList;
 
     const picks = useMemo(() => {

@@ -98,7 +98,12 @@ export default function ComposerScreen() {
 
     const roomTypes = useCatalogStore((s) => s.roomTypes);
     const styleList = useCatalogStore((s) => s.designStyles);
-    const seasonalThemes = useCatalogStore((s) => s.seasonalThemes);
+    const seasons = useCatalogStore((s) => s.seasons);
+    const leadingThemes = useCatalogStore((s) => s.seasonalThemes);
+    const seasonCode = useStudioStore((s) => s.seasonCode);
+    // V202: the themes of the season the tile was tapped for; the leading season's
+    // when the store has none (an intent arrival, a restored draft).
+    const seasonalThemes = seasons.find((x) => x.code === seasonCode)?.themes ?? leadingThemes;
     const ensureCatalog = useCatalogStore((s) => s.ensureLoaded);
     // Cozy Christmas (2.5.0): the second strip picks a THEME, in the same place
     // and the same store field a style goes — the server tells the two apart

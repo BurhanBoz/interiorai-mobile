@@ -34,6 +34,7 @@ import { useCatalogStore } from "@/stores/catalogStore";
 import { catalogName } from "@/utils/catalogI18n";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { getStyleImage } from "@/components/studio/styleImages";
+import { seasonOfTheme } from "@/components/studio/seasonMedia";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
@@ -576,11 +577,14 @@ export default function ResultDetailScreen() {
    * second place for a double-charge to live.
    */
   const styleList = useCatalogStore((s) => s.designStyles);
-  const seasonalThemes = useCatalogStore((s) => s.seasonalThemes);
+  const seasons = useCatalogStore((s) => s.seasons);
+  const leadingThemes = useCatalogStore((s) => s.seasonalThemes);
   // A seasonal render (2.5.0) restyles with another THEME, never a style: the
   // store still holds mode SEASONAL, and the server refuses a style on it.
+  // V202: the themes of this render's own season, not the leading one's.
   const seasonalJob = job?.designMode === "SEASONAL";
-  const designStyles = seasonalJob ? seasonalThemes : styleList;
+  const jobSeason = seasonOfTheme(seasons, job?.designStyleName);
+  const designStyles = seasonalJob ? (jobSeason?.themes ?? leadingThemes) : styleList;
   const { generate, isSubmitting: restyling, cost: restyleCost } = useGenerate();
   // Which thumbnail is rendering, so the tap shows on the thing tapped.
   const [restyleCode, setRestyleCode] = useState<string | null>(null);

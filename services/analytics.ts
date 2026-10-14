@@ -209,6 +209,11 @@ export type AnalyticsEvent =
     | "push_permission"
     // 2.4.1: locked-tool preview sheet and the share card.
     | "locked_preview_shown"
+    // Studio v4 (build 114): a tool tile tapped (mode, tool, season), the add-room screen's
+    // source (camera / gallery / sample), and the first-open intro's button.
+    | "tool_tile_tap"
+    | "add_room_source"
+    | "intro_done"
     | "locked_preview_upgrade"
     | "result_share_card"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.

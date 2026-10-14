@@ -65,6 +65,10 @@ const THEME_IMAGES: Record<string, ImageSourcePropType> = {
     XMAS_NORDIC: require("@/assets/themes/xmas_nordic.jpg"),
     XMAS_WOODLAND: require("@/assets/themes/xmas_woodland.jpg"),
     XMAS_WHITE: require("@/assets/themes/xmas_white.jpg"),
+    // Halloween (V202, 14 Oct): the lab's living room 3 in each theme, square-cropped.
+    HW_CLASSIC: require("@/assets/themes/hw_classic.jpg"),
+    HW_GOTHIC: require("@/assets/themes/hw_gothic.jpg"),
+    HW_HARVEST: require("@/assets/themes/hw_harvest.jpg"),
 };
 
 export function getStyleImage(code: string | null | undefined): ImageSourcePropType | null {

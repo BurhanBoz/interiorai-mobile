@@ -150,11 +150,12 @@ export default function RootIndex() {
     // taps on "buy" came from people who had rendered nothing, a median ~10s
     // after the screen appeared, and every one of them backed out at Apple's
     // sheet. Restoring the condition is adding `&& metOffer` back here.
-    // First open: straight to Studio. Marked shown so a later navigation back to
-    // this index in the same process does not open it either.
+    // First open: the intro — three real before/afters with a handle, one button —
+    // then Studio (build 114, owner 14 Oct). Marked shown so a later navigation back
+    // to this index in the same process does not open the offer either.
     if (openedBefore === false) {
       offerShownThisLaunch = true;
-      return <Redirect href="/(tabs)/studio" />;
+      return <Redirect href="/intro" />;
     }
     if (subscriptionResolved
         && !tierAtLeast(subscription?.planCode, "BASE")) {
