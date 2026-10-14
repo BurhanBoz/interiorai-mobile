@@ -1436,6 +1436,8 @@
     "advanced_body": "Farbpalette, wie stark die Veränderung ausfällt und ob dein Layout bleibt. Optional – die Standardwerte funktionieren gut.",
     "generate_title": "Erstelle dein Design",
     "generate_body": "Tippe hier, wenn du bereit bist. Die Kosten stehen direkt darüber.",
-    "room_strip_body": "Wische und tippe auf deinen Raum. Du wählst Raum und Stil – beides wird zum Erstellen gebraucht."
+    "room_strip_body": "Wische und tippe auf deinen Raum. Du wählst Raum und Stil – beides wird zum Erstellen gebraucht.",
+    "theme_title": "Wähle ein Thema",
+    "theme_body": "Jedes Thema dekoriert deinen Raum auf seine Art. Tippe auf dein Lieblingsthema."
   }
 }

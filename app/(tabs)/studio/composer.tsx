@@ -455,7 +455,7 @@ export default function ComposerScreen() {
                 onFinish={tour.finish}
                 steps={[
                     { target: "composer.room", title: t("studio.which_room"), body: t("tour.room_strip_body"), padding: 4 },
-                    { target: "composer.style", title: t("tour.style_title"), body: t("tour.style_body"), padding: 4 },
+                    { target: "composer.style", title: t(seasonal ? "tour.theme_title" : "tour.style_title"), body: t(seasonal ? "tour.theme_body" : "tour.style_body"), padding: 4 },
                     { target: "composer.advanced", title: t("tour.advanced_title"), body: t("tour.advanced_body"), padding: 4 },
                     { target: "composer.generate", title: t("tour.generate_title"), body: t("tour.generate_body"), padding: 0, radius: 22 },
                 ]}

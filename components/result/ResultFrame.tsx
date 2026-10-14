@@ -157,22 +157,25 @@ export function ResultFrame({
         })
         .onUpdate((e) => {
             if (w.value === 0) return;
-            wipe.value = Math.min(1, Math.max(0, dragStart.value + e.translationX / w.value));
+            // The after grows from the RIGHT (build 118), so dragging right shows more before.
+            wipe.value = Math.min(1, Math.max(0, dragStart.value - e.translationX / w.value));
         })
         .onEnd(() => {
             runOnJS(setShowAfter)(wipe.value >= 0.97 ? true : wipe.value <= 0.03 ? false : null);
         });
 
+    // Build 118 (owner, 14 Oct): before on the LEFT of the seam, after on the right — the same
+    // reading as every other before/after in the app. The after window slides in from the right.
     const windowStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: -(1 - wipe.value) * w.value }],
+        transform: [{ translateX: (1 - wipe.value) * w.value }],
     }));
     const innerStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: (1 - wipe.value) * w.value }],
+        transform: [{ translateX: -(1 - wipe.value) * w.value }],
     }));
     // The seam: faint at the very ends (nothing to split there), full between.
     const edgeStyle = useAnimatedStyle(() => ({
         opacity: interpolate(wipe.value, [0, 0.02, 0.98, 1], [0.35, 1, 1, 0.35]),
-        transform: [{ translateX: wipe.value * w.value - 1 }],
+        transform: [{ translateX: (1 - wipe.value) * w.value - 1 }],
     }));
 
     const hasBefore = !!beforeUrl;

@@ -1436,6 +1436,8 @@
     "advanced_body": "Palette de couleurs, intensité du changement et conservation de l'agencement. Facultatif — les réglages par défaut fonctionnent bien.",
     "generate_title": "Créez votre design",
     "generate_body": "Touchez ici quand vous êtes prêt. Le coût est indiqué juste au-dessus.",
-    "room_strip_body": "Faites défiler et touchez votre pièce. Vous choisissez la pièce et le style : les deux sont nécessaires."
+    "room_strip_body": "Faites défiler et touchez votre pièce. Vous choisissez la pièce et le style : les deux sont nécessaires.",
+    "theme_title": "Choisissez un thème",
+    "theme_body": "Chaque thème décore votre pièce à sa façon. Touchez celui qui vous plaît."
   }
 }

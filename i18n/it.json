@@ -1436,6 +1436,8 @@
     "advanced_body": "Palette di colori, intensità del cambiamento e mantenimento della disposizione. Facoltativo: le impostazioni predefinite funzionano bene.",
     "generate_title": "Crea il tuo design",
     "generate_body": "Tocca qui quando sei pronto. Il costo è indicato appena sopra.",
-    "room_strip_body": "Scorri e tocca la tua stanza. Scegli tu stanza e stile: servono entrambi."
+    "room_strip_body": "Scorri e tocca la tua stanza. Scegli tu stanza e stile: servono entrambi.",
+    "theme_title": "Scegli un tema",
+    "theme_body": "Ogni tema decora la stanza a modo suo. Tocca quello che ti piace."
   }
 }

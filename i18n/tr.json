@@ -1435,6 +1435,8 @@
     "advanced_body": "Renk paleti, değişimin ne kadar cesur olacağı ve düzeni koruma burada. İsteğe bağlı; varsayılanlar iyi çalışır.",
     "generate_title": "Tasarımını oluştur",
     "generate_body": "Hazır olduğunda buraya dokun. Bedeli hemen üstünde yazar.",
-    "room_strip_body": "Kaydır ve odanı seç. Odayı ve stili sen seçersin; oluşturmak için ikisi de gerekli."
+    "room_strip_body": "Kaydır ve odanı seç. Odayı ve stili sen seçersin; oluşturmak için ikisi de gerekli.",
+    "theme_title": "Bir tema seç",
+    "theme_body": "Her tema odanı kendi tarzında süsler. Beğendiğine dokun."
   }
 }

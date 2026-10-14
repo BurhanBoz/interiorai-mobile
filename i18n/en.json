@@ -1436,6 +1436,8 @@
     "advanced_body": "Color palette, how bold the change is and keeping your layout live here. Optional — the defaults work well.",
     "generate_title": "Create your design",
     "generate_body": "Tap here when you're ready. The cost is shown just above.",
-    "room_strip_body": "Scroll and tap your room. You choose the room and the style — both are needed to create."
+    "room_strip_body": "Scroll and tap your room. You choose the room and the style — both are needed to create.",
+    "theme_title": "Pick a theme",
+    "theme_body": "Each theme decorates your room its own way. Tap the one you like."
   }
 }

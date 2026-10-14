@@ -1436,6 +1436,8 @@
     "advanced_body": "Paleta de colores, intensidad del cambio y conservar la distribución. Opcional: los valores por defecto funcionan bien.",
     "generate_title": "Crea tu diseño",
     "generate_body": "Toca aquí cuando estés listo. El coste aparece justo encima.",
-    "room_strip_body": "Desliza y toca tu habitación. Tú eliges la habitación y el estilo: hacen falta los dos."
+    "room_strip_body": "Desliza y toca tu habitación. Tú eliges la habitación y el estilo: hacen falta los dos.",
+    "theme_title": "Elige un tema",
+    "theme_body": "Cada tema decora tu espacio a su manera. Toca el que te guste."
   }
 }
