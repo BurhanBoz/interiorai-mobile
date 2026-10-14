@@ -119,7 +119,10 @@ export default function Intro() {
             <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
                 <Pressable onPress={start} accessibilityRole="button" style={{ borderRadius: R.button, overflow: "hidden" }}>
                     <LinearGradient colors={[U.accentBright, U.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 56, alignItems: "center", justifyContent: "center" }}>
-                        <Text style={{ ...V.button, color: U.buttonInk }}>{t("intro.cta")}</Text>
+                        {/* One line in every language: French and Dutch run long in capitals. */}
+                        <Text style={{ ...V.button, color: U.buttonInk, paddingHorizontal: 16 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+                            {t("intro.cta")}
+                        </Text>
                     </LinearGradient>
                 </Pressable>
             </View>

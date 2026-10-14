@@ -86,7 +86,8 @@ export function ResultFrame({
 }) {
     const { t } = useTranslation();
     const [width, setWidth] = useState(0);
-    const [showAfter, setShowAfter] = useState(true);
+    /** Which end the seam sits at; null in between (the settled comparison), so neither pill reads selected. */
+    const [showAfter, setShowAfter] = useState<boolean | null>(true);
     const [afterLoaded, setAfterLoaded] = useState(false);
     const [beforeReady, setBeforeReady] = useState(!beforeUrl);
     const played = useRef(false);
@@ -123,12 +124,12 @@ export function ResultFrame({
         if (played.current || !afterLoaded || !beforeReady || width === 0) return;
         if (reduceMotion) {
             wipe.value = SETTLE_AT;
-            setShowAfter(false);
+            setShowAfter(null);
         } else {
             wipe.value = withSequence(
                 withTiming(1, { duration: WIPE_MS, easing: Easing.out(Easing.cubic) }),
                 withDelay(SETTLE_HOLD_MS, withTiming(SETTLE_AT, { duration: SETTLE_MS, easing: Easing.inOut(Easing.cubic) }, (done) => {
-                    if (done) runOnJS(setShowAfter)(false);
+                    if (done) runOnJS(setShowAfter)(null);
                 })),
             );
         }
@@ -159,7 +160,7 @@ export function ResultFrame({
             wipe.value = Math.min(1, Math.max(0, dragStart.value + e.translationX / w.value));
         })
         .onEnd(() => {
-            runOnJS(setShowAfter)(wipe.value >= 0.5);
+            runOnJS(setShowAfter)(wipe.value >= 0.97 ? true : wipe.value <= 0.03 ? false : null);
         });
 
     const windowStyle = useAnimatedStyle(() => ({
@@ -280,8 +281,8 @@ export function ResultFrame({
                             borderWidth: 1, borderColor: U.photoChromeBorder,
                         }}
                     >
-                        <Segment label={t("result.before")} selected={!showAfter} onPress={() => select(false)} />
-                        <Segment label={t("result.after")} selected={showAfter} onPress={() => select(true)} />
+                        <Segment label={t("result.before")} selected={showAfter === false} onPress={() => select(false)} />
+                        <Segment label={t("result.after")} selected={showAfter === true} onPress={() => select(true)} />
                     </View>
                 ) : null}
 
