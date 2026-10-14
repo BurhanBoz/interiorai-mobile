@@ -394,7 +394,8 @@
     "smart_edit_mode_remove": "Weghalen",
     "smart_edit_hint_keep": "Kleur het stuk in dat je wilt houden — het blijft precies zo, en de kamer wordt eromheen vernieuwd.",
     "mask_ready_remove": "Te verwijderen object gekozen",
-    "mask_ready_keep": "Te behouden stuk gekozen"
+    "mask_ready_keep": "Te behouden stuk gekozen",
+    "sample_dining_room": "Eetkamer"
   },
   "furniture": {
     "title": "Meubels",

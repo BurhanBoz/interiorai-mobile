@@ -394,7 +394,8 @@
     "smart_edit_mode_remove": "Quitar",
     "smart_edit_hint_keep": "Pinta la pieza que quieres conservar: queda exactamente igual y la habitación se rediseña a su alrededor.",
     "mask_ready_remove": "Objeto a quitar elegido",
-    "mask_ready_keep": "Pieza a conservar elegida"
+    "mask_ready_keep": "Pieza a conservar elegida",
+    "sample_dining_room": "Comedor"
   },
   "furniture": {
     "title": "Muebles",

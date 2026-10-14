@@ -23,8 +23,8 @@ export type SliderSource = ImageSourcePropType | { uri: string; cacheKey?: strin
 /**
  * Before/after with a handle (build 114, owner 14 Oct: "before/after slider'ları").
  *
- * <p>The after sits over the before and is clipped at {@code position} (0 = all before,
- * 1 = all after). Three ways to drive it: a finger on the handle or anywhere on the picture
+ * <p>The before sits over the after, clipped to the left of {@code position} (0 = all after,
+ * 1 = all before). Three ways to drive it: a finger on the handle or anywhere on the picture
  * ({@code interactive}), an {@code autoSweep} that drifts between the two ends until the first
  * touch (the Studio's hero tile), or a fixed {@code initial} for a still tile. Transform-only
  * (clip window + counter-translate), so a drag never re-lays out the pictures. Under Reduce
@@ -141,13 +141,16 @@ export function BeforeAfterSlider({
                     w.value = lw;
                 }}
             >
-                <Image source={before as never} style={StyleSheet.absoluteFill} contentFit="cover" onLoad={onBeforeLoad} />
+                {/* The after is the base and the BEFORE is the clipped window on the left, so the
+                    picture reads the way the pills say: before on the left of the handle, after on the
+                    right (simulator, 14 Oct: the first build had them the other way round). */}
+                <Image source={after as never} style={StyleSheet.absoluteFill} contentFit="cover" onLoad={onAfterLoad} />
                 <Animated.View
                     pointerEvents="none"
                     style={[{ position: "absolute", top: 0, left: 0, bottom: 0, width: width || "100%", overflow: "hidden" }, windowStyle]}
                 >
                     <Animated.View style={[{ width: width || "100%", height: "100%" }, innerStyle]}>
-                        <Image source={after as never} style={{ width: "100%", height: "100%" }} contentFit="cover" onLoad={onAfterLoad} />
+                        <Image source={before as never} style={{ width: "100%", height: "100%" }} contentFit="cover" onLoad={onBeforeLoad} />
                     </Animated.View>
                 </Animated.View>
 

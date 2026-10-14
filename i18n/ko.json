@@ -392,7 +392,8 @@
     "smart_edit_mode_remove": "삭제",
     "smart_edit_hint_keep": "남기고 싶은 가구를 칠해 주세요. 그대로 두고 주변을 새로 꾸며요.",
     "mask_ready_remove": "삭제할 물건을 골랐어요",
-    "mask_ready_keep": "남길 가구를 골랐어요"
+    "mask_ready_keep": "남길 가구를 골랐어요",
+    "sample_dining_room": "다이닝룸"
   },
   "furniture": {
     "title": "가구",

@@ -394,7 +394,8 @@
     "smart_edit_mode_remove": "Entfernen",
     "smart_edit_hint_keep": "Male das Stück an, das bleiben soll — es bleibt genau so, und der Raum wird darum herum neu gestaltet.",
     "mask_ready_remove": "Zu entfernendes Objekt gewählt",
-    "mask_ready_keep": "Zu behaltendes Stück gewählt"
+    "mask_ready_keep": "Zu behaltendes Stück gewählt",
+    "sample_dining_room": "Esszimmer"
   },
   "furniture": {
     "title": "Möbel",

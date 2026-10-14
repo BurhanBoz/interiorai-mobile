@@ -394,7 +394,8 @@
     "smart_edit_mode_remove": "Rimuovere",
     "smart_edit_hint_keep": "Dipingi il pezzo da tenere: resta identico e la stanza viene ridisegnata intorno a lui.",
     "mask_ready_remove": "Oggetto da rimuovere scelto",
-    "mask_ready_keep": "Pezzo da tenere scelto"
+    "mask_ready_keep": "Pezzo da tenere scelto",
+    "sample_dining_room": "Sala da pranzo"
   },
   "furniture": {
     "title": "Arredamento",

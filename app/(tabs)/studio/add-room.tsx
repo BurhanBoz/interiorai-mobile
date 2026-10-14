@@ -56,7 +56,7 @@ export default function AddRoom() {
     const after = sm?.after ?? fm.after ?? fm.image;
     const title = season ? seasonTitle(season, i18n.language) : t(feature.titleKey);
 
-    const samples = SAMPLE_ROOMS.filter((s) => s.modes.includes(key === "SEASONAL" ? "REDESIGN" : key)).slice(0, 3);
+    const samples = SAMPLE_ROOMS.filter((s) => s.modes.includes(key)).slice(0, 3);
 
     /** Where the mode goes once a room is in (unchanged from the one-screen Studio). */
     const go = () => {
@@ -128,35 +128,36 @@ export default function AddRoom() {
 
                 <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.add_room_for")}</Text>
 
-                {/* Two square doors side by side (owner, 14 Oct): camera filled — the recommendation —
-                    and the library outlined. Same height, so neither reads as the small print. */}
+                {/* Two doors side by side (owner, 14 Oct: "daha soft"). Both quiet surfaces with the
+                    same hairline; the camera — the recommendation — carries a faint gold wash and a
+                    gold icon well, the library a neutral one. Sentence-case labels, not capitals:
+                    these are choices, not alarms. */}
                 <View style={{ flexDirection: "row", gap: 12, marginTop: -8 }}>
-                    <Pressable
-                        onPress={() => addPhoto({ kind: "camera" })}
-                        disabled={isUploading}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("studio.take_photo")}
-                        style={{ flex: 1, borderRadius: R.card, overflow: "hidden" }}
-                    >
-                        <LinearGradient colors={[U.accentBright, U.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 124, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 12 }}>
-                            <View style={{ width: 44, height: 44, borderRadius: 13, borderWidth: 1.5, borderColor: U.buttonInk, alignItems: "center", justifyContent: "center", opacity: 0.85 }}>
-                                <CameraIcon color={U.buttonInk} />
+                    {([
+                        { kind: "camera" as const, label: t("studio.take_photo"), icon: "camera-outline" as const, primary: true },
+                        { kind: "gallery" as const, label: t("studio.choose_from_library"), icon: "images-outline" as const, primary: false },
+                    ]).map((d) => (
+                        <Pressable
+                            key={d.kind}
+                            onPress={() => addPhoto({ kind: d.kind })}
+                            disabled={isUploading}
+                            accessibilityRole="button"
+                            accessibilityLabel={d.label}
+                            style={{
+                                flex: 1, height: 112, borderRadius: R.card,
+                                backgroundColor: d.primary ? U.lineAccent : U.surface,
+                                borderWidth: 1, borderColor: d.primary ? "rgba(221,180,119,0.35)" : U.lineNeutral,
+                                alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 12,
+                            }}
+                        >
+                            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: d.primary ? "rgba(239,208,160,0.18)" : "rgba(246,241,231,0.06)", alignItems: "center", justifyContent: "center" }}>
+                                <Ionicons name={d.icon} size={21} color={d.primary ? U.accentBright : U.ink} />
                             </View>
-                            <Text style={{ ...V.button, fontSize: 13, color: U.buttonInk, textAlign: "center" }} numberOfLines={2}>{t("studio.take_photo")}</Text>
-                        </LinearGradient>
-                    </Pressable>
-                    <Pressable
-                        onPress={() => addPhoto({ kind: "gallery" })}
-                        disabled={isUploading}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("studio.choose_from_library")}
-                        style={{ flex: 1, height: 124, borderRadius: R.card, borderWidth: 1.5, borderColor: U.accent, backgroundColor: U.surface, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 12 }}
-                    >
-                        <View style={{ width: 44, height: 44, borderRadius: 13, borderWidth: 1.5, borderColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
-                            <Ionicons name="images-outline" size={22} color={U.accentBright} />
-                        </View>
-                        <Text style={{ ...V.button, fontSize: 13, color: U.accentBright, textAlign: "center" }} numberOfLines={2}>{t("studio.choose_from_library")}</Text>
-                    </Pressable>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, lineHeight: 18, color: d.primary ? U.accentBright : U.ink, textAlign: "center" }} numberOfLines={2}>
+                                {d.label}
+                            </Text>
+                        </Pressable>
+                    ))}
                 </View>
 
                 {samples.length > 0 && (
@@ -172,7 +173,7 @@ export default function AddRoom() {
                                     accessibilityLabel={`${t("studio.try_a_sample")}: ${t(s.labelKey)}`}
                                     style={{ flex: 1, borderRadius: R.tile, overflow: "hidden", backgroundColor: U.surface }}
                                 >
-                                    <RNImage source={s.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                                    <RNImage source={s.thumb ?? s.module} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                                     <View style={{ position: "absolute", left: 6, bottom: 6, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder }}>
                                         <Text numberOfLines={1} style={{ fontFamily: "Inter-SemiBold", fontSize: 11, color: U.ink }}>{t(s.labelKey)}</Text>
                                     </View>

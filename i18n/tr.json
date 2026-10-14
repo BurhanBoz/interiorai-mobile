@@ -393,7 +393,8 @@
     "smart_edit_mode_remove": "Kaldır",
     "smart_edit_hint_keep": "Korumak istediğin parçayı boya — birebir aynı kalır, oda onun etrafında yenilenir.",
     "mask_ready_remove": "Kaldırılacak nesne seçildi",
-    "mask_ready_keep": "Korunacak parça seçildi"
+    "mask_ready_keep": "Korunacak parça seçildi",
+    "sample_dining_room": "Yemek odası"
   },
   "furniture": {
     "title": "Mobilya",
