@@ -1005,7 +1005,11 @@ function ToolTile({
     }, [enabled, reduceMotion, index, veil, restVeil]);
 
     const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
-    const primary = mode === "REDESIGN" || festive;
+    // Only the seasonal tile carries a standing gold outline (2.5.0). Redesign kept one
+    // from v3 and next to the seasonal tile it read as "already selected" (owner, 14 Oct);
+    // any tile now shows the gold outline only while a finger is on it.
+    const primary = festive;
+    const [pressed, setPressed] = useState(false);
     // A slow breathing glow on the seasonal tile's gold outline.
     const glow = useSharedValue(0.35);
     useEffect(() => {
@@ -1030,6 +1034,9 @@ function ToolTile({
         <View style={{ flex: span }}>
             <Pressable
                 onPress={onPress}
+                // State, not Pressable's ({pressed}) style callback — see sekme-gezgini / redesign v3.
+                onPressIn={() => setPressed(true)}
+                onPressOut={() => setPressed(false)}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !enabled }}
                 accessibilityLabel={locked ? `${label}, PRO` : label}
@@ -1132,8 +1139,8 @@ function ToolTile({
                     style={{
                         ...StyleSheet.absoluteFillObject,
                         borderRadius: R.tile,
-                        borderWidth: primary ? 1.5 : 1,
-                        borderColor: festive ? U.accentBright : primary ? U.accent : U.lineNeutral,
+                        borderWidth: primary || pressed ? 1.5 : 1,
+                        borderColor: festive ? U.accentBright : pressed ? U.accent : U.lineNeutral,
                     }}
                 />
                 {festive && (
