@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, type ImageSourcePropType } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
@@ -44,6 +45,8 @@ export function BeforeAfterSlider({
     onInteract,
     onBeforeLoad,
     onAfterLoad,
+    sweep = [0.2, 0.8],
+    glow = false,
 }: {
     before: SliderSource;
     after: SliderSource;
@@ -60,12 +63,21 @@ export function BeforeAfterSlider({
     onInteract?: () => void;
     onBeforeLoad?: () => void;
     onAfterLoad?: () => void;
+    /** The two ends the auto sweep drifts between (first-run screens open it almost fully). */
+    sweep?: [number, number];
+    /**
+     * First-run shine (17 Oct): a soft gold halo behind the seam, the grip pulsing until the
+     * first touch, and a light sheen that crosses the result as the handle reveals it.
+     */
+    glow?: boolean;
 }) {
     const [width, setWidth] = useState(0);
     const w = useSharedValue(0);
     const pos = useSharedValue(initial);
     const start = useSharedValue(initial);
     const touched = useSharedValue(false);
+    const pulse = useSharedValue(0);
+    const sheen = useSharedValue(-1);
 
     useEffect(() => {
         if (!autoSweep || reduceMotion || touched.value) {
@@ -73,20 +85,48 @@ export function BeforeAfterSlider({
             if (!autoSweep || reduceMotion) pos.value = initial;
             return;
         }
+        // Reveal first (toward lo = more AFTER), hold, drift back, hold — and loop from there
+        // without ever snapping to the start: the old sequence jumped back to `initial` at the
+        // end of each pass, which the first-run pages made visible (simulator, 17 Oct).
+        const [lo, hi] = sweep;
         pos.value = withRepeat(
             withSequence(
-                withTiming(0.8, { duration: 2600, easing: Easing.inOut(Easing.ease) }),
-                withDelay(900, withTiming(0.2, { duration: 2600, easing: Easing.inOut(Easing.ease) })),
-                withDelay(900, withTiming(initial, { duration: 0 })),
+                withTiming(lo, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
+                withDelay(1100, withTiming(hi, { duration: 2400, easing: Easing.inOut(Easing.ease) })),
+                withDelay(700, withTiming(hi, { duration: 0 })),
             ),
             -1,
             false,
         );
         return () => cancelAnimation(pos);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [autoSweep, reduceMotion, initial]);
+    }, [autoSweep, reduceMotion, initial, sweep[0], sweep[1]]);
+
+    useEffect(() => {
+        if (!glow || reduceMotion) {
+            cancelAnimation(pulse); cancelAnimation(sheen);
+            pulse.value = 0; sheen.value = -1;
+            return;
+        }
+        pulse.value = withRepeat(
+            withSequence(withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) }), withTiming(0, { duration: 900, easing: Easing.in(Easing.ease) })),
+            -1,
+            false,
+        );
+        // The sheen crosses once per sweep, a little after the handle starts moving.
+        sheen.value = withRepeat(
+            withSequence(withDelay(600, withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.cubic) })), withDelay(4000, withTiming(-1, { duration: 0 }))),
+            -1,
+            false,
+        );
+        return () => { cancelAnimation(pulse); cancelAnimation(sheen); };
+    }, [glow, reduceMotion, pulse, sheen]);
 
     const stop = () => {
+        cancelAnimation(pulse);
+        pulse.value = withTiming(0, { duration: 200 });
+        cancelAnimation(sheen);
+        sheen.value = -1;
         onInteract?.();
     };
 
@@ -130,6 +170,22 @@ export function BeforeAfterSlider({
     const handleStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: pos.value * w.value - 1 }],
     }));
+    const haloStyle = useAnimatedStyle(() => ({
+        opacity: 0.18 + pulse.value * 0.22,
+        transform: [{ translateX: pos.value * w.value - 9 }],
+    }));
+    const gripStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: 1 + pulse.value * 0.16 }],
+        shadowOpacity: 0.35 + pulse.value * 0.4,
+    }));
+    const ringStyle = useAnimatedStyle(() => ({
+        opacity: (1 - pulse.value) * 0.55,
+        transform: [{ scale: 1 + pulse.value * 0.9 }],
+    }));
+    const sheenStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: sheen.value * (w.value + 160) }, { skewX: "-18deg" }],
+        opacity: glow && !reduceMotion ? 1 : 0,
+    }));
 
     return (
         <GestureDetector gesture={Gesture.Simultaneous(pan, tap)}>
@@ -145,6 +201,18 @@ export function BeforeAfterSlider({
                     picture reads the way the pills say: before on the left of the handle, after on the
                     right (simulator, 14 Oct: the first build had them the other way round). */}
                 <Image source={after as never} style={StyleSheet.absoluteFill} contentFit="cover" onLoad={onAfterLoad} />
+                {/* The sheen lives over the AFTER and under the before window: the light only ever
+                    touches the result, as the handle uncovers it. */}
+                {glow && (
+                    <Animated.View pointerEvents="none" style={[{ position: "absolute", top: -40, bottom: -40, left: -80, width: 160 }, sheenStyle]}>
+                        <LinearGradient
+                            colors={["rgba(255,236,200,0)", "rgba(255,236,200,0.28)", "rgba(255,236,200,0)"]}
+                            start={{ x: 0, y: 0.5 }}
+                            end={{ x: 1, y: 0.5 }}
+                            style={{ flex: 1 }}
+                        />
+                    </Animated.View>
+                )}
                 <Animated.View
                     pointerEvents="none"
                     style={[{ position: "absolute", top: 0, left: 0, bottom: 0, width: width || "100%", overflow: "hidden" }, windowStyle]}
@@ -154,6 +222,13 @@ export function BeforeAfterSlider({
                     </Animated.View>
                 </Animated.View>
 
+                {/* A soft gold halo behind the seam, breathing with the grip. */}
+                {glow && (
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[{ position: "absolute", top: 0, bottom: 0, left: 0, width: 18, backgroundColor: U.accentBright }, haloStyle]}
+                    />
+                )}
                 {/* The handle: a 2pt gold line with a round grip in the middle. */}
                 <Animated.View
                     pointerEvents="none"
@@ -167,16 +242,27 @@ export function BeforeAfterSlider({
                         handleStyle,
                     ]}
                 >
-                    {interactive && (
-                        <View
-                            style={{
-                                width: 34, height: 34, borderRadius: 17,
-                                backgroundColor: U.accentBright,
-                                alignItems: "center", justifyContent: "center",
-                                shadowColor: "#000", shadowOpacity: 0.35, shadowRadius: 5, shadowOffset: { width: 0, height: 2 },
-                            }}
-                        >
-                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 11, color: U.buttonInk, letterSpacing: -1 }}>◂ ▸</Text>
+                    {(interactive || glow) && (
+                        <View style={{ alignItems: "center", justifyContent: "center" }}>
+                            {/* An expanding ring that fades as it grows: "this moves, touch it". */}
+                            {glow && (
+                                <Animated.View
+                                    style={[{ position: "absolute", width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: U.accentBright }, ringStyle]}
+                                />
+                            )}
+                            <Animated.View
+                                style={[
+                                    {
+                                        width: 34, height: 34, borderRadius: 17,
+                                        backgroundColor: U.accentBright,
+                                        alignItems: "center", justifyContent: "center",
+                                        shadowColor: glow ? U.accentBright : "#000", shadowOpacity: 0.35, shadowRadius: glow ? 10 : 5, shadowOffset: { width: 0, height: glow ? 0 : 2 },
+                                    },
+                                    gripStyle,
+                                ]}
+                            >
+                                <Text style={{ fontFamily: "Inter-Bold", fontSize: 11, color: U.buttonInk, letterSpacing: -1 }}>◂ ▸</Text>
+                            </Animated.View>
                         </View>
                     )}
                 </Animated.View>

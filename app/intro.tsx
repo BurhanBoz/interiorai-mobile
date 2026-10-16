@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import { View, Text, Pressable, useWindowDimensions, FlatList, type ViewToken } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, useWindowDimensions, FlatList, type ViewToken } from "react-native";
+import Reanimated, { ZoomIn, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -13,6 +14,7 @@ import { seasonMedia, seasonTitle } from "@/components/studio/seasonMedia";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { HexMark } from "@/components/brand/HexMark";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
 import { track } from "@/services/analytics";
 
 const U = theme.umber;
@@ -82,9 +84,14 @@ export default function Intro() {
                 viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
                 style={{ flex: 1, marginTop: 14 }}
                 onLayout={(e) => setPageH(e.nativeEvent.layout.height)}
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                     <View style={{ width, height: pageH || undefined, paddingHorizontal: 16, paddingBottom: 10 }}>
-                        <View style={{ flex: 1, borderRadius: R.card, overflow: "hidden", ...theme.elevation.lg }}>
+                        {/* 17 Oct: the card settles in (scale + fade) and the slider carries the first-run
+                            shine until the first touch; the first drag gets a haptic tick. */}
+                        <Reanimated.View
+                            entering={reduceMotion ? undefined : ZoomIn.duration(520).springify().damping(16).withInitialValues({ transform: [{ scale: 0.94 }], opacity: 0 })}
+                            style={{ flex: 1, borderRadius: R.card, overflow: "hidden", ...theme.elevation.lg }}
+                        >
                             <BeforeAfterSlider
                                 before={item.before as never}
                                 after={item.after as never}
@@ -93,8 +100,10 @@ export default function Intro() {
                                 afterLabel={t("result.after")}
                                 initial={0.5}
                                 autoSweep={!hintGone}
+                                sweep={[0.12, 0.88]}
+                                glow={!hintGone && index === page}
                                 reduceMotion={reduceMotion}
-                                onInteract={() => setHintGone(true)}
+                                onInteract={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setHintGone(true); }}
                             />
                             {/* The tool's name, on the picture, bottom left. */}
                             <LinearGradient
@@ -104,10 +113,10 @@ export default function Intro() {
                             >
                                 <Text style={{ ...V.displayS, color: "#fff" }} numberOfLines={2}>{item.title}</Text>
                                 {!hintGone && (
-                                    <Text style={{ ...V.caption, color: U.accentBright, marginTop: 4 }}>{t("intro.drag_hint")}</Text>
+                                    <PulsingHint text={t("intro.drag_hint")} reduceMotion={reduceMotion} />
                                 )}
                             </LinearGradient>
-                        </View>
+                        </Reanimated.View>
                     </View>
                 )}
             />
@@ -119,15 +128,29 @@ export default function Intro() {
             </View>
 
             <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-                <Pressable onPress={start} accessibilityRole="button" style={{ borderRadius: R.button, overflow: "hidden" }}>
-                    <LinearGradient colors={[U.accentBright, U.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 56, alignItems: "center", justifyContent: "center" }}>
+                <ShimmerButton onPress={start} reduceMotion={reduceMotion}>
+                    <View style={{ height: 56, alignItems: "center", justifyContent: "center" }}>
                         {/* One line in every language: French and Dutch run long in capitals. */}
                         <Text style={{ ...V.button, color: U.buttonInk, paddingHorizontal: 16 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
                             {t("intro.cta")}
                         </Text>
-                    </LinearGradient>
-                </Pressable>
+                    </View>
+                </ShimmerButton>
             </View>
         </SafeAreaView>
+    );
+}
+
+/** "Drag to compare", breathing, until the first touch removes it. */
+function PulsingHint({ text, reduceMotion }: { text: string; reduceMotion: boolean }) {
+    const o = useSharedValue(1);
+    useEffect(() => {
+        if (reduceMotion) { o.value = 1; return; }
+        o.value = withRepeat(withSequence(withTiming(0.45, { duration: 800 }), withTiming(1, { duration: 800 })), -1, false);
+        return () => cancelAnimation(o);
+    }, [reduceMotion, o]);
+    const style = useAnimatedStyle(() => ({ opacity: o.value }));
+    return (
+        <Reanimated.Text style={[{ ...V.caption, color: U.accentBright, marginTop: 4 }, style]}>{text}</Reanimated.Text>
     );
 }

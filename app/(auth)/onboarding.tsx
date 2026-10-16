@@ -14,9 +14,13 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as SecureStore from "expo-secure-store";
 
+import Reanimated, { FadeInDown } from "react-native-reanimated";
+
 import { theme, track } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { HexMark } from "@/components/brand/HexMark";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
 import { WipeHero, HalloweenHero, ChristmasHero } from "@/components/onboarding/Heroes";
 
 const U = theme.umber;
@@ -71,6 +75,7 @@ export default function OnboardingScreen() {
     // screen, the dots and headline sitting just under its fade.
     const HERO_HEIGHT = Math.round(Math.min(height * 0.68, 640));
     const guestLogin = useAuthStore((st) => st.guestLogin);
+    const reduceMotion = useReduceMotion();
 
     const [busy, setBusy] = useState(false);
     const [index, setIndex] = useState(0);
@@ -183,42 +188,32 @@ export default function OnboardingScreen() {
                 {/* Headline only (owner, 5 Oct): the moving pictures carry the page; a paragraph
                     under them read as a manual. bodyKey stays on the slides for the copy history. */}
                 {/* One line in every language (owner, 5 Oct): long ones scale down instead of wrapping. */}
-                <Text
-                    style={{ ...V.displayL, color: U.ink }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.55}
-                >
-                    {t(SLIDES[index].headlineKey)}
-                </Text>
+                {/* 17 Oct: the headline rises in with each page (keyed on the index so it re-enters). */}
+                <Reanimated.View key={SLIDES[index].id} entering={reduceMotion ? undefined : FadeInDown.duration(420).springify().damping(18)}>
+                    <Text
+                        style={{ ...V.displayL, color: U.ink }}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.55}
+                    >
+                        {t(SLIDES[index].headlineKey)}
+                    </Text>
+                </Reanimated.View>
 
-                <Pressable
-                    onPress={advance}
-                    disabled={busy}
-                    accessibilityRole="button"
-                    style={{
-                        height: 56,
-                        borderRadius: 16,
-                        backgroundColor: U.buttonFill,
-                        opacity: busy ? 0.6 : 1,
-                        marginTop: 28,
-                        paddingHorizontal: 22,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    {busy ? (
-                        <ActivityIndicator color={U.buttonInk} />
-                    ) : (
-                        <>
-                            <Text style={{ ...V.button, color: U.buttonInk }}>
-                                {t(last ? "onboarding.v2_start" : "onboarding.v2_next")}
-                            </Text>
-                            <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-                        </>
-                    )}
-                </Pressable>
+                <ShimmerButton onPress={advance} disabled={busy} reduceMotion={reduceMotion} style={{ marginTop: 28 }}>
+                    <View style={{ height: 56, paddingHorizontal: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                        {busy ? (
+                            <ActivityIndicator color={U.buttonInk} />
+                        ) : (
+                            <>
+                                <Text style={{ ...V.button, color: U.buttonInk }}>
+                                    {t(last ? "onboarding.v2_start" : "onboarding.v2_next")}
+                                </Text>
+                                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                            </>
+                        )}
+                    </View>
+                </ShimmerButton>
 
                 {/* Always visible — a tour nobody can leave is not a tour. */}
                 <Pressable onPress={start} disabled={busy} hitSlop={10} accessibilityRole="button">
