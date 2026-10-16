@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, Image as RNImage } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Image as RNImage, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -40,6 +40,7 @@ export default function SampleResult() {
     const seasons = useCatalogStore((s) => s.seasons);
     const { pickImage, isUploading } = useImagePicker();
     const [previewUri, setPreviewUri] = useState<string | null>(null);
+    const { width } = useWindowDimensions();
 
     const key = (mode ?? "REDESIGN") as DesignMode;
     const sample = sampleByKey(sampleKey);
@@ -59,7 +60,7 @@ export default function SampleResult() {
     };
 
     return (
-        <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: U.ground }}>
+        <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
             <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 8, height: 44 }}>
                 <Pressable
                     onPress={() => router.back()}
@@ -74,9 +75,11 @@ export default function SampleResult() {
                 <View style={{ width: 44 }} />
             </View>
 
-            <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingBottom: 12, gap: 14 }}>
-                {/* The result fills what the doors leave; the handle is the whole explanation. */}
-                <View style={{ flex: 1, borderRadius: R.card, overflow: "hidden", ...theme.elevation.lg }}>
+            {/* Scrolls like add-room: the tab bar sits over the bottom of this stack, so the doors
+                need room under them rather than a flex layout that the bar then covers. */}
+            <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: 110, gap: 14 }} showsVerticalScrollIndicator={false}>
+                {/* The result, taller than the add-room preview: the handle is the whole explanation. */}
+                <View style={{ height: Math.round((width - GUTTER * 2) * 1.15), borderRadius: R.card, overflow: "hidden", ...theme.elevation.lg }}>
                     {sample && after ? (
                         <BeforeAfterSlider
                             before={sample.module as never}
@@ -129,7 +132,7 @@ export default function SampleResult() {
                         </Pressable>
                     ))}
                 </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
