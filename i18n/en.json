@@ -367,6 +367,8 @@
     "take_photo": "Take a photo",
     "choose_from_library": "Choose from library",
     "try_with_sample": "Or try with a sample room",
+    "sample_result_note": "The app made this from the sample photo in about 30 seconds.",
+    "sample_now_yours": "Now your own room",
     "own_piece": "My own piece",
     "or_try_a_sample": "Or try a sample",
     "what_to_do_with_it": "What to do with it",

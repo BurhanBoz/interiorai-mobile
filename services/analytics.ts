@@ -214,6 +214,8 @@ export type AnalyticsEvent =
     | "tool_tile_tap"
     | "add_room_source"
     | "intro_done"
+    /** 17 Oct — a sample room opened on its bundled result instead of rendering (mode, sample, season). */
+    | "sample_result_shown"
     | "locked_preview_upgrade"
     | "result_share_card"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.

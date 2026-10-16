@@ -13,7 +13,8 @@ import { useCatalogStore } from "@/stores/catalogStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { STUDIO_FEATURES, type MagicTool } from "@/components/studio/featureCatalog";
-import { SAMPLE_ROOMS } from "@/components/studio/sampleRooms";
+import { SAMPLE_ROOMS, type SampleRoom } from "@/components/studio/sampleRooms";
+import { sampleResult } from "@/components/studio/sampleResults";
 import { BeforeAfterSlider } from "@/components/studio/BeforeAfterSlider";
 import { seasonMedia, seasonTitle } from "@/components/studio/seasonMedia";
 import { CameraIcon } from "@/components/studio/StudioIcons";
@@ -73,12 +74,22 @@ export default function AddRoom() {
         router.replace("/studio/composer" as never);
     };
 
-    const addPhoto = async (source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; module: number }) => {
+    const addPhoto = async (source: { kind: "camera" } | { kind: "gallery" } | { kind: "sample"; sample: SampleRoom }) => {
         Haptics.selectionAsync();
         track("add_room_source", { mode: key, source: source.kind, season: season?.code ?? null });
+        // A sample the app has already rendered opens on its result at once — no upload, no
+        // wait, no credit (17 Oct). Only samples without a bundled result still render for real.
+        if (source.kind === "sample" && sampleResult(source.sample, key, season?.code)) {
+            track("sample_result_shown", { mode: key, sample: source.sample.key, season: season?.code ?? null });
+            router.push({
+                pathname: "/studio/sample-result",
+                params: { mode: key, tool: tool ?? "", season: season?.code ?? "", sample: source.sample.key },
+            } as never);
+            return;
+        }
         const opts = { onPreview: setPreviewUri };
         const picked = source.kind === "sample"
-            ? await useSampleImage(source.module, opts)
+            ? await useSampleImage(source.sample.module, opts)
             : await pickImage(source.kind, opts);
         setPreviewUri(null);
         if (!picked) return;
@@ -167,7 +178,7 @@ export default function AddRoom() {
                             {samples.map((s) => (
                                 <Pressable
                                     key={s.key}
-                                    onPress={() => addPhoto({ kind: "sample", module: s.module })}
+                                    onPress={() => addPhoto({ kind: "sample", sample: s })}
                                     disabled={isUploading}
                                     accessibilityRole="button"
                                     accessibilityLabel={`${t("studio.try_a_sample")}: ${t(s.labelKey)}`}

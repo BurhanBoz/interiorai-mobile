@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { tierAtLeast } from "@/utils/planTier";
-import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
+import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import { firstResultOfferFlag } from "@/hooks/useFirstResultPaywall";
 
 /**
@@ -26,6 +26,8 @@ let offerShownThisLaunch = false;
 
 /** Set on an identity's first launch; the launch offer is skipped while it is unset. */
 const firstOpenFlag = (userId: string) => `first_open:${userId}`;
+const firstOpenAtKey = (userId: string) => `first_open_at:${userId}`;
+const FIRST_DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The single place that decides where a launch lands.
@@ -58,6 +60,8 @@ export default function RootIndex() {
   const [metFirstOffer, setMetFirstOffer] = useState<boolean | null>(null);
   /** False on this identity's very first launch (2.4.1); null until read. */
   const [openedBefore, setOpenedBefore] = useState<boolean | null>(null);
+  /** Epoch ms of that first launch (17 Oct); 0 when the identity predates the stamp. */
+  const [firstOpenAt, setFirstOpenAt] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setWaitedLongEnough(true), SUBSCRIPTION_WAIT_MS);
@@ -87,8 +91,10 @@ export default function RootIndex() {
         // cold start onward is unchanged. Per identity, in the Keychain like the
         // other one-shot flags, so a reinstall does not hand out a second skip.
         const before = await isFlagSet(firstOpenFlag(uid));
-        if (!before) await setFlag(firstOpenFlag(uid));
-        if (!cancelled) { setMetFirstOffer(v); setOpenedBefore(before); }
+        if (!before) await Promise.all([setFlag(firstOpenFlag(uid)), writeCounter(firstOpenAtKey(uid), Date.now())]);
+        // When this identity first opened the app, 0 for anyone from before the stamp existed.
+        const openedAt = before ? await readCounter(firstOpenAtKey(uid)) : Date.now();
+        if (!cancelled) { setMetFirstOffer(v); setOpenedBefore(before); setFirstOpenAt(openedAt); }
       } catch {
         if (!cancelled) { setMetFirstOffer(false); setOpenedBefore(true); }
       }
@@ -157,7 +163,14 @@ export default function RootIndex() {
       offerShownThisLaunch = true;
       return <Redirect href="/intro" />;
     }
+    // 17 Oct (owner): no cold-start offer in the first 24 hours either. In the 30 days to
+    // 16 Oct this placement was shown 517 times and sold 3; 444 people closed it, and two in
+    // three new users never produced a design. The first day belongs to the first result —
+    // the FIRST_RESULT offer still asks after it. Identities from before the stamp (openedAt
+    // 0) are unchanged.
+    const withinFirstDay = firstOpenAt != null && firstOpenAt > 0 && Date.now() - firstOpenAt < FIRST_DAY_MS;
     if (subscriptionResolved
+        && !withinFirstDay
         && !tierAtLeast(subscription?.planCode, "BASE")) {
       offerShownThisLaunch = true;
       return <Redirect href={{ pathname: "/paywall", params: { source: "APP_OPEN" } }} />;

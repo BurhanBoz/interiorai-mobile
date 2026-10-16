@@ -367,6 +367,8 @@
     "take_photo": "Prendre une photo",
     "choose_from_library": "Choisir dans la photothèque",
     "try_with_sample": "Ou essayez avec une pièce d'exemple",
+    "sample_result_note": "L'app a créé ceci à partir de la photo d'exemple en 30 secondes environ.",
+    "sample_now_yours": "À votre pièce maintenant",
     "own_piece": "Mon propre meuble",
     "or_try_a_sample": "Ou essayez un exemple",
     "what_to_do_with_it": "Ce que vous pouvez en faire",
