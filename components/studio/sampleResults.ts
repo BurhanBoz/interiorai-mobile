@@ -18,6 +18,11 @@ import { SAMPLE_ROOMS, type SampleRoom } from "@/components/studio/sampleRooms";
  * so a mode that needs the user's hand (Magic Edit, Style Transfer) is never faked.
  */
 const RESULTS: Record<string, ImageSourcePropType> = {
+    // REDESIGN — the 13 Oct set round (Replicate NB2, live prompt line), all three passed review:
+    // living room 3 Bohemian, kitchen 2 Scandinavian, dining room 1 Scandinavian.
+    "living_room_3|REDESIGN": require("@/assets/samples/l3_redesign.jpg"),
+    "kitchen_2|REDESIGN": require("@/assets/samples/k2_redesign.jpg"),
+    "dining_room_1|REDESIGN": require("@/assets/samples/d1_redesign.jpg"),
     // SEASONAL — the season's leading theme (Spooky / Classic), the one the hero tile shows.
     "living_room_3|SEASONAL|HALLOWEEN": require("@/assets/samples/l3_halloween.jpg"),
     "kitchen_2|SEASONAL|HALLOWEEN": require("@/assets/samples/k2_halloween.jpg"),
