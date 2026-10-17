@@ -341,12 +341,16 @@ export default function ResultDetailScreen() {
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
 
-  // Post-result prompts: the offer (1st result, below), the notification ask
+  // Post-result prompts: the offer (2nd result since 2.6.0, below), the notification ask
   // (1st, once the offer has closed), the account ask (5th, guests, when enabled) — and the rating,
   // which is keyed to a value signal rather than a visit number.
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
-  useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
+  // 2.6.0: the offer moved to the SECOND result — the same visit the "second_result" rating
+  // signal fires on — so a visit that scheduled the offer keeps the rating back.
+  const offerThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
+  const offerThisVisitRef = useRef(false);
+  offerThisVisitRef.current = offerThisVisit;
   // RATING FIRST (2.3.3, owner's rule): this screen asks for the rating and
   // nothing else before it. The notification question moved to the progress
   // screen (usePushPermissionAsk there); the account ask waits until the
@@ -415,6 +419,7 @@ export default function ResultDetailScreen() {
   }, [outputs.length, signalValue]);
   const ratingTurn = useReviewPrompt(valueSignal, () =>
     !screenFocused.current
+    || offerThisVisitRef.current // the second-result offer is on its way (2.6.0)
     || otherAskOnScreen.current // the account alert
     || isPushAskOnScreen()      // the progress screen's question, if it is still up
     || fullscreenUrl != null    // the fullscreen viewer is a Modal

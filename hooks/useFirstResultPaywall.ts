@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { tierAtLeast } from "@/utils/planTier";
-import { isFlagSet, setFlag } from "@/utils/oneShotFlag";
+import { isFlagSet, setFlag, readCounter, writeCounter } from "@/utils/oneShotFlag";
 import type { JobResponse } from "@/types/api";
 import { isPostPurchaseQuiet } from "@/stores/postPurchaseStore";
 
@@ -18,6 +18,9 @@ const DELAY_MS = 2500;
  */
 export const firstResultOfferFlag = (userId: string) => `first_result_paywall:${userId}`;
 const flagFor = firstResultOfferFlag;
+/** Distinct completed results this identity has opened (2.6.0). */
+export const resultCountKey = (userId: string) => `result_count:${userId}`;
+const RESULTS_BEFORE_OFFER = 2;
 
 /**
  * The offer, at the moment it has something to point at.
@@ -26,6 +29,12 @@ const flagFor = firstResultOfferFlag;
  * that result as the hero. Everything the first-open placement lacked is
  * present here: the user has seen what the product does, has a render of their
  * own room in front of them, and the watermark on it is the thing being sold.
+ *
+ * <p>2.6.0 (owner, 17 Oct): it now waits for the SECOND completed result. On the first one
+ * it was shown 112 times in the 30 days to 16 Oct and three people picked a plan: the
+ * moment belongs to the result (save, share, a second look), not to a price. Someone who
+ * makes a second design has shown they want more — that is the one to ask. Each result is
+ * counted once (a per-job flag), so reopening the same result does not advance the count.
  *
  * <p>Paying tiers never see it. Keyed per user, not per device, for the same
  * reason the channel sheet is: a guest logout mints a new identity, and the
@@ -55,7 +64,15 @@ export function useFirstResultPaywall(
         (async () => {
             const flag = flagFor(userId);
             if (await isFlagSet(flag)) return;
-            if (cancelled) return;
+            // Count distinct completed results; ask on the second.
+            const seen = `result_seen:${userId}:${job.id}`;
+            let count = await readCounter(resultCountKey(userId));
+            if (!(await isFlagSet(seen))) {
+                await setFlag(seen);
+                count += 1;
+                await writeCounter(resultCountKey(userId), count);
+            }
+            if (count < RESULTS_BEFORE_OFFER || cancelled) return;
             // Marked before it opens: one offer per person, whatever happens
             // next — a crash, a kill, a cancelled sheet — never a second one.
             await setFlag(flag);

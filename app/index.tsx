@@ -159,9 +159,13 @@ export default function RootIndex() {
     // First open: the intro — three real before/afters with a handle, one button —
     // then Studio (build 114, owner 14 Oct). Marked shown so a later navigation back
     // to this index in the same process does not open the offer either.
+    // 2.6.0 (owner, 17 Oct): the first open no longer adds the intro on top of onboarding.
+    // A new user met six screens before Studio — three onboarding pages, then three intro
+    // cards, the Halloween pair twice. Onboarding carries the before/afters (with the
+    // slider's shine since build 120); Studio is next. app/intro.tsx stays for a return.
     if (openedBefore === false) {
       offerShownThisLaunch = true;
-      return <Redirect href="/intro" />;
+      return <Redirect href="/(tabs)/studio" />;
     }
     // 17 Oct (owner): no cold-start offer in the first 24 hours either. In the 30 days to
     // 16 Oct this placement was shown 517 times and sold 3; 444 people closed it, and two in

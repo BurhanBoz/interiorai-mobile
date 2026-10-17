@@ -437,7 +437,7 @@ export default function HelpScreen() {
               // offer, so the next cold start plays the intro (app/intro.tsx) like a brand-new install.
               // The keys mirror app/index.tsx and hooks/useFirstResultPaywall.ts.
               const uid = useAuthStore.getState().user?.id;
-              const firstRun = uid ? [clearFlag(`first_open:${uid}`), clearFlag(`first_open_at:${uid}`), clearFlag(firstResultOfferFlag(uid))] : [];
+              const firstRun = uid ? [clearFlag(`first_open:${uid}`), clearFlag(`first_open_at:${uid}`), clearFlag(firstResultOfferFlag(uid)), clearFlag(`result_count:${uid}`)] : [];
               const softReset = () => Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk(), ...firstRun]);
               // Build 117 (owner, 14 Oct): a second choice that also forgets the guest identity
               // (device_key in the Keychain survives a reinstall), so the next screen is onboarding
