@@ -189,12 +189,12 @@ export default function SampleResult() {
                             disabled={isUploading}
                             accessibilityRole="button"
                             accessibilityLabel={d.label}
-                            style={({ pressed }) => ({
+                            // A plain style object: a ({ pressed }) style function does not apply here (redesign v3 note).
+                            style={{
                                 flex: 1, height: 100, borderRadius: 22,
                                 backgroundColor: d.primary ? "rgba(239,208,160,0.14)" : "rgba(246,241,231,0.05)",
                                 alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 12,
-                                opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }],
-                            })}
+                            }}
                         >
                             <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: d.primary ? "rgba(239,208,160,0.22)" : "rgba(246,241,231,0.08)", alignItems: "center", justifyContent: "center" }}>
                                 <Ionicons name={d.icon} size={21} color={d.primary ? U.accentBright : U.ink} />
