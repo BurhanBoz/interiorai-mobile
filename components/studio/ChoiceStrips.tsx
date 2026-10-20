@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -84,7 +84,7 @@ function Ring({ style, radius, tint }: { style: object; radius: number; tint: bo
  * strip scrolls so the selected tile is in view instead of leaving a gold
  * ring somewhere off the right edge.
  */
-function useScrollToSelected(index: number, step: number) {
+function useScrollToSelected(index: number, step: number, reveal?: boolean) {
     const ref = useRef<ScrollView>(null);
     const done = useRef(false);
     // Content size, not layout: the catalogue can arrive after the strip has
@@ -94,6 +94,14 @@ function useScrollToSelected(index: number, step: number) {
         done.current = true;
         ref.current?.scrollTo({ x: Math.max(0, index * step - step), animated: false });
     };
+    // 3.0.0: a selection the SERVER made (the room guess) can land on a box that is off
+    // screen to the right; bring it in, animated. A user's own tap never scrolls — the box
+    // they tapped is under their finger.
+    useEffect(() => {
+        if (!reveal || index < 1) return;
+        ref.current?.scrollTo({ x: Math.max(0, index * step - step), animated: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reveal]);
     return { ref, onContentSizeChange };
 }
 
@@ -178,15 +186,18 @@ export function RoomStrip({
     selectedId,
     onSelect,
     gutter,
+    reveal,
 }: {
     items: CatalogItemResponse[];
     selectedId: string | null;
     onSelect: (r: CatalogItemResponse) => void;
     /** Leading inset; the strip itself runs edge to edge so it reads as scrollable. */
     gutter: number;
+    /** True once the selection was set from outside (the room guess): scrolls it into view. */
+    reveal?: boolean;
 }) {
     const index = items.findIndex((r) => r.id === selectedId);
-    const { ref, onContentSizeChange } = useScrollToSelected(index, ROOM_TILE + ROOM_GAP);
+    const { ref, onContentSizeChange } = useScrollToSelected(index, ROOM_TILE + ROOM_GAP, reveal);
     return (
         <ScrollView
             ref={ref}
@@ -277,14 +288,16 @@ export function StyleStrip({
     selectedId,
     onSelect,
     gutter,
+    reveal,
 }: {
     styles: CatalogItemResponse[];
     selectedId: string | null;
     onSelect: (s: CatalogItemResponse) => void;
     gutter: number;
+    reveal?: boolean;
 }) {
     const index = styles.findIndex((s) => s.id === selectedId);
-    const { ref, onContentSizeChange } = useScrollToSelected(index, STYLE_CARD_W + STYLE_GAP);
+    const { ref, onContentSizeChange } = useScrollToSelected(index, STYLE_CARD_W + STYLE_GAP, reveal);
     return (
         <ScrollView
             ref={ref}

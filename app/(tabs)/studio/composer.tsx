@@ -340,6 +340,7 @@ export default function ComposerScreen() {
                         items={roomTypes}
                         selectedId={roomType?.id ?? null}
                         gutter={GUTTER}
+                        reveal={detected.room}
                         onSelect={(r) => {
                             Haptics.selectionAsync();
                             setRoomType(r);
@@ -354,6 +355,7 @@ export default function ComposerScreen() {
                         styles={designStyles}
                         selectedId={designStyle?.id ?? null}
                         gutter={GUTTER}
+                        reveal={detected.style}
                         onSelect={(s) => {
                             Haptics.selectionAsync();
                             setDesignStyle(s);
