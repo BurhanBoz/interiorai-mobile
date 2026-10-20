@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 
 import { theme } from "@/config/theme";
-import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { useCreditStore } from "@/stores/creditStore";
@@ -16,6 +15,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { resultCountKey } from "@/hooks/useFirstResultPaywall";
+import { readCounter } from "@/utils/oneShotFlag";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES, type StudioFeature } from "@/components/studio/featureCatalog";
 import { HexMark } from "@/components/brand/HexMark";
@@ -126,8 +126,10 @@ export default function Studio() {
     useFocusEffect(useCallback(() => {
         let alive = true;
         if (!userId) { setFirstSession(false); return; }
-        SecureStore.getItemAsync(resultCountKey(userId))
-            .then((v) => { if (alive) setFirstSession(!(Number(v ?? "0") > 0)); })
+        // Through oneShotFlag, never SecureStore directly: the key carries a colon, which the
+        // keychain rejects — read raw it threw, and the doors never showed (simulator, 20 Oct).
+        readCounter(resultCountKey(userId))
+            .then((n) => { if (alive) setFirstSession(!(n > 0)); })
             .catch(() => { if (alive) setFirstSession(false); });
         return () => { alive = false; };
     }, [userId]));

@@ -228,7 +228,7 @@ export default function ComposerScreen() {
     /*
      * Room detection (3.0.0, owner 20 Oct). The server guesses the room type and a style from
      * the photo at upload time (GET /api/files/{id}/room-guess, Haiku, ~2 s). While the boxes
-     * are still empty, this polls for up to ~8 s and PRE-SELECTS the room box and — outside the
+     * are still empty, this polls for up to ~11 s and PRE-SELECTS the room box and — outside the
      * seasonal mode — the recommended style box, with a "detected from your photo" caption on
      * the room title and "<Style> suits this room" over the styles. The boxes stay exactly as
      * they are: a tap changes the pick like any other, and once the user has tapped, the guess
@@ -270,7 +270,7 @@ export default function ComposerScreen() {
             } catch {
                 /* a missing endpoint or a network blip: the boxes simply stay empty */
             }
-            if (tries < 6) setTimeout(poll, 1400);
+            if (tries < 8) setTimeout(poll, 1400);
         };
         poll();
         return () => { cancelled = true; };
