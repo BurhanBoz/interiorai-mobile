@@ -692,14 +692,13 @@ export default function PaywallScreen() {
                             onPress={handlePack}
                             disabled={busy}
                             accessibilityRole="button"
-                            style={({ pressed }) => ({
+                            style={{
                                 minHeight: 52,
                                 backgroundColor: "rgba(246,241,231,0.06)",
                                 borderRadius: theme.v2Layout.radius.inline, paddingVertical: 14, paddingHorizontal: 16,
                                 flexDirection: "row", gap: 12,
                                 alignItems: "center", justifyContent: "space-between",
-                                opacity: pressed ? 0.8 : 1,
-                            })}
+                            }}
                         >
                             <Text style={{ ...theme.v2.row, color: U.ink, flex: 1 }}>
                                 {t("paywall.pack_line", { credits: exhaustedPack.credits })}
