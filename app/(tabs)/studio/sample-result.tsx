@@ -175,10 +175,9 @@ export default function SampleResult() {
                     )}
                 </View>
 
-                <Text style={{ ...V.caption, color: U.inkMuted, textAlign: "center" }}>{t("studio.sample_result_note")}</Text>
-
-                <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.sample_now_yours")}</Text>
-                {/* The add-room doors, unchanged: camera recommended, library quiet. */}
+                <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 4 }}>{t("studio.sample_now_yours")}</Text>
+                {/* Two quiet doors (owner, 20 Oct: "daha soft"): no hairlines, a faint gold wash on the
+                    camera only, generous radius, the icon in a soft well. */}
                 <View style={{ flexDirection: "row", gap: 12, marginTop: -6 }}>
                     {([
                         { kind: "camera" as const, label: t("studio.take_photo"), icon: "camera-outline" as const, primary: true },
@@ -190,17 +189,17 @@ export default function SampleResult() {
                             disabled={isUploading}
                             accessibilityRole="button"
                             accessibilityLabel={d.label}
-                            style={{
-                                flex: 1, height: 96, borderRadius: R.card,
-                                backgroundColor: d.primary ? U.lineAccent : U.surface,
-                                borderWidth: 1, borderColor: d.primary ? "rgba(221,180,119,0.35)" : U.lineNeutral,
-                                alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12,
-                            }}
+                            style={({ pressed }) => ({
+                                flex: 1, height: 100, borderRadius: 22,
+                                backgroundColor: d.primary ? "rgba(239,208,160,0.14)" : "rgba(246,241,231,0.05)",
+                                alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 12,
+                                opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }],
+                            })}
                         >
-                            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: d.primary ? "rgba(239,208,160,0.18)" : "rgba(246,241,231,0.06)", alignItems: "center", justifyContent: "center" }}>
-                                <Ionicons name={d.icon} size={20} color={d.primary ? U.accentBright : U.ink} />
+                            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: d.primary ? "rgba(239,208,160,0.22)" : "rgba(246,241,231,0.08)", alignItems: "center", justifyContent: "center" }}>
+                                <Ionicons name={d.icon} size={21} color={d.primary ? U.accentBright : U.ink} />
                             </View>
-                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, lineHeight: 18, color: d.primary ? U.accentBright : U.ink, textAlign: "center" }} numberOfLines={2}>
+                            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, lineHeight: 19, color: d.primary ? U.accentBright : U.ink, textAlign: "center" }} numberOfLines={2}>
                                 {d.label}
                             </Text>
                         </Pressable>

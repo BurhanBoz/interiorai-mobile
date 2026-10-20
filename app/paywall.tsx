@@ -20,6 +20,8 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
+import { listJobs } from "@/services/jobs";
+import { getFileDownloadUrl } from "@/services/files";
 import {
     purchaseAlertKeys,
     reportPurchaseOutcome,
@@ -150,6 +152,23 @@ export default function PaywallScreen() {
     // URLs must travel without headers; the "before" proxy needs the token.
     const ownAfter = typeof params.afterUrl === "string" && params.afterUrl ? params.afterUrl : null;
     const ownBefore = typeof params.beforeUrl === "string" && params.beforeUrl ? params.beforeUrl : null;
+
+    // Out of credits (2.6.1, owner 20 Oct): the hero is the user's LAST finished design — the room
+    // they just made, before and after — fetched here because Generate opens this screen with no
+    // picture of its own. 44 people saw the old "out of credits" screen in 14 days and none picked
+    // a plan; a screen about their own room is the one argument we have. Falls back to the photo
+    // they were about to redesign, then to the Pro tools.
+    const [lastOwn, setLastOwn] = useState<{ before: string; after: string } | null>(null);
+    useEffect(() => {
+        if (source !== SOURCE_CREDITS_EXHAUSTED || ownAfter) return;
+        let cancelled = false;
+        listJobs(0, 10).then((page) => {
+            const done = page.content.find((j) => j.status === "COMPLETED" && j.outputs?.length && j.inputFile?.id);
+            if (!cancelled && done) setLastOwn({ before: getFileDownloadUrl(done.inputFile.id), after: done.outputs[0].url });
+        }).catch(() => {});
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source]);
 
     const [selected, setSelected] = useState<string>(PLAN_WEEKLY);
 
@@ -528,6 +547,9 @@ export default function PaywallScreen() {
                 chip: t("paywall.chip_video"), icon: "videocam",
             };
         }
+        if (source === SOURCE_CREDITS_EXHAUSTED && lastOwn) {
+            return { kind: "pair", before: { uri: lastOwn.before, headers: authHeaders }, after: { uri: lastOwn.after } };
+        }
         if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
             return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline" };
         }
@@ -556,6 +578,8 @@ export default function PaywallScreen() {
         if (source === SOURCE_FIRST_RESULT) return { title: t("paywall.hero_first_title"), sub: t("paywall.hero_first_sub") };
         if (source === SOURCE_RESULT_VIDEO) return { title: t("paywall.hero_video_title"), sub: t("paywall.hero_video_sub") };
         if (source === SOURCE_CREDITS_EXHAUSTED) {
+            // Their own last design on screen: one sentence about the next one, not about credits.
+            if (lastOwn) return { title: t("paywall.hero_next_title"), sub: t("paywall.hero_next_sub") };
             return hero.kind === "photo" && !ownAfter
                 ? { title: t("paywall.hero_room_title"), sub: t("paywall.hero_room_sub") }
                 : { title: t("paywall.title_out_of_credits"), sub: t("paywall.hero_exhausted_sub") };
@@ -668,15 +692,16 @@ export default function PaywallScreen() {
                             onPress={handlePack}
                             disabled={busy}
                             accessibilityRole="button"
-                            style={{
-                                minHeight: 44,
-                                borderWidth: 1, borderColor: U.lineNeutral,
-                                borderRadius: theme.v2Layout.radius.inline, paddingVertical: 12, paddingHorizontal: 16,
+                            style={({ pressed }) => ({
+                                minHeight: 52,
+                                backgroundColor: "rgba(246,241,231,0.06)",
+                                borderRadius: theme.v2Layout.radius.inline, paddingVertical: 14, paddingHorizontal: 16,
                                 flexDirection: "row", gap: 12,
                                 alignItems: "center", justifyContent: "space-between",
-                            }}
+                                opacity: pressed ? 0.8 : 1,
+                            })}
                         >
-                            <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
+                            <Text style={{ ...theme.v2.row, color: U.ink, flex: 1 }}>
                                 {t("paywall.pack_line", { credits: exhaustedPack.credits })}
                             </Text>
                             <Text style={{ ...theme.v2.row, color: U.accentBright }}>
