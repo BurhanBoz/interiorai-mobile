@@ -212,6 +212,8 @@ export type AnalyticsEvent =
     // Studio v4 (build 114): a tool tile tapped (mode, tool, season), the add-room screen's
     // source (camera / gallery / sample), and the first-open intro's button.
     | "tool_tile_tap"
+    | "tool_tile_select"
+    | "room_guess_applied"
     | "add_room_source"
     | "intro_done"
     /** 17 Oct — a sample room opened on its bundled result instead of rendering (mode, sample, season). */

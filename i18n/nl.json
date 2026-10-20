@@ -65,7 +65,9 @@
     "v2_next": "Volgende",
     "v2_start": "Beginnen",
     "v2_skip": "Overslaan",
-    "sign_in_existing": "Inloggen met een bestaand account"
+    "sign_in_existing": "Inloggen met een bestaand account",
+    "v3_headline": "Jouw kamer. Elke stijl. Eén foto.",
+    "v3_cta": "Probeer het in mijn kamer"
   },
   "auth": {
     "login_title": "Welkom terug",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Kleur het stuk in dat je wilt houden — het blijft precies zo, en de kamer wordt eromheen vernieuwd.",
     "mask_ready_remove": "Te verwijderen object gekozen",
     "mask_ready_keep": "Te behouden stuk gekozen",
-    "sample_dining_room": "Eetkamer"
+    "sample_dining_room": "Eetkamer",
+    "detected_from_photo": "herkend op je foto",
+    "style_suits_room": "{{style}} past bij deze kamer",
+    "what_you_can_make": "Wat je kunt maken"
   },
   "furniture": {
     "title": "Meubels",

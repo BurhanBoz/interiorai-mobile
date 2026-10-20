@@ -65,7 +65,9 @@
     "v2_next": "次へ",
     "v2_start": "はじめる",
     "v2_skip": "スキップ",
-    "sign_in_existing": "既存のアカウントでログイン"
+    "sign_in_existing": "既存のアカウントでログイン",
+    "v3_headline": "あなたの部屋。どんなスタイルも。写真1枚で。",
+    "v3_cta": "自分の部屋で試す"
   },
   "auth": {
     "login_title": "おかえりなさい",
@@ -395,7 +397,10 @@
     "smart_edit_hint_keep": "残したい家具をなぞってください。そのまま残し、周りの部屋を一新します。",
     "mask_ready_remove": "取り除く物を選びました",
     "mask_ready_keep": "残す家具を選びました",
-    "sample_dining_room": "ダイニング"
+    "sample_dining_room": "ダイニング",
+    "detected_from_photo": "写真から判定",
+    "style_suits_room": "この部屋には{{style}}が似合います",
+    "what_you_can_make": "できること"
   },
   "furniture": {
     "title": "家具",

@@ -65,7 +65,9 @@
     "v2_next": "Siguiente",
     "v2_start": "Empezar",
     "v2_skip": "Omitir",
-    "sign_in_existing": "Iniciar sesión con una cuenta existente"
+    "sign_in_existing": "Iniciar sesión con una cuenta existente",
+    "v3_headline": "Tu habitación. Cualquier estilo. Una foto.",
+    "v3_cta": "Probar en mi habitación"
   },
   "auth": {
     "login_title": "Bienvenido de Vuelta",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Pinta la pieza que quieres conservar: queda exactamente igual y la habitación se rediseña a su alrededor.",
     "mask_ready_remove": "Objeto a quitar elegido",
     "mask_ready_keep": "Pieza a conservar elegida",
-    "sample_dining_room": "Comedor"
+    "sample_dining_room": "Comedor",
+    "detected_from_photo": "detectado en tu foto",
+    "style_suits_room": "{{style}} le queda bien a esta habitación",
+    "what_you_can_make": "Lo que puedes crear"
   },
   "furniture": {
     "title": "Muebles",

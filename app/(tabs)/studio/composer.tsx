@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, Image, ActivityIndicator, ActivityIndicator as Spinner, InteractionManager, ScrollView as HScroll } from "react-native";
 import { useCreditStore } from "@/stores/creditStore";
 import { consumeCatalogueOnArrive } from "@/utils/catalogueOnArrive";
@@ -17,6 +17,7 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useCreditCost } from "@/hooks/useCreditCost";
 import { furnitureService } from "@/services/furniture";
+import { getRoomGuess } from "@/services/files";
 import type { FurnitureItem } from "@/types/api";
 import { AdvancedSheet } from "@/components/studio/AdvancedSheet";
 import { RoomStrip, StyleStrip } from "@/components/studio/ChoiceStrips";
@@ -224,6 +225,61 @@ export default function ComposerScreen() {
         setNumOutputs(1);
     }, [setNumOutputs]);
 
+    /*
+     * Room detection (3.0.0, owner 20 Oct). The server guesses the room type and a style from
+     * the photo at upload time (GET /api/files/{id}/room-guess, Haiku, ~2 s). While the boxes
+     * are still empty, this polls for up to ~8 s and PRE-SELECTS the room box and — outside the
+     * seasonal mode — the recommended style box, with a "detected from your photo" caption on
+     * the room title and "<Style> suits this room" over the styles. The boxes stay exactly as
+     * they are: a tap changes the pick like any other, and once the user has tapped, the guess
+     * never overrides it. A guess that names a code the catalogue does not carry is ignored.
+     * Nothing here is a default in the 10 Oct sense — nothing is chosen that the photo did not say.
+     */
+    const [detected, setDetected] = useState<{ room: boolean; style: boolean }>({ room: false, style: false });
+    const guessedFor = useRef<string | null>(null);
+    useEffect(() => {
+        const fileId = photo?.fileId;
+        if (!fileId || guessedFor.current === fileId) return;
+        if (roomType?.id && (seasonal || designStyle?.id)) return; // the user already chose
+        if (roomTypes.length === 0) return; // the catalogue has not loaded yet; retried when it has
+        guessedFor.current = fileId;
+        setDetected({ room: false, style: false });
+        let cancelled = false;
+        let tries = 0;
+        const poll = async () => {
+            if (cancelled) return;
+            tries += 1;
+            try {
+                const g = await getRoomGuess(fileId);
+                if (cancelled) return;
+                if (g.ready) {
+                    const st = useStudioStore.getState();
+                    const room = roomTypes.find((r) => r.code === g.roomTypeCode);
+                    const style = seasonal ? null : styleList.find((x) => x.code === g.styleCode);
+                    const roomSet = Boolean(room) && !st.roomType?.id;
+                    const styleSet = Boolean(style) && !st.designStyle?.id;
+                    if (roomSet) st.setRoomType(room!);
+                    if (styleSet) st.setDesignStyle(style!);
+                    if (roomSet || styleSet) {
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                        setDetected({ room: roomSet, style: styleSet });
+                    }
+                    track("room_guess_applied", { room: g.roomTypeCode ?? null, style: g.styleCode ?? null, roomSet, styleSet, tries });
+                    return;
+                }
+            } catch {
+                /* a missing endpoint or a network blip: the boxes simply stay empty */
+            }
+            if (tries < 6) setTimeout(poll, 1400);
+        };
+        poll();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [photo?.fileId, roomTypes.length, styleList.length]);
+    // A user's own tap clears the caption for that box.
+    const roomTitleCaption = detected.room && roomType?.id ? t("studio.detected_from_photo") : null;
+    const styleSuits = !seasonal && detected.style && designStyle?.id ? t("studio.style_suits_room", { style: catalogName(t, "style", designStyle) }) : null;
+
     const pickedProduct = objectRefs[0] ?? null;
 
     const onReplace = useCallback(async () => {
@@ -279,7 +335,7 @@ export default function ComposerScreen() {
                 />
 
                 <View ref={tourTarget("composer.room")} collapsable={false}>
-                    <SectionTitle>{t("studio.which_room")}</SectionTitle>
+                    <SectionTitle caption={roomTitleCaption}>{t("studio.which_room")}</SectionTitle>
                     <RoomStrip
                         items={roomTypes}
                         selectedId={roomType?.id ?? null}
@@ -287,12 +343,13 @@ export default function ComposerScreen() {
                         onSelect={(r) => {
                             Haptics.selectionAsync();
                             setRoomType(r);
+                            setDetected((d) => ({ ...d, room: false }));
                         }}
                     />
                 </View>
 
                 <View ref={tourTarget("composer.style")} collapsable={false} style={{ marginTop: 18 }}>
-                    <SectionTitle>{t(seasonal ? "studio.pick_theme" : "studio.pick_style")}</SectionTitle>
+                    <SectionTitle>{styleSuits ?? t(seasonal ? "studio.pick_theme" : "studio.pick_style")}</SectionTitle>
                     <StyleStrip
                         styles={designStyles}
                         selectedId={designStyle?.id ?? null}
@@ -300,6 +357,7 @@ export default function ComposerScreen() {
                         onSelect={(s) => {
                             Haptics.selectionAsync();
                             setDesignStyle(s);
+                            setDetected((d) => ({ ...d, style: false }));
                             // 🔴 Bu olay 1.6.0'da KÖRLEŞMİŞTİ. Sihirbazın stil
                             // ızgarası ekranından (studio/style.tsx) atılıyordu
                             // ve o ekran yeniden tasarımda silindi; tipi
@@ -661,11 +719,19 @@ function PhotoPill({
     );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children, caption }: { children: React.ReactNode; caption?: string | null }) {
     return (
-        <Text accessibilityRole="header" style={{ ...V.displayXS, color: U.ink, paddingHorizontal: GUTTER, marginBottom: 10 }}>
-            {children}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, paddingHorizontal: GUTTER, marginBottom: 10 }}>
+            <Text accessibilityRole="header" style={{ ...V.displayXS, color: U.ink, flexShrink: 1 }}>
+                {children}
+            </Text>
+            {caption ? (
+                // 3.0.0: "detected from your photo" — gold, quiet, beside the title.
+                <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: U.accent }} numberOfLines={1}>
+                    {caption}
+                </Text>
+            ) : null}
+        </View>
     );
 }
 

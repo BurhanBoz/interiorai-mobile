@@ -1008,6 +1008,7 @@ export default function ResultDetailScreen() {
               pushGranted={pushGranted}
               thumbUrl={afterUrl}
               thumbCacheKey={afterKey}
+              reduceMotion={reduceMotion}
               onPress={handleVideo}
             />
           </Rise>

@@ -65,7 +65,9 @@
     "v2_next": "Next",
     "v2_start": "Start",
     "v2_skip": "Skip",
-    "sign_in_existing": "Sign in to an existing account"
+    "sign_in_existing": "Sign in to an existing account",
+    "v3_headline": "Your room. Any style. One photo.",
+    "v3_cta": "Try it on my room"
   },
   "auth": {
     "login_title": "Welcome Back",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Paint over the piece you want to keep — it stays exactly as it is, and the room is redesigned around it.",
     "mask_ready_remove": "Object to remove is set",
     "mask_ready_keep": "Piece to keep is set",
-    "sample_dining_room": "Dining room"
+    "sample_dining_room": "Dining room",
+    "detected_from_photo": "detected from your photo",
+    "style_suits_room": "{{style}} suits this room",
+    "what_you_can_make": "What you can make"
   },
   "furniture": {
     "title": "Furniture",

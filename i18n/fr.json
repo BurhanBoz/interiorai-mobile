@@ -65,7 +65,9 @@
     "v2_next": "Suivant",
     "v2_start": "Commencer",
     "v2_skip": "Passer",
-    "sign_in_existing": "Se connecter à un compte existant"
+    "sign_in_existing": "Se connecter à un compte existant",
+    "v3_headline": "Votre pièce. Tous les styles. Une photo.",
+    "v3_cta": "Essayer sur ma pièce"
   },
   "auth": {
     "login_title": "Bon retour",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Peignez la pièce à garder — elle reste telle quelle, et la pièce est repensée autour d'elle.",
     "mask_ready_remove": "Objet à retirer choisi",
     "mask_ready_keep": "Pièce à garder choisie",
-    "sample_dining_room": "Salle à manger"
+    "sample_dining_room": "Salle à manger",
+    "detected_from_photo": "détecté sur votre photo",
+    "style_suits_room": "{{style}} convient à cette pièce",
+    "what_you_can_make": "Ce que vous pouvez créer"
   },
   "furniture": {
     "title": "Mobilier",

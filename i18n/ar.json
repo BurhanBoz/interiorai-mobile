@@ -65,7 +65,9 @@
     "v2_next": "التالي",
     "v2_start": "ابدأ",
     "v2_skip": "تخطٍ",
-    "sign_in_existing": "تسجيل الدخول بحساب موجود"
+    "sign_in_existing": "تسجيل الدخول بحساب موجود",
+    "v3_headline": "غرفتك. أي طراز. صورة واحدة.",
+    "v3_cta": "جرّبه في غرفتي"
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -395,7 +397,10 @@
     "smart_edit_hint_keep": "لوّن القطعة التي تريد الاحتفاظ بها — تبقى كما هي تمامًا، وتتجدد الغرفة من حولها.",
     "mask_ready_remove": "تم تحديد القطعة المراد إزالتها",
     "mask_ready_keep": "تم تحديد القطعة المراد الاحتفاظ بها",
-    "sample_dining_room": "غرفة الطعام"
+    "sample_dining_room": "غرفة الطعام",
+    "detected_from_photo": "تم التعرف عليه من صورتك",
+    "style_suits_room": "{{style}} يليق بهذه الغرفة",
+    "what_you_can_make": "ما يمكنك صنعه"
   },
   "furniture": {
     "title": "الأثاث",

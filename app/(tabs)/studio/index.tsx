@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, InteractionManager, type ImageSourcePropType } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, InteractionManager, ActivityIndicator, type ImageSourcePropType } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image as ExpoImage } from "expo-image";
@@ -8,8 +8,14 @@ import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 
 import { theme } from "@/config/theme";
+import * as SecureStore from "expo-secure-store";
+import { Ionicons } from "@expo/vector-icons";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { useCreditStore } from "@/stores/creditStore";
+import { useAuthStore } from "@/stores/authStore";
+import { useStudioStore } from "@/stores/studioStore";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { resultCountKey } from "@/hooks/useFirstResultPaywall";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES, type StudioFeature } from "@/components/studio/featureCatalog";
 import { HexMark } from "@/components/brand/HexMark";
@@ -50,6 +56,13 @@ const GUTTER = theme.v2Layout.gutterWide;
  * for him, not for the screen). This screen scrolls — it is a menu to browse, not a form. The
  * first-run coach marks left with the photo card; the intro screen (app/intro.tsx) does that
  * job now.
+ *
+ * <p><b>3.0.0 — the first session (owner, 20 Oct 2026).</b> Until the user has one finished
+ * design, the screen is a single decision: "Add your room" with the camera and the library as two
+ * doors on top, and the tools under it as SELECTABLE tiles — the open season first and wide,
+ * pre-selected — so the photo goes straight to the chosen tool's composer. No sample row here (the
+ * samples stay on add-room for returning users). After the first result the v4 menu returns:
+ * a tile opens add-room with its own before/after and the samples.
  */
 export default function Studio() {
     const { t, i18n } = useTranslation();
@@ -104,6 +117,60 @@ export default function Studio() {
     const [hero, ...moreSeasons] = seasons;
     const seasonLocked = isLocked("SEASONAL");
 
+    /*
+     * First session (3.0.0): no finished design yet → the doors layout. The count is the one
+     * useFirstResultPaywall keeps; null while it is being read, so neither layout flashes.
+     */
+    const userId = useAuthStore((s) => s.user?.id ?? null);
+    const [firstSession, setFirstSession] = useState<boolean | null>(null);
+    useFocusEffect(useCallback(() => {
+        let alive = true;
+        if (!userId) { setFirstSession(false); return; }
+        SecureStore.getItemAsync(resultCountKey(userId))
+            .then((v) => { if (alive) setFirstSession(!(Number(v ?? "0") > 0)); })
+            .catch(() => { if (alive) setFirstSession(false); });
+        return () => { alive = false; };
+    }, [userId]));
+
+    /** The tile ringed in gold: the tool the doors hand the photo to. The season leads. */
+    const [chosen, setChosen] = useState<{ feature: StudioFeature; season: SeasonResponse | null } | null>(null);
+    const effectiveChosen = chosen ?? (hero && !seasonLocked ? { feature: seasonal, season: hero } : { feature: STUDIO_FEATURES.find((f) => f.key === "REDESIGN")!, season: null });
+    const choose = (feature: StudioFeature, season: SeasonResponse | null) => {
+        Haptics.selectionAsync();
+        if (isLocked(feature.key)) {
+            track("locked_preview_shown", { mode: feature.key, season: season?.code ?? null });
+            setLockedPreview({ mode: feature.key, season });
+            return;
+        }
+        track("tool_tile_select", { mode: feature.key, tool: feature.tool ?? null, season: season?.code ?? null });
+        setChosen({ feature, season });
+    };
+
+    const { pickImage, isUploading } = useImagePicker();
+    const [previewUri, setPreviewUri] = useState<string | null>(null);
+    /** A door: the photo goes to the chosen tool. Pushed, not replaced — this is the tab's root. */
+    const addPhoto = async (kind: "camera" | "gallery") => {
+        Haptics.selectionAsync();
+        const { feature, season } = effectiveChosen;
+        track("add_room_source", { mode: feature.key, source: kind, season: season?.code ?? null, from: "studio" });
+        const picked = await pickImage(kind, { onPreview: setPreviewUri }).catch(() => null);
+        setPreviewUri(null);
+        if (!picked) return;
+        const st = useStudioStore.getState();
+        st.setPhoto(picked);
+        st.setMode(feature.key);
+        st.setSeasonCode(season?.code ?? null);
+        if (feature.key === "INPAINT") {
+            router.push((feature.tool ? `/studio/smart-edit?tool=${feature.tool}` : "/studio/smart-edit") as never);
+        } else if (feature.key === "STYLE_TRANSFER") {
+            router.push("/studio/style-transfer" as never);
+        } else {
+            router.push("/studio/composer" as never);
+        }
+    };
+    const isChosen = (feature: StudioFeature, season: SeasonResponse | null) =>
+        effectiveChosen.feature.id === feature.id && (effectiveChosen.season?.code ?? null) === (season?.code ?? null);
+
     return (
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
             <ScrollView
@@ -112,49 +179,96 @@ export default function Studio() {
             >
                 <Header balance={balance} planCode={planCode} />
 
-                <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 4 }}>{t("studio.pick_what_to_make")}</Text>
+                {firstSession === true && (
+                    <>
+                        <Text style={{ ...V.displayS, color: U.ink, marginTop: 10 }}>{t("studio.add_your_room")}</Text>
+                        <View style={{ flexDirection: "row", gap: 12, marginTop: -2 }}>
+                            {([
+                                { kind: "camera" as const, label: t("studio.take_photo"), icon: "camera-outline" as const, primary: true },
+                                { kind: "gallery" as const, label: t("studio.choose_from_library"), icon: "images-outline" as const, primary: false },
+                            ]).map((d) => (
+                                <Pressable
+                                    key={d.kind}
+                                    onPress={() => addPhoto(d.kind)}
+                                    disabled={isUploading}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={d.label}
+                                    style={{
+                                        flex: 1, height: 104, borderRadius: R.card,
+                                        backgroundColor: d.primary ? U.lineAccent : U.surface,
+                                        borderWidth: 1, borderColor: d.primary ? "rgba(221,180,119,0.35)" : U.lineNeutral,
+                                        alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 12, overflow: "hidden",
+                                    }}
+                                >
+                                    <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: d.primary ? "rgba(239,208,160,0.18)" : "rgba(246,241,231,0.06)", alignItems: "center", justifyContent: "center" }}>
+                                        <Ionicons name={d.icon} size={22} color={d.primary ? U.accentBright : U.ink} />
+                                    </View>
+                                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, lineHeight: 18, color: d.primary ? U.accentBright : U.ink, textAlign: "center" }} numberOfLines={2}>
+                                        {d.label}
+                                    </Text>
+                                    {isUploading && (
+                                        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: U.overlayScrim, alignItems: "center", justifyContent: "center" }}>
+                                            {previewUri ? <ExpoImage source={{ uri: previewUri }} style={{ ...StyleSheet.absoluteFillObject, opacity: 0.5 }} contentFit="cover" /> : null}
+                                            <ActivityIndicator color={U.accentBright} />
+                                        </View>
+                                    )}
+                                </Pressable>
+                            ))}
+                        </View>
+                        <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 8 }}>{t("studio.what_you_can_make")}</Text>
+                    </>
+                )}
 
-                {hero && (
+                {firstSession === false && (
+                    <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 4 }}>{t("studio.pick_what_to_make")}</Text>
+                )}
+
+                {firstSession !== null && hero && (
                     <SeasonHero
                         season={hero}
                         locale={i18n.language}
                         locked={seasonLocked}
                         newTag={isNew(hero) ? t("studio.seasonal_new") : undefined}
                         reduceMotion={reduceMotion}
-                        onPress={() => open(seasonal, hero)}
+                        selected={firstSession ? isChosen(seasonal, hero) : false}
+                        onPress={() => (firstSession ? choose(seasonal, hero) : open(seasonal, hero))}
                     />
                 )}
 
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: -4 }}>
-                    {moreSeasons.map((s) => {
-                        const m = seasonMedia(s);
-                        return m ? (
-                            <ToolTile
-                                key={s.code}
-                                label={seasonTitle(s, i18n.language)}
-                                before={m.before}
-                                after={m.after}
-                                locked={seasonLocked}
-                                newTag={isNew(s) ? t("studio.seasonal_new") : undefined}
-                                onPress={() => open(seasonal, s)}
-                            />
-                        ) : null;
-                    })}
-                    {tools.map((f) => {
-                        const m = f.media as { before?: number; after?: number; image?: number; reference?: number };
-                        return (
-                            <ToolTile
-                                key={f.id}
-                                label={t(f.titleKey)}
-                                before={m.before ?? m.image!}
-                                after={m.after ?? m.image!}
-                                reference={m.reference}
-                                locked={isLocked(f.key)}
-                                onPress={() => open(f, null)}
-                            />
-                        );
-                    })}
-                </View>
+                {firstSession !== null && (
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: -4 }}>
+                        {moreSeasons.map((s) => {
+                            const m = seasonMedia(s);
+                            return m ? (
+                                <ToolTile
+                                    key={s.code}
+                                    label={seasonTitle(s, i18n.language)}
+                                    before={m.before}
+                                    after={m.after}
+                                    locked={seasonLocked}
+                                    newTag={isNew(s) ? t("studio.seasonal_new") : undefined}
+                                    selected={firstSession ? isChosen(seasonal, s) : false}
+                                    onPress={() => (firstSession ? choose(seasonal, s) : open(seasonal, s))}
+                                />
+                            ) : null;
+                        })}
+                        {tools.map((f) => {
+                            const m = f.media as { before?: number; after?: number; image?: number; reference?: number };
+                            return (
+                                <ToolTile
+                                    key={f.id}
+                                    label={t(f.titleKey)}
+                                    before={m.before ?? m.image!}
+                                    after={m.after ?? m.image!}
+                                    reference={m.reference}
+                                    locked={isLocked(f.key)}
+                                    selected={firstSession ? isChosen(f, null) : false}
+                                    onPress={() => (firstSession ? choose(f, null) : open(f, null))}
+                                />
+                            );
+                        })}
+                    </View>
+                )}
             </ScrollView>
 
             {lockedPreview && (
@@ -195,9 +309,9 @@ const HERO_HEIGHT = 196;
  * the plan does not include it. The gold outline is the only standing outline on the screen.
  */
 function SeasonHero({
-    season, locale, locked, newTag, reduceMotion, onPress,
+    season, locale, locked, newTag, reduceMotion, selected, onPress,
 }: {
-    season: SeasonResponse; locale: string; locked: boolean; newTag?: string; reduceMotion: boolean; onPress: () => void;
+    season: SeasonResponse; locale: string; locked: boolean; newTag?: string; reduceMotion: boolean; selected?: boolean; onPress: () => void;
 }) {
     const m = seasonMedia(season);
     const title = seasonTitle(season, locale);
@@ -207,6 +321,7 @@ function SeasonHero({
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={locked ? `${title}, PRO` : title}
+            accessibilityState={selected ? { selected: true } : undefined}
             style={{ height: HERO_HEIGHT, borderRadius: R.card, overflow: "hidden", backgroundColor: U.surface, ...theme.elevation.lg }}
         >
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -240,7 +355,8 @@ function SeasonHero({
             </View>
             {newTag && !locked ? <Tag text={`✦ ${newTag}`} /> : null}
             {locked ? <Tag text="PRO" dark /> : null}
-            <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, borderRadius: R.card, borderWidth: 1.5, borderColor: U.accentBright }} />
+            {selected ? <Check /> : null}
+            <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, borderRadius: R.card, borderWidth: selected ? 2.5 : 1.5, borderColor: U.accentBright }} />
         </Pressable>
     );
 }
@@ -263,7 +379,7 @@ const TILE_HEIGHT = 150;
  * without a tap. Label bottom-left, PRO tag top-right. A gold outline only while pressed.
  */
 function ToolTile({
-    label, before, after, reference, locked, newTag, onPress,
+    label, before, after, reference, locked, newTag, selected, onPress,
 }: {
     label: string;
     before: ImageSourcePropType | { uri: string };
@@ -271,6 +387,8 @@ function ToolTile({
     reference?: ImageSourcePropType;
     locked: boolean;
     newTag?: string;
+    /** 3.0.0 first session: the tile the doors will use — a gold ring and a check. */
+    selected?: boolean;
     onPress: () => void;
 }) {
     const [pressed, setPressed] = useState(false);
@@ -281,6 +399,7 @@ function ToolTile({
             onPressOut={() => setPressed(false)}
             accessibilityRole="button"
             accessibilityLabel={locked ? `${label}, PRO` : label}
+            accessibilityState={selected ? { selected: true } : undefined}
             style={{ width: "48.5%", flexGrow: 1, height: TILE_HEIGHT, borderRadius: R.tile, overflow: "hidden", backgroundColor: U.surface }}
         >
             <ExpoImage source={after as never} style={StyleSheet.absoluteFill} contentFit="cover" />
@@ -295,15 +414,25 @@ function ToolTile({
                 {reference ? <Inset source={reference} /> : null}
             </View>
             <Text
-                style={{ ...V.tile, fontSize: 13, lineHeight: 16, position: "absolute", left: 10, right: 10, bottom: 9, color: "#fff" }}
+                style={{ ...V.tile, fontSize: 13, lineHeight: 16, position: "absolute", left: 10, right: selected ? 40 : 10, bottom: 9, color: "#fff" }}
                 numberOfLines={2}
             >
                 {label}
             </Text>
             {locked ? <Tag text="PRO" dark /> : null}
             {!locked && newTag ? <Tag text={`✦ ${newTag}`} /> : null}
-            <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, borderRadius: R.tile, borderWidth: pressed ? 1.5 : 1, borderColor: pressed ? U.accent : U.lineNeutral }} />
+            {selected ? <Check /> : null}
+            <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, borderRadius: R.tile, borderWidth: selected ? 2.5 : pressed ? 1.5 : 1, borderColor: selected || pressed ? U.accentBright : U.lineNeutral }} />
         </Pressable>
+    );
+}
+
+/** The gold check on the selected tile (bottom-right, clear of the PRO/NEW tag). */
+function Check() {
+    return (
+        <View pointerEvents="none" style={{ position: "absolute", right: 10, bottom: 10, width: 24, height: 24, borderRadius: 12, backgroundColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="checkmark" size={15} color={U.buttonInk} />
+        </View>
     );
 }
 

@@ -65,7 +65,9 @@
     "v2_next": "Avanti",
     "v2_start": "Inizia",
     "v2_skip": "Salta",
-    "sign_in_existing": "Accedi a un account esistente"
+    "sign_in_existing": "Accedi a un account esistente",
+    "v3_headline": "La tua stanza. Ogni stile. Una foto.",
+    "v3_cta": "Provalo nella mia stanza"
   },
   "auth": {
     "login_title": "Bentornato",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Dipingi il pezzo da tenere: resta identico e la stanza viene ridisegnata intorno a lui.",
     "mask_ready_remove": "Oggetto da rimuovere scelto",
     "mask_ready_keep": "Pezzo da tenere scelto",
-    "sample_dining_room": "Sala da pranzo"
+    "sample_dining_room": "Sala da pranzo",
+    "detected_from_photo": "rilevato dalla tua foto",
+    "style_suits_room": "{{style}} si adatta a questa stanza",
+    "what_you_can_make": "Cosa puoi creare"
   },
   "furniture": {
     "title": "Arredamento",

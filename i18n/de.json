@@ -65,7 +65,9 @@
     "v2_next": "Weiter",
     "v2_start": "Los",
     "v2_skip": "Überspringen",
-    "sign_in_existing": "Mit bestehendem Konto anmelden"
+    "sign_in_existing": "Mit bestehendem Konto anmelden",
+    "v3_headline": "Dein Raum. Jeder Stil. Ein Foto.",
+    "v3_cta": "In meinem Raum ausprobieren"
   },
   "auth": {
     "login_title": "Willkommen zurück",
@@ -360,7 +362,7 @@
     "change_reference": "Ändern",
     "home_headline": "Dein Raum, neu gestaltet.",
     "home_subline": "Starte mit einem Foto des Raums, wie er ist.",
-    "add_your_room": "Raum hinzufügen",
+    "add_your_room": "Deinen Raum hinzufügen",
     "add_your_room_sub": "Kamera oder Fotomediathek",
     "pick_what_to_make": "Was gestalten wir?",
     "add_room_for": "Raum hinzufügen",
@@ -397,7 +399,10 @@
     "smart_edit_hint_keep": "Male das Stück an, das bleiben soll — es bleibt genau so, und der Raum wird darum herum neu gestaltet.",
     "mask_ready_remove": "Zu entfernendes Objekt gewählt",
     "mask_ready_keep": "Zu behaltendes Stück gewählt",
-    "sample_dining_room": "Esszimmer"
+    "sample_dining_room": "Esszimmer",
+    "detected_from_photo": "aus deinem Foto erkannt",
+    "style_suits_room": "{{style}} passt zu diesem Raum",
+    "what_you_can_make": "Was du machen kannst"
   },
   "furniture": {
     "title": "Möbel",

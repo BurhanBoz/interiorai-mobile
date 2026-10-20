@@ -158,9 +158,12 @@ export default function PaywallScreen() {
     // picture of its own. 44 people saw the old "out of credits" screen in 14 days and none picked
     // a plan; a screen about their own room is the one argument we have. Falls back to the photo
     // they were about to redesign, then to the Pro tools.
+    // 3.0.0 (owner, 20 Oct: "paywall ekranı da out of credits gibi çarpıcı olsun"): every placement
+    // that has no picture of its own now shows the user's own last design the same way — the
+    // credit pill, the app-open offer, Settings. A locked-tool placement keeps that tool's pair.
     const [lastOwn, setLastOwn] = useState<{ before: string; after: string } | null>(null);
     useEffect(() => {
-        if (source !== SOURCE_CREDITS_EXHAUSTED || ownAfter) return;
+        if (ownAfter || PRO_TOOL_SOURCES.has(source) || source === SOURCE_RESULT_VIDEO) return;
         let cancelled = false;
         listJobs(0, 10).then((page) => {
             const done = page.content.find((j) => j.status === "COMPLETED" && j.outputs?.length && j.inputFile?.id);
@@ -170,7 +173,9 @@ export default function PaywallScreen() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [source]);
 
-    const [selected, setSelected] = useState<string>(PLAN_WEEKLY);
+    // 3.0.0: monthly comes selected (owner, 20 Oct). All 10 paying users so far chose weekly from a
+    // weekly-first screen; the monthly row now leads and is the default, weekly a tap below.
+    const [selected, setSelected] = useState<string>(PLAN_MONTHLY);
 
     // How long the paywall actually held someone, and whether they touched it
     // at all. The server already records SHOWN and DISMISSED — what it cannot
@@ -266,7 +271,7 @@ export default function PaywallScreen() {
     // Seçim, gerçekten satın alınabilir olanın içinde kalmalı.
     const effectiveSelected = offersWeekly && offersMonthly
         ? selected
-        : offersWeekly ? PLAN_WEEKLY : PLAN_MONTHLY;
+        : offersMonthly ? PLAN_MONTHLY : PLAN_WEEKLY;
     const chosen = effectiveSelected === PLAN_WEEKLY
         ? (offersWeekly ? weekly : undefined)
         : (offersMonthly ? monthly : undefined);
@@ -547,7 +552,7 @@ export default function PaywallScreen() {
                 chip: t("paywall.chip_video"), icon: "videocam",
             };
         }
-        if (source === SOURCE_CREDITS_EXHAUSTED && lastOwn) {
+        if (lastOwn && source !== SOURCE_FIRST_RESULT) {
             return { kind: "pair", before: { uri: lastOwn.before, headers: authHeaders }, after: { uri: lastOwn.after } };
         }
         if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
@@ -584,6 +589,8 @@ export default function PaywallScreen() {
                 ? { title: t("paywall.hero_room_title"), sub: t("paywall.hero_room_sub") }
                 : { title: t("paywall.title_out_of_credits"), sub: t("paywall.hero_exhausted_sub") };
         }
+        // Their own last design on screen (3.0.0): the next-room sentence, as on out-of-credits.
+        if (lastOwn) return { title: t("paywall.hero_next_title"), sub: t("paywall.hero_default_sub") };
         return seasonHeadline ?? { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
     })();
 
@@ -640,6 +647,30 @@ export default function PaywallScreen() {
 
                     {/* İki satır: aynı Pro, iki dönem — her biri BUGÜN ne çekileceğini söylüyor. */}
                     <PaywallPlanRow
+                        label={`Pro · ${t("paywall.monthly")}`}
+                        price={monthlyRowPrice}
+                        period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
+                        then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
+                        badge={monthlyIntroShown
+                            ? introBadge(monthly, monthlyIntro)
+                            : monthlySaving != null ? t("paywall.save_pct", { pct: monthlySaving }) : t("paywall.best_value")}
+                        selected={offersMonthly && effectiveSelected === PLAN_MONTHLY}
+                        current={currentCode === PLAN_MONTHLY}
+                        locked={!offersMonthly}
+                        currentLabel={t("plans.current_plan")}
+                        a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
+                            monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
+                            monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
+                        reduceMotion={reduceMotion}
+                        onPress={() => {
+                            if (!offersMonthly) return;
+                            touchedAPlan.current = true;
+                            setSelected(PLAN_MONTHLY);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
+                        }}
+                    />
+
+                    <PaywallPlanRow
                         label={`Pro · ${t("paywall.weekly")}`}
                         price={weeklyRowPrice}
                         period={weeklyIntroShown ? t("paywall.first_week") : t("paywall.per_week")}
@@ -660,30 +691,6 @@ export default function PaywallScreen() {
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_WEEKLY });
                         }}
                     />
-                    <PaywallPlanRow
-                        label={`Pro · ${t("paywall.monthly")}`}
-                        price={monthlyRowPrice}
-                        period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
-                        then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
-                        badge={monthlyIntroShown
-                            ? introBadge(monthly, monthlyIntro)
-                            : monthlySaving != null ? t("paywall.save_pct", { pct: monthlySaving }) : null}
-                        selected={offersMonthly && effectiveSelected === PLAN_MONTHLY}
-                        current={currentCode === PLAN_MONTHLY}
-                        locked={!offersMonthly}
-                        currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
-                            monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
-                            monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
-                        reduceMotion={reduceMotion}
-                        onPress={() => {
-                            if (!offersMonthly) return;
-                            touchedAPlan.current = true;
-                            setSelected(PLAN_MONTHLY);
-                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
-                        }}
-                    />
-
                     {/* The out-of-credits placement keeps its low-commitment step:
                         someone who has just run dry is the one person for whom a
                         one-off pack is the right size of decision. */}

@@ -65,7 +65,9 @@
     "v2_next": "Devam",
     "v2_start": "Başla",
     "v2_skip": "Geç",
-    "sign_in_existing": "Var olan hesaba giriş yap"
+    "sign_in_existing": "Var olan hesaba giriş yap",
+    "v3_headline": "Senin odan. Her stil. Tek fotoğraf.",
+    "v3_cta": "Kendi odamda dene"
   },
   "auth": {
     "login_title": "Tekrar Hoş Geldin",
@@ -396,7 +398,10 @@
     "smart_edit_hint_keep": "Korumak istediğin parçayı boya — birebir aynı kalır, oda onun etrafında yenilenir.",
     "mask_ready_remove": "Kaldırılacak nesne seçildi",
     "mask_ready_keep": "Korunacak parça seçildi",
-    "sample_dining_room": "Yemek odası"
+    "sample_dining_room": "Yemek odası",
+    "detected_from_photo": "fotoğrafından anlaşıldı",
+    "style_suits_room": "Bu odaya {{style}} yakışır",
+    "what_you_can_make": "Neler yapabilirsin"
   },
   "furniture": {
     "title": "Mobilya",
