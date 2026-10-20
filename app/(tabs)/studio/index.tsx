@@ -357,7 +357,7 @@ function SeasonHero({
             </View>
             {newTag && !locked ? <Tag text={`✦ ${newTag}`} /> : null}
             {locked ? <Tag text="PRO" dark /> : null}
-            {selected ? <Check /> : null}
+            {selected ? <Check topLeft /> : null}
             <View pointerEvents="none" style={{ ...StyleSheet.absoluteFillObject, borderRadius: R.card, borderWidth: selected ? 2.5 : 1.5, borderColor: U.accentBright }} />
         </Pressable>
     );
@@ -429,10 +429,10 @@ function ToolTile({
     );
 }
 
-/** The gold check on the selected tile (bottom-right, clear of the PRO/NEW tag). */
-function Check() {
+/** The gold check on the selected tile: bottom-right on a tile, top-left on the season hero (its theme thumbnails sit bottom-right, the NEW tag top-right). */
+function Check({ topLeft }: { topLeft?: boolean }) {
     return (
-        <View pointerEvents="none" style={{ position: "absolute", right: 10, bottom: 10, width: 24, height: 24, borderRadius: 12, backgroundColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
+        <View pointerEvents="none" style={{ position: "absolute", ...(topLeft ? { left: 10, top: 10 } : { right: 10, bottom: 10 }), width: 24, height: 24, borderRadius: 12, backgroundColor: U.accentBright, alignItems: "center", justifyContent: "center" }}>
             <Ionicons name="checkmark" size={15} color={U.buttonInk} />
         </View>
     );
