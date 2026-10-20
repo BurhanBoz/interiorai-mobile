@@ -45,39 +45,39 @@ for f, fam, w, st in FONTS:
 (OUT / "fonts/fonts.css").write_text("/* Roomframe's bundled fonts — the same files the iOS app ships (assets/fonts). */\n" + "\n".join(faces) + "\n")
 
 # ── tokens ─────────────────────────────────────────────────────────────────
-colors = """/* Colour — Umber palette (config/theme.ts `umber`, 2026-09-19). Dark-only product: there is no light theme. */
+colors = """/* Colour — Umber palette (config/theme.ts `umber`, 2026-09-19; lifted ground 2026-10-14 build 116, synced 2026-10-20). Dark-only product: there is no light theme. */
 :root {
   /* Grounds and surfaces, darkest to lightest */
-  --rf-ground: #191510;                 /* every screen's background */
-  --rf-surface-lowest: #141009;
-  --rf-sheet: #201B15;                  /* bottom sheets, low containers */
-  --rf-surface: #241F18;                /* cards, tiles, plan rows */
-  --rf-surface-high: #2C2519;
-  --rf-surface-highest: #332B1E;
-  --rf-surface-bright: #3A3124;
+  --rf-ground: #221C17;                 /* every screen's background (build 116: lifted from #191510) */
+  --rf-surface-lowest: #1A1510;
+  --rf-sheet: #28221C;                  /* bottom sheets, low containers */
+  --rf-surface: #2C261F;                /* cards, tiles, plan rows */
+  --rf-surface-high: #342C23;
+  --rf-surface-highest: #3B3228;
+  --rf-surface-bright: #44392D;
 
   /* Ink */
-  --rf-ink: #F6F1E7;                    /* primary text */
+  --rf-ink: #F1EADF;                    /* primary text */
   --rf-ink-variant: #CFC4B0;            /* secondary text on cards */
-  --rf-ink-muted: #9A8F7D;              /* captions, metadata, inactive tabs */
+  --rf-ink-muted: #A89D8B;              /* captions, metadata, inactive tabs */
 
   /* Gold accent — golden-hour, never neon */
-  --rf-gold-dawn: #F0CE99;              /* bright gold: gradient start, active icons */
+  --rf-gold-dawn: #EFD0A0;              /* bright gold: gradient start, active icons */
   --rf-gold: #DDB477;                   /* the accent: selected borders, links, kickers */
   --rf-gold-dusk: #C09B62;              /* gradient end */
-  --rf-button-fill: #E4BE86;            /* solid primary button */
+  --rf-button-fill: #E2C08E;            /* solid primary button */
   --rf-on-gold: #231B10;                /* text/icons ON gold — always this, never white */
 
   /* Lines */
-  --rf-line-accent: rgba(221,180,119,0.15);
-  --rf-line-neutral: rgba(246,241,231,0.10);
+  --rf-line-accent: rgba(221,180,119,0.16);
+  --rf-line-neutral: rgba(246,241,231,0.12);
   --rf-outline: #9A8F7D;
   --rf-outline-variant: #3D362A;
 
   /* Over photography */
   --rf-photo-chrome: rgba(14,13,12,0.70);         /* pills/chips laid on a room photo */
   --rf-photo-chrome-border: rgba(255,255,255,0.20);
-  --rf-scrim: rgba(25,21,16,0.50);
+  --rf-scrim: rgba(34,28,23,0.50);
   --rf-sheet-scrim: rgba(0,0,0,0.55);
   --rf-product-plate: #F6F1E7;                    /* light plate behind furniture cut-outs */
 
@@ -156,7 +156,7 @@ effects = """/* Elevation, gradients, motion (config/theme.ts `elevation`, `grad
   --rf-glow-gold: 0 0 18px rgba(240,206,153,0.35);       /* focused/selected gold elements */
   --rf-glow-gold-soft: 0 4px 22px rgba(221,180,119,0.18);
 
-  --rf-gradient-primary: linear-gradient(135deg, #F0CE99, #DDB477);      /* primary CTA */
+  --rf-gradient-primary: linear-gradient(135deg, #EFD0A0, #DDB477);      /* primary CTA */
   --rf-gradient-primary-deep: linear-gradient(135deg, #DDB477, #C09B62);
   --rf-gradient-muted-cta: linear-gradient(135deg, #B8AE9C, #A69C8A);    /* second CTA; label stays --rf-on-gold */
   --rf-gradient-card-border: linear-gradient(135deg, rgba(225,195,155,0.28), rgba(225,195,155,0.06));

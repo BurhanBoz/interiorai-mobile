@@ -6,6 +6,8 @@
 - Reference screenshots in `.design-sync/reference/` come from the iOS simulator (2026-10-09, Release build, TR locale).
 - DesignSync needs `/design-login` from an interactive `claude` terminal session; the desktop session cannot run it.
 
+- 2026-10-20 re-sync: tokens updated to the lifted umber ground (build 116: #221C17 etc.), references replaced with 2.6.1 screens, `guidelines/first-run-brief.md` added (owner's radical-redesign brief for the first-run flow), screens.md rewritten for Studio v4. Off-script build again (tokens-only); the skill's `package-validate.mjs` is run against `ds-bundle/` before upload.
+
 ## Re-sync risks
 - Token drift: any edit to `config/theme.ts` is invisible here until `build_bundle.py` is updated by hand.
 - No `_ds_sync.json` anchor (honest choice for an off-script tokens-only bundle) → every sync re-uploads everything; harmless at this size.
