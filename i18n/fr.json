@@ -1448,12 +1448,12 @@
     "room_title": "Vérifiez le type de pièce",
     "room_body": "Touchez-le pour choisir une autre pièce.",
     "style_title": "Choisissez un style",
-    "style_body": "Faites défiler pour tous les voir et touchez celui qui vous plaît.",
+    "style_body": "Nous avons choisi celui qui convient à cette pièce. Faites défiler pour tous les voir et touchez-en un autre.",
     "advanced_title": "Affinez si vous le souhaitez",
     "advanced_body": "Palette de couleurs, intensité du changement et conservation de l'agencement. Facultatif — les réglages par défaut fonctionnent bien.",
     "generate_title": "Créez votre design",
     "generate_body": "Touchez ici quand vous êtes prêt. Le coût est indiqué juste au-dessus.",
-    "room_strip_body": "Faites défiler et touchez votre pièce. Vous choisissez la pièce et le style : les deux sont nécessaires.",
+    "room_strip_body": "Nous avons reconnu la pièce sur votre photo. Touchez une autre case si ce n’est pas la bonne.",
     "theme_title": "Choisissez un thème",
     "theme_body": "Chaque thème décore votre pièce à sa façon. Touchez celui qui vous plaît."
   }

@@ -1448,12 +1448,12 @@
     "room_title": "Controlla il tipo di stanza",
     "room_body": "Toccalo per scegliere un'altra stanza.",
     "style_title": "Scegli uno stile",
-    "style_body": "Scorri per vederli tutti e tocca quello che ti piace.",
+    "style_body": "Abbiamo scelto quello adatto a questa stanza. Scorri per vederli tutti e toccane un altro.",
     "advanced_title": "Rifinisci, se vuoi",
     "advanced_body": "Palette di colori, intensità del cambiamento e mantenimento della disposizione. Facoltativo: le impostazioni predefinite funzionano bene.",
     "generate_title": "Crea il tuo design",
     "generate_body": "Tocca qui quando sei pronto. Il costo è indicato appena sopra.",
-    "room_strip_body": "Scorri e tocca la tua stanza. Scegli tu stanza e stile: servono entrambi.",
+    "room_strip_body": "Abbiamo riconosciuto la stanza dalla tua foto. Tocca un’altra casella se non è giusta.",
     "theme_title": "Scegli un tema",
     "theme_body": "Ogni tema decora la stanza a modo suo. Tocca quello che ti piace."
   }

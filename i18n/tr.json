@@ -1447,12 +1447,12 @@
     "room_title": "Oda tipini kontrol et",
     "room_body": "Başka bir oda seçmek için dokun.",
     "style_title": "Bir stil seç",
-    "style_body": "Hepsini görmek için kaydır, beğendiğine dokun.",
+    "style_body": "Bu odaya yakışanı seçtik. Hepsini görmek için kaydır, istediğine dokun.",
     "advanced_title": "İstersen ince ayar yap",
     "advanced_body": "Renk paleti, değişimin ne kadar cesur olacağı ve düzeni koruma burada. İsteğe bağlı; varsayılanlar iyi çalışır.",
     "generate_title": "Tasarımını oluştur",
     "generate_body": "Hazır olduğunda buraya dokun. Bedeli hemen üstünde yazar.",
-    "room_strip_body": "Kaydır ve odanı seç. Odayı ve stili sen seçersin; oluşturmak için ikisi de gerekli.",
+    "room_strip_body": "Odayı fotoğrafından anladık. Yanlışsa başka bir kutuya dokun.",
     "theme_title": "Bir tema seç",
     "theme_body": "Her tema odanı kendi tarzında süsler. Beğendiğine dokun."
   }

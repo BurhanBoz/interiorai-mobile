@@ -1448,12 +1448,12 @@
     "room_title": "Raumtyp prüfen",
     "room_body": "Tippe darauf, um einen anderen Raum zu wählen.",
     "style_title": "Wähle einen Stil",
-    "style_body": "Wische, um alle zu sehen, und tippe auf deinen Favoriten.",
+    "style_body": "Wir haben den passenden Stil gewählt. Wische, um alle zu sehen, und tippe auf einen anderen.",
     "advanced_title": "Feinabstimmung, wenn du magst",
     "advanced_body": "Farbpalette, wie stark die Veränderung ausfällt und ob dein Layout bleibt. Optional – die Standardwerte funktionieren gut.",
     "generate_title": "Erstelle dein Design",
     "generate_body": "Tippe hier, wenn du bereit bist. Die Kosten stehen direkt darüber.",
-    "room_strip_body": "Wische und tippe auf deinen Raum. Du wählst Raum und Stil – beides wird zum Erstellen gebraucht.",
+    "room_strip_body": "Wir haben den Raum aus deinem Foto erkannt. Tippe auf ein anderes Feld, wenn es nicht stimmt.",
     "theme_title": "Wähle ein Thema",
     "theme_body": "Jedes Thema dekoriert deinen Raum auf seine Art. Tippe auf dein Lieblingsthema."
   }

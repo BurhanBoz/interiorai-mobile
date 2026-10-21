@@ -11,11 +11,8 @@ import { theme } from "@/config/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { useCreditStore } from "@/stores/creditStore";
-import { useAuthStore } from "@/stores/authStore";
 import { useStudioStore } from "@/stores/studioStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
-import { resultCountKey } from "@/hooks/useFirstResultPaywall";
-import { readCounter } from "@/utils/oneShotFlag";
 import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitlement";
 import { STUDIO_FEATURES, type StudioFeature } from "@/components/studio/featureCatalog";
 import { HexMark } from "@/components/brand/HexMark";
@@ -57,12 +54,12 @@ const GUTTER = theme.v2Layout.gutterWide;
  * first-run coach marks left with the photo card; the intro screen (app/intro.tsx) does that
  * job now.
  *
- * <p><b>3.0.0 — the first session (owner, 20 Oct 2026).</b> Until the user has one finished
- * design, the screen is a single decision: "Add your room" with the camera and the library as two
- * doors on top, and the tools under it as SELECTABLE tiles — the open season first and wide,
- * pre-selected — so the photo goes straight to the chosen tool's composer. No sample row here (the
- * samples stay on add-room for returning users). After the first result the v4 menu returns:
- * a tile opens add-room with its own before/after and the samples.
+ * <p><b>3.0.0 (owner, 20–21 Oct 2026).</b> One decision, for everyone, every time: "Add your room"
+ * with the camera and the library as two doors on top, and the tools under it as SELECTABLE tiles —
+ * the open season first and wide, pre-selected — so the photo goes straight to the chosen tool's
+ * composer. The add-room screen (a tool's before/after plus the sample rooms) is no longer in the
+ * flow: the owner did not want a second screen between the tile and the photo. The files stay for
+ * the sample-result route, which nothing reaches from here any more.
  */
 export default function Studio() {
     const { t, i18n } = useTranslation();
@@ -83,23 +80,9 @@ export default function Studio() {
     /** The locked tool whose sample is on screen, or null. */
     const [lockedPreview, setLockedPreview] = useState<{ mode: string; season: SeasonResponse | null } | null>(null);
 
-    const open = (feature: StudioFeature, season: SeasonResponse | null) => {
-        Haptics.selectionAsync();
-        if (isLocked(feature.key)) {
-            track("locked_preview_shown", { mode: feature.key, season: season?.code ?? null });
-            setLockedPreview({ mode: feature.key, season });
-            return;
-        }
-        track("tool_tile_tap", { mode: feature.key, tool: feature.tool ?? null, season: season?.code ?? null });
-        router.push({
-            pathname: "/studio/add-room",
-            params: { mode: feature.key, ...(feature.tool ? { tool: feature.tool } : {}), ...(season ? { season: season.code } : {}) },
-        } as never);
-    };
-
     /**
      * Arrival with a tool already chosen (2.3.0): the welcome screen after a purchase sends
-     * "Empty Room", "Style Transfer"… as `intent`. It lands on the add-room screen for that tool.
+     * "Empty Room", "Style Transfer"… as `intent`. 3.0.0: it selects that tile; the doors do the rest.
      */
     const { intent } = useLocalSearchParams<{ intent?: string }>();
     const handledIntent = useRef<string | null>(null);
@@ -108,7 +91,7 @@ export default function Studio() {
         handledIntent.current = intent;
         router.setParams({ intent: undefined } as never);
         const feature = STUDIO_FEATURES.find((f) => f.key === intent);
-        if (feature) InteractionManager.runAfterInteractions(() => open(feature, null));
+        if (feature) InteractionManager.runAfterInteractions(() => choose(feature, null));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [intent]);
 
@@ -116,23 +99,6 @@ export default function Studio() {
     const tools = STUDIO_FEATURES.filter((f) => f.key !== "SEASONAL");
     const [hero, ...moreSeasons] = seasons;
     const seasonLocked = isLocked("SEASONAL");
-
-    /*
-     * First session (3.0.0): no finished design yet → the doors layout. The count is the one
-     * useFirstResultPaywall keeps; null while it is being read, so neither layout flashes.
-     */
-    const userId = useAuthStore((s) => s.user?.id ?? null);
-    const [firstSession, setFirstSession] = useState<boolean | null>(null);
-    useFocusEffect(useCallback(() => {
-        let alive = true;
-        if (!userId) { setFirstSession(false); return; }
-        // Through oneShotFlag, never SecureStore directly: the key carries a colon, which the
-        // keychain rejects — read raw it threw, and the doors never showed (simulator, 20 Oct).
-        readCounter(resultCountKey(userId))
-            .then((n) => { if (alive) setFirstSession(!(n > 0)); })
-            .catch(() => { if (alive) setFirstSession(false); });
-        return () => { alive = false; };
-    }, [userId]));
 
     /** The tile ringed in gold: the tool the doors hand the photo to. The season leads. */
     const [chosen, setChosen] = useState<{ feature: StudioFeature; season: SeasonResponse | null } | null>(null);
@@ -181,9 +147,7 @@ export default function Studio() {
             >
                 <Header balance={balance} planCode={planCode} />
 
-                {firstSession === true && (
-                    <>
-                        <Text style={{ ...V.displayS, color: U.ink, marginTop: 10 }}>{t("studio.add_your_room")}</Text>
+                <Text style={{ ...V.displayS, color: U.ink, marginTop: 10 }}>{t("studio.add_your_room")}</Text>
                         <View style={{ flexDirection: "row", gap: 12, marginTop: -2 }}>
                             {([
                                 { kind: "camera" as const, label: t("studio.take_photo"), icon: "camera-outline" as const, primary: true },
@@ -217,60 +181,52 @@ export default function Studio() {
                                 </Pressable>
                             ))}
                         </View>
-                        <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 8 }}>{t("studio.what_you_can_make")}</Text>
-                    </>
-                )}
+                <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 8 }}>{t("studio.what_you_can_make")}</Text>
 
-                {firstSession === false && (
-                    <Text style={{ ...V.kicker, color: U.inkMuted, marginTop: 4 }}>{t("studio.pick_what_to_make")}</Text>
-                )}
-
-                {firstSession !== null && hero && (
+                {hero && (
                     <SeasonHero
                         season={hero}
                         locale={i18n.language}
                         locked={seasonLocked}
                         newTag={isNew(hero) ? t("studio.seasonal_new") : undefined}
                         reduceMotion={reduceMotion}
-                        selected={firstSession ? isChosen(seasonal, hero) : false}
-                        onPress={() => (firstSession ? choose(seasonal, hero) : open(seasonal, hero))}
+                        selected={isChosen(seasonal, hero)}
+                        onPress={() => choose(seasonal, hero)}
                     />
                 )}
 
-                {firstSession !== null && (
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: -4 }}>
-                        {moreSeasons.map((s) => {
-                            const m = seasonMedia(s);
-                            return m ? (
-                                <ToolTile
-                                    key={s.code}
-                                    label={seasonTitle(s, i18n.language)}
-                                    before={m.before}
-                                    after={m.after}
-                                    locked={seasonLocked}
-                                    newTag={isNew(s) ? t("studio.seasonal_new") : undefined}
-                                    selected={firstSession ? isChosen(seasonal, s) : false}
-                                    onPress={() => (firstSession ? choose(seasonal, s) : open(seasonal, s))}
-                                />
-                            ) : null;
-                        })}
-                        {tools.map((f) => {
-                            const m = f.media as { before?: number; after?: number; image?: number; reference?: number };
-                            return (
-                                <ToolTile
-                                    key={f.id}
-                                    label={t(f.titleKey)}
-                                    before={m.before ?? m.image!}
-                                    after={m.after ?? m.image!}
-                                    reference={m.reference}
-                                    locked={isLocked(f.key)}
-                                    selected={firstSession ? isChosen(f, null) : false}
-                                    onPress={() => (firstSession ? choose(f, null) : open(f, null))}
-                                />
-                            );
-                        })}
-                    </View>
-                )}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: -4 }}>
+                    {moreSeasons.map((s) => {
+                        const m = seasonMedia(s);
+                        return m ? (
+                            <ToolTile
+                                key={s.code}
+                                label={seasonTitle(s, i18n.language)}
+                                before={m.before}
+                                after={m.after}
+                                locked={seasonLocked}
+                                newTag={isNew(s) ? t("studio.seasonal_new") : undefined}
+                                selected={isChosen(seasonal, s)}
+                                onPress={() => choose(seasonal, s)}
+                            />
+                        ) : null;
+                    })}
+                    {tools.map((f) => {
+                        const m = f.media as { before?: number; after?: number; image?: number; reference?: number };
+                        return (
+                            <ToolTile
+                                key={f.id}
+                                label={t(f.titleKey)}
+                                before={m.before ?? m.image!}
+                                after={m.after ?? m.image!}
+                                reference={m.reference}
+                                locked={isLocked(f.key)}
+                                selected={isChosen(f, null)}
+                                onPress={() => choose(f, null)}
+                            />
+                        );
+                    })}
+                </View>
             </ScrollView>
 
             {lockedPreview && (

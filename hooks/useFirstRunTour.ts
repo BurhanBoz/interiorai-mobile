@@ -2,13 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "expo-router";
 
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useAuthStore } from "@/stores/authStore";
 import { clearFlag, isFlagSet, setFlag } from "@/utils/oneShotFlag";
 
 /** Every tour the app has. resetTours() forgets all of them. */
 const TOUR_KEYS = ["studio", "composer"] as const;
 type TourKey = (typeof TOUR_KEYS)[number];
 
-const flagOf = (key: TourKey) => `tour.${key}.v1`;
+/**
+ * 3.0.0 (21 Oct): the flag is PER IDENTITY, like first_open and result_count. It used to be one
+ * per device, so the first guest to finish the tour finished it for every guest the device would
+ * ever create — a "full reset (new guest)" on the owner's phone, or a reinstall, never replayed it.
+ * (The old device-wide key is left alone; an identity that has rendered is ineligible anyway.)
+ */
+const flagOf = (key: TourKey, uid: string | null) => (uid ? `tour.${key}.v1:${uid}` : `tour.${key}.v1`);
 
 /**
  * Build 92 (TestFlight only) had a "Skip" that ended every tour through this flag.
@@ -31,7 +38,12 @@ const finishedThisSession = new Set<TourKey>();
  */
 export async function resetTours(): Promise<void> {
     finishedThisSession.clear();
-    await Promise.all([...TOUR_KEYS.map((k) => clearFlag(flagOf(k))), clearFlag(LEGACY_SKIPPED_ALL)]);
+    const uid = useAuthStore.getState().user?.id ?? null;
+    await Promise.all([
+        ...TOUR_KEYS.map((k) => clearFlag(flagOf(k, uid))),
+        ...TOUR_KEYS.map((k) => clearFlag(flagOf(k, null))),
+        clearFlag(LEGACY_SKIPPED_ALL),
+    ]);
 }
 
 /**
@@ -57,9 +69,11 @@ export function useFirstRunTour(key: TourKey, ready: boolean, delayMs = 650) {
     const subscriptionResolved = useSubscriptionStore((s) => s.subscriptionResolved);
     const hasGenerated = useSubscriptionStore((s) => s.subscription?.hasGenerated);
 
+    const uid = useAuthStore((s) => s.user?.id ?? null);
+
     const [visible, setVisible] = useState(false);
     const [focused, setFocused] = useState(false);
-    const flag = flagOf(key);
+    const flag = flagOf(key, uid);
 
     useFocusEffect(
         useCallback(() => {
@@ -71,7 +85,8 @@ export function useFirstRunTour(key: TourKey, ready: boolean, delayMs = 650) {
         }, []),
     );
 
-    const eligible = focused && ready && subscriptionResolved && hasGenerated === false;
+    // No identity yet (the /me call still in flight) → wait; the flag must be read under the right name.
+    const eligible = focused && ready && subscriptionResolved && hasGenerated === false && uid !== null;
 
     useEffect(() => {
         if (!eligible || finishedThisSession.has(key)) return;

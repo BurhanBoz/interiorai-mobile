@@ -127,7 +127,9 @@ export default function OnboardingScreen() {
                         adjustsFontSizeToFit
                         minimumFontScale={0.6}
                     >
-                        {t("onboarding.v3_headline")}
+                        {/* One sentence per line (owner, 21 Oct): the full stops are the line breaks, in
+                            every language — "。" in Japanese, ". " elsewhere. */}
+                        {t("onboarding.v3_headline").replace(/([.。])\s*(?=\S)/g, "$1\n")}
                     </Text>
                 </Reanimated.View>
 

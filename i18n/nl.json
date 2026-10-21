@@ -1448,12 +1448,12 @@
     "room_title": "Controleer het kamertype",
     "room_body": "Tik erop om een andere kamer te kiezen.",
     "style_title": "Kies een stijl",
-    "style_body": "Veeg om ze allemaal te zien en tik op je favoriet.",
+    "style_body": "We kozen de stijl die bij deze kamer past. Veeg om ze allemaal te zien en tik op een andere.",
     "advanced_title": "Verfijn als je wilt",
     "advanced_body": "Kleurenpalet, hoe sterk de verandering is en je indeling behouden. Optioneel — de standaardinstellingen werken goed.",
     "generate_title": "Maak je ontwerp",
     "generate_body": "Tik hier als je klaar bent. De kosten staan er direct boven.",
-    "room_strip_body": "Scrol en tik op je kamer. Jij kiest de kamer en de stijl — beide zijn nodig.",
+    "room_strip_body": "We herkenden de kamer op je foto. Tik op een ander vak als het niet klopt.",
     "theme_title": "Kies een thema",
     "theme_body": "Elk thema versiert je kamer op zijn eigen manier. Tik op je favoriet."
   }

@@ -1448,12 +1448,12 @@
     "room_title": "Revisa el tipo de habitación",
     "room_body": "Tócalo para elegir otra habitación.",
     "style_title": "Elige un estilo",
-    "style_body": "Desliza para verlos todos y toca el que te guste.",
+    "style_body": "Elegimos el que le queda bien a esta habitación. Desliza para verlos todos y toca otro.",
     "advanced_title": "Ajusta si quieres",
     "advanced_body": "Paleta de colores, intensidad del cambio y conservar la distribución. Opcional: los valores por defecto funcionan bien.",
     "generate_title": "Crea tu diseño",
     "generate_body": "Toca aquí cuando estés listo. El coste aparece justo encima.",
-    "room_strip_body": "Desliza y toca tu habitación. Tú eliges la habitación y el estilo: hacen falta los dos.",
+    "room_strip_body": "Reconocimos la habitación en tu foto. Toca otra casilla si nos equivocamos.",
     "theme_title": "Elige un tema",
     "theme_body": "Cada tema decora tu espacio a su manera. Toca el que te guste."
   }
