@@ -59,10 +59,10 @@ export function PlanCard({
         <View style={{ borderRadius: 18, overflow: "hidden", backgroundColor: U.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: U.accent }}>
             {bg ? (
                 <>
-                    <Image source={{ uri: bg }} style={{ ...StyleSheet.absoluteFillObject, opacity: 0.35 }} contentFit="cover" transition={300} />
+                    <Image source={{ uri: bg }} style={{ ...StyleSheet.absoluteFillObject, opacity: 0.55 }} contentFit="cover" transition={300} />
                     <LinearGradient
                         pointerEvents="none"
-                        colors={["rgba(44,38,31,0.25)", "rgba(44,38,31,0.96)"]}
+                        colors={["rgba(44,38,31,0.10)", "rgba(44,38,31,0.90)"]}
                         style={StyleSheet.absoluteFill}
                     />
                 </>

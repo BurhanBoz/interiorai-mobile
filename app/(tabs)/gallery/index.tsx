@@ -648,7 +648,7 @@ export default function GalleryScreen() {
                 <View style={{ paddingHorizontal: EDGE }}>
                   <NewDesignCell
                     width={width - EDGE * 2}
-                    height={96}
+                    height={64}
                     onPress={() => router.push("/(tabs)/studio")}
                   />
                 </View>

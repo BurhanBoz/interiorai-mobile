@@ -240,7 +240,10 @@ export default function ComposerScreen() {
     useEffect(() => {
         const fileId = photo?.fileId;
         if (!fileId || guessedFor.current === fileId) return;
-        if (roomType?.id && (seasonal || designStyle?.id)) return; // the user already chose
+        // A room already chosen on arrival means this photo was placed by something that knows
+        // it — the gallery's "another style on this room", the result screen, an ad link. The
+        // guess would only hand back the style they just made; it runs for a NEW photo only.
+        if (roomType?.id) return;
         if (roomTypes.length === 0) return; // the catalogue has not loaded yet; retried when it has
         guessedFor.current = fileId;
         setDetected({ room: false, style: false });
