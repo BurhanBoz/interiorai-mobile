@@ -1369,7 +1369,11 @@
     "save_pct": "{{pct}}% 절약",
     "hero_one_room_title": "이건 방 하나였어요.",
     "value_line": "Pro는 모든 방을 원하는 스타일로 다시 디자인해요. 방 영상 포함, 워터마크 없음.",
-    "price_today": "오늘 {{price}}"
+    "price_today": "오늘 {{price}}",
+    "confirming_title": "구매를 확인하는 중…",
+    "confirming_body": "Apple 결제가 완료됐어요. 요금제를 켜는 중이에요. 몇 초 걸려요.",
+    "pending_title": "결제 완료",
+    "pending_body": "결제가 처리됐어요. Apple과 확인을 마무리하는 중이에요. 요금제와 크레딧이 몇 분 안에 표시돼요. 다시 결제되지 않아요."
   },
   "purchase_errors": {
     "sheet_title": "Apple 결제 화면이 열리지 않았습니다",

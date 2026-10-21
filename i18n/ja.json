@@ -1369,7 +1369,11 @@
     "save_pct": "{{pct}}%お得",
     "hero_one_room_title": "これはひと部屋だけ。",
     "value_line": "Proならどの部屋もどのスタイルでも。ルーム動画付き、透かしなし。",
-    "price_today": "本日 {{price}}"
+    "price_today": "本日 {{price}}",
+    "confirming_title": "購入を確認しています…",
+    "confirming_body": "Appleでのお支払いは完了しています。プランを有効にしています（数秒かかります）。",
+    "pending_title": "お支払いを受け付けました",
+    "pending_body": "お支払いは完了しています。Appleとの確認を続けています。プランとクレジットは数分以内に反映されます。再度請求されることはありません。"
   },
   "purchase_errors": {
     "sheet_title": "Appleの支払い画面が開きませんでした",

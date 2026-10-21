@@ -201,6 +201,8 @@ export default function PaywallScreen() {
         });
     }, []);
     const [busy, setBusy] = useState(false);
+    /** 3.0.0: Apple has taken the payment and the server is settling it — the screen says so. */
+    const [confirming, setConfirming] = useState(false);
 
     // The hero takes what the screen can spare. The rule for redesigned
     // screens is "fits 393x852 without scrolling"; v3's full-bleed picture
@@ -391,10 +393,16 @@ export default function PaywallScreen() {
         setBusy(true);
         await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: exhaustedPack.code });
         try {
-            await purchasePack(exhaustedPack.code);
+            const result = await purchasePack(exhaustedPack.code);
             // The wallet changed server-side; the studio's affordability gate
             // reads the store, so refresh before handing the user back to it.
             await fetchBalance().catch(() => {});
+            if ((result as { pending?: boolean } | undefined)?.pending) {
+                await recordPaywallEvent("PURCHASE_PENDING", { source, planCode: exhaustedPack.code });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             await leave("PURCHASED", exhaustedPack.code);
         } catch (e) {
             // One classifier for all four purchase entry points — see
@@ -422,12 +430,37 @@ export default function PaywallScreen() {
 
         setBusy(true);
         await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: plan.code });
+        let paid = false;
         try {
-            await iap.purchaseSubscription(plan.code, plan.appleProductId);
+            // Apple's sheet is up until this resolves; from then on Apple has the money and the
+            // overlay says the payment is being confirmed while the server settles it (3.0.0).
+            const result = await iap.purchaseSubscription(plan.code, plan.appleProductId,
+                () => { paid = true; setConfirming(true); });
             await fetchSubscription().catch(() => {});
             await fetchBalance().catch(() => {});
+            setConfirming(false);
+            if ((result as { settled?: boolean }).settled === false) {
+                // 🔴 Never "purchased" before the server has the plan on (21 Oct: the screen said
+                // purchased while the account stayed FREE with 0 credits). Honest words instead;
+                // the foreground reconciler finishes the job and the user is never charged twice.
+                await recordPaywallEvent("PURCHASE_PENDING", {
+                    source, planCode: plan.code,
+                    failureCode: (result as { reason?: string }).reason ?? null,
+                });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             await leave("PURCHASED", plan.code);
         } catch (e) {
+            setConfirming(false);
+            if (paid) {
+                // Apple took the payment and something of ours threw: still not a failure.
+                await recordPaywallEvent("PURCHASE_PENDING", { source, planCode: plan.code, failureCode: "CLIENT_ERROR" });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             // Cancelling the Apple sheet is not a failure and must not be
             // reported as one — it would inflate the FAILED bucket with people
             // who simply changed their mind at the last step. The classifier
@@ -810,6 +843,24 @@ export default function PaywallScreen() {
             >
                 <Ionicons name="close" size={18} color={U.ink} />
             </Pressable>
+
+            {/* 3.0.0: between Apple's sheet closing and the server settling the purchase (a second
+                usually, up to 20 s). Covers the screen so nothing can be bought twice meanwhile. */}
+            {confirming && (
+                <View
+                    accessibilityRole="progressbar"
+                    accessibilityLabel={t("paywall.confirming_title")}
+                    style={{
+                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: "rgba(20,16,12,0.86)",
+                        alignItems: "center", justifyContent: "center", paddingHorizontal: 36, gap: 14,
+                    }}
+                >
+                    <ActivityIndicator size="large" color={U.accentBright} />
+                    <Text style={{ ...theme.v2.displayS, color: U.ink, textAlign: "center" }}>{t("paywall.confirming_title")}</Text>
+                    <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, textAlign: "center" }}>{t("paywall.confirming_body")}</Text>
+                </View>
+            )}
         </View>
     );
 }

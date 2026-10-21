@@ -1374,7 +1374,11 @@
     "save_pct": "Risparmi il {{pct}}%",
     "hero_one_room_title": "Questa era una stanza.",
     "value_line": "Pro ridisegna ogni stanza in qualsiasi stile, con video e senza filigrana.",
-    "price_today": "{{price}} oggi"
+    "price_today": "{{price}} oggi",
+    "confirming_title": "Conferma dell’acquisto…",
+    "confirming_body": "Apple ha il tuo pagamento. Stiamo attivando il tuo piano: pochi secondi.",
+    "pending_title": "Pagamento ricevuto",
+    "pending_body": "Il pagamento è andato a buon fine. Lo stiamo ancora confermando con Apple: piano e crediti compariranno tra pochi minuti. Non ti verrà addebitato di nuovo."
   },
   "purchase_errors": {
     "sheet_title": "La schermata di pagamento di Apple non si è aperta",

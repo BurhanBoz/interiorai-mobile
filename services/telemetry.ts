@@ -188,7 +188,9 @@ export type PaywallEvent =
     | "PLAN_SELECTED"
     | "PURCHASE_STARTED"
     | "PURCHASED"
-    | "FAILED";
+    | "FAILED"
+    /** 3.0.0: Apple took the payment, the server had not settled it when the app stopped waiting. */
+    | "PURCHASE_PENDING";
 
 /**
  * Report one paywall interaction.

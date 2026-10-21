@@ -1373,7 +1373,11 @@
     "save_pct": "%{{pct}} tasarruf",
     "hero_one_room_title": "Bu yalnızca bir odaydı.",
     "value_line": "Pro her odayı istediğin stilde yeniden tasarlar; oda videoları var, filigran yok.",
-    "price_today": "Bugün {{price}}"
+    "price_today": "Bugün {{price}}",
+    "confirming_title": "Satın alman onaylanıyor…",
+    "confirming_body": "Ödemen Apple'a ulaştı. Planını açıyoruz; birkaç saniye sürer.",
+    "pending_title": "Ödeme alındı",
+    "pending_body": "Ödemen geçti. Apple ile onayı hâlâ tamamlıyoruz; planın ve kredilerin birkaç dakika içinde görünecek. Tekrar ücret alınmayacak."
   },
   "purchase_errors": {
     "sheet_title": "Apple'ın ödeme ekranı açılmadı",

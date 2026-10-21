@@ -1374,7 +1374,11 @@
     "save_pct": "Bespaar {{pct}}%",
     "hero_one_room_title": "Dit was één kamer.",
     "value_line": "Pro ontwerpt elke kamer opnieuw in elke stijl, met kamervideo's en zonder watermerk.",
-    "price_today": "Vandaag {{price}}"
+    "price_today": "Vandaag {{price}}",
+    "confirming_title": "Je aankoop wordt bevestigd…",
+    "confirming_body": "Apple heeft je betaling. We zetten je abonnement aan; dat duurt een paar seconden.",
+    "pending_title": "Betaling ontvangen",
+    "pending_body": "Je betaling is gelukt. We bevestigen hem nog bij Apple; je abonnement en credits verschijnen binnen een paar minuten. Je betaalt niet nog een keer."
   },
   "purchase_errors": {
     "sheet_title": "Het betaalscherm van Apple ging niet open",

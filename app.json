@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.roomframeai.mobile",
-      "buildNumber": "127",
+      "buildNumber": "128",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false

@@ -1374,7 +1374,11 @@
     "save_pct": "Save {{pct}}%",
     "hero_one_room_title": "This was one room.",
     "value_line": "Pro redesigns every room in any style, with room videos and no watermark.",
-    "price_today": "{{price}} today"
+    "price_today": "{{price}} today",
+    "confirming_title": "Confirming your purchase…",
+    "confirming_body": "Apple has your payment. We are switching your plan on — this takes a few seconds.",
+    "pending_title": "Payment received",
+    "pending_body": "Your payment went through. We are still confirming it with Apple — your plan and credits will appear in a few minutes. You will not be charged again."
   },
   "purchase_errors": {
     "sheet_title": "Apple's payment screen didn't open",

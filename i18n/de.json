@@ -1374,7 +1374,11 @@
     "save_pct": "{{pct}} % sparen",
     "hero_one_room_title": "Das war ein Raum.",
     "value_line": "Pro gestaltet jeden Raum in jedem Stil neu – mit Raumvideos und ohne Wasserzeichen.",
-    "price_today": "Heute {{price}}"
+    "price_today": "Heute {{price}}",
+    "confirming_title": "Kauf wird bestätigt …",
+    "confirming_body": "Apple hat deine Zahlung. Wir schalten deinen Plan frei – das dauert ein paar Sekunden.",
+    "pending_title": "Zahlung erhalten",
+    "pending_body": "Deine Zahlung ist durchgegangen. Wir bestätigen sie noch mit Apple – Plan und Credits erscheinen in wenigen Minuten. Es wird nicht erneut abgebucht."
   },
   "purchase_errors": {
     "sheet_title": "Apples Zahlungsfenster hat sich nicht geöffnet",

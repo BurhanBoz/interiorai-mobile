@@ -1374,7 +1374,11 @@
     "save_pct": "Économisez {{pct}} %",
     "hero_one_room_title": "Ce n'était qu'une pièce.",
     "value_line": "Pro repense chaque pièce dans n'importe quel style, avec vidéos et sans filigrane.",
-    "price_today": "{{price}} aujourd'hui"
+    "price_today": "{{price}} aujourd'hui",
+    "confirming_title": "Confirmation de votre achat…",
+    "confirming_body": "Apple a votre paiement. Nous activons votre formule — quelques secondes.",
+    "pending_title": "Paiement reçu",
+    "pending_body": "Votre paiement est passé. Nous le confirmons encore avec Apple — votre formule et vos crédits apparaîtront d’ici quelques minutes. Vous ne serez pas débité une seconde fois."
   },
   "purchase_errors": {
     "sheet_title": "L'écran de paiement d'Apple ne s'est pas ouvert",

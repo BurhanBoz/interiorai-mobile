@@ -1374,7 +1374,11 @@
     "save_pct": "Ahorra un {{pct}} %",
     "hero_one_room_title": "Esto fue una habitación.",
     "value_line": "Pro rediseña cada habitación en cualquier estilo, con vídeos y sin marca de agua.",
-    "price_today": "{{price}} hoy"
+    "price_today": "{{price}} hoy",
+    "confirming_title": "Confirmando tu compra…",
+    "confirming_body": "Apple tiene tu pago. Estamos activando tu plan; tarda unos segundos.",
+    "pending_title": "Pago recibido",
+    "pending_body": "Tu pago se ha realizado. Aún lo estamos confirmando con Apple; tu plan y tus créditos aparecerán en unos minutos. No se te cobrará de nuevo."
   },
   "purchase_errors": {
     "sheet_title": "No se abrió la pantalla de pago de Apple",
