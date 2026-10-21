@@ -459,7 +459,12 @@
     "design_fallback": "Ontwerp",
     "v3_count_one": "{{count}} ontwerp",
     "v3_count_other": "{{count}} ontwerpen",
-    "v3_days_ago": "{{count}} dagen geleden"
+    "v3_days_ago": "{{count}} dagen geleden",
+    "your_rooms": "Jouw kamers",
+    "group_styles_one": "{{room}} · 1 stijl",
+    "group_styles_other": "{{room}} · {{count}} stijlen",
+    "another_style": "Andere stijl",
+    "another_style_on_room": "Een andere stijl voor deze kamer"
   },
   "history": {
     "title": "Geschiedenis",
@@ -538,7 +543,10 @@
     "rate_app": "Beoordeel Roomframe",
     "section_account": "Account",
     "section_roomframe": "Roomframe",
-    "refills_daily": "vult dagelijks aan"
+    "refills_daily": "vult dagelijks aan",
+    "keep_rooms_title": "Bewaar je kamers op een nieuwe telefoon",
+    "keep_rooms_sub": "Inloggen met Apple — 10 seconden, geen wachtwoord",
+    "section_preferences": "Voorkeuren"
   },
   "plans": {
     "title": "Kies je abonnement",

@@ -14,7 +14,7 @@ import { ConsentSheet } from "@/components/studio/ConsentSheet";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { manageSubscription } from "@/services/manageSubscription";
 import { BOTTOM_SAFE_GAP, TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
-import { CreditCard } from "@/components/settings/CreditCard";
+import { PlanCard } from "@/components/settings/PlanCard";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { Rise } from "@/components/settings/settingsMotion";
 import {
@@ -124,51 +124,17 @@ export default function SettingsScreen() {
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Identity — and the door to everything the rows below do
-                    not carry. */}
-                <Pressable
-                    onPress={openAccount}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${displayName}, ${planLabel}`}
-                    accessibilityHint={t("profile.account_and_data")}
-                    style={{ flexDirection: "row", alignItems: "center", gap: 14, minHeight: 56 }}
-                >
-                    <View
-                        style={{
-                            width: 54,
-                            height: 54,
-                            borderRadius: 27,
-                            backgroundColor: U.lineAccent,
-                            borderWidth: 1,
-                            borderColor: U.accent,
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Text style={{ fontFamily: "NotoSerif", fontSize: 21, color: U.accentBright }}>
-                            {initials}
-                        </Text>
-                    </View>
-                    <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                        {/* 🔴 The name and the plan. NOT the internal address. */}
-                        <Text style={{ ...V.displayS, color: U.ink }} numberOfLines={1}>
-                            {displayName}
-                        </Text>
-                        <View style={{ flexDirection: "row" }}>
-                            <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: isFree ? U.lineNeutral : U.lineAccent, borderWidth: 1, borderColor: isFree ? U.lineNeutral : U.accent }}>
-                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11, letterSpacing: 0.6, color: isFree ? U.inkMuted : U.accentBright }} numberOfLines={1}>
-                                    {planLabel.toLocaleUpperCase()}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                    <ChevronIcon color={U.inkMuted} size={16} />
-                </Pressable>
-
+                {/* 3.0.0 (owner, 20 Oct): the identity and the wallet are ONE card with the
+                    user's own last design faint behind it (components/settings/PlanCard). The
+                    identity block is the door to the account screen, as the old row was. */}
                 <Rise play={entered} index={0}>
-                    <CreditCard
-                        balance={balance}
+                    <PlanCard
+                        initials={initials}
+                        displayName={displayName}
+                        planLabel={planLabel}
                         isFree={isFree}
+                        balance={balance}
+                        onAccount={openAccount}
                         onGetPro={() => router.push("/paywall?source=SETTINGS" as never)}
                         onBuyCredits={() => router.push("/credits/packs" as never)}
                         // Eski "Planını Seç" ekranı yeniden tasarlanmadı ve
@@ -178,19 +144,38 @@ export default function SettingsScreen() {
                     />
                 </Rise>
 
-                <Rise play={entered} index={1}>
-                    <SettingsGroup label={t("profile.section_account", { defaultValue: "Account" })}>
-                        {/* Always present, and it opens the ACCOUNT screen — name,
-                            email, billing, terms, deletion, and for a guest the
-                            add-email upgrade. It used to push /login, which asked
-                            a signed-in user to sign in again and gave a guest no
-                            way to set a name at all. */}
-                        <SettingsRow
-                            icon={<PersonIcon color={ICON} />}
-                            label={t(isGuest ? "profile.sign_in_to_keep" : "profile.account_and_data")}
+                {/* 3.0.0: for a guest, the one ask they need, worded as a benefit — the same
+                    account screen the old "Sign in to keep your gallery" row opened. */}
+                {isGuest && (
+                    <Rise play={entered} index={1}>
+                        <Pressable
                             onPress={() => router.push("/settings/profile-edit" as never)}
-                            chevron
-                        />
+                            accessibilityRole="button"
+                            accessibilityLabel={`${t("profile.keep_rooms_title")}. ${t("profile.keep_rooms_sub")}`}
+                            style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, backgroundColor: "rgba(239,208,160,0.10)" }}
+                        >
+                            <PersonIcon color={U.accentBright} />
+                            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, color: U.accentBright }} numberOfLines={1}>{t("profile.keep_rooms_title")}</Text>
+                                <Text style={{ ...V.caption, color: theme.color.onSurfaceVariant }} numberOfLines={2}>{t("profile.keep_rooms_sub")}</Text>
+                            </View>
+                            <ChevronIcon color={U.inkMuted} />
+                        </Pressable>
+                    </Rise>
+                )}
+
+                <Rise play={entered} index={2}>
+                    <SettingsGroup label={t("profile.section_preferences", { defaultValue: "Preferences" })}>
+                        {/* A signed-in account keeps its row to the ACCOUNT screen — name,
+                            email, billing, terms, deletion. A guest has the gold row above. */}
+                        {!isGuest && (
+                            <SettingsRow
+                                icon={<PersonIcon color={ICON} />}
+                                label={t("profile.account_and_data")}
+                                onPress={() => router.push("/settings/profile-edit" as never)}
+                                chevron
+                            />
+                        )}
                         {/* 2.0.0: the way into Apple's subscription page used to
                             live only on the plans screen, which nothing in the
                             tab bar reaches. It sits here now, and asks its one
@@ -247,7 +232,7 @@ export default function SettingsScreen() {
                     </SettingsGroup>
                 </Rise>
 
-                <Rise play={entered} index={2}>
+                <Rise play={entered} index={3}>
                     <SettingsGroup label={t("profile.section_roomframe", { defaultValue: "Roomframe" })}>
                         <SettingsRow
                             icon={<StarIcon color={U.accentBright} />}

@@ -459,7 +459,12 @@
     "design_fallback": "Design",
     "v3_count_one": "{{count}} design",
     "v3_count_other": "{{count}} designs",
-    "v3_days_ago": "il y a {{count}} jours"
+    "v3_days_ago": "il y a {{count}} jours",
+    "your_rooms": "Vos pièces",
+    "group_styles_one": "{{room}} · 1 style",
+    "group_styles_other": "{{room}} · {{count}} styles",
+    "another_style": "Un autre style",
+    "another_style_on_room": "Un autre style pour cette pièce"
   },
   "history": {
     "title": "Historique",
@@ -538,7 +543,10 @@
     "rate_app": "Noter Roomframe",
     "section_account": "Compte",
     "section_roomframe": "Roomframe",
-    "refills_daily": "se recharge chaque jour"
+    "refills_daily": "se recharge chaque jour",
+    "keep_rooms_title": "Gardez vos pièces sur un nouveau téléphone",
+    "keep_rooms_sub": "Connexion avec Apple — 10 secondes, sans mot de passe",
+    "section_preferences": "Préférences"
   },
   "plans": {
     "title": "Choisissez votre offre",

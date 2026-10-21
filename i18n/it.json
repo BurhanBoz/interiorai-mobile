@@ -459,7 +459,12 @@
     "design_fallback": "Progetto",
     "v3_count_one": "{{count}} design",
     "v3_count_other": "{{count}} design",
-    "v3_days_ago": "{{count}} giorni fa"
+    "v3_days_ago": "{{count}} giorni fa",
+    "your_rooms": "Le tue stanze",
+    "group_styles_one": "{{room}} · 1 stile",
+    "group_styles_other": "{{room}} · {{count}} stili",
+    "another_style": "Un altro stile",
+    "another_style_on_room": "Un altro stile per questa stanza"
   },
   "history": {
     "title": "Cronologia",
@@ -538,7 +543,10 @@
     "rate_app": "Valuta Roomframe",
     "section_account": "Account",
     "section_roomframe": "Roomframe",
-    "refills_daily": "si ricarica ogni giorno"
+    "refills_daily": "si ricarica ogni giorno",
+    "keep_rooms_title": "Conserva le tue stanze su un nuovo telefono",
+    "keep_rooms_sub": "Accedi con Apple — 10 secondi, senza password",
+    "section_preferences": "Preferenze"
   },
   "plans": {
     "title": "Scegli il Tuo Piano",

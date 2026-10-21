@@ -28,11 +28,24 @@ import { useCreditStore } from "@/stores/creditStore";
 import type { JobResponse } from "@/types/api";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { GalleryCard, NewDesignCell } from "@/components/gallery/GalleryCard";
+import { useStudioStore } from "@/stores/studioStore";
+import { useCatalogStore } from "@/stores/catalogStore";
+import { backToStudioThen } from "@/utils/tabNavigation";
+import type { DesignMode } from "@/types/api";
 import { GalleryFilterChip } from "@/components/gallery/GalleryFilterChip";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { theme } from "@/config/theme";
 
 /*
+ * 3.0.0 (owner, 20 Oct 2026) — the gallery is grouped by the PHOTO, not a flat grid.
+ *
+ * One room, its designs side by side: a group header "Living room · 3 styles" with the
+ * date, a horizontal row of the designs made from that photo, and under it one door —
+ * "Another style on this room" — that reopens the composer with that same photo and room
+ * already in. A room with one design ends its row with an "Another style" tile too. The
+ * title is "Your rooms". The chips, Activity, favorites, pull-to-refresh, paging and the
+ * long-press peek are unchanged. The v3 masonry below is retired.
+ *
  * Redesign v3 (2026-10-10) — visual layer only.
  *
  * A "ROOMFRAME" kicker over the serif title, with the design count on the
@@ -55,10 +68,9 @@ const FILTER_FAVORITES = "__FAVORITES__";
 // matter most: they are the only route back to a retry.
 const FILTER_ACTIVITY = "__ACTIVITY__";
 
-// v3 masonry: two card heights from the approved mockup, alternating per
-// column so the columns interlock.
-const TALL = 230;
-const SHORT = 160;
+// 3.0.0 row cards: the canvas's 160 × 200, side by side in a horizontal row.
+const CARD_W = 160;
+const CARD_H = 200;
 // Entrance stagger, and how many cards get one. Past eight the wait reads
 // as lag, not rhythm.
 const ENTER_STAGGER = 40;
@@ -106,6 +118,9 @@ function GalleryEmpty() {
 interface GalleryOutput {
   jobId: string;
   outputId: string;
+  /** The photo this design was made from — the grouping key (3.0.0). */
+  inputFileId: string;
+  designMode: DesignMode;
   /**
    * For a picture: the pre-signed output URL. For a clip (V183): the still it
    * was made from, through the authenticated /api/files proxy — the tile
@@ -132,9 +147,6 @@ export default function GalleryScreen() {
   // Layout constants — 2-col masonry. v3 uses the redesign's wide gutter (20)
   // on every edge of this screen: title, chips and grid share one line.
   const EDGE = theme.v2Layout.gutterWide;
-  const GAP = 12;
-  const COLS = 2;
-  const tileWidth = (width - EDGE * 2 - GAP * (COLS - 1)) / COLS;
 
   // Cards that mount while this is true get the entrance; it is switched off
   // shortly after the first grid paint, so the next page, a filter switch or
@@ -254,6 +266,8 @@ export default function GalleryScreen() {
           return {
             jobId: j.id,
             outputId: o.id,
+            inputFileId: j.inputFile?.id ?? j.id,
+            designMode: j.designMode,
             // Direct pre-signed S3 URL (1-hour expiry). Going through the
             // backend /download redirect breaks on iOS — URLSession forwards
             // the Authorization header to the S3 redirect target and S3
@@ -349,16 +363,37 @@ export default function GalleryScreen() {
     setPreviewItem(item);
   }, []);
 
-  /* ── Masonry block — four cards, two interlocking columns ── */
-  // Groups of four keep the FlatList one-column (so it can share the list
-  // with the Activity rows) while drawing a true masonry: left column
-  // TALL then SHORT, right column SHORT then TALL. Reading order is still
-  // newest-first, left-to-right, top-to-bottom.
-  const outputBlocks = useMemo(() => {
-    const blocks: GalleryOutput[][] = [];
-    for (let i = 0; i < outputs.length; i += 4) blocks.push(outputs.slice(i, i + 4));
-    return blocks;
+  /* ── Groups — one per photo, newest photo first (3.0.0) ── */
+  const groups = useMemo(() => {
+    const map = new Map<string, GalleryOutput[]>();
+    for (const o of outputs) {
+      const arr = map.get(o.inputFileId);
+      if (arr) arr.push(o); else map.set(o.inputFileId, [o]);
+    }
+    // `outputs` is newest-first, so each group's first item is its newest and the
+    // insertion order of the map is "newest photo first".
+    return Array.from(map.entries()).map(([inputFileId, items]) => ({ inputFileId, items }));
   }, [outputs]);
+
+  const roomTypes = useCatalogStore((s) => s.roomTypes);
+  /**
+   * "Another style on this room": the composer with that photo already in and its room
+   * pre-selected, the style left open. The mode is the group's own (a seasonal or outdoor
+   * room restyles in its mode); anything else lands on Redesign.
+   */
+  const restyleGroup = useCallback((g: { inputFileId: string; items: GalleryOutput[] }) => {
+    Haptics.selectionAsync();
+    const first = g.items[0];
+    const st = useStudioStore.getState();
+    st.replacePhoto({ uri: getFileDownloadUrl(g.inputFileId), fileId: g.inputFileId });
+    const mode: DesignMode = (["REDESIGN", "EMPTY_ROOM", "OUTDOOR", "SEASONAL"] as DesignMode[]).includes(first.designMode)
+      ? first.designMode : "REDESIGN";
+    st.setMode(mode);
+    if (mode !== "SEASONAL") st.setSeasonCode(null);
+    st.setRoomType(roomTypes.find((r) => r.name === first.roomTypeName) ?? null);
+    st.setDesignStyle(null);
+    backToStudioThen("/studio/composer");
+  }, [roomTypes]);
 
   const renderCard = useCallback(
     (item: GalleryOutput, height: number, flatIndex: number) => {
@@ -367,9 +402,8 @@ export default function GalleryScreen() {
         catalogLabel("style", item.designStyleName) ||
         catalogLabel("room", item.roomTypeName) ||
         t("gallery.design_fallback");
-      const room = item.designStyleName ? catalogLabel("room", item.roomTypeName) : "";
-      const when = relativeDay(item.createdAt, t, i18n.language);
-      const caption = [room, when].filter(Boolean).join(" · ");
+      // 3.0.0: the room and the date sit on the group header; the card carries the style.
+      const caption = "";
       const a11y = [
         title,
         caption,
@@ -379,7 +413,7 @@ export default function GalleryScreen() {
       return (
         <GalleryCard
           key={item.outputId}
-          width={tileWidth}
+          width={CARD_W}
           height={height}
           imageUrl={item.imageUrl}
           headers={item.kind === "video" ? authHeaders : undefined}
@@ -401,27 +435,52 @@ export default function GalleryScreen() {
     // favoriteIds: isFavorite is a stable store function, so the ids are
     // what tells this callback a heart changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tileWidth, authHeaders, handleTap, handleLongPress, isFavorite, favoriteIds, catalogLabel, t, i18n.language, reduceMotion],
+    [authHeaders, handleTap, handleLongPress, isFavorite, favoriteIds, catalogLabel, t, i18n.language, reduceMotion],
   );
 
-  const renderBlock = useCallback(
-    ({ item: block, index }: { item: GalleryOutput[]; index: number }) => {
-      const base = index * 4;
-      const [a, b, c, d] = block;
+  const renderGroup = useCallback(
+    ({ item: g, index }: { item: { inputFileId: string; items: GalleryOutput[] }; index: number }) => {
+      const first = g.items[0];
+      const room = catalogLabel("room", first.roomTypeName) || t("gallery.design_fallback");
+      const when = relativeDay(first.createdAt, t, i18n.language);
+      const base = index * 3;
       return (
-        <View style={{ flexDirection: "row", gap: GAP, paddingHorizontal: EDGE }}>
-          <View style={{ width: tileWidth, gap: GAP }}>
-            {a && renderCard(a, TALL, base)}
-            {c && renderCard(c, SHORT, base + 2)}
+        <View style={{ gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: EDGE }}>
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.ink }} numberOfLines={1}>
+              {t("gallery.group_styles", { room, count: g.items.length })}
+            </Text>
+            <Text style={{ ...V.caption, color: U.inkMuted }}>{when}</Text>
           </View>
-          <View style={{ width: tileWidth, gap: GAP }}>
-            {b && renderCard(b, SHORT, base + 1)}
-            {d && renderCard(d, TALL, base + 3)}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: EDGE, gap: 8 }}>
+            {g.items.map((o, k) => renderCard(o, CARD_H, base + k))}
+            {g.items.length === 1 ? (
+              <Pressable
+                onPress={() => restyleGroup(g)}
+                accessibilityRole="button"
+                accessibilityLabel={t("gallery.another_style")}
+                style={{ width: CARD_W, height: CARD_H, borderRadius: theme.v2Layout.radius.card, backgroundColor: "rgba(246,241,231,0.05)", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                <Ionicons name="add" size={22} color={U.accentBright} />
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accentBright }}>{t("gallery.another_style")}</Text>
+              </Pressable>
+            ) : null}
+          </ScrollView>
+          <View style={{ paddingHorizontal: EDGE }}>
+            <Pressable
+              onPress={() => restyleGroup(g)}
+              accessibilityRole="button"
+              accessibilityLabel={t("gallery.another_style_on_room")}
+              style={{ height: 40, borderRadius: theme.v2Layout.radius.inline, backgroundColor: U.lineAccent, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <Ionicons name="add" size={16} color={U.accentBright} />
+              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accentBright }}>{t("gallery.another_style_on_room")}</Text>
+            </Pressable>
           </View>
         </View>
       );
     },
-    [renderCard, tileWidth, EDGE],
+    [renderCard, restyleGroup, catalogLabel, t, i18n.language, EDGE],
   );
 
   // The header count. Only once every page is in: "20 designs" for a list
@@ -467,7 +526,7 @@ export default function GalleryScreen() {
         <View style={{ gap: 4, flexShrink: 1 }}>
           <Text style={{ ...V.brand, color: U.accent }}>ROOMFRAME</Text>
           <Text style={{ ...V.displayM, color: U.ink }} accessibilityRole="header">
-            {t("gallery.title")}
+            {t("gallery.your_rooms")}
           </Text>
         </View>
         {countLabel ? (
@@ -485,8 +544,8 @@ export default function GalleryScreen() {
           // filter renders the masonry, four cards per row item (see
           // renderBlock). Both are numColumns={1} since v3, so there is no
           // columnWrapperStyle to get wrong.
-          key={showActivity ? "activity" : "grid"}
-          data={showActivity ? (activityJobs as any[]) : (outputBlocks as any[])}
+          key={showActivity ? "activity" : "groups"}
+          data={showActivity ? (activityJobs as any[]) : (groups as any[])}
           renderItem={
             showActivity
               ? ({ item }: any) => (
@@ -494,16 +553,16 @@ export default function GalleryScreen() {
                     <JobActivityCard item={item} />
                   </View>
                 )
-              : (renderBlock as any)
+              : (renderGroup as any)
           }
           // A block is keyed by its position: a new design at the top shifts
           // every card one slot, and position keys let the blocks stay
           // mounted while the cards inside (keyed by outputId) move.
-          keyExtractor={(item: any, index: number) => (showActivity ? item.id : `block-${index}`)}
+          keyExtractor={(item: any) => (showActivity ? item.id : item.inputFileId)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP,
-            gap: GAP,
+            gap: 20,
           }}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
@@ -588,8 +647,8 @@ export default function GalleryScreen() {
               {!showActivity && (
                 <View style={{ paddingHorizontal: EDGE }}>
                   <NewDesignCell
-                    width={tileWidth}
-                    height={SHORT}
+                    width={width - EDGE * 2}
+                    height={96}
                     onPress={() => router.push("/(tabs)/studio")}
                   />
                 </View>

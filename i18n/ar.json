@@ -457,7 +457,12 @@
     "design_fallback": "تصميم",
     "v3_count_one": "تصميم واحد",
     "v3_count_other": "{{count}} تصاميم",
-    "v3_days_ago": "قبل {{count}} أيام"
+    "v3_days_ago": "قبل {{count}} أيام",
+    "your_rooms": "غرفك",
+    "group_styles_one": "{{room}} · طراز واحد",
+    "group_styles_other": "{{room}} · {{count}} طرز",
+    "another_style": "طراز آخر",
+    "another_style_on_room": "طراز آخر لهذه الغرفة"
   },
   "history": {
     "title": "السجل",
@@ -534,7 +539,10 @@
     "rate_app": "قيّم Roomframe",
     "section_account": "الحساب",
     "section_roomframe": "Roomframe",
-    "refills_daily": "يتجدد يوميًا"
+    "refills_daily": "يتجدد يوميًا",
+    "keep_rooms_title": "احتفظ بغرفك على هاتف جديد",
+    "keep_rooms_sub": "تسجيل الدخول بـ Apple — 10 ثوانٍ، بدون كلمة مرور",
+    "section_preferences": "التفضيلات"
   },
   "plans": {
     "title": "اختر خطتك",

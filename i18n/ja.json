@@ -457,7 +457,12 @@
     "design_fallback": "デザイン",
     "v3_count_one": "{{count}}件のデザイン",
     "v3_count_other": "{{count}}件のデザイン",
-    "v3_days_ago": "{{count}}日前"
+    "v3_days_ago": "{{count}}日前",
+    "your_rooms": "あなたの部屋",
+    "group_styles_one": "{{room}} · 1スタイル",
+    "group_styles_other": "{{room}} · {{count}}スタイル",
+    "another_style": "別のスタイル",
+    "another_style_on_room": "この部屋に別のスタイル"
   },
   "history": {
     "title": "履歴",
@@ -534,7 +539,10 @@
     "rate_app": "Roomframeを評価",
     "section_account": "アカウント",
     "section_roomframe": "Roomframe",
-    "refills_daily": "毎日補充"
+    "refills_daily": "毎日補充",
+    "keep_rooms_title": "新しいスマホでも部屋を残す",
+    "keep_rooms_sub": "Appleでサインイン — 10秒、パスワード不要",
+    "section_preferences": "設定"
   },
   "plans": {
     "title": "プランを選択",

@@ -458,7 +458,12 @@
     "design_fallback": "Tasarım",
     "v3_count_one": "{{count}} tasarım",
     "v3_count_other": "{{count}} tasarım",
-    "v3_days_ago": "{{count}} gün önce"
+    "v3_days_ago": "{{count}} gün önce",
+    "your_rooms": "Odaların",
+    "group_styles_one": "{{room}} · 1 stil",
+    "group_styles_other": "{{room}} · {{count}} stil",
+    "another_style": "Başka stil",
+    "another_style_on_room": "Bu odaya başka bir stil"
   },
   "history": {
     "title": "Geçmiş",
@@ -537,7 +542,10 @@
     "rate_app": "Roomframe'i değerlendir",
     "section_account": "Hesap",
     "section_roomframe": "Roomframe",
-    "refills_daily": "her gün yenilenir"
+    "refills_daily": "her gün yenilenir",
+    "keep_rooms_title": "Odalarını yeni telefonda da koru",
+    "keep_rooms_sub": "Apple ile giriş — 10 saniye, şifre yok",
+    "section_preferences": "Tercihler"
   },
   "plans": {
     "title": "Planını Seç",
