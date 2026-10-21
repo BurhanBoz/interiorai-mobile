@@ -236,6 +236,8 @@ export default function ComposerScreen() {
      * Nothing here is a default in the 10 Oct sense — nothing is chosen that the photo did not say.
      */
     const [detected, setDetected] = useState<{ room: boolean; style: boolean }>({ room: false, style: false });
+    /** True while the guess is being polled — the room title says "Reading your photo…". */
+    const [guessing, setGuessing] = useState(false);
     const guessedFor = useRef<string | null>(null);
     useEffect(() => {
         const fileId = photo?.fileId;
@@ -247,6 +249,7 @@ export default function ComposerScreen() {
         if (roomTypes.length === 0) return; // the catalogue has not loaded yet; retried when it has
         guessedFor.current = fileId;
         setDetected({ room: false, style: false });
+        setGuessing(true);
         let cancelled = false;
         let tries = 0;
         const poll = async () => {
@@ -256,6 +259,7 @@ export default function ComposerScreen() {
                 const g = await getRoomGuess(fileId);
                 if (cancelled) return;
                 if (g.ready) {
+                    setGuessing(false);
                     const st = useStudioStore.getState();
                     const room = roomTypes.find((r) => r.code === g.roomTypeCode);
                     const style = seasonal ? null : styleList.find((x) => x.code === g.styleCode);
@@ -274,13 +278,16 @@ export default function ComposerScreen() {
                 /* a missing endpoint or a network blip: the boxes simply stay empty */
             }
             if (tries < 8) setTimeout(poll, 1400);
+            else setGuessing(false);
         };
         poll();
-        return () => { cancelled = true; };
+        return () => { cancelled = true; setGuessing(false); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [photo?.fileId, roomTypes.length, styleList.length]);
     // A user's own tap clears the caption for that box.
-    const roomTitleCaption = detected.room && roomType?.id ? t("studio.detected_from_photo") : null;
+    const roomTitleCaption = detected.room && roomType?.id
+        ? t("studio.detected_from_photo")
+        : guessing && !roomType?.id ? t("studio.reading_photo") : null;
     const styleSuits = !seasonal && detected.style && designStyle?.id ? t("studio.style_suits_room", { style: catalogName(t, "style", designStyle) }) : null;
 
     const pickedProduct = objectRefs[0] ?? null;
@@ -338,7 +345,7 @@ export default function ComposerScreen() {
                 />
 
                 <View ref={tourTarget("composer.room")} collapsable={false}>
-                    <SectionTitle caption={roomTitleCaption}>{t("studio.which_room")}</SectionTitle>
+                    <SectionTitle caption={roomTitleCaption} busy={guessing && !roomType?.id}>{t("studio.which_room")}</SectionTitle>
                     <RoomStrip
                         items={roomTypes}
                         selectedId={roomType?.id ?? null}
@@ -359,6 +366,8 @@ export default function ComposerScreen() {
                         selectedId={designStyle?.id ?? null}
                         gutter={GUTTER}
                         reveal={detected.style}
+                        badgeId={!seasonal && detected.style ? designStyle?.id ?? null : null}
+                        badgeText={t("studio.recommended")}
                         onSelect={(s) => {
                             Haptics.selectionAsync();
                             setDesignStyle(s);
@@ -724,12 +733,13 @@ function PhotoPill({
     );
 }
 
-function SectionTitle({ children, caption }: { children: React.ReactNode; caption?: string | null }) {
+function SectionTitle({ children, caption, busy }: { children: React.ReactNode; caption?: string | null; busy?: boolean }) {
     return (
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, paddingHorizontal: GUTTER, marginBottom: 10 }}>
             <Text accessibilityRole="header" style={{ ...V.displayXS, color: U.ink, flexShrink: 1 }}>
                 {children}
             </Text>
+            {busy ? <ActivityIndicator size="small" color={U.accent} style={{ transform: [{ scale: 0.7 }] }} /> : null}
             {caption ? (
                 // 3.0.0: "detected from your photo" — gold, quiet, beside the title.
                 <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: U.accent }} numberOfLines={1}>

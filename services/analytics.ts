@@ -213,6 +213,7 @@ export type AnalyticsEvent =
     // source (camera / gallery / sample), and the first-open intro's button.
     | "tool_tile_tap"
     | "tool_tile_select"
+    | "style_reference_set"
     | "room_guess_applied"
     | "add_room_source"
     | "intro_done"

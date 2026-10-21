@@ -64,6 +64,11 @@ export interface RoomGuessResponse {
     roomTypeCode: string | null;
     styleCode: string | null;
     confidence: number | null;
+    /** The photo's look (21 Oct, "Copy this look"): hex colours, materials, mood, palette name. */
+    palette?: string[];
+    materials?: string | null;
+    mood?: string | null;
+    paletteName?: string | null;
 }
 
 export async function getRoomGuess(fileId: string): Promise<RoomGuessResponse> {

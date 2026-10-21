@@ -220,10 +220,13 @@ function StyleCard({
     item,
     selected,
     onSelect,
+    badge,
 }: {
     item: CatalogItemResponse;
     selected: boolean;
     onSelect: (s: CatalogItemResponse) => void;
+    /** 3.0.0: "· recommended" after the name on the style the room guess picked. */
+    badge?: string | null;
 }) {
     const { t } = useTranslation();
     const { pulse, scaleStyle, ringStyle } = useSelectionMotion(selected);
@@ -277,6 +280,7 @@ function StyleCard({
                     }}
                 >
                     {name}
+                    {badge ? <Text style={{ ...V.caption, color: U.accent }}>{` · ${badge}`}</Text> : null}
                 </Text>
             </Animated.View>
         </Pressable>
@@ -289,12 +293,16 @@ export function StyleStrip({
     onSelect,
     gutter,
     reveal,
+    badgeId,
+    badgeText,
 }: {
     styles: CatalogItemResponse[];
     selectedId: string | null;
     onSelect: (s: CatalogItemResponse) => void;
     gutter: number;
     reveal?: boolean;
+    badgeId?: string | null;
+    badgeText?: string;
 }) {
     const index = styles.findIndex((s) => s.id === selectedId);
     const { ref, onContentSizeChange } = useScrollToSelected(index, STYLE_CARD_W + STYLE_GAP, reveal);
@@ -308,7 +316,7 @@ export function StyleStrip({
             contentContainerStyle={{ gap: STYLE_GAP, paddingHorizontal: gutter, paddingVertical: GLOW_PAD }}
         >
             {styles.map((s) => (
-                <StyleCard key={s.id} item={s} selected={s.id === selectedId} onSelect={onSelect} />
+                <StyleCard key={s.id} item={s} selected={s.id === selectedId} onSelect={onSelect} badge={badgeId && s.id === badgeId ? badgeText : null} />
             ))}
         </ScrollView>
     );

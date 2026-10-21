@@ -1,502 +1,333 @@
+import { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { theme } from "@/config/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
+
+import { theme } from "@/config/theme";
 import { useStudioStore } from "@/stores/studioStore";
-import { TAB_BAR_HEIGHT } from "@/components/layout/GlassNavBar";
-import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { useImagePicker } from "@/hooks/useImagePicker";
-import { useCreditCost } from "@/hooks/useCreditCost";
-import { AvatarMenu } from "@/components/ui/AvatarMenu";
-import Slider from "@react-native-community/slider";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
+import { STYLE_IMAGES } from "@/components/studio/styleImages";
+import { getRoomGuess, type RoomGuessResponse } from "@/services/files";
+import { track } from "@/services/analytics";
 
-// Height of the global GlassNavBar (icon row + label + home-indicator pad).
-// Sticky wizard footers must sit above this so the CTA stays tappable.
+const U = theme.umber;
+const V = theme.v2;
+const R = theme.v2Layout.radius;
+const GUTTER = theme.v2Layout.gutterWide;
 
-// Fallback hero when the user lands here without a source photo (e.g. via
-// deep link). Editorial interior shot, matches the dark-luxe aesthetic.
-const PLACEHOLDER_ROOM =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDY-BQvBeDvm_wjubZLoxxq_fdlB5DKLCs169xupU4TBlveZuXhYoh8b2cOxE9_z84iGFq8qjXZc-c896-Aciya2jHbgH7Psc7YEK26HW7MMJMiUfHeZBwmR7GV-bRLJ8_vkNjbLHLonBtC8eFH0GoGOpKUkNebi4AJqLpCVbwKo1OB-ahMCRo2YHyno3Fm4MlQmMuSvzu_wEyG8nzEZ7jJu-GPQZtnXXZ74fzGjvo45HHVaF3amPj6cKSibyrOMLFCxCMjicmhr_g";
+/**
+ * Copy this look — the reference step (3.0.0, owner 21 Oct; canvas boards 11 and 12).
+ *
+ * <p>Replaces the 2026-07 "Curate Your Aesthetic" screen (its own type scale, a plan badge, a
+ * blurred footer). Umber now, like the composer. One ask: WHICH LOOK. Two cards side by side —
+ * your room (with a Change pill) and the look — and under the look's dashed door three starter
+ * looks, so a first run never dead-ends on "I have no reference" (bundled style pictures, uploaded
+ * like a sample room). Once the look is in, the app says what it will copy: the reference's
+ * palette, materials and mood, read by the same upload-time Haiku call that names rooms
+ * (GET /api/files/{id}/room-guess, polled a few seconds; absent on a server without it). Extra
+ * references stay, smaller. The influence slider stays in the composer's Advanced sheet (one
+ * owner for that value, 19 Sep); the line under Continue says it comes next.
+ */
+const STARTERS = [
+  { code: "SCANDINAVIAN", labelKey: "studio.look_starter_1" },
+  { code: "BOHEMIAN", labelKey: "studio.look_starter_2" },
+  { code: "MID_CENTURY", labelKey: "studio.look_starter_3" },
+] as const;
 
-// Label-only mapping. The product calls ULTRA_HD "4K" in the UI — the
-// underlying enum stays the same.
 export default function StyleTransferScreen() {
   const { t } = useTranslation();
-  const photo = useStudioStore(s => s.photo);
-  const referencePhoto = useStudioStore(s => s.referencePhoto);
-  const extraStyleRefs = useStudioStore(s => s.extraStyleRefs);
-  const addExtraStyleRef = useStudioStore(s => s.addExtraStyleRef);
-  const removeExtraStyleRef = useStudioStore(s => s.removeExtraStyleRef);
-  const strength = useStudioStore(s => s.strength);
-  const setStrength = useStudioStore(s => s.setStrength);
-  const setReferencePhoto = useStudioStore(s => s.setReferencePhoto);
-  const { cost } = useCreditCost();
-  const { pickImage, isUploading } = useImagePicker();
-  const subscription = useSubscriptionStore(s => s.subscription);
-  const planLabel = subscription?.planName ?? "Max";
+  const photo = useStudioStore((s) => s.photo);
+  const replacePhoto = useStudioStore((s) => s.replacePhoto);
+  const referencePhoto = useStudioStore((s) => s.referencePhoto);
+  const setReferencePhoto = useStudioStore((s) => s.setReferencePhoto);
+  const extraStyleRefs = useStudioStore((s) => s.extraStyleRefs);
+  const addExtraStyleRef = useStudioStore((s) => s.addExtraStyleRef);
+  const removeExtraStyleRef = useStudioStore((s) => s.removeExtraStyleRef);
+  const { pickImage, useSampleImage, isUploading } = useImagePicker();
+  const authHeaders = useAuthHeaders();
 
-  const roomImage = photo?.uri ?? PLACEHOLDER_ROOM;
-  const strengthPercent = Math.round(strength * 100);
+  const [busyWhat, setBusyWhat] = useState<null | "room" | "look" | "extra">(null);
+  const busy = isUploading || busyWhat !== null;
 
-  const handlePickReference = async () => {
-    if (isUploading) return; // one in-flight upload at a time
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await pickImage();
-    if (result) {
-      setReferencePhoto({ uri: result.uri, fileId: result.fileId ?? "" });
-    }
-  };
-
-  // IO-2 — extra style reference for the "+" tile (max 2, store-capped;
-  // each bills +1 credit, mirrored in useCreditCost).
-  const handlePickExtraRef = async () => {
-    if (isUploading) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await pickImage();
-    if (result?.fileId) {
-      addExtraStyleRef({ uri: result.uri, fileId: result.fileId });
-    }
-  };
-
-  // A reference image is mandatory for Style Transfer — without it the
-  // backend has no "target style" to apply and the render collapses to
-  // a plain redesign. Gate the Next CTA until one is uploaded.
-  const canProceed = !!referencePhoto?.fileId;
-
-  // wizard=1 → entered right after photo upload (2026-07 IA rework):
-  // continue the shared chain (style → options). Otherwise this screen was
-  // opened from Options to (re)pick the reference, so go back there —
-  // Options owns Generate since the Review step was folded into it (P2-8).
-  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
-  const handleNext = () => {
-    if (!canProceed) return;
+  const pickLook = async (source: "gallery" | "camera" = "gallery") => {
+    if (busy) return;
     Haptics.selectionAsync();
-    // The reference is collected here; the decision and the charge happen in
-    // the composer, which owns the only statement of cost in the app. This
-    // used to land on the old "Step 3 / 3" options screen.
-    router.replace("/studio/composer" as never);
+    setBusyWhat("look");
+    try {
+      const r = await pickImage(source);
+      if (r?.fileId) {
+        track("style_reference_set", { source });
+        setReferencePhoto({ uri: r.uri, fileId: r.fileId, width: r.width ?? null, height: r.height ?? null });
+      }
+    } finally {
+      setBusyWhat(null);
+    }
   };
+  const pickStarter = async (code: string) => {
+    if (busy) return;
+    Haptics.selectionAsync();
+    setBusyWhat("look");
+    try {
+      const r = await useSampleImage(STYLE_IMAGES[code] as number);
+      if (r?.fileId) {
+        track("style_reference_set", { source: "starter", code });
+        setReferencePhoto({ uri: r.uri, fileId: r.fileId, width: r.width ?? null, height: r.height ?? null });
+      }
+    } finally {
+      setBusyWhat(null);
+    }
+  };
+  const changeRoom = async () => {
+    if (busy) return;
+    Haptics.selectionAsync();
+    setBusyWhat("room");
+    try {
+      const r = await pickImage("gallery");
+      if (r) replacePhoto(r);
+    } finally {
+      setBusyWhat(null);
+    }
+  };
+  const pickExtra = async () => {
+    if (busy) return;
+    Haptics.selectionAsync();
+    setBusyWhat("extra");
+    try {
+      const r = await pickImage("gallery");
+      if (r?.fileId) addExtraStyleRef({ uri: r.uri, fileId: r.fileId });
+    } finally {
+      setBusyWhat(null);
+    }
+  };
+
+  // What will be copied: the reference's look, from the upload-time guess. Polled a few
+  // seconds; a server without the fields just leaves the line out.
+  const [look, setLook] = useState<RoomGuessResponse | null>(null);
+  const [reading, setReading] = useState(false);
+  const lookFor = useRef<string | null>(null);
+  useEffect(() => {
+    const id = referencePhoto?.fileId;
+    if (!id) { setLook(null); setReading(false); lookFor.current = null; return; }
+    if (lookFor.current === id) return;
+    lookFor.current = id;
+    setLook(null);
+    setReading(true);
+    let cancelled = false;
+    let tries = 0;
+    const poll = async () => {
+      if (cancelled) return;
+      tries += 1;
+      try {
+        const g = await getRoomGuess(id);
+        if (cancelled) return;
+        if (g.ready) {
+          setLook(g.palette && g.palette.length > 0 ? g : null);
+          setReading(false);
+          return;
+        }
+      } catch {
+        setReading(false);
+        return;
+      }
+      if (tries < 8) setTimeout(poll, 1400); else setReading(false);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [referencePhoto?.fileId]);
+  const lookLine = look ? [look.paletteName, look.materials, look.mood].filter(Boolean).join(" · ") : "";
+
+  const canProceed = !!referencePhoto?.fileId && !busy;
+  const remoteRoom = photo?.uri && /^https?:/i.test(photo.uri);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.umber.ground }}>
-      {/* Composer-language header: 34px back, a kicker naming the mode, a
-          matching spacer. No step counter — this is one collection step, not
-          a numbered stage of a wizard. */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 18,
-          paddingTop: 8,
-          paddingBottom: 14,
-        }}
-      >
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
+      {/* Composer-language header: a 34px back button, a kicker naming the mode, a spacer. */}
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: 8, paddingBottom: 6 }}>
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
           hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            backgroundColor: theme.umber.lineNeutral,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: U.lineNeutral, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={{ color: theme.umber.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
+          <Text style={{ color: U.ink, fontSize: 18, lineHeight: 20 }}>‹</Text>
         </Pressable>
-        <Text
-          style={{ ...theme.v2.kicker, color: theme.umber.inkMuted, flex: 1, textAlign: "center" }}
-        >
-          {t("studio.mode_style_transfer").toUpperCase()}
-        </Text>
+        <Text style={{ ...V.kicker, color: U.inkMuted, flex: 1, textAlign: "center" }}>{t("studio.mode_style_transfer").toUpperCase()}</Text>
         <View style={{ width: 34 }} />
       </View>
 
       <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: theme.space.gutter,
-          // Footer (~120px) sits at bottom: TAB_BAR_HEIGHT (96px). Add a
-          // 60px buffer on top of those so the last visible content is
-          // never hidden behind the glass bar.
-          paddingBottom: TAB_BAR_HEIGHT + 120 + 40,
-        }}
+        contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: 24, gap: 16 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
-        {/* Badge & Header */}
-        <View style={{ marginBottom: 48 }}>
-          <View
-            className="flex-row items-center mb-6"
-            style={{ gap: 12, marginTop: 8 }}
-          >
-            <View
-              className="rounded-full px-3"
-              style={{
-                paddingVertical: 4,
-                backgroundColor: "#584325",
-              }}
-            >
-              <Text
-                className="font-label"
-                style={{
-                  ...theme.text.caption,
-                  color: "#FEDFB5",
-                }}
-              >
-                {t("studio.mode_style_transfer")}
-              </Text>
-            </View>
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                ...theme.text.label,
-              }}
-            >
-              {planLabel}
-            </Text>
-          </View>
-          <Text
-            className="font-headline text-on-surface"
-            style={{ ...theme.text.display }}
-          >
-            {t("studio.style_transfer_headline")}
+        <View style={{ gap: 6 }}>
+          <Text style={{ ...V.displayS, fontSize: 28, lineHeight: 32, color: U.ink }} accessibilityRole="header">
+            {referencePhoto ? t("studio.mode_style_transfer") : t("studio.look_which")}
+          </Text>
+          <Text style={{ ...V.rowQuiet, fontSize: 13.5, lineHeight: 19, color: "#CFC4B0" }}>
+            {referencePhoto ? t("studio.look_copy_sub") : t("studio.look_sub")}
           </Text>
         </View>
 
-        {/* Image Pair — Your Room & Ref Style */}
-        <View className="flex-row" style={{ gap: 16, marginBottom: 48 }}>
-          {/* Your Room */}
-          <View style={{ flex: 1, gap: 16 }}>
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                ...theme.text.caption,
-                textAlign: "center",
-              }}
-            >
-              {t("studio.style_transfer_subject_label")}
-            </Text>
-            <View
-              className="rounded-xl overflow-hidden bg-surface-container-low"
-              style={{ aspectRatio: 4 / 5 }}
-            >
-              <Image
-                source={{ uri: roomImage }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-                transition={300}
-              />
-              <View
-                className="absolute inset-0"
-                style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
-                pointerEvents="none"
-              />
+        {/* The pair: your room (in) and the look (the ask). */}
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flex: 1, gap: 8 }}>
+            <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.look_your_room")}</Text>
+            <View style={{ height: 214, borderRadius: R.card, overflow: "hidden", backgroundColor: U.surface }}>
+              {photo?.uri ? (
+                <Image
+                  source={remoteRoom ? { uri: photo.uri, headers: authHeaders } : { uri: photo.uri }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                  transition={200}
+                />
+              ) : null}
+              <Pressable
+                onPress={changeRoom}
+                accessibilityRole="button"
+                accessibilityLabel={t("studio.change_photo")}
+                style={{ position: "absolute", right: 8, bottom: 8, paddingHorizontal: 9, paddingVertical: 5, borderRadius: R.pill, backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder }}
+              >
+                {busyWhat === "room" ? <ActivityIndicator size="small" color={U.ink} /> : (
+                  <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 11, color: U.ink }}>{t("studio.change_reference")}</Text>
+                )}
+              </Pressable>
             </View>
           </View>
 
-          {/* Ref. Style */}
-          <View style={{ flex: 1, gap: 16 }}>
-            <Text
-              className="font-label text-on-surface-variant"
-              style={{
-                ...theme.text.caption,
-                textAlign: "center",
-              }}
-            >
-              {t("studio.style_transfer_reference_label")}
-            </Text>
+          <View style={{ flex: 1, gap: 8 }}>
+            <Text style={{ ...V.kicker, color: U.accentBright }}>{t("studio.look_the_look")}</Text>
             {referencePhoto?.uri ? (
-              <View style={{ position: "relative" }}>
-                <Pressable onPress={handlePickReference}>
-                  <View
-                    className="rounded-xl overflow-hidden"
-                    style={{ aspectRatio: 4 / 5 }}
-                  >
-                    <Image
-                      source={{ uri: referencePhoto.uri }}
-                      style={{ width: "100%", height: "100%" }}
-                      contentFit="cover"
-                      transition={300}
-                    />
-                  </View>
+              <View style={{ height: 214, borderRadius: R.card, overflow: "hidden", backgroundColor: U.surface, borderWidth: 2, borderColor: U.accent }}>
+                <Pressable onPress={() => pickLook("gallery")} accessibilityRole="button" accessibilityLabel={t("studio.change_reference")} style={{ flex: 1 }}>
+                  <Image source={{ uri: referencePhoto.uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
                 </Pressable>
-                {/* Remove reference photo */}
                 <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setReferencePhoto(null);
-                  }}
+                  onPress={() => { Haptics.selectionAsync(); setReferencePhoto(null); }}
                   hitSlop={8}
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    width: 32,
-                    height: 32,
-                    borderRadius: theme.radius.md,
-                    backgroundColor: "rgba(19,19,19,0.80)",
-                    borderWidth: 1,
-                    borderColor: "rgba(225,195,155,0.30)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("studio.remove_photo")}
+                  style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder, alignItems: "center", justifyContent: "center" }}
                 >
-                  <Ionicons name="close" size={15} color="#F5F0EB" />
+                  <Ionicons name="close" size={14} color={U.ink} />
                 </Pressable>
               </View>
             ) : (
-              <Pressable onPress={handlePickReference}>
-                <View
-                  className="rounded-xl items-center justify-center bg-surface-container-low"
-                  style={{
-                    aspectRatio: 4 / 5,
-                    borderWidth: 1.5,
-                    borderColor: "rgba(225,195,155,0.55)",
-                    borderStyle: "dashed",
-                  }}
-                >
-                  {isUploading ? (
-                    <ActivityIndicator size="small" color="#DDB477" style={{ marginBottom: 16 }} />
-                  ) : (
-                    <Ionicons
-                      name="cloud-upload-outline"
-                      size={36}
-                      color="#9A8F7D"
-                      style={{ marginBottom: 16 }}
-                    />
-                  )}
-                  <Text
-                    className="font-label"
-                    style={{
-                      ...theme.text.caption,
-                      color: isUploading ? "#DDB477" : "#9A8F7D",
-                    }}
-                  >
-                    {isUploading
-                      ? t("studio.uploading")
-                      : t("studio.upload_reference")}
-                  </Text>
+              <Pressable
+                onPress={() => pickLook("gallery")}
+                disabled={busy}
+                accessibilityRole="button"
+                accessibilityLabel={t("studio.choose_from_library")}
+                style={{ height: 214, borderRadius: R.card, borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(221,180,119,0.55)", backgroundColor: "rgba(239,208,160,0.08)", alignItems: "center", justifyContent: "center", gap: 10 }}
+              >
+                <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(239,208,160,0.18)", alignItems: "center", justifyContent: "center" }}>
+                  {busyWhat === "look" ? <ActivityIndicator color={U.accentBright} /> : <Ionicons name="images-outline" size={22} color={U.accentBright} />}
                 </View>
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: U.accentBright, textAlign: "center", paddingHorizontal: 8 }}>{t("studio.choose_from_library")}</Text>
               </Pressable>
             )}
-
-            {/* IO-2 — extra style reference "+" tiles (max 2, +1 credit each).
-                Only offered once the primary reference exists: the extras are
-                "more of the same aesthetic", not a substitute for it. */}
-            {referencePhoto?.uri ? (
-              <View style={{ marginTop: 16 }}>
-                {/* Top-aligned so the captioned empty tile doesn't push the
-                    thumbnails off the shared edge. */}
-                <View className="flex-row" style={{ gap: 10, alignItems: "flex-start" }}>
-                  {extraStyleRefs.map((ref) => (
-                    <View key={ref.fileId} style={{ position: "relative", width: 76, height: 76 }}>
-                      <View className="rounded-xl overflow-hidden" style={{ width: 76, height: 76 }}>
-                        <Image
-                          source={{ uri: ref.uri }}
-                          style={{ width: "100%", height: "100%" }}
-                          contentFit="cover"
-                          transition={200}
-                        />
-                      </View>
-                      <Pressable
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          removeExtraStyleRef(ref.fileId);
-                        }}
-                        hitSlop={8}
-                        style={{
-                          position: "absolute",
-                          top: -6,
-                          right: -6,
-                          width: 22,
-                          height: 22,
-                          borderRadius: 11,
-                          backgroundColor: "rgba(19,19,19,0.92)",
-                          borderWidth: 1,
-                          borderColor: "rgba(225,195,155,0.30)",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Ionicons name="close" size={12} color="#F5F0EB" />
-                      </Pressable>
-                    </View>
-                  ))}
-                  {extraStyleRefs.length < 2 ? (
-                    <Pressable onPress={handlePickExtraRef} disabled={isUploading}>
-                      <View style={{ alignItems: "center", gap: 7 }}>
-                        <View
-                          className="rounded-xl items-center justify-center bg-surface-container-low"
-                          style={{
-                            width: 76,
-                            height: 76,
-                            borderWidth: 1.5,
-                            borderColor: "rgba(225,195,155,0.32)",
-                            borderStyle: "dashed",
-                            gap: 3,
-                          }}
-                        >
-                          {isUploading ? (
-                            <ActivityIndicator size="small" color="#DDB477" />
-                          ) : (
-                            <>
-                              <Ionicons name="images-outline" size={22} color="#8C8378" />
-                              <Ionicons name="add" size={14} color="#A79C8E" />
-                            </>
-                          )}
-                        </View>
-                        <Text
-                          style={{
-                            fontFamily: "Inter",
-                            fontSize: 10,
-                            lineHeight: 13,
-                            letterSpacing: 0.2,
-                            textAlign: "center",
-                            color: "#8C8378",
-                            width: 76,
-                          }}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.8}
-                        >
-                          {t("studio.add_reference")}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
           </View>
         </View>
 
-        {/* The influence slider came off (2026-09-19). It is the same
-            `strength` value the composer's Advanced sheet already owns, and
-            two controls writing one field is how they drift — the user sets
-            70% here, opens Advanced, and reads 50% because that screen last
-            wrote it. One owner, on the screen that also states the cost. */}
-
-      </ScrollView>
-
-      {/* Sticky Footer — sits ABOVE the GlassNavBar so the CTA is always
-          tappable. A blurred glass surface mirrors the navbar aesthetic
-          (BlurView intensity 55, dark tint) and a faint top-edge gradient
-          fades scrolling content into the bar without a hard line. */}
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: TAB_BAR_HEIGHT,
-        }}
-      >
-        {/* Edge fade — content disappears into the glass instead of
-            colliding with the border. Sits ABOVE the BlurView, no taps. */}
-        <LinearGradient
-          colors={["transparent", "rgba(19,19,19,0.85)"]}
-          style={{ height: 32 }}
-          pointerEvents="none"
-        />
-
-        <BlurView
-          intensity={55}
-          tint="dark"
-          style={{
-            paddingHorizontal: theme.space.gutter,
-            paddingTop: 14,
-            paddingBottom: 18,
-            backgroundColor: "rgba(19,19,19,0.55)",
-            borderTopWidth: 1,
-            borderTopColor: "rgba(225,195,155,0.18)",
-          }}
-        >
-          {/* Cost row — micro-summary, doesn't crowd the CTA */}
-          <View
-            className="flex-row items-center justify-between"
-            style={{ marginBottom: 12 }}
-          >
-            <Text
-              className="font-label"
-              style={{
-                ...theme.text.caption,
-                color: "#9A8F7D",
-              }}
-            >
-              {t("studio.style_transfer_cost_label")}
-            </Text>
-            <View className="flex-row items-center" style={{ gap: 6 }}>
-              <Ionicons name="flash" size={13} color="#FEDFB5" />
-              <Text
-                className="font-headline"
-                style={{
-                  ...theme.text.title,
-                  fontStyle: "italic",
-                  color: "#F6F1E7",
-                }}
-              >
-                {t("studio.cost_credits", { count: cost })}
+        {/* Look in: what gets copied — the reference's palette and three words. */}
+        {referencePhoto ? (
+          (reading || look) ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderRadius: R.inline, backgroundColor: U.surface }}>
+              {look ? (
+                <View style={{ flexDirection: "row" }}>
+                  {look.palette!.slice(0, 4).map((hex, i) => (
+                    <View key={hex + i} style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: hex, borderWidth: 2, borderColor: U.ground, marginLeft: i ? -6 : 0 }} />
+                  ))}
+                </View>
+              ) : (
+                <ActivityIndicator size="small" color={U.accent} />
+              )}
+              <Text style={{ ...V.rowQuiet, fontSize: 13, lineHeight: 18, color: U.ink, flex: 1 }} numberOfLines={2}>
+                {look ? lookLine : t("studio.look_reading")}
               </Text>
             </View>
+          ) : null
+        ) : (
+          /* No look yet: three starter looks, so the first run never dead-ends. */
+          <View style={{ gap: 10, marginTop: 2 }}>
+            <Text style={{ ...V.kicker, color: U.inkMuted }}>{t("studio.look_start_from")}</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {STARTERS.map((s) => (
+                <Pressable
+                  key={s.code}
+                  onPress={() => pickStarter(s.code)}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(s.labelKey)}
+                  style={{ flex: 1, height: 92, borderRadius: R.thumb, overflow: "hidden", backgroundColor: U.surface }}
+                >
+                  <Image source={STYLE_IMAGES[s.code] as never} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                  <View style={{ position: "absolute", left: 6, bottom: 6, paddingHorizontal: 7, paddingVertical: 3, borderRadius: R.pill, backgroundColor: U.photoChrome }}>
+                    <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10.5, color: U.ink }} numberOfLines={1}>{t(s.labelKey)}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
           </View>
+        )}
 
-          {/* CTA Button */}
-          <Pressable
-            onPress={handleNext}
-            disabled={!canProceed || isUploading}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed && canProceed ? 0.98 : 1 }],
-              opacity: canProceed ? 1 : 0.55,
-            })}
-          >
-            <LinearGradient
-              colors={["#DDB477", "#C09B62"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                height: 54,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: 22,
-                borderWidth: 1,
-                borderColor: "rgba(254,223,181,0.35)",
-                shadowColor: "#DDB477",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.35,
-                shadowRadius: 14,
-                elevation: 8,
-              }}
-            >
-              <Text
-                numberOfLines={1}
-                style={{
-                  ...theme.text.caption,
-                  color: "#231B10",
-                }}
+        {/* More of the same look: optional, small (up to two, as before). */}
+        {referencePhoto ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {extraStyleRefs.map((ref) => (
+              <View key={ref.fileId} style={{ width: 64, height: 64 }}>
+                <View style={{ width: 64, height: 64, borderRadius: R.thumb, overflow: "hidden" }}>
+                  <Image source={{ uri: ref.uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                </View>
+                <Pressable
+                  onPress={() => { Haptics.selectionAsync(); removeExtraStyleRef(ref.fileId); }}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("studio.remove_photo")}
+                  style={{ position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: U.photoChrome, borderWidth: 1, borderColor: U.photoChromeBorder, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Ionicons name="close" size={12} color={U.ink} />
+                </Pressable>
+              </View>
+            ))}
+            {extraStyleRefs.length < 2 ? (
+              <Pressable
+                onPress={pickExtra}
+                disabled={busy}
+                accessibilityRole="button"
+                accessibilityLabel={t("studio.add_reference")}
+                style={{ width: 64, height: 64, borderRadius: R.thumb, borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(221,180,119,0.45)", alignItems: "center", justifyContent: "center" }}
               >
-                {canProceed
-                  ? t("studio.next_review")
-                  : t("studio.upload_reference_first")}
-              </Text>
-              <Ionicons
-                name={canProceed ? "arrow-forward" : "cloud-upload-outline"}
-                size={20}
-                color="#231B10"
-              />
-            </LinearGradient>
-          </Pressable>
-        </BlurView>
+                {busyWhat === "extra" ? <ActivityIndicator size="small" color={U.accent} /> : <Ionicons name="add" size={20} color={U.accent} />}
+              </Pressable>
+            ) : null}
+            <Text style={{ ...V.caption, fontSize: 12.5, lineHeight: 17, color: U.inkMuted, flex: 1 }}>{t("studio.look_more")}</Text>
+          </View>
+        ) : null}
+      </ScrollView>
+
+      {/* The one action, above the tab bar. */}
+      <View style={{ paddingHorizontal: GUTTER, paddingBottom: TAB_BAR_HEIGHT + BOTTOM_SAFE_GAP + 10, gap: 10 }}>
+        <Pressable
+          onPress={() => {
+            if (!canProceed) return;
+            Haptics.selectionAsync();
+            router.replace("/studio/composer" as never);
+          }}
+          disabled={!canProceed}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canProceed }}
+          accessibilityLabel={t("common.continue")}
+          style={{ height: 54, borderRadius: R.button, alignItems: "center", justifyContent: "center", backgroundColor: canProceed ? U.buttonFill : U.surface, borderWidth: canProceed ? 0 : 1, borderColor: U.lineNeutral }}
+        >
+          <Text style={{ ...V.button, color: canProceed ? U.buttonInk : U.inkMuted }}>{t("common.continue")}</Text>
+        </Pressable>
+        <Text style={{ ...V.caption, fontSize: 12.5, color: U.inkMuted, textAlign: "center" }}>{t("studio.look_next")}</Text>
       </View>
     </SafeAreaView>
   );

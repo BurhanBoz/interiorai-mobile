@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TextInput,
   Keyboard,
   ActivityIndicator,
+  ScrollView,
   type LayoutChangeEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,12 +22,13 @@ import Svg, { Polyline, Circle } from "react-native-svg";
 import { theme } from "@/config/theme";
 import { useStudioStore } from "@/stores/studioStore";
 import { useCatalogStore } from "@/stores/catalogStore";
-import { useDismissible } from "@/hooks/useDismissible";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
-import { OneShotSpotlight } from "@/components/ui/OneShotSpotlight";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
 import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
+import { getStyleImage } from "@/components/studio/styleImages";
+import { catalogName } from "@/utils/catalogI18n";
+import type { CatalogItemResponse } from "@/types/api";
 
 /**
  * Magic Edit — the painting screen (redesigned 12 Oct, owner: "sade ve direkt sonuca odaklanan").
@@ -48,6 +50,15 @@ import { createMask, type MaskMode, type MaskStroke } from "@/services/files";
  *
  * <p>Strokes are captured in resolution-independent normalised coordinates and rasterised
  * SERVER-SIDE at the photo's original size, so this screen never touches pixel data.
+ *
+ * <p><b>3.0.0 (owner, 21 Oct — canvas boards 9 and 10).</b> "Tap the piece — or paint over it":
+ * a single tap is a one-point stroke, and the server's object mask grows it to the whole piece
+ * at render time (Magic Edit object mask, 30 Sep), so careful painting is the fallback, not the
+ * rule. The toolbar (brush sizes, undo, clear) floats on the photo. Replace offers three
+ * suggestion chips under "What should appear here?" plus "designer's pick", so nobody has to
+ * type. Keep carries its own banner and a style strip — pick a style here and Generate runs at
+ * once; "All styles" still opens the composer. The one-shot spotlights are retired: the chip and
+ * the banner teach every time, quietly.
  */
 
 const U = theme.umber;
@@ -94,8 +105,13 @@ export default function SmartEditScreen() {
   const prompt = useStudioStore(s => s.prompt);
   const setPrompt = useStudioStore(s => s.setPrompt);
   const ensureCatalog = useCatalogStore(s => s.ensureLoaded);
+  const designStyles = useCatalogStore(s => s.designStyles);
+  const setDesignStyle = useStudioStore(s => s.setDesignStyle);
   const { generate, isSubmitting, cost } = useGenerate();
   const authHeaders = useAuthHeaders();
+  useEffect(() => { ensureCatalog().catch(() => {}); }, [ensureCatalog]);
+  /** Keep (board 10): the style the rest of the room gets; null = "All styles" → composer. */
+  const [keepStyle, setKeepStyle] = useState<CatalogItemResponse | null>(null);
 
   // An old mask from the other tool does not carry over: Keep never opens on a Replace mask.
   const tool = toolOf(toolParam, savedMaskMode);
@@ -107,11 +123,6 @@ export default function SmartEditScreen() {
   const [maskMode, setMaskMode] = useState<MaskMode>(() =>
     savedMaskMode && modes.includes(savedMaskMode) ? savedMaskMode : modes[0]);
   const [saving, setSaving] = useState(false);
-  // Keep paints the opposite thing, so it teaches once on its own. ONE hook, keyed by the
-  // tool: useDismissible marks a key seen the moment it shows, so a second hook for Keep
-  // spent Keep's hint on the first Replace visit without ever showing it (simulator, 12 Oct).
-  const [introVisible, dismissIntro] = useDismissible(
-    tool === "keep" ? "magic_keep_intro_seen" : "magic_edit_intro_seen");
 
   const title = t(tool === "keep" ? "studio.tool_keep" : "studio.tool_replace");
   const strokeColor = TINT[maskMode];
@@ -215,24 +226,29 @@ export default function SmartEditScreen() {
       setMode("INPAINT");
       setMask(mask.id, strokes, maskMode);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (!remove) {
-        // Replace and Keep go to the composer, which owns the style and the statement of cost.
+      const keepNow = maskMode === "PROTECT" && keepStyle != null;
+      if (!remove && !keepNow) {
+        // Replace, and Keep without a style picked here, go to the composer, which owns the
+        // style and the statement of cost.
         router.replace("/studio/composer" as never);
         return;
       }
-      setPrompt("");
+      if (remove) setPrompt("");
       const ctx = await removeContext();
       if (!ctx) {
         Alert.alert(title, t("errors.network"));
         return;
       }
+      // Keep with a style chosen here (3.0.0): the room the user has, or the catalogue's
+      // default, and the style from the strip — the same path the composer's Generate takes.
+      if (keepNow) setDesignStyle(keepStyle!);
       await generate({
         mode: "INPAINT",
         maskFileId: mask.id,
         roomType: ctx.room,
-        designStyle: ctx.style,
-        prompt: "",
-        replace: true,
+        designStyle: keepNow ? keepStyle! : ctx.style,
+        prompt: keepNow ? prompt : "",
+        replace: !keepNow,
       });
     } catch (e: any) {
       const msg = e?.response?.data?.message;
@@ -256,7 +272,11 @@ export default function SmartEditScreen() {
   }
 
   const remote = /^https?:/i.test(photo.uri);
-  const ctaLabel = maskMode === "REMOVE" ? t("studio.smart_edit_mode_remove") : t("common.continue");
+  const generatesHere = maskMode === "REMOVE" || (maskMode === "PROTECT" && keepStyle != null);
+  const ctaLabel = maskMode === "REMOVE" ? t("studio.smart_edit_mode_remove")
+    : generatesHere ? t("studio.generate") : t("common.continue");
+  const SUGGESTIONS = ["studio.smart_edit_suggest_1", "studio.smart_edit_suggest_2", "studio.smart_edit_suggest_3"] as const;
+  const keepStyles = designStyles.slice(0, 6);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: U.ground }}>
@@ -305,6 +325,14 @@ export default function SmartEditScreen() {
           </View>
         )}
 
+        {/* Keep (board 10): the banner says what the paint means, every time. */}
+        {tool === "keep" && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: R.inline, backgroundColor: "rgba(156,197,176,0.10)" }}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={TINT.PROTECT} />
+            <Text style={{ ...V.rowQuiet, fontSize: 13.5, lineHeight: 18, color: U.ink, flex: 1 }}>{t("studio.smart_edit_hint_keep")}</Text>
+          </View>
+        )}
+
         {/* "Replace it" only: what should appear. Optional — left blank, the designer picks. */}
         {maskMode === "CHANGE" && (
           <View
@@ -334,6 +362,32 @@ export default function SmartEditScreen() {
               style={{ ...V.rowQuiet, fontSize: 14, color: U.ink, flex: 1, paddingVertical: 0 }}
             />
           </View>
+        )}
+        {maskMode === "CHANGE" && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={{ flexGrow: 0, marginTop: -4 }} contentContainerStyle={{ gap: 8 }}>
+            {SUGGESTIONS.map((k) => {
+              const label = t(k);
+              const on = prompt.trim() === label;
+              return (
+                <Pressable
+                  key={k}
+                  onPress={() => { Haptics.selectionAsync(); setPrompt(on ? "" : label); }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: R.pill, backgroundColor: on ? U.lineAccent : "rgba(246,241,231,0.06)", borderWidth: on ? 1 : 0, borderColor: U.accent }}
+                >
+                  <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: on ? U.accentBright : U.ink }}>{label}</Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => { Haptics.selectionAsync(); setPrompt(""); }}
+              accessibilityRole="button"
+              style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: R.pill, backgroundColor: "rgba(246,241,231,0.06)" }}
+            >
+              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: U.inkMuted }}>{t("studio.smart_edit_designer_pick")}</Text>
+            </Pressable>
+          </ScrollView>
         )}
 
         {/* The photo — as large as the stage allows. */}
@@ -368,10 +422,20 @@ export default function SmartEditScreen() {
               </Svg>
             </View>
           )}
-        </View>
-
-        {/* One toolbar: brush sizes on the left, undo and clear on the right. */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {/* The teaching line, on the photo: "tap the piece — or paint over it", then "piece
+              selected" once there is a stroke (the server grows a tap to the whole piece). */}
+          {stage && canvasW > 0 && (
+            <View pointerEvents="none" style={{ position: "absolute", left: (stage.w - canvasW) / 2 + 10, top: (stage.h - canvasH) / 2 + 10, paddingHorizontal: 10, paddingVertical: 6, borderRadius: R.pill, backgroundColor: strokes.length > 0 ? strokeColor : U.photoChrome, borderWidth: 1, borderColor: strokes.length > 0 ? strokeColor : U.photoChromeBorder }}>
+              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: strokes.length > 0 ? U.buttonInk : U.ink }}>
+                {strokes.length > 0
+                  ? `✓ ${t(tool === "keep" ? "studio.smart_edit_piece_stays" : "studio.smart_edit_piece_selected")}`
+                  : t("studio.smart_edit_tap_hint")}
+              </Text>
+            </View>
+          )}
+          {/* The toolbar floats on the photo (board 9): brush sizes left, undo and clear right. */}
+          {stage && canvasW > 0 && (
+            <View style={{ position: "absolute", left: (stage.w - canvasW) / 2 + 10, right: (stage.w - canvasW) / 2 + 10, bottom: (stage.h - canvasH) / 2 + 10, flexDirection: "row", alignItems: "center", gap: 8 }}>
           {BRUSHES.map(b => {
             const active = brushRatio === b.ratio;
             return (
@@ -390,9 +454,9 @@ export default function SmartEditScreen() {
                   borderRadius: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: active ? U.sheetSurface : U.surface,
-                  borderWidth: 1,
-                  borderColor: active ? strokeColor : U.lineNeutral,
+                  backgroundColor: U.photoChrome,
+                  borderWidth: active ? 1.5 : 1,
+                  borderColor: active ? strokeColor : U.photoChromeBorder,
                 }}
               >
                 <View
@@ -400,7 +464,7 @@ export default function SmartEditScreen() {
                     width: b.dot,
                     height: b.dot,
                     borderRadius: b.dot / 2,
-                    backgroundColor: active ? strokeColor : U.inkMuted,
+                    backgroundColor: active ? strokeColor : "#CFC4B0",
                   }}
                 />
               </Pressable>
@@ -419,7 +483,36 @@ export default function SmartEditScreen() {
             disabled={strokes.length === 0 || busy}
             onPress={() => setStrokes([])}
           />
+            </View>
+          )}
         </View>
+
+        {/* Keep (board 10): the style the rest gets — pick one here and Generate runs at once;
+            "All styles" keeps the composer route. */}
+        {tool === "keep" && keepStyles.length > 0 && (
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+              <Text style={{ ...V.displayXS, fontSize: 18, color: U.ink }}>{t("studio.smart_edit_rest_as")}</Text>
+              <Pressable onPress={() => { Haptics.selectionAsync(); setKeepStyle(null); }} accessibilityRole="button" hitSlop={6}>
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 12.5, color: keepStyle ? U.accent : U.accentBright }}>{t("studio.all_styles")}</Text>
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginHorizontal: -GUTTER }} contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 8 }}>
+              {keepStyles.map((st) => {
+                const on = keepStyle?.id === st.id;
+                const img = getStyleImage(st.code);
+                return (
+                  <Pressable key={st.id} onPress={() => { Haptics.selectionAsync(); setKeepStyle(on ? null : st); }} accessibilityRole="button" accessibilityState={{ selected: on }} style={{ width: 96, gap: 5 }}>
+                    <View style={{ height: 64, borderRadius: R.thumb, overflow: "hidden", backgroundColor: U.surface, borderWidth: on ? 2 : 0, borderColor: U.accent }}>
+                      {img ? <Image source={img as never} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : null}
+                    </View>
+                    <Text numberOfLines={1} style={{ fontFamily: "Inter-SemiBold", fontSize: 12, color: on ? U.accentBright : U.ink }}>{catalogName(t, "style", st)}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* The one action. Quiet until something is painted. */}
         <Pressable
@@ -427,7 +520,7 @@ export default function SmartEditScreen() {
           disabled={busy}
           accessibilityRole="button"
           accessibilityState={{ disabled: !ready }}
-          accessibilityLabel={maskMode === "REMOVE" ? `${ctaLabel}, ${t("studio.credit_cost", { count: cost })}` : ctaLabel}
+          accessibilityLabel={generatesHere ? `${ctaLabel}, ${t("studio.credit_cost", { count: cost })}` : ctaLabel}
           style={{
             height: 54,
             borderRadius: R.button,
@@ -445,7 +538,7 @@ export default function SmartEditScreen() {
           ) : (
             <>
               <Text style={{ ...V.button, color: ready ? U.buttonInk : U.inkMuted }}>{ctaLabel}</Text>
-              {maskMode === "REMOVE" && (
+              {generatesHere && (
                 <Text style={{ ...V.rowQuiet, color: ready ? U.buttonInk : U.inkMuted, opacity: 0.75 }}>
                   · {t("studio.credit_cost", { count: cost })}
                 </Text>
@@ -455,13 +548,6 @@ export default function SmartEditScreen() {
         </Pressable>
       </View>
 
-      {/* One-shot teaching spotlight — shared pattern (OneShotSpotlight). */}
-      <OneShotSpotlight
-        visible={introVisible}
-        onDismiss={dismissIntro}
-        icon={tool === "keep" ? "shield-checkmark-outline" : "color-wand-outline"}
-        text={t(tool === "keep" ? "studio.smart_edit_hint_keep" : "studio.smart_edit_hint")}
-      />
     </SafeAreaView>
   );
 }
@@ -504,10 +590,10 @@ function IconButton({
         borderRadius: 20,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: U.surface,
+        backgroundColor: U.photoChrome,
         borderWidth: 1,
-        borderColor: U.lineNeutral,
-        opacity: disabled ? 0.35 : 1,
+        borderColor: U.photoChromeBorder,
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       <Ionicons name={icon} size={18} color={U.ink} />
