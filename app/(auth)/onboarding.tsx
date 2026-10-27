@@ -19,7 +19,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { HexMark } from "@/components/brand/HexMark";
 import { ShimmerButton } from "@/components/ui/ShimmerButton";
-import { HalloweenHero } from "@/components/onboarding/Heroes";
+import { ChristmasHero } from "@/components/onboarding/Heroes";
 
 const U = theme.umber;
 const V = theme.v2;
@@ -30,9 +30,12 @@ const V = theme.v2;
  * <p><b>What it replaces.</b> The three-page tour (Halloween / Christmas / the empty room, build
  * 117): the data said 62% of installs never generate, and a pager with Next ×3 and a Skip stood
  * between the install and the camera. This screen says the one sentence the app is — "Your room.
- * Any style. One photo." — over the Halloween before/after, with one door: "Try it on my room".
+ * Any style. One photo." — over the season's before/after, with one door: "Try it on my room".
  * No dots, no Skip, no body copy. It is shown once; the root gate never sends a signed-in user
  * back here.
+ *
+ * <p>3.0.1 (owner, 27 Oct): the hero is the Cozy Christmas pair — Halloween ends on 1 Nov and the
+ * Christmas season leads the Studio from then on. Bundled, so swapping it is a release.
  *
  * <p>🔴 The hero is BUNDLED and MOVES (components/onboarding/Heroes.tsx): a real output of the
  * app, the handle sweeping on its own with the first-run shine. The brand lockup rides above it.
@@ -91,7 +94,7 @@ export default function OnboardingScreen() {
                 accessibilityRole="image"
                 accessibilityLabel={t("onboarding.v3_headline")}
             >
-                <HalloweenHero width={width} height={HERO_HEIGHT} active />
+                <ChristmasHero width={width} height={HERO_HEIGHT} active />
                 <LinearGradient
                     pointerEvents="none"
                     colors={[U.overlayScrim, "transparent", U.ground]}
