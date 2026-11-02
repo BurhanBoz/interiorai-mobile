@@ -7,10 +7,14 @@ import Animated, {
     Easing,
     cancelAnimation,
     interpolate,
+    runOnJS,
     useAnimatedStyle,
     useSharedValue,
+    withDelay,
+    withSequence,
     withTiming,
 } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { theme, track } from "@/config/theme";
 
 const U = theme.umber;
@@ -19,6 +23,10 @@ const U = theme.umber;
 const WIPE_MS = 700;
 /** Before ⇄ after, once the user is driving it. */
 const TOGGLE_MS = 240;
+/** After the arrival wipe has shown the whole design, the seam eases back to here. */
+const SETTLE_AT = 0.5;
+const SETTLE_HOLD_MS = 1100;
+const SETTLE_MS = 520;
 /**
  * How long the wipe waits for the BEFORE photo once the after has landed. The
  * before comes through the backend with an auth header and is usually the
@@ -46,6 +54,12 @@ const BEFORE_GRACE_MS = 500;
  * <p>Transform-only (a clipping window sliding right while the picture inside
  * slides left by the same amount), so the wipe runs on the UI thread and never
  * re-lays out the card.
+ *
+ * <p><b>Build 114 (owner, 14 Oct): the seam is a handle again.</b> Once the arrival wipe has
+ * played, the gold edge stays and a finger drags it anywhere between the two pictures; BEFORE
+ * / AFTER now move the seam to its ends instead of fading the after in and out. The tap on
+ * the picture still opens the fullscreen viewer (a pan with a few points of travel is not a
+ * tap). Reduce Motion keeps the drag, drops the arrival animation.
  */
 export function ResultFrame({
     beforeUrl,
@@ -72,7 +86,8 @@ export function ResultFrame({
 }) {
     const { t } = useTranslation();
     const [width, setWidth] = useState(0);
-    const [showAfter, setShowAfter] = useState(true);
+    /** Which end the seam sits at; null in between (the settled comparison), so neither pill reads selected. */
+    const [showAfter, setShowAfter] = useState<boolean | null>(true);
     const [afterLoaded, setAfterLoaded] = useState(false);
     const [beforeReady, setBeforeReady] = useState(!beforeUrl);
     const played = useRef(false);
@@ -81,8 +96,6 @@ export function ResultFrame({
 
     /** 0 = only the before shows, 1 = the after covers the card. */
     const wipe = useSharedValue(0);
-    /** The after layer's opacity — the toggle. */
-    const afterOpacity = useSharedValue(1);
     const w = useSharedValue(0);
 
     const arrive = () => {
@@ -110,35 +123,59 @@ export function ResultFrame({
     useEffect(() => {
         if (played.current || !afterLoaded || !beforeReady || width === 0) return;
         if (reduceMotion) {
-            wipe.value = 1;
+            wipe.value = SETTLE_AT;
+            setShowAfter(null);
         } else {
-            wipe.value = withTiming(1, { duration: WIPE_MS, easing: Easing.out(Easing.cubic) });
+            wipe.value = withSequence(
+                withTiming(1, { duration: WIPE_MS, easing: Easing.out(Easing.cubic) }),
+                withDelay(SETTLE_HOLD_MS, withTiming(SETTLE_AT, { duration: SETTLE_MS, easing: Easing.inOut(Easing.cubic) }, (done) => {
+                    if (done) runOnJS(setShowAfter)(null);
+                })),
+            );
         }
         arrive();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [afterLoaded, beforeReady, width, reduceMotion]);
 
     const select = (after: boolean) => {
-        if (after === showAfter) return;
         // A tap during the wipe finishes it: the user has asked for a side.
         cancelAnimation(wipe);
-        wipe.value = 1;
         arrive();
         setShowAfter(after);
         const to = after ? 1 : 0;
-        afterOpacity.value = reduceMotion ? to : withTiming(to, { duration: TOGGLE_MS });
+        wipe.value = reduceMotion ? to : withTiming(to, { duration: TOGGLE_MS });
     };
 
+    /** The seam under a finger: drag from wherever it is, clamped to the card. */
+    const dragStart = useSharedValue(0);
+    const pan = Gesture.Pan()
+        .activeOffsetX([-8, 8])
+        .failOffsetY([-12, 12])
+        .onBegin(() => {
+            cancelAnimation(wipe);
+            dragStart.value = wipe.value;
+        })
+        .onUpdate((e) => {
+            if (w.value === 0) return;
+            // The after grows from the RIGHT (build 118), so dragging right shows more before.
+            wipe.value = Math.min(1, Math.max(0, dragStart.value - e.translationX / w.value));
+        })
+        .onEnd(() => {
+            runOnJS(setShowAfter)(wipe.value >= 0.97 ? true : wipe.value <= 0.03 ? false : null);
+        });
+
+    // Build 118 (owner, 14 Oct): before on the LEFT of the seam, after on the right — the same
+    // reading as every other before/after in the app. The after window slides in from the right.
     const windowStyle = useAnimatedStyle(() => ({
-        opacity: afterOpacity.value,
-        transform: [{ translateX: -(1 - wipe.value) * w.value }],
-    }));
-    const innerStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: (1 - wipe.value) * w.value }],
     }));
+    const innerStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: -(1 - wipe.value) * w.value }],
+    }));
+    // The seam: faint at the very ends (nothing to split there), full between.
     const edgeStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(wipe.value, [0, 0.04, 0.85, 1], [0, 1, 1, 0]),
-        transform: [{ translateX: wipe.value * w.value - 1 }],
+        opacity: interpolate(wipe.value, [0, 0.02, 0.98, 1], [0.35, 1, 1, 0.35]),
+        transform: [{ translateX: (1 - wipe.value) * w.value - 1 }],
     }));
 
     const hasBefore = !!beforeUrl;
@@ -152,6 +189,7 @@ export function ResultFrame({
                 ...theme.elevation.lg,
             }}
         >
+            <GestureDetector gesture={pan}>
             <View
                 style={{ flex: 1, borderRadius: theme.v2Layout.radius.card, overflow: "hidden" }}
                 onLayout={(e) => {
@@ -203,7 +241,7 @@ export function ResultFrame({
                         </Animated.View>
                     ) : null}
 
-                    {/* The wipe's front: a thin gold edge, gone when the wipe lands. */}
+                    {/* The wipe's front, and afterwards the handle: a thin gold edge with a grip. */}
                     <Animated.View
                         pointerEvents="none"
                         style={[
@@ -212,10 +250,21 @@ export function ResultFrame({
                                 backgroundColor: U.accentBright,
                                 shadowColor: U.accent, shadowOpacity: 0.9, shadowRadius: 8,
                                 shadowOffset: { width: 0, height: 0 },
+                                alignItems: "center", justifyContent: "center",
                             },
                             edgeStyle,
                         ]}
-                    />
+                    >
+                        <View
+                            style={{
+                                width: 34, height: 34, borderRadius: 17, backgroundColor: U.accentBright,
+                                alignItems: "center", justifyContent: "center",
+                                shadowColor: "#000", shadowOpacity: 0.35, shadowRadius: 5, shadowOffset: { width: 0, height: 2 },
+                            }}
+                        >
+                            <Text style={{ fontFamily: "Inter-Bold", fontSize: 11, color: U.buttonInk, letterSpacing: -1 }}>◂ ▸</Text>
+                        </View>
+                    </Animated.View>
 
                     {!afterLoaded && afterUrl ? (
                         <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
@@ -235,8 +284,8 @@ export function ResultFrame({
                             borderWidth: 1, borderColor: U.photoChromeBorder,
                         }}
                     >
-                        <Segment label={t("result.before")} selected={!showAfter} onPress={() => select(false)} />
-                        <Segment label={t("result.after")} selected={showAfter} onPress={() => select(true)} />
+                        <Segment label={t("result.before")} selected={showAfter === false} onPress={() => select(false)} />
+                        <Segment label={t("result.after")} selected={showAfter === true} onPress={() => select(true)} />
                     </View>
                 ) : null}
 
@@ -255,6 +304,7 @@ export function ResultFrame({
                     <Ionicons name="expand-outline" size={18} color={U.ink} />
                 </Pressable>
             </View>
+            </GestureDetector>
         </View>
     );
 }

@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Animated,
-    FlatList,
     Pressable,
     Text,
     useWindowDimensions,
@@ -14,65 +12,43 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as SecureStore from "expo-secure-store";
 
-import { theme, track } from "@/config/theme";
+import Reanimated, { FadeInDown } from "react-native-reanimated";
+
+import { theme } from "@/config/theme";
 import { useAuthStore } from "@/stores/authStore";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { HexMark } from "@/components/brand/HexMark";
-import { ShowcaseHero, WallHero, WipeHero } from "@/components/onboarding/Heroes";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
+import { ChristmasHero } from "@/components/onboarding/Heroes";
 
 const U = theme.umber;
 const V = theme.v2;
 
 /**
- * First run (Umber redesign, 2026-09-19).
+ * First run — one page (3.0.0, owner 20 Oct 2026).
  *
- * <p><b>What it replaces.</b> A splash carrying the retired brand name
- * "ARCHITECTURAL LENS / DIGITAL CURATOR" — dropped in April 2026 — over a
- * logo PNG with a Photoshop transparency checkerboard baked into it. Then a
- * three-dot carousel whose dots did not track anything: the button skipped
- * all three pages and swiping moved nothing.
+ * <p><b>What it replaces.</b> The three-page tour (Halloween / Christmas / the empty room, build
+ * 117): the data said 62% of installs never generate, and a pager with Next ×3 and a Skip stood
+ * between the install and the camera. This screen says the one sentence the app is — "Your room.
+ * Any style. One photo." — over the season's before/after, with one door: "Try it on my room".
+ * No dots, no Skip, no body copy. It is shown once; the root gate never sends a signed-in user
+ * back here.
  *
- * <p>The dots now track the page and the button advances one page at a time,
- * with SKIP always visible for anyone who does not want the tour.
+ * <p>3.0.1 (owner, 27 Oct): the hero is the Cozy Christmas pair — Halloween ends on 1 Nov and the
+ * Christmas season leads the Studio from then on. Bundled, so swapping it is a release.
  *
- * <p>🔴 The three heroes are BUNDLED and since 2026-10-05 they MOVE and are real
- * outputs (components/onboarding/Heroes.tsx): the empty room furnishing itself,
- * one render per mode, then a drifting wall of designs. The three still mood
- * shots before them were never something the app had made. Copy and layout
- * are unchanged.
+ * <p>🔴 The hero is BUNDLED and MOVES (components/onboarding/Heroes.tsx): a real output of the
+ * app, the handle sweeping on its own with the first-run shine. The brand lockup rides above it.
  */
-const SLIDES = [
-    {
-        id: "restyled",
-        headlineKey: "onboarding.v2_slide1_headline",
-        bodyKey: "onboarding.v2_slide1_body",
-        Hero: WipeHero,
-    },
-    {
-        id: "six-ways",
-        headlineKey: "onboarding.v2_slide2_headline",
-        bodyKey: "onboarding.v2_slide2_body",
-        Hero: ShowcaseHero,
-    },
-    {
-        id: "free-today",
-        headlineKey: "onboarding.v2_slide3_headline",
-        bodyKey: "onboarding.v2_slide3_body",
-        Hero: WallHero,
-    },
-] as const;
-
-
 export default function OnboardingScreen() {
     const { t } = useTranslation();
     const { width, height } = useWindowDimensions();
-    // Headline-only pages (5 Oct): the picture takes the room the paragraph left — ~68% of the
-    // screen, the dots and headline sitting just under its fade.
-    const HERO_HEIGHT = Math.round(Math.min(height * 0.68, 640));
+    // The picture takes ~70% of the screen; the headline and the one button sit under its fade.
+    const HERO_HEIGHT = Math.round(Math.min(height * 0.7, 660));
     const guestLogin = useAuthStore((st) => st.guestLogin);
+    const reduceMotion = useReduceMotion();
 
     const [busy, setBusy] = useState(false);
-    const [index, setIndex] = useState(0);
-    const listRef = useRef<FlatList>(null);
 
     // Returning account holders only (R1, 2026-08-09): a dead session past the
     // refresh window would otherwise be forked into a fresh empty guest by the
@@ -110,49 +86,22 @@ export default function OnboardingScreen() {
         }
     }, [busy, guestLogin]);
 
-    const advance = () => {
-        if (index < SLIDES.length - 1) {
-            const next = index + 1;
-            setIndex(next);
-            listRef.current?.scrollToOffset({ offset: next * width, animated: true });
-            return;
-        }
-        start();
-    };
-
-    const last = index === SLIDES.length - 1;
-
     return (
         <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: U.ground }}>
-            <FlatList
-                ref={listRef}
-                data={SLIDES}
-                keyExtractor={(s) => s.id}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
+            <View
                 style={{ position: "absolute", top: 0, left: 0, right: 0, height: HERO_HEIGHT }}
-                onMomentumScrollEnd={(e) =>
-                    setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
-                }
-                extraData={index}
-                renderItem={({ item, index: i }) => (
-                    <View
-                        style={{ width, height: HERO_HEIGHT }}
-                        accessible
-                        accessibilityRole="image"
-                        accessibilityLabel={t(item.headlineKey)}
-                    >
-                        <item.Hero width={width} height={HERO_HEIGHT} active={i === index} />
-                        <LinearGradient
-                            pointerEvents="none"
-                            colors={[U.overlayScrim, "transparent", U.ground]}
-                            locations={[0, 0.3, 0.97]}
-                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                    </View>
-                )}
-            />
+                accessible
+                accessibilityRole="image"
+                accessibilityLabel={t("onboarding.v3_headline")}
+            >
+                <ChristmasHero width={width} height={HERO_HEIGHT} active />
+                <LinearGradient
+                    pointerEvents="none"
+                    colors={[U.overlayScrim, "transparent", U.ground]}
+                    locations={[0, 0.3, 0.97]}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                />
+            </View>
 
             {/* Brand lockup rides above the hero. */}
             <View
@@ -172,97 +121,44 @@ export default function OnboardingScreen() {
             </View>
 
             <View style={{ flex: 1, justifyContent: "flex-end", paddingHorizontal: 26, paddingBottom: 34 }}>
-                <View style={{ flexDirection: "row", gap: 7, marginBottom: 20 }}>
-                    {SLIDES.map((s, i) => (
-                        <Dot key={s.id} active={i === index} />
-                    ))}
-                </View>
-
-                {/* Headline only (owner, 5 Oct): the moving pictures carry the page; a paragraph
-                    under them read as a manual. bodyKey stays on the slides for the copy history. */}
-                {/* One line in every language (owner, 5 Oct): long ones scale down instead of wrapping. */}
-                <Text
-                    style={{ ...V.displayL, color: U.ink }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.55}
-                >
-                    {t(SLIDES[index].headlineKey)}
-                </Text>
-
-                <Pressable
-                    onPress={advance}
-                    disabled={busy}
-                    accessibilityRole="button"
-                    style={{
-                        height: 56,
-                        borderRadius: 16,
-                        backgroundColor: U.buttonFill,
-                        opacity: busy ? 0.6 : 1,
-                        marginTop: 28,
-                        paddingHorizontal: 22,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    {busy ? (
-                        <ActivityIndicator color={U.buttonInk} />
-                    ) : (
-                        <>
-                            <Text style={{ ...V.button, color: U.buttonInk }}>
-                                {t(last ? "onboarding.v2_start" : "onboarding.v2_next")}
-                            </Text>
-                            <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
-                        </>
-                    )}
-                </Pressable>
-
-                {/* Always visible — a tour nobody can leave is not a tour. */}
-                <Pressable onPress={start} disabled={busy} hitSlop={10} accessibilityRole="button">
+                {/* The one sentence, rising in. Three short lines by design — the full stops are the
+                    rhythm; long languages shrink instead of wrapping past three lines. */}
+                <Reanimated.View entering={reduceMotion ? undefined : FadeInDown.duration(520).springify().damping(18)}>
                     <Text
-                        style={{
-                            fontFamily: "Inter-SemiBold",
-                            fontSize: 13,
-                            letterSpacing: track(1.2),
-                            color: U.inkMuted,
-                            marginTop: 16,
-                        }}
+                        style={{ ...V.displayL, color: U.ink }}
+                        numberOfLines={3}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.6}
                     >
-                        {t("onboarding.v2_skip")}
+                        {/* One sentence per line (owner, 21 Oct): the full stops are the line breaks, in
+                            every language — "。" in Japanese, ". " elsewhere. */}
+                        {t("onboarding.v3_headline").replace(/([.。])\s*(?=\S)/g, "$1\n")}
                     </Text>
-                </Pressable>
+                </Reanimated.View>
+
+                <ShimmerButton onPress={start} disabled={busy} reduceMotion={reduceMotion} style={{ marginTop: 26 }}>
+                    <View style={{ height: 58, paddingHorizontal: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                        {busy ? (
+                            <ActivityIndicator color={U.buttonInk} />
+                        ) : (
+                            <>
+                                <Text style={{ ...V.button, color: U.buttonInk }} numberOfLines={1} adjustsFontSizeToFit>
+                                    {t("onboarding.v3_cta")}
+                                </Text>
+                                <Text style={{ color: U.buttonInk, fontSize: 18 }}>→</Text>
+                            </>
+                        )}
+                    </View>
+                </ShimmerButton>
 
                 {hadAccount && (
                     <Pressable onPress={() => router.push("/login")} hitSlop={10} accessibilityRole="button">
-                        <Text style={{ ...V.caption, color: U.inkMuted, marginTop: 12 }}>
+                        <Text style={{ ...V.caption, color: U.inkMuted, marginTop: 16 }}>
                             {t("onboarding.sign_in_existing")}
                         </Text>
                     </Pressable>
                 )}
             </View>
         </SafeAreaView>
-    );
-}
-
-/** 28 × 4 when active, 4 × 4 when not — the spec's tracking pager. */
-function Dot({ active }: { active: boolean }) {
-    const w = useRef(new Animated.Value(active ? 28 : 4)).current;
-    useEffect(() => {
-        Animated.timing(w, {
-            toValue: active ? 28 : 4,
-            duration: 200,
-            useNativeDriver: false,
-        }).start();
-    }, [active, w]);
-    return (
-        <Animated.View
-            style={{
-                width: w,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: active ? U.accentBright : U.lineNeutral,
-            }}
-        />
     );
 }

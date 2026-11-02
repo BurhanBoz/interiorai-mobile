@@ -60,3 +60,23 @@ export async function verifySubscriptionReceipt(
     );
     return data;
 }
+
+/**
+ * 3.0.0 (21 Oct 2026): settle a purchase straight with Apple. The server looks the StoreKit
+ * transaction up through the App Store Server API, verifies Apple's signature, checks the
+ * purchase belongs to this user, and activates the plan / grants the pack in one database
+ * transaction — the same idempotency keys as RevenueCat's webhook, so whichever arrives second
+ * grants nothing. Always HTTP 200 with a status; only a network failure throws.
+ */
+export interface ConfirmPurchaseResponse {
+    status: "CONFIRMED" | "PENDING" | "REJECTED";
+    reason: string;
+    kind: "SUBSCRIPTION" | "CREDIT_PACK" | "OTHER" | null;
+    planCode: string | null;
+    balance: number | null;
+}
+
+export async function confirmStorePurchase(transactionId: string): Promise<ConfirmPurchaseResponse> {
+    const { data } = await api.post<ConfirmPurchaseResponse>("/api/iap/confirm", { transactionId });
+    return data;
+}

@@ -34,11 +34,12 @@ import { Easing } from "react-native";
  */
 export const color = {
   // Neutral surface stack (matches tailwind.config.js)
-  surface: "#191510",
-  surfaceContainer: "#241F18",
-  surfaceContainerLow: "#201B15",
-  surfaceContainerHigh: "#2C2519",
-  surfaceContainerHighest: "#332B1E",
+  // Build 116: lifted with umber.ground so the v1 screens share the same ground.
+  surface: "#221C17",
+  surfaceContainer: "#2C261F",
+  surfaceContainerLow: "#28221C",
+  surfaceContainerHigh: "#342C23",
+  surfaceContainerHighest: "#3B3228",
 
   // Gold / primary palette — always reference this
   goldDawn: "#F0CE99",
@@ -340,28 +341,29 @@ export const text = {
  * and the sand accent but warms the ground so it shares hue with the wood and
  * leather in the product photography, and lifts the accent for contrast.
  *
- * 🔴 Measured, not picked: `inkMuted` on `ground` is 5.7:1 and `accentBright`
- * on `ground` is 9.4:1. Lightening `ground` breaks both — re-check before you
- * touch it.
+ * 🔴 Measured, not picked. Build 116 (owner, 14 Oct: "arka plan çok koyu"): the ground
+ * came up from #191510 to #221C17 and the inks went a touch softer; re-measured — `inkMuted`
+ * on `ground` 6.3:1 (was 5.7), `accentBright` 11.2:1, `ink` 14.1:1. Lightening further
+ * costs these; re-check before you touch it.
  *
  * `photoChrome` is deliberately NOT a theme colour. Pills that sit on top of a
  * photograph have to work on any photograph, so they carry their own dark fill
  * and light hairline rather than a token that assumes a known background.
  */
 export const umber = {
-  ground: "#191510",
-  surface: "#241F18",
-  sheetSurface: "#201B15",
-  ink: "#F6F1E7",
-  inkMuted: "#9A8F7D",
+  ground: "#221C17",
+  surface: "#2C261F",
+  sheetSurface: "#28221C",
+  ink: "#F1EADF",
+  inkMuted: "#A89D8B",
   accent: "#DDB477",
-  accentBright: "#F0CE99",
-  buttonFill: "#E4BE86",
+  accentBright: "#EFD0A0",
+  buttonFill: "#E2C08E",
   buttonInk: "#231B10",
-  lineAccent: "rgba(221,180,119,0.15)",
-  lineNeutral: "rgba(246,241,231,0.10)",
+  lineAccent: "rgba(221,180,119,0.16)",
+  lineNeutral: "rgba(246,241,231,0.12)",
   productPlate: "#F6F1E7",
-  overlayScrim: "rgba(25,21,16,0.5)",
+  overlayScrim: "rgba(34,28,23,0.5)",
   sheetScrim: "rgba(0,0,0,0.55)",
   /** Pills over photography. Pair with `photoChromeBorder`. */
   photoChrome: "rgba(14,13,12,0.7)",

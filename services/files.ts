@@ -57,3 +57,21 @@ export async function createMask(
     );
     return data;
 }
+
+/** The upload-time room guess (3.0.0): `ready` false while the server is still looking. */
+export interface RoomGuessResponse {
+    ready: boolean;
+    roomTypeCode: string | null;
+    styleCode: string | null;
+    confidence: number | null;
+    /** The photo's look (21 Oct, "Copy this look"): hex colours, materials, mood, palette name. */
+    palette?: string[];
+    materials?: string | null;
+    mood?: string | null;
+    paletteName?: string | null;
+}
+
+export async function getRoomGuess(fileId: string): Promise<RoomGuessResponse> {
+    const { data } = await api.get<RoomGuessResponse>(`/api/files/${fileId}/room-guess`);
+    return data;
+}

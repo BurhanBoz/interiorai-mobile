@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useCatalogStore } from "@/stores/catalogStore";
 import { catalogName } from "@/utils/catalogI18n";
@@ -21,6 +21,10 @@ export function useCatalogLabel() {
     const { t } = useTranslation();
     const roomTypes = useCatalogStore((s) => s.roomTypes);
     const designStyles = useCatalogStore((s) => s.designStyles);
+    // A seasonal render (2.5.0) names its theme in the style slot; the
+    // themes live in their own list, so a label lookup must see both.
+    const seasons = useCatalogStore((s) => s.seasons);
+    const seasonalThemes = useMemo(() => seasons.flatMap((x) => x.themes), [seasons]);
     const ensureLoaded = useCatalogStore((s) => s.ensureLoaded);
     // The screen that labels a job can be the first one to need the
     // catalogue: an account restored on a new phone opens the gallery before
@@ -34,9 +38,10 @@ export function useCatalogLabel() {
         (kind: "style" | "room", name: string | null | undefined): string => {
             if (!name) return "";
             const list = kind === "room" ? roomTypes : designStyles;
-            const item = list.find((i) => i.name === name);
+            const item = list.find((i) => i.name === name)
+                ?? (kind === "style" ? seasonalThemes.find((i) => i.name === name) : undefined);
             return item ? catalogName(t, kind, item) : name;
         },
-        [t, roomTypes, designStyles],
+        [t, roomTypes, designStyles, seasonalThemes],
     );
 }

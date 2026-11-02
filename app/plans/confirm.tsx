@@ -176,7 +176,13 @@ export default function PlanConfirmScreen() {
                 await new Promise((r) => setTimeout(r, 1500));
             }
 
-            await reportPurchaseSuccess({ source: "PLANS_SCREEN", planCode: plan.code });
+            // 3.0.0: PURCHASED only once the server has the plan (or the deferred change) — a
+            // purchase the server has not settled yet is PURCHASE_PENDING, never a sale on paper.
+            if (reconciled || scheduled) {
+                await reportPurchaseSuccess({ source: "PLANS_SCREEN", planCode: plan.code });
+            } else {
+                await recordPaywallEvent("PURCHASE_PENDING", { source: "PLANS_SCREEN", planCode: plan.code });
+            }
 
             const scheduledDate = (() => {
                 const iso = useSubscriptionStore.getState().subscription?.scheduledChangeAt

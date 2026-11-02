@@ -20,6 +20,8 @@ import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 import { formatProductPrice } from "@/utils/price";
 import * as iap from "@/services/iap";
 import { recordPaywallEvent } from "@/services/telemetry";
+import { listJobs } from "@/services/jobs";
+import { getFileDownloadUrl } from "@/services/files";
 import {
     purchaseAlertKeys,
     reportPurchaseOutcome,
@@ -30,6 +32,8 @@ import { planTier, tierRank } from "@/utils/planTier";
 import type { PlanResponse } from "@/types/api";
 import { usePostPurchaseStore } from "@/stores/postPurchaseStore";
 import { useStudioStore } from "@/stores/studioStore";
+import { useCatalogStore } from "@/stores/catalogStore";
+import { seasonMedia, seasonTitle } from "@/components/studio/seasonMedia";
 
 const U = theme.umber;
 
@@ -117,7 +121,13 @@ const SAMPLE_AFTER = require("@/assets/features/paywall_after.jpg");
 const INTRO_WAIT_MS = 1200;
 
 export default function PaywallScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    // Build 117 (owner, 14 Oct): the paywall's sample is the open season when there is one
+    // (Halloween now, Christmas from 1 Nov), the empty room furnished otherwise.
+    const leadingSeason = useCatalogStore((s) => s.seasons[0] ?? null);
+    const ensureCatalog = useCatalogStore((s) => s.ensureLoaded);
+    // The launch offer can open before Studio ever asked for the catalogue; a cached copy paints at once.
+    useEffect(() => { void ensureCatalog(); }, [ensureCatalog]);
     const plans = useSubscriptionStore((s) => s.plans);
     const fetchPlans = useSubscriptionStore((s) => s.fetchPlans);
     const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
@@ -143,7 +153,29 @@ export default function PaywallScreen() {
     const ownAfter = typeof params.afterUrl === "string" && params.afterUrl ? params.afterUrl : null;
     const ownBefore = typeof params.beforeUrl === "string" && params.beforeUrl ? params.beforeUrl : null;
 
-    const [selected, setSelected] = useState<string>(PLAN_WEEKLY);
+    // Out of credits (2.6.1, owner 20 Oct): the hero is the user's LAST finished design — the room
+    // they just made, before and after — fetched here because Generate opens this screen with no
+    // picture of its own. 44 people saw the old "out of credits" screen in 14 days and none picked
+    // a plan; a screen about their own room is the one argument we have. Falls back to the photo
+    // they were about to redesign, then to the Pro tools.
+    // 3.0.0 (owner, 20 Oct: "paywall ekranı da out of credits gibi çarpıcı olsun"): every placement
+    // that has no picture of its own now shows the user's own last design the same way — the
+    // credit pill, the app-open offer, Settings. A locked-tool placement keeps that tool's pair.
+    const [lastOwn, setLastOwn] = useState<{ before: string; after: string } | null>(null);
+    useEffect(() => {
+        if (ownAfter || PRO_TOOL_SOURCES.has(source) || source === SOURCE_RESULT_VIDEO) return;
+        let cancelled = false;
+        listJobs(0, 10).then((page) => {
+            const done = page.content.find((j) => j.status === "COMPLETED" && j.outputs?.length && j.inputFile?.id);
+            if (!cancelled && done) setLastOwn({ before: getFileDownloadUrl(done.inputFile.id), after: done.outputs[0].url });
+        }).catch(() => {});
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source]);
+
+    // 3.0.0: monthly comes selected (owner, 20 Oct). All 10 paying users so far chose weekly from a
+    // weekly-first screen; the monthly row now leads and is the default, weekly a tap below.
+    const [selected, setSelected] = useState<string>(PLAN_MONTHLY);
 
     // How long the paywall actually held someone, and whether they touched it
     // at all. The server already records SHOWN and DISMISSED — what it cannot
@@ -169,6 +201,8 @@ export default function PaywallScreen() {
         });
     }, []);
     const [busy, setBusy] = useState(false);
+    /** 3.0.0: Apple has taken the payment and the server is settling it — the screen says so. */
+    const [confirming, setConfirming] = useState(false);
 
     // The hero takes what the screen can spare. The rule for redesigned
     // screens is "fits 393x852 without scrolling"; v3's full-bleed picture
@@ -239,7 +273,7 @@ export default function PaywallScreen() {
     // Seçim, gerçekten satın alınabilir olanın içinde kalmalı.
     const effectiveSelected = offersWeekly && offersMonthly
         ? selected
-        : offersWeekly ? PLAN_WEEKLY : PLAN_MONTHLY;
+        : offersMonthly ? PLAN_MONTHLY : PLAN_WEEKLY;
     const chosen = effectiveSelected === PLAN_WEEKLY
         ? (offersWeekly ? weekly : undefined)
         : (offersMonthly ? monthly : undefined);
@@ -359,10 +393,16 @@ export default function PaywallScreen() {
         setBusy(true);
         await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: exhaustedPack.code });
         try {
-            await purchasePack(exhaustedPack.code);
+            const result = await purchasePack(exhaustedPack.code);
             // The wallet changed server-side; the studio's affordability gate
             // reads the store, so refresh before handing the user back to it.
             await fetchBalance().catch(() => {});
+            if ((result as { pending?: boolean } | undefined)?.pending) {
+                await recordPaywallEvent("PURCHASE_PENDING", { source, planCode: exhaustedPack.code });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             await leave("PURCHASED", exhaustedPack.code);
         } catch (e) {
             // One classifier for all four purchase entry points — see
@@ -390,12 +430,37 @@ export default function PaywallScreen() {
 
         setBusy(true);
         await recordPaywallEvent("PURCHASE_STARTED", { source, planCode: plan.code });
+        let paid = false;
         try {
-            await iap.purchaseSubscription(plan.code, plan.appleProductId);
+            // Apple's sheet is up until this resolves; from then on Apple has the money and the
+            // overlay says the payment is being confirmed while the server settles it (3.0.0).
+            const result = await iap.purchaseSubscription(plan.code, plan.appleProductId,
+                () => { paid = true; setConfirming(true); });
             await fetchSubscription().catch(() => {});
             await fetchBalance().catch(() => {});
+            setConfirming(false);
+            if ((result as { settled?: boolean }).settled === false) {
+                // 🔴 Never "purchased" before the server has the plan on (21 Oct: the screen said
+                // purchased while the account stayed FREE with 0 credits). Honest words instead;
+                // the foreground reconciler finishes the job and the user is never charged twice.
+                await recordPaywallEvent("PURCHASE_PENDING", {
+                    source, planCode: plan.code,
+                    failureCode: (result as { reason?: string }).reason ?? null,
+                });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             await leave("PURCHASED", plan.code);
         } catch (e) {
+            setConfirming(false);
+            if (paid) {
+                // Apple took the payment and something of ours threw: still not a failure.
+                await recordPaywallEvent("PURCHASE_PENDING", { source, planCode: plan.code, failureCode: "CLIENT_ERROR" });
+                Alert.alert(t("paywall.pending_title"), t("paywall.pending_body"));
+                exit();
+                return;
+            }
             // Cancelling the Apple sheet is not a failure and must not be
             // reported as one — it would inflate the FAILED bucket with people
             // who simply changed their mind at the last step. The classifier
@@ -498,13 +563,15 @@ export default function PaywallScreen() {
     };
 
     // ── The moment that opened the screen ────────────────────────────
-    const proTools: PaywallHeroSpec = {
-        kind: "pro",
-        left: { image: require("@/assets/features/style_after.jpg"), label: t("studio.mode_style_transfer") },
-        // outdoor_card.png is an 8 KB diagonal-stripe placeholder — the
-        // "asset missing" pattern, not a photograph.
-        right: { image: require("@/assets/features/outdoor_after.jpg"), label: t("studio.mode_outdoor") },
-    };
+    // Build 117: the Style Transfer + Outdoor pair is retired from the paywall. Its place —
+    // and the default — is the open season's before/after, or the empty room without one.
+    const seasonPair = leadingSeason ? seasonMedia(leadingSeason) : null;
+    const proTools: PaywallHeroSpec = seasonPair
+        ? { kind: "pair", before: seasonPair.before as never, after: seasonPair.after as never }
+        : { kind: "pair", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+    const seasonHeadline = seasonPair && leadingSeason
+        ? { title: seasonTitle(leadingSeason, i18n.language), sub: t("studio.feature_seasonal_desc") }
+        : null;
     const hero: PaywallHeroSpec = (() => {
         if (PRO_TOOL_SOURCES.has(source)) return proTools;
         if (source === SOURCE_FIRST_RESULT && ownAfter) {
@@ -518,11 +585,13 @@ export default function PaywallScreen() {
                 chip: t("paywall.chip_video"), icon: "videocam",
             };
         }
+        if (lastOwn && source !== SOURCE_FIRST_RESULT) {
+            return { kind: "pair", before: { uri: lastOwn.before, headers: authHeaders }, after: { uri: lastOwn.after } };
+        }
         if (source === SOURCE_CREDITS_EXHAUSTED && pendingPhoto) {
             return { kind: "photo", image: { uri: pendingPhoto }, chip: t("paywall.chip_your_room"), icon: "image-outline" };
         }
-        if (subscribed) return proTools;
-        return { kind: "pair", before: SAMPLE_BEFORE, after: SAMPLE_AFTER };
+        return proTools;
     })();
 
     /**
@@ -543,15 +612,19 @@ export default function PaywallScreen() {
                 sub: reloadNote,
             };
         }
-        if (PRO_TOOL_SOURCES.has(source)) return { title: t("paywall.two_things_headline"), sub: t("paywall.pro_tools_sub") };
+        if (PRO_TOOL_SOURCES.has(source)) return seasonHeadline ?? { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
         if (source === SOURCE_FIRST_RESULT) return { title: t("paywall.hero_first_title"), sub: t("paywall.hero_first_sub") };
         if (source === SOURCE_RESULT_VIDEO) return { title: t("paywall.hero_video_title"), sub: t("paywall.hero_video_sub") };
         if (source === SOURCE_CREDITS_EXHAUSTED) {
+            // Their own last design on screen: one sentence about the next one, not about credits.
+            if (lastOwn) return { title: t("paywall.hero_next_title"), sub: t("paywall.hero_next_sub") };
             return hero.kind === "photo" && !ownAfter
                 ? { title: t("paywall.hero_room_title"), sub: t("paywall.hero_room_sub") }
                 : { title: t("paywall.title_out_of_credits"), sub: t("paywall.hero_exhausted_sub") };
         }
-        return { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
+        // Their own last design on screen (3.0.0): the next-room sentence, as on out-of-credits.
+        if (lastOwn) return { title: t("paywall.hero_next_title"), sub: t("paywall.hero_default_sub") };
+        return seasonHeadline ?? { title: t("paywall.hero_default_title"), sub: t("paywall.hero_default_sub") };
     })();
 
     // ── Money lines ──────────────────────────────────────────────────
@@ -607,6 +680,30 @@ export default function PaywallScreen() {
 
                     {/* İki satır: aynı Pro, iki dönem — her biri BUGÜN ne çekileceğini söylüyor. */}
                     <PaywallPlanRow
+                        label={`Pro · ${t("paywall.monthly")}`}
+                        price={monthlyRowPrice}
+                        period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
+                        then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
+                        badge={monthlyIntroShown
+                            ? introBadge(monthly, monthlyIntro)
+                            : monthlySaving != null ? t("paywall.save_pct", { pct: monthlySaving }) : t("paywall.best_value")}
+                        selected={offersMonthly && effectiveSelected === PLAN_MONTHLY}
+                        current={currentCode === PLAN_MONTHLY}
+                        locked={!offersMonthly}
+                        currentLabel={t("plans.current_plan")}
+                        a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
+                            monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
+                            monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
+                        reduceMotion={reduceMotion}
+                        onPress={() => {
+                            if (!offersMonthly) return;
+                            touchedAPlan.current = true;
+                            setSelected(PLAN_MONTHLY);
+                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
+                        }}
+                    />
+
+                    <PaywallPlanRow
                         label={`Pro · ${t("paywall.weekly")}`}
                         price={weeklyRowPrice}
                         period={weeklyIntroShown ? t("paywall.first_week") : t("paywall.per_week")}
@@ -627,30 +724,6 @@ export default function PaywallScreen() {
                             recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_WEEKLY });
                         }}
                     />
-                    <PaywallPlanRow
-                        label={`Pro · ${t("paywall.monthly")}`}
-                        price={monthlyRowPrice}
-                        period={monthlyIntroShown ? t("paywall.first_month") : t("paywall.per_month")}
-                        then={monthlyIntroShown && monthlyPrice ? t("paywall.then_price_month", { price: monthlyPrice }) : null}
-                        badge={monthlyIntroShown
-                            ? introBadge(monthly, monthlyIntro)
-                            : monthlySaving != null ? t("paywall.save_pct", { pct: monthlySaving }) : null}
-                        selected={offersMonthly && effectiveSelected === PLAN_MONTHLY}
-                        current={currentCode === PLAN_MONTHLY}
-                        locked={!offersMonthly}
-                        currentLabel={t("plans.current_plan")}
-                        a11yLabel={rowA11y(`Pro ${t("paywall.monthly")}`,
-                            monthlyIntroShown ? monthlyIntro!.priceString : monthlyPrice,
-                            monthlyIntroShown ? ` ${t("paywall.first_month")}` : t("paywall.per_month"))}
-                        reduceMotion={reduceMotion}
-                        onPress={() => {
-                            if (!offersMonthly) return;
-                            touchedAPlan.current = true;
-                            setSelected(PLAN_MONTHLY);
-                            recordPaywallEvent("PLAN_SELECTED", { source, planCode: PLAN_MONTHLY });
-                        }}
-                    />
-
                     {/* The out-of-credits placement keeps its low-commitment step:
                         someone who has just run dry is the one person for whom a
                         one-off pack is the right size of decision. */}
@@ -660,14 +733,14 @@ export default function PaywallScreen() {
                             disabled={busy}
                             accessibilityRole="button"
                             style={{
-                                minHeight: 44,
-                                borderWidth: 1, borderColor: U.lineNeutral,
-                                borderRadius: theme.v2Layout.radius.inline, paddingVertical: 12, paddingHorizontal: 16,
+                                minHeight: 52,
+                                backgroundColor: "rgba(246,241,231,0.06)",
+                                borderRadius: theme.v2Layout.radius.inline, paddingVertical: 14, paddingHorizontal: 16,
                                 flexDirection: "row", gap: 12,
                                 alignItems: "center", justifyContent: "space-between",
                             }}
                         >
-                            <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, flex: 1 }}>
+                            <Text style={{ ...theme.v2.row, color: U.ink, flex: 1 }}>
                                 {t("paywall.pack_line", { credits: exhaustedPack.credits })}
                             </Text>
                             <Text style={{ ...theme.v2.row, color: U.accentBright }}>
@@ -770,6 +843,24 @@ export default function PaywallScreen() {
             >
                 <Ionicons name="close" size={18} color={U.ink} />
             </Pressable>
+
+            {/* 3.0.0: between Apple's sheet closing and the server settling the purchase (a second
+                usually, up to 20 s). Covers the screen so nothing can be bought twice meanwhile. */}
+            {confirming && (
+                <View
+                    accessibilityRole="progressbar"
+                    accessibilityLabel={t("paywall.confirming_title")}
+                    style={{
+                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: "rgba(20,16,12,0.86)",
+                        alignItems: "center", justifyContent: "center", paddingHorizontal: 36, gap: 14,
+                    }}
+                >
+                    <ActivityIndicator size="large" color={U.accentBright} />
+                    <Text style={{ ...theme.v2.displayS, color: U.ink, textAlign: "center" }}>{t("paywall.confirming_title")}</Text>
+                    <Text style={{ ...theme.v2.rowQuiet, color: U.inkMuted, textAlign: "center" }}>{t("paywall.confirming_body")}</Text>
+                </View>
+            )}
         </View>
     );
 }

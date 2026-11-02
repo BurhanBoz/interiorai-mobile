@@ -30,8 +30,7 @@ import { useEffectivePlanCode } from "@/hooks/useEntitlement";
 // derived so a rename there fails the build here instead of silently
 // dropping a mode from every marketing link.
 const VALID_MODES: DesignMode[] = [
-    "REDESIGN", "EMPTY_ROOM", "STYLE_TRANSFER", "INPAINT", "OUTDOOR",
-];
+    "REDESIGN", "EMPTY_ROOM", "STYLE_TRANSFER", "INPAINT", "OUTDOOR", "SEASONAL"];
 
 export default function DesignDeepLink() {
     const params = useLocalSearchParams<{ room?: string; style?: string; mode?: string }>();

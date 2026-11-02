@@ -41,30 +41,38 @@ export type SampleRoom = {
     labelKey: string;
     /** Modes this room makes sense in. A furnished room cannot demo Empty Room. */
     modes: DesignMode[];
+    /**
+     * What the tile SHOWS when it is not the room itself (build 118, owner 14 Oct): the room
+     * decorated for Halloween by the app — the tap still sends {@link module}, the plain room.
+     */
+    thumb?: number;
 };
 
 export const SAMPLE_ROOMS: SampleRoom[] = [
+    // Build 118 (owner, 14 Oct): three rooms the app itself decorated in the 14 Oct lab round —
+    // living room 3, kitchen 2, dining room 1. The tile shows the Halloween result, the tap sends
+    // the room as photographed. The three older samples are retired (they stay in assets/trial
+    // for the anonymous-trial carousel).
     {
-        // The plant-filled living room with the green sofa — the Redesign room of the owner's
-        // Prompt Lab runs (fotolar/01-salon.jpg, 4–5 Oct). Studio's first sample since 2.3.0.
-        key: "green_living_room",
-        module: require("@/assets/trial/greenLivingRoom_Before.jpg"),
+        key: "living_room_3",
+        module: require("@/assets/samples/l3_room.jpg"),
+        thumb: require("@/assets/samples/l3_thumb.jpg"),
         labelKey: "studio.sample_living_room",
-        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER"],
+        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER", "SEASONAL"],
     },
     {
-        key: "living_room",
-        module: require("@/assets/trial/livingRoom_Before.png"),
-        labelKey: "studio.sample_living_room",
-        // Dated but furnished: the redesign has something to work against, and
-        // Magic Edit / Style Transfer both need existing furniture to change.
-        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER"],
-    },
-    {
-        key: "kitchen",
-        module: require("@/assets/trial/kitchen_Before.png"),
+        key: "kitchen_2",
+        module: require("@/assets/samples/k2_room.jpg"),
+        thumb: require("@/assets/samples/k2_thumb.jpg"),
         labelKey: "studio.sample_kitchen",
-        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER"],
+        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER", "SEASONAL"],
+    },
+    {
+        key: "dining_room_1",
+        module: require("@/assets/samples/d1_room.jpg"),
+        thumb: require("@/assets/samples/d1_thumb.jpg"),
+        labelKey: "studio.sample_dining_room",
+        modes: ["REDESIGN", "INPAINT", "STYLE_TRANSFER", "SEASONAL"],
     },
     {
         key: "empty_room",

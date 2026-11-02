@@ -15,7 +15,9 @@ import {
     DEFAULT_OFFERING_ID,
 } from "@/config/revenuecat";
 import { purchaseCreditPack } from "./creditPacks";
-import { verifySubscriptionReceipt } from "./plans";
+import { confirmStorePurchase, getActiveSubscription as fetchActiveSubscription, type ConfirmPurchaseResponse } from "./plans";
+import { unfinishedTransactions, currentEntitlements } from "@/modules/roomframe-storekit";
+import { classifyPurchaseError } from "./purchaseOutcome";
 import {
     beginPurchaseAttempt,
     finishPurchaseAttempt,
@@ -338,7 +340,9 @@ async function buySubscriptionPackage(
 export async function purchaseSubscription(
     planCode: string,
     appleProductId?: string | null,
-): Promise<SubscriptionResponse> {
+    /** Called once Apple's sheet has closed with a purchase — the moment to show "confirming". */
+    onPaid?: () => void,
+): Promise<SubscriptionResponse & Partial<Settled>> {
     if (isDummyMode) {
         // Dev flow — bypass StoreKit, call backend's dummy activation endpoint
         // directly. Backend rejects this when `app.allow-dummy-purchases=false`
@@ -353,45 +357,87 @@ export async function purchaseSubscription(
         purchased = await buySubscriptionPackage(attempt, planCode, appleProductId);
     } catch (e) {
         finishPurchaseAttempt(attempt, e);
+        // 3.0.0: an error is not proof Apple did not charge. If StoreKit holds a purchase of
+        // this product nobody has finished, let the server settle it before calling it failed.
+        if (!classifyPurchaseError(e).cancelled && appleProductId
+                && await settleStoreTransactions(appleProductId)) {
+            const sub = await fetchActiveSubscription().catch(() => null);
+            return { ...((sub ?? { planCode }) as SubscriptionResponse), settled: true, reason: "SETTLED_FROM_STOREKIT" };
+        }
         throw e;
     }
-    // Apple's part is over; verify-receipt below is ours and never throws.
+    // Apple's part is over; everything below is ours and never throws.
     finishPurchaseAttempt(attempt);
-    const { customerInfo, productIdentifier } = purchased;
+    try { onPaid?.(); } catch { /* UI callback must not cost the settlement */ }
+    const settled = await settleSubscription(purchased.transaction?.transactionIdentifier ?? null, planCode);
+    return settled;
+}
 
-    const premium = customerInfo.entitlements.active["premium"];
-    const productId = premium?.productIdentifier ?? productIdentifier;
+/**
+ * The result of a store purchase once our server has had its say (3.0.0).
+ * {@code settled} = the server has activated the plan / granted the credits. False means Apple
+ * took the payment but the server has not settled it yet — the caller must NOT say "purchased";
+ * it says "payment received, confirming" and the foreground reconciler finishes the job.
+ */
+export type Settled = { settled: boolean; reason: string };
 
-    // SOURCE OF TRUTH = RevenueCat webhook. RC validates the Apple receipt
-    // server-side and POSTs INITIAL_PURCHASE to our backend, which
-    // activates the subscription + grants credits
-    // (RevenueCatWebhookController → AppleIapService.handleRevenueCatSubscriptionEvent).
-    //
-    // verify-receipt here is BEST-EFFORT for immediate feedback only. The
-    // backend can't re-verify a raw StoreKit receipt we don't have (RC
-    // abstracts it), so this call may 4xx — that's expected and harmless.
-    // We swallow the error; the caller (confirm.tsx) polls
-    // fetchSubscription which reconciles once the webhook lands (~1-3s).
-    try {
-        return await verifySubscriptionReceipt({
-            productId,
-            transactionId: customerInfo.originalAppUserId,
-            receiptData: "",
-        });
-    } catch (e) {
-        console.warn(
-            "[IAP] verify-receipt best-effort failed — RC webhook will reconcile:",
-            (e as { response?: { status?: number } })?.response?.status ?? e,
-        );
-        // Return RC's customerInfo-derived view so the caller has SOMETHING
-        // to render immediately; the subsequent fetchSubscription() poll
-        // replaces it with the authoritative server state.
-        return {
-            planCode,
-            status: "ACTIVE",
-            provider: "REVENUECAT",
-        } as unknown as SubscriptionResponse;
+const SETTLE_WINDOW_MS = 20_000;
+const SETTLE_POLL_MS = 1_500;
+
+/**
+ * Make the server settle a subscription the user just paid for (3.0.0, 21 Oct 2026).
+ *
+ * <p><b>Why.</b> RevenueCat's webhook used to be the ONLY thing that activated a plan, and the
+ * old "verify-receipt" call sent an empty receipt that the server always answered 400. On 21 Oct
+ * RevenueCat's server failed to record a TestFlight purchase ("Encountered a server error"): no
+ * webhook, plan FREE, 0 credits — and this screen said "purchased".
+ *
+ * <p><b>Now.</b> (1) The server confirms the transaction with Apple directly — usually done in
+ * this one call. (2) If not (Apple slow, another account's subscription, a plan change), the
+ * receipt is re-posted to RevenueCat ({@code syncPurchases}) and the server is polled, re-asking
+ * Apple now and then, for up to 20 s. (3) Still nothing: {@code settled=false}; the caller tells
+ * the user the payment is being confirmed and the foreground reconciler keeps going.
+ */
+export async function settleSubscription(transactionId: string | null, planCode: string): Promise<SubscriptionResponse & Settled> {
+    // "Paid" = any paid plan on the server. A deferred plan change shows up as scheduledPlanCode
+    // while the old paid plan stays active — that is settled too: nothing is owed to the user.
+    const isPaid = (s: SubscriptionResponse | null) =>
+        !!s && !!s.planCode && s.planCode !== "FREE";
+    let reason = transactionId ? "PENDING" : "NO_TRANSACTION_ID";
+    let last: SubscriptionResponse | null = null;
+    const deadline = Date.now() + SETTLE_WINDOW_MS;
+    let synced = false;
+    let round = 0;
+    while (Date.now() < deadline) {
+        // Ask our server to settle with Apple on rounds 0, 3 and 6 (~0 s, ~5 s, ~10 s): Apple can
+        // take a moment to list a brand-new transaction, and each ask is idempotent.
+        if (transactionId && round % 3 === 0 && round <= 6) {
+            try {
+                const r: ConfirmPurchaseResponse = await confirmStorePurchase(transactionId);
+                reason = r.reason;
+                if (r.status === "CONFIRMED") {
+                    last = await fetchActiveSubscription().catch(() => last);
+                    return { ...(last ?? ({ planCode: r.planCode } as SubscriptionResponse)), settled: true, reason };
+                }
+                // REJECTED (revoked, expired, unknown product) will not change by waiting on
+                // Apple; RevenueCat may still know better, so the poll below goes on.
+            } catch {
+                reason = "CONFIRM_NETWORK";
+            }
+        }
+        last = await fetchActiveSubscription().catch(() => last);
+        if (isPaid(last)) return { ...(last as SubscriptionResponse), settled: true, reason: "SERVER_ACTIVE" };
+        if (!synced) {
+            synced = true;
+            // Re-post the receipt to RevenueCat: the path that recovers a purchase RevenueCat
+            // failed to record, and the one that settles a subscription bought under another
+            // account (RevenueCat's transfer rules), which our confirm deliberately leaves alone.
+            await Purchases.syncPurchasesForResult().catch(() => {});
+        }
+        round++;
+        await new Promise((r) => setTimeout(r, SETTLE_POLL_MS));
     }
+    return { ...((last ?? { planCode: "FREE" }) as SubscriptionResponse), settled: false, reason };
 }
 
 /**
@@ -399,7 +445,7 @@ export async function purchaseSubscription(
  * product up, then open Apple's sheet. Kept apart for the same reason as
  * {@link buySubscriptionPackage}.
  */
-async function buyPackProduct(attempt: PurchaseAttempt, productId: string): Promise<void> {
+async function buyPackProduct(attempt: PurchaseAttempt, productId: string): Promise<MakePurchaseResult> {
     await ensureConfigured();
 
     // Real RC flow — fetch the product, trigger the StoreKit purchase.
@@ -423,7 +469,7 @@ async function buyPackProduct(attempt: PurchaseAttempt, productId: string): Prom
     // its own, like the subscription path.
     markStoreCall(attempt);
     try {
-        await Purchases.purchaseStoreProduct(product);
+        return await Purchases.purchaseStoreProduct(product);
     } finally {
         markStoreEnd(attempt);
     }
@@ -471,15 +517,53 @@ export async function purchasePack(packCode: string): Promise<CreditPackPurchase
     const { useCreditStore } = await import("@/stores/creditStore");
     const balanceBefore = useCreditStore.getState().balance ?? 0;
     const attempt = openAttempt("pack", productId);
+    let bought: MakePurchaseResult;
     try {
-        await buyPackProduct(attempt, productId);
+        bought = await buyPackProduct(attempt, productId);
     } catch (e) {
         finishPurchaseAttempt(attempt, e);
+        // 3.0.0 (21 Oct, 13:08): RevenueCat could not validate the receipt and its SDK threw —
+        // while Apple HAD charged the pack. StoreKit still holds it unfinished: read it and let
+        // the server settle it with Apple before anything is called a failure.
+        if (!classifyPurchaseError(e).cancelled && await settleStoreTransactions(productId)) {
+            await useCreditStore.getState().fetchBalance().catch(() => {});
+            const now = useCreditStore.getState().balance ?? balanceBefore;
+            return {
+                packCode,
+                creditsGranted: Math.max(0, now - balanceBefore),
+                newBalance: now,
+                provider: "REVENUECAT",
+            } as CreditPackPurchaseResponse;
+        }
         throw e;
     }
     // Apple's part is over; the poll below only waits for the webhook, and a
     // second purchase need not wait for it.
     finishPurchaseAttempt(attempt);
+
+    // 3.0.0: settle it with Apple through our server first — the credits are in the wallet when
+    // this call returns, whatever RevenueCat is doing. Same idempotency key as the webhook, so the
+    // webhook that follows grants nothing. Never throws; the poll below stays as the fallback.
+    const txn = bought?.transaction?.transactionIdentifier;
+    if (txn) {
+        try {
+            const r = await confirmStorePurchase(txn);
+            if (r.status === "CONFIRMED") {
+                await useCreditStore.getState().fetchBalance().catch(() => {});
+                const now = useCreditStore.getState().balance ?? r.balance ?? balanceBefore;
+                if (now > balanceBefore) {
+                    return {
+                        packCode,
+                        creditsGranted: now - balanceBefore,
+                        newBalance: now,
+                        provider: "REVENUECAT",
+                    } as CreditPackPurchaseResponse;
+                }
+            }
+        } catch {
+            // Network: the poll below and the webhook still settle it.
+        }
+    }
 
     // Poll for the webhook-driven grant. 12 tries × 2s = 24s ceiling — RC
     // usually delivers in 1-3s, but the founder's 50-credit sandbox purchase
@@ -656,5 +740,82 @@ export async function fetchIntroEligibility(productIds: string[]): Promise<Recor
     } catch (e) {
         console.warn("[IAP] intro eligibility check failed, showing regular prices:", e);
         return {};
+    }
+}
+
+let lastReconcileAt = 0;
+let syncedThisSession = false;
+
+/**
+ * Self-healing check, run on launch and every return to the foreground (3.0.0, 21 Oct 2026).
+ *
+ * <p>If RevenueCat's view on this phone says the user has an active entitlement while our server
+ * says FREE, a payment was not settled — the case the user who paid must never be left in. The
+ * server is asked to confirm each active subscription's transaction with Apple; failing that, the
+ * receipt is re-posted to RevenueCat once per app session (it recovers what RevenueCat dropped,
+ * and applies RevenueCat's transfer rules for a subscription bought under an earlier account).
+ * Throttled to once a minute; never throws; does nothing when the two already agree.
+ */
+export async function reconcilePaidEntitlement(): Promise<"AGREE" | "CONFIRMED" | "SYNCED" | "SKIPPED"> {
+    if (isDummyMode) return "SKIPPED";
+    if (Date.now() - lastReconcileAt < 60_000) return "SKIPPED";
+    lastReconcileAt = Date.now();
+    try {
+        // Payments StoreKit holds that nobody delivered (a pack RevenueCat failed to record).
+        // Independent of RevenueCat's view, so it runs before anything else.
+        const settledPending = await settleStoreTransactions();
+        await ensureConfigured();
+        const info = await Purchases.getCustomerInfo();
+        const active = Object.values(info.entitlements.active ?? {});
+        if (active.length === 0) return settledPending ? "CONFIRMED" : "AGREE";
+        const server = await fetchActiveSubscription().catch(() => null);
+        if (!server || (server.planCode && server.planCode !== "FREE")) return settledPending ? "CONFIRMED" : "AGREE";
+
+        for (const e of active) {
+            const txn = info.subscriptionsByProductIdentifier?.[e.productIdentifier]?.storeTransactionId;
+            if (!txn) continue;
+            const r = await confirmStorePurchase(txn).catch(() => null);
+            if (r?.status === "CONFIRMED") return "CONFIRMED";
+        }
+        if (!syncedThisSession) {
+            syncedThisSession = true;
+            await Purchases.syncPurchasesForResult().catch(() => {});
+            return "SYNCED";
+        }
+        return "SKIPPED";
+    } catch {
+        return "SKIPPED";
+    }
+}
+
+/**
+ * Settle every purchase StoreKit still holds unfinished (and, without a product filter, the
+ * current subscription entitlements) through our server (3.0.0, 21 Oct 2026).
+ *
+ * <p>RevenueCat finishes a transaction only once it has recorded it, so "unfinished" is exactly
+ * the set of payments Apple took that RevenueCat has not delivered. The server checks each one
+ * with Apple and its ownership (appAccountToken) and grants idempotently; another account's
+ * purchase is left alone. Nothing here finishes a transaction — RevenueCat's retry stays intact.
+ *
+ * @param productId only these (a just-failed purchase); omitted = everything (launch / foreground).
+ * @return true when the server confirmed at least one matching purchase. Never throws.
+ */
+export async function settleStoreTransactions(productId?: string): Promise<boolean> {
+    if (isDummyMode) return false;
+    try {
+        const pending = await unfinishedTransactions();
+        const owned = productId ? [] : await currentEntitlements();
+        const seen = new Set<string>();
+        let confirmed = false;
+        for (const t of [...pending, ...owned]) {
+            if (seen.has(t.transactionId) || t.revokedAtMs) continue;
+            seen.add(t.transactionId);
+            if (productId && t.productId !== productId) continue;
+            const r = await confirmStorePurchase(t.transactionId).catch(() => null);
+            if (r?.status === "CONFIRMED") confirmed = true;
+        }
+        return confirmed;
+    } catch {
+        return false;
     }
 }

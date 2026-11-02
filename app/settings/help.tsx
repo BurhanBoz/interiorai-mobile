@@ -7,7 +7,9 @@ import {
   ScrollView,
   TextInput,
   Linking,
+  Alert,
 } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +22,8 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/authStore";
+import { clearFlag } from "@/utils/oneShotFlag";
+import { firstResultOfferFlag } from "@/hooks/useFirstResultPaywall";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 
 const SUPPORT_EMAIL = "boz.burhan8@gmail.com";
@@ -429,11 +433,42 @@ export default function HelpScreen() {
           <Pressable
             delayLongPress={1500}
             onLongPress={() => {
-              Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk()]).then(() => {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setToursReset(true);
-                setTimeout(() => setToursReset(false), 2000);
-              });
+              // Build 115 (owner, 14 Oct): also forget this identity's first open and the first-result
+              // offer, so the next cold start plays the intro (app/intro.tsx) like a brand-new install.
+              // The keys mirror app/index.tsx and hooks/useFirstResultPaywall.ts.
+              const uid = useAuthStore.getState().user?.id;
+              const firstRun = uid ? [clearFlag(`first_open:${uid}`), clearFlag(`first_open_at:${uid}`), clearFlag(firstResultOfferFlag(uid)), clearFlag(`result_count:${uid}`)] : [];
+              const softReset = () => Promise.all([resetTours(), resetReviewPrompt(), resetPushAsk(), ...firstRun]);
+              // Build 117 (owner, 14 Oct): a second choice that also forgets the guest identity
+              // (device_key in the Keychain survives a reinstall), so the next screen is onboarding
+              // and a NEW guest account is created. The old account stays on the server; its
+              // gallery is no longer on this phone. Owner-only door, so it asks once, plainly.
+              Haptics.selectionAsync();
+              Alert.alert(
+                t("settings.reset_title", { defaultValue: "Test reset" }),
+                t("settings.reset_body", { defaultValue: "First-run screens, or a full reset that starts as a new guest (this account's gallery leaves this phone)." }),
+                [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("settings.reset_first_run", { defaultValue: "First-run screens" }),
+                    onPress: () => softReset().then(() => {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      setToursReset(true);
+                      setTimeout(() => setToursReset(false), 2000);
+                    }),
+                  },
+                  {
+                    text: t("settings.reset_full", { defaultValue: "Full reset (new guest)" }),
+                    style: "destructive",
+                    onPress: async () => {
+                      await softReset().catch(() => {});
+                      await SecureStore.deleteItemAsync("device_key").catch(() => {});
+                      await useAuthStore.getState().logout();
+                      router.replace("/(auth)/onboarding" as never);
+                    },
+                  },
+                ],
+              );
             }}
           >
             <Text

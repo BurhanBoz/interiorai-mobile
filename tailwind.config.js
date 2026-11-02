@@ -6,14 +6,14 @@ module.exports = {
     extend: {
       colors: {
         surface: {
-          DEFAULT: "#191510",
-          dim: "#191510",
+          DEFAULT: "#221C17",
+          dim: "#221C17",
           bright: "#3A3124",
           tint: "#DDB477",
           variant: "#332B1E",
           "container-lowest": "#141009",
           "container-low": "#201B15",
-          container: "#241F18",
+          container: "#2C261F",
           "container-high": "#2C2519",
           "container-highest": "#332B1E",
         },
@@ -21,7 +21,7 @@ module.exports = {
           DEFAULT: "#F6F1E7",
           variant: "#CFC4B0",
         },
-        background: "#191510",
+        background: "#221C17",
         "on-background": "#F6F1E7",
         primary: {
           DEFAULT: "#DDB477",

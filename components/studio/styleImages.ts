@@ -55,7 +55,24 @@ export const STYLE_IMAGES: Record<string, ImageSourcePropType> = {
   LUXURY: require("@/assets/styles/luxury.jpg"),
 };
 
+/**
+ * Seasonal themes (2.5.0). They are picked with the same strip as a style, so
+ * they live in the same map: real results of the Christmas mode's own prompt
+ * on the lab's living rooms (13 Oct), cropped square.
+ */
+const THEME_IMAGES: Record<string, ImageSourcePropType> = {
+    XMAS_CLASSIC: require("@/assets/themes/xmas_classic.jpg"),
+    XMAS_NORDIC: require("@/assets/themes/xmas_nordic.jpg"),
+    XMAS_WOODLAND: require("@/assets/themes/xmas_woodland.jpg"),
+    XMAS_WHITE: require("@/assets/themes/xmas_white.jpg"),
+    // Halloween (V202, 14 Oct): the lab's living room 3 in each theme, square-cropped.
+    HW_CLASSIC: require("@/assets/themes/hw_classic.jpg"),
+    HW_GOTHIC: require("@/assets/themes/hw_gothic.jpg"),
+    HW_HARVEST: require("@/assets/themes/hw_harvest.jpg"),
+};
+
 export function getStyleImage(code: string | null | undefined): ImageSourcePropType | null {
     if (!code) return null;
-    return STYLE_IMAGES[code.toUpperCase()] ?? null;
+    const key = code.toUpperCase();
+    return STYLE_IMAGES[key] ?? THEME_IMAGES[key] ?? null;
 }

@@ -34,6 +34,7 @@ import { useCatalogStore } from "@/stores/catalogStore";
 import { catalogName } from "@/utils/catalogI18n";
 import { useCatalogLabel } from "@/hooks/useCatalogLabel";
 import { getStyleImage } from "@/components/studio/styleImages";
+import { seasonOfTheme } from "@/components/studio/seasonMedia";
 import { useGenerate } from "@/hooks/useGenerate";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
@@ -340,12 +341,16 @@ export default function ResultDetailScreen() {
   const outputs = job?.outputs ?? [];
   const currentOutput = outputs[activeIndex];
 
-  // Post-result prompts: the offer (1st result, below), the notification ask
+  // Post-result prompts: the offer (2nd result since 2.6.0, below), the notification ask
   // (1st, once the offer has closed), the account ask (5th, guests, when enabled) — and the rating,
   // which is keyed to a value signal rather than a visit number.
   const firstResultBeforeUrl = job?.inputFile?.id ? getFileDownloadUrl(job.inputFile.id) : "";
   const firstResultAfterUrl = job && currentOutput ? getOutputImageUrl(job.id, currentOutput) : undefined;
-  useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
+  // 2.6.0: the offer moved to the SECOND result — the same visit the "second_result" rating
+  // signal fires on — so a visit that scheduled the offer keeps the rating back.
+  const offerThisVisit = useFirstResultPaywall(job, firstResultAfterUrl, firstResultBeforeUrl);
+  const offerThisVisitRef = useRef(false);
+  offerThisVisitRef.current = offerThisVisit;
   // RATING FIRST (2.3.3, owner's rule): this screen asks for the rating and
   // nothing else before it. The notification question moved to the progress
   // screen (usePushPermissionAsk there); the account ask waits until the
@@ -414,6 +419,7 @@ export default function ResultDetailScreen() {
   }, [outputs.length, signalValue]);
   const ratingTurn = useReviewPrompt(valueSignal, () =>
     !screenFocused.current
+    || offerThisVisitRef.current // the second-result offer is on its way (2.6.0)
     || otherAskOnScreen.current // the account alert
     || isPushAskOnScreen()      // the progress screen's question, if it is still up
     || fullscreenUrl != null    // the fullscreen viewer is a Modal
@@ -575,7 +581,15 @@ export default function ResultDetailScreen() {
    * a different kind of transaction, and a second path to the wallet is a
    * second place for a double-charge to live.
    */
-  const designStyles = useCatalogStore((s) => s.designStyles);
+  const styleList = useCatalogStore((s) => s.designStyles);
+  const seasons = useCatalogStore((s) => s.seasons);
+  const leadingThemes = useCatalogStore((s) => s.seasonalThemes);
+  // A seasonal render (2.5.0) restyles with another THEME, never a style: the
+  // store still holds mode SEASONAL, and the server refuses a style on it.
+  // V202: the themes of this render's own season, not the leading one's.
+  const seasonalJob = job?.designMode === "SEASONAL";
+  const jobSeason = seasonOfTheme(seasons, job?.designStyleName);
+  const designStyles = seasonalJob ? (jobSeason?.themes ?? leadingThemes) : styleList;
   const { generate, isSubmitting: restyling, cost: restyleCost } = useGenerate();
   // Which thumbnail is rendering, so the tap shows on the thing tapped.
   const [restyleCode, setRestyleCode] = useState<string | null>(null);
@@ -994,6 +1008,7 @@ export default function ResultDetailScreen() {
               pushGranted={pushGranted}
               thumbUrl={afterUrl}
               thumbCacheKey={afterKey}
+              reduceMotion={reduceMotion}
               onPress={handleVideo}
             />
           </Rise>
@@ -1033,6 +1048,7 @@ export default function ResultDetailScreen() {
               </View>
             )}
             <AnotherStyleRow
+              seasonal={seasonalJob}
               currentStyleCode={
                 designStyles.find((s) => s.name === job.designStyleName)?.code ?? null
               }

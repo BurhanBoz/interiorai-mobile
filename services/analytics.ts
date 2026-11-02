@@ -169,6 +169,7 @@ export type AnalyticsEvent =
      * choose — and, joined against the wallet, which ones lead to paying.
      */
     | "style_selected"
+    | "theme_selected"
     /**
      * Whether the furniture catalogue is used at all, and whether people
      * reach for our pieces or their own photographs. It shipped in 1.5.0
@@ -208,6 +209,16 @@ export type AnalyticsEvent =
     | "push_permission"
     // 2.4.1: locked-tool preview sheet and the share card.
     | "locked_preview_shown"
+    // Studio v4 (build 114): a tool tile tapped (mode, tool, season), the add-room screen's
+    // source (camera / gallery / sample), and the first-open intro's button.
+    | "tool_tile_tap"
+    | "tool_tile_select"
+    | "style_reference_set"
+    | "room_guess_applied"
+    | "add_room_source"
+    | "intro_done"
+    /** 17 Oct — a sample room opened on its bundled result instead of rendering (mode, sample, season). */
+    | "sample_result_shown"
     | "locked_preview_upgrade"
     | "result_share_card"
     // 1.7.0 (82) — the clip's speaker button; `muted` is the new state.

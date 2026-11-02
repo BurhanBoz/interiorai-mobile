@@ -1,5 +1,5 @@
 // ── Enums ──────────────────────────────────────
-export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR";
+export type DesignMode = "REDESIGN" | "EMPTY_ROOM" | "INPAINT" | "STYLE_TRANSFER" | "OUTDOOR" | "SEASONAL";
 export type QualityTier = "STANDARD" | "HD" | "ULTRA_HD";
 export type JobStatus = "PENDING" | "SUBMITTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type StorageStatus = "PENDING" | "UPLOADED" | "FAILED";
@@ -32,6 +32,21 @@ export interface CatalogItemResponse {
     description: string;
     category: string;
     previewUrl: string;
+}
+
+/**
+ * One open season of the decorate-only mode (V202, build 114). The first in the
+ * list leads the Studio. `names` is locale → title; fall back to `name`.
+ */
+export interface SeasonResponse {
+    code: string;
+    name: string;
+    names: Record<string, string> | null;
+    previewBeforeUrl: string | null;
+    previewAfterUrl: string | null;
+    startsAt: string | null;
+    endsAt: string | null;
+    themes: CatalogItemResponse[];
 }
 
 // ── Files ──────────────────────────────────────

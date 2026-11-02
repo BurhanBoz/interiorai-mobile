@@ -52,6 +52,7 @@ const FEATURE_LABEL: Record<string, string> = {
     // V183 — the clip. The server walks up to the render for the room name,
     // so the row reads "Room video · Living Room · 10".
     room_video: "credits.ledger_feature_room_video",
+    seasonal_decor: "credits.ledger_feature_seasonal_decor",
 };
 
 /** The three job-scoped verbs the builder prefixes a feature onto. */

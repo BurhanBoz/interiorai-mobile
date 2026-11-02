@@ -43,9 +43,9 @@ export function CreditCard({
 
     const primaryLabel = t(isFree ? "profile.get_pro" : "profile.buy_credits");
     const secondaryLabel = t(isFree ? "profile.credits_label" : "profile.manage_plan");
-    const sideLine = isFree
-        ? t("profile.refills_daily", { defaultValue: "refills daily" })
-        : t("profile.credits_line", { count: balance });
+    // Build 116 (owner, 14 Oct): the PRO side line read as a stray "kredi" next to the number;
+    // only FREE keeps its one useful word.
+    const sideLine = isFree ? t("profile.refills_daily", { defaultValue: "refills daily" }) : "";
 
     return (
         <View
@@ -81,12 +81,14 @@ export function CreditCard({
                         {shown}
                     </Text>
                 </View>
-                <Text
-                    style={{ ...V.rowQuiet, color: theme.color.onSurfaceVariant, textAlign: "right", flexShrink: 1, marginBottom: 6 }}
-                    numberOfLines={2}
-                >
-                    {sideLine}
-                </Text>
+                {sideLine ? (
+                    <Text
+                        style={{ ...V.rowQuiet, color: theme.color.onSurfaceVariant, textAlign: "right", flexShrink: 1, marginBottom: 6 }}
+                        numberOfLines={2}
+                    >
+                        {sideLine}
+                    </Text>
+                ) : null}
             </View>
 
             <View style={{ flexDirection: "row", gap: 10 }}>

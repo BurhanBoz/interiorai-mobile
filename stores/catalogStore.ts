@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getRoomTypes, getDesignStyles } from "@/services/catalog";
-import type { CatalogItemResponse } from "@/types/api";
+import { getRoomTypes, getDesignStyles, getSeasons } from "@/services/catalog";
+import type { CatalogItemResponse, SeasonResponse } from "@/types/api";
 
 /**
  * Room types and design styles, cached across launches.
@@ -28,6 +28,13 @@ const STALE_AFTER_MS = 60 * 60 * 1000; // 1h — matches the server's Cache-Cont
 interface CatalogState {
     roomTypes: CatalogItemResponse[];
     designStyles: CatalogItemResponse[];
+    /**
+     * The open seasons (V202, build 114), first = the Studio's hero. Empty = no
+     * season = no seasonal tile. Each carries its themes.
+     */
+    seasons: SeasonResponse[];
+    /** The leading season's themes — what the composer showed before seasons existed. */
+    seasonalThemes: CatalogItemResponse[];
     /** Epoch ms of the last successful fetch; null when never fetched. */
     fetchedAt: number | null;
     /** True only when there is nothing cached to render. */
@@ -48,11 +55,16 @@ export const useCatalogStore = create<CatalogState>()(
                 if (inFlight) return inFlight;
                 inFlight = (async () => {
                     try {
-                        const [roomTypes, designStyles] = await Promise.all([
+                        // The seasons must not take the catalogue down with them: a
+                        // server without /seasons (pre-V202) must still leave the rooms
+                        // and styles the screen needs — then there is simply no season.
+                        const [roomTypes, designStyles, seasons] = await Promise.all([
                             getRoomTypes(),
                             getDesignStyles(),
+                            getSeasons().catch(() => [] as SeasonResponse[]),
                         ]);
-                        set({ roomTypes, designStyles, fetchedAt: Date.now(), isLoading: false });
+                        set({ roomTypes, designStyles, seasons, seasonalThemes: seasons[0]?.themes ?? [],
+                              fetchedAt: Date.now(), isLoading: false });
                     } catch {
                         // Keep whatever we already have; only stop the spinner.
                         set({ isLoading: false });
@@ -66,6 +78,8 @@ export const useCatalogStore = create<CatalogState>()(
             return {
                 roomTypes: [],
                 designStyles: [],
+                seasons: [],
+                seasonalThemes: [],
                 fetchedAt: null,
                 isLoading: false,
 
@@ -91,12 +105,21 @@ export const useCatalogStore = create<CatalogState>()(
         {
             name: "catalog-store",
             storage: createJSONStorage(() => AsyncStorage),
-            version: 1,
+            version: 3,
+            // v1 → v2 (2.5.0): the persisted copy predates seasonalThemes; v2 → v3
+            // (build 114): and seasons. An undefined list would crash the first
+            // render, so both rehydrate empty and the next fetch fills them.
+            migrate: (persisted) => {
+                const s = (persisted ?? {}) as Partial<CatalogState>;
+                return { ...s, seasonalThemes: s.seasonalThemes ?? [], seasons: s.seasons ?? [] } as CatalogState;
+            },
             // Never persist the transient flag — a launch that died mid-fetch
             // would otherwise rehydrate stuck in a loading state.
             partialize: (s) => ({
                 roomTypes: s.roomTypes,
                 designStyles: s.designStyles,
+                seasons: s.seasons,
+                seasonalThemes: s.seasonalThemes,
                 fetchedAt: s.fetchedAt,
             }),
         },

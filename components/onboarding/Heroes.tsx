@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 
 import { theme } from "@/config/theme";
+import { BeforeAfterSlider } from "@/components/studio/BeforeAfterSlider";
 
 const U = theme.umber;
 
@@ -71,36 +72,49 @@ function Tag({ label, side }: { label: string; side: "left" | "right" }) {
  * window narrows, the same construction as the result screen's slider.
  */
 export function WipeHero({ width, height, active }: { width: number; height: number; active: boolean }) {
+    return <PairWipe width={width} height={height} active={active} before={ROOM_BEFORE} after={ROOM_AFTER} />;
+}
+
+/**
+ * Build 117 (owner, 14 Oct): the three onboarding pages are three before/afters, the most
+ * striking first — Halloween, then Christmas (Classic), then the empty room furnished. The
+ * lab's own living room 3, the same pictures as the store's first two frames.
+ */
+const HALLOWEEN_BEFORE = require("@/assets/seasons/onb_halloween_before.jpg");
+const HALLOWEEN_AFTER = require("@/assets/seasons/onb_halloween_after.jpg");
+const CHRISTMAS_BEFORE = require("@/assets/seasons/onb_christmas_before.jpg");
+const CHRISTMAS_AFTER = require("@/assets/seasons/onb_christmas_after.jpg");
+
+export function HalloweenHero(p: { width: number; height: number; active: boolean }) {
+    return <PairWipe {...p} before={HALLOWEEN_BEFORE} after={HALLOWEEN_AFTER} />;
+}
+export function ChristmasHero(p: { width: number; height: number; active: boolean }) {
+    return <PairWipe {...p} before={CHRISTMAS_BEFORE} after={CHRISTMAS_AFTER} />;
+}
+
+/**
+ * 17 Oct: the same slider as the intro and the Studio tile, with its first-run shine — gold
+ * halo on the seam, pulsing grip, a sheen crossing the result — sweeping almost edge to edge.
+ * Not interactive here: the pages scroll sideways, and a horizontal pan would fight them (the
+ * intro paged vertically for exactly that reason). A page off screen stays still at the start.
+ */
+function PairWipe({ width, height, active, before, after }: { width: number; height: number; active: boolean; before: number; after: number }) {
     const { t } = useTranslation();
     const reduce = useReduceMotion();
-    const reveal = useRef(new Animated.Value(width)).current;
-
-    useEffect(() => {
-        if (!active || reduce) {
-            reveal.setValue(reduce ? width * 0.5 : width);
-            return;
-        }
-        reveal.setValue(width);
-        const loop = Animated.loop(Animated.sequence([
-            Animated.delay(700),
-            Animated.timing(reveal, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
-            Animated.delay(1800),
-            Animated.timing(reveal, { toValue: width, duration: 1600, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
-        ]));
-        loop.start();
-        return () => loop.stop();
-    }, [active, reduce, reveal, width]);
-
     return (
         <View style={{ width, height, overflow: "hidden" }}>
-            <Image source={ROOM_AFTER} style={{ width, height }} contentFit="cover" />
-            <Animated.View style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: reveal, overflow: "hidden" }}>
-                <Image source={ROOM_BEFORE} style={{ width, height }} contentFit="cover" />
-            </Animated.View>
-            <Animated.View style={{
-                position: "absolute", top: 0, bottom: 0, width: 2, backgroundColor: U.accentBright,
-                transform: [{ translateX: Animated.subtract(reveal, 1) }],
-            }} />
+            <BeforeAfterSlider
+                before={before}
+                after={after}
+                height={height}
+                radius={0}
+                interactive={false}
+                autoSweep={active}
+                sweep={[0.06, 0.94]}
+                initial={reduce ? 0.5 : 0.94}
+                glow={active}
+                reduceMotion={reduce}
+            />
             <Tag label={t("result.before")} side="left" />
             <Tag label={t("result.after")} side="right" />
         </View>
