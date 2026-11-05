@@ -71,6 +71,7 @@ import { FreeWatermark } from "@/components/ui/FreeWatermark";
 import { ZoomableImage } from "@/components/ui/ZoomableImage";
 import type { JobResponse, JobOutputResponse, JobStatus } from "@/types/api";
 import { useReviewPrompt, type ReviewTrigger } from "@/hooks/useReviewPrompt";
+import { SourceSheet } from "@/components/ui/SourceSheet";
 import { useSuccessCount } from "@/hooks/useSuccessCount";
 import { useResumeNote } from "@/hooks/useResumeNote";
 import { ResumeNote } from "@/components/ui/ResumeNote";
@@ -1110,6 +1111,16 @@ export default function ResultDetailScreen() {
           </Pressable>
         </GestureHandlerRootView>
       </Modal>
+      {/* "How did you hear about us?" — back on the result screen (3.0.2).
+          The 19 September redesign dropped the sheet and nothing replaced it:
+          one answer in the 60 days to 5 November, so every channel that is
+          not Search Ads (the videos, the site, a friend) stays unreadable.
+          It takes the LAST turn: the rating has had its moment and the
+          account ask is not up. Second result or later, once per identity
+          (the sheet keeps that flag itself). */}
+      <SourceSheet
+        enabled={outputs.length > 0 && successCount >= 2 && ratingTurn === "clear" && !accountAskOnScreen}
+      />
     </SafeAreaView>
   );
 }

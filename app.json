@@ -2,7 +2,7 @@
   "expo": {
     "name": "Roomframe AI",
     "slug": "roomframeai-mobile",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.roomframeai.mobile",
-      "buildNumber": "130",
+      "buildNumber": "131",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
