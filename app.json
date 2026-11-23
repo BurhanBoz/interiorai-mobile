@@ -93,6 +93,7 @@
       "bundler": "metro"
     },
     "plugins": [
+      "./plugins/withMinPodDeploymentTarget",
       "expo-router",
       "expo-font",
       "expo-localization",
