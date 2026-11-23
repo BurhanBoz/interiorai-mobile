@@ -319,6 +319,14 @@ export interface CreditBalanceResponse {
     /** Server-evaluated flag — true while trial expiry is in the future. */
     welcomeBonusActive?: boolean;
     /**
+     * When the next FREE credit lands (ISO-8601, backend FreeCreditClock; weekly
+     * since 2026-11-23). Null when not on the FREE drip, already at the ceiling,
+     * or claimable now. Older servers omit it.
+     */
+    nextFreeCreditAt?: string | null;
+    /** The most the FREE bucket holds (app.daily-drip.ceiling). Older servers omit it. */
+    freeCreditCeiling?: number;
+    /**
      * True when every design job bills a flat 1 credit for this account — the
      * FREE rate (JobServiceImpl.freeFlatRateApplies). Server-evaluated on
      * purpose: it depends on plan, trial state AND whether a bought pack is

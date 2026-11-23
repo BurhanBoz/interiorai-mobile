@@ -17,7 +17,6 @@ import { useEffectivePlanCode, useEffectiveFeatures } from "@/hooks/useEntitleme
 import { STUDIO_FEATURES, type StudioFeature } from "@/components/studio/featureCatalog";
 import { HexMark } from "@/components/brand/HexMark";
 import { TAB_BAR_HEIGHT, BOTTOM_SAFE_GAP } from "@/components/layout/GlassNavBar";
-import { FREE_DAILY_CEILING } from "@/config/freeTier";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 import { StarIcon } from "@/components/studio/StudioIcons";
 import { LockedToolSheet } from "@/components/studio/LockedToolSheet";
@@ -410,15 +409,21 @@ function Inset({ source }: { source: ImageSourcePropType | { uri: string } }) {
  */
 function Header({ balance, planCode }: { balance: number; planCode: string | null }) {
     const { t } = useTranslation();
-    // The drip grant is stamped against the UTC calendar day (CreditServiceImpl.maybeGrantDailyDrip),
-    // so the next one lands at the next UTC midnight — not at a local hour.
-    const hoursToRefill = (() => {
-        const now = new Date();
-        const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-        return Math.max(1, Math.ceil((next - now.getTime()) / 3_600_000));
+    // The next FREE credit's date comes from the server (FreeCreditClock: seven days
+    // after the later of the last grant and the last spend). The app used to assume
+    // "next UTC midnight", which stopped being true when the drip went weekly.
+    const nextFreeCreditAt = useCreditStore((s) => s.nextFreeCreditAt);
+    const ceiling = useCreditStore((s) => s.freeCreditCeiling);
+    const refillLabel = (() => {
+        if (!nextFreeCreditAt) return null;
+        const ms = new Date(nextFreeCreditAt).getTime() - Date.now();
+        if (!Number.isFinite(ms) || ms <= 0) return null;
+        const hours = Math.ceil(ms / 3_600_000);
+        if (hours <= 24) return t("studio.refill_in", { hours });
+        return t("studio.refill_in_days", { count: Math.ceil(ms / 86_400_000) });
     })();
     // At or above the ceiling the drip does not fire. FREE only — a subscriber's credits do not trickle.
-    const showRefill = planCode === "FREE" && balance < FREE_DAILY_CEILING;
+    const showRefill = planCode === "FREE" && balance < ceiling && refillLabel != null;
 
     return (
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 6 }}>
@@ -441,7 +446,7 @@ function Header({ balance, planCode }: { balance: number; planCode: string | nul
                 <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: U.accentBright }}>{balance}</Text>
                 {showRefill && (
                     <Text style={{ fontFamily: "Inter-Medium", fontSize: 11, color: U.inkMuted }}>
-                        {t("studio.refill_in", { hours: hoursToRefill })}
+                        {refillLabel}
                     </Text>
                 )}
             </Pressable>
