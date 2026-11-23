@@ -1,6 +1,7 @@
 import type { PlanCreditRuleResponse } from "@/types/api";
 import { create } from "zustand";
 import * as creditsService from "@/services/credits";
+import { FREE_CREDIT_CEILING } from "@/config/freeTier";
 
 interface CreditState {
     balance: number;
@@ -17,6 +18,10 @@ interface CreditState {
     flatRateApplies: boolean;
     pricingPlanCode: string | null;
     effectiveCreditRules: PlanCreditRuleResponse[];
+    /** Server's date for the next FREE credit (ISO); null = none pending. */
+    nextFreeCreditAt: string | null;
+    /** Server's FREE ceiling; falls back to FREE_CREDIT_CEILING for older servers. */
+    freeCreditCeiling: number;
     fetchBalance: () => Promise<void>;
     canAfford: (cost: number) => boolean;
     /**
@@ -30,7 +35,7 @@ interface CreditState {
 const initialCreditState = (): Pick<
     CreditState,
     "balance" | "monthlyLimit" | "planCode" | "welcomeBonusExpiresAt" | "welcomeBonusActive"
-    | "flatRateApplies" | "pricingPlanCode" | "effectiveCreditRules"
+    | "flatRateApplies" | "pricingPlanCode" | "effectiveCreditRules" | "nextFreeCreditAt" | "freeCreditCeiling"
 > => ({
     balance: 0,
     monthlyLimit: 0,
@@ -40,6 +45,8 @@ const initialCreditState = (): Pick<
     flatRateApplies: true,
     pricingPlanCode: null,
     effectiveCreditRules: [],
+    nextFreeCreditAt: null,
+    freeCreditCeiling: FREE_CREDIT_CEILING,
 });
 
 export const useCreditStore = create<CreditState>((set, get) => ({
@@ -58,6 +65,8 @@ export const useCreditStore = create<CreditState>((set, get) => ({
             flatRateApplies: data.flatRateApplies ?? true,
             pricingPlanCode: data.pricingPlanCode ?? null,
             effectiveCreditRules: data.creditRules ?? [],
+            nextFreeCreditAt: data.nextFreeCreditAt ?? null,
+            freeCreditCeiling: data.freeCreditCeiling ?? FREE_CREDIT_CEILING,
         });
     },
 
